@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+benchmark*.json
+ci-results/
