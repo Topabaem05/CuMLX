@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Python lint and generated kernels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - run: python -m pip install ruff==0.11.13
+      - name: Lint correctness
+        run: python -m ruff check .
+      - name: Python syntax
+        run: python -m compileall -q src tests scripts benchmarks
+      - name: Check generated sources match the generator
+        run: |
+          python scripts/generate_kernels.py
+          git diff --exit-code -- src/cumlx/kernels
+          test -z "$(git ls-files --others --exclude-standard src/cumlx/kernels)"
+
+  cpu:
+    name: CPU reference (Python ${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install CPU dependencies only
+        run: python -m pip install -e '.[dev]'
+      - name: Host compiler is required for helper tests
+        run: c++ --version
+      - name: CPU tests (GPU tests are deselected, not claimed as passed)
+        run: python -m pytest -q -m 'not gpu' --junitxml=ci-results/pytest.xml
+      - name: CPU example and environment
+        run: |
+          python scripts/cpu_example.py > ci-results/cpu-example.json
+          python scripts/env_report.py > ci-results/environment.json
+      - name: Publish CPU evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: cpu-python-${{ matrix.python }}
+          path: ci-results/
+          if-no-files-found: error
+          retention-days: 14
+
+  build:
+    name: Build distributions and isolated wheel smoke test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - run: python -m pip install build twine
+      - run: python -m build
+      - run: python -m twine check dist/*
+      - name: Install wheel outside the checkout
+        shell: bash
+        run: |
+          python -m venv "$RUNNER_TEMP/wheel-venv"
+          "$RUNNER_TEMP/wheel-venv/bin/python" -m pip install dist/*.whl
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/wheel-venv/bin/python" -I "$GITHUB_WORKSPACE/scripts/wheel_smoke.py"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: python-distributions
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14

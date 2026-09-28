@@ -1,0 +1,13 @@
+{
+  "source": "Conversation-provided archives; retained unchanged outside the repository",
+  "sha256": {
+    "CUMLX-starter.zip": "db8de4fee045435157872b2e626cdc38c902d2ab83b9b8a8d1103503e6d96f23",
+    "CUMLX-design-v0.2.zip": "74fb01ccbfe91bba9aa7aafa07079c4258f213d06a802b1fb133b371fe7e7410",
+    "CUMLX-kernels-v0.3.zip": "5ae049a7e832669c50a96ae6793a7aa96286af7b18597922437d64ff58bf23d7"
+  },
+  "excluded_from_git": [
+    "dist/*.whl",
+    "provenance/*.zip",
+    "MANIFEST.json (original ZIP manifest)"
+  ]
+}

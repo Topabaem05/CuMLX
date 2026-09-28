@@ -1,0 +1,7 @@
+{
+  "installed_from": "/mnt/data/cumlx-ci-wheel-venv/lib/python3.13/site-packages/cumlx/__init__.py",
+  "version": "0.3.0.dev0",
+  "kernel_sources": 16,
+  "gpu_executed": false,
+  "status": "WHEEL_CPU_SMOKE_PASSED"
+}

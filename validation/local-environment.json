@@ -1,0 +1,14 @@
+{
+  "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+  "machine": "x86_64",
+  "python": "3.13.5",
+  "mlx_installed": null,
+  "mlx_target": "0.32.2",
+  "device_validation": "NOT_RUN",
+  "cuda_facing_pytorch": false,
+  "native_fp4_matrix_instruction": false,
+  "automatic_cpu_fallback": false,
+  "metal_available": null,
+  "cuda_available": null,
+  "probe_error": "ModuleNotFoundError: No module named 'mlx'"
+}
