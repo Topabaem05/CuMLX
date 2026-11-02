@@ -1,10 +1,27 @@
 # CUMLX 1개월 로드맵 — CUDA→MLX 포팅 동등성 검증기
 
-작성일: 2026-11-02 (개정 2) · 기간: 2026-11-02 ~ 2026-11-30
+작성일: 2026-11-02 (개정 3: D1 진행 결과 반영) · 기간: 2026-11-02 ~ 2026-11-30
 **베타: 2026-11-08 (D7)** · 정식: 2026-11-30 (`v0.4.0`)
 기준 커밋: `22fe8ce` (v0.3.0.dev0)
 
 > **한 줄 정의:** CUDA로 만든 모델을 *누가 어떻게* MLX로 옮겼든, **원본과 같은 동작을 하는지 레이어 단위로 증명하고, 다르면 어디서 처음 달라졌는지 찾아 주는 도구.**
+
+## 진행 현황 (2026-11-02, D1 종료 시점)
+
+베타 주간 D1~D5 범위와 오류 주입 F7·F8(원래 W2)을 하루 만에 구현하고 검증했다. 사용법과 검증 기록은 [CLI 문서](CLI.md)에 있다.
+
+| 항목 | 상태 | 근거 |
+|---|---|---|
+| D1 CLI 골격·trace 형식·metrics | ✅ | `src/cumlx/cli/`, `verify/trace.py`, `verify/metrics.py` |
+| D1 위험: Linux MLX CPU wheel | ✅ 해소 | `mlx[cpu]` 0.32.4가 Linux x86_64에서 동작 |
+| D2 capture, tiny fixture | ✅ | `cumlx fixture`, `cumlx capture` |
+| D3 chain diff, D4 isolated diff·보고서 | ✅ | 깨끗한 포팅 false alarm 0, 최대 chain rel_l2 9.8e-7 |
+| D5 conform, 오류 주입 | ✅ | F1~F8 **8/8** 정확한 모듈 지목, conform에서 MLX NVFP4 global_scale 규약 차이 발견 |
+| 양자화 반영 golden (원래 W2) | ✅ 앞당김 | `capture --weights-from-mlx` |
+| CI verifier job | ✅ 작성 | `.github/workflows/ci.yml` `verifier` job. 원격 실행 결과는 아직 없음 |
+| **D6 실제 모델 dogfooding** | ⛔ 막힘 | 개발 환경 네트워크 정책이 `huggingface.co` 차단. 허용하거나 Mac에서 실행해야 함 |
+| Apple Silicon(Metal) 실행 | ⏳ 미실행 | Linux CPU 백엔드만 확인 |
+| D7 베타 태그 | ⏳ | 베타 Gate의 실제 모델 항목이 남음 |
 
 ---
 
@@ -98,30 +115,35 @@ cumlx conform --checkpoint <path>
 | 결정 | 이유 |
 |---|---|
 | 기존 GPU 커널(`MLXBackend`)에 **의존하지 않는다** | 커널은 아직 미검증. 검증기는 MLX 기본 op로 동작하는 어떤 모델에든 적용 가능해야 한다 |
-| trace 형식 = `safetensors` + `manifest.json` | numpy만으로 읽고 쓸 수 있고 (`safetensors.numpy`) torch·mlx 양쪽에서 쉽게 로드된다 |
+| trace 형식 = `safetensors` + `manifest.json` | 공식 safetensors와 상호 호환되는 NumPy 전용 구현(`verify/safetensors_io.py`). 샘플 파일마다 SHA-256을 manifest에 기록해 변조를 거부 |
 | golden 생성은 **CPU float32 PyTorch**로 시작 | 베타에서 CUDA 장비가 없어도 된다. CUDA capture는 W3에 추가 (같은 형식) |
 | PyTorch 쪽 기록 = `register_forward_hook` | 표준 API, 모델 코드 수정 불필요 |
-| MLX 쪽 기록 = **Probe 래퍼 모듈** | MLX `nn.Module`에는 forward hook이 없다. 자식 모듈을 `Probe(inner, name)`로 바꿔 끼워 출력만 기록한다 |
-| 모듈 이름 매핑 = **동일 경로 우선 + 규칙 파일** | mlx-lm은 대부분 HF와 같은 경로(`model.layers.N.self_attn.q_proj`)를 쓴다. 다른 경우만 YAML 규칙으로 보완 |
+| MLX 쪽 기록 = **인스턴스 클래스 교체(probe)** | MLX `nn.Module`에는 forward hook이 없다. 기록할 모듈 인스턴스의 `__class__`를 `__call__`만 감싼 하위 클래스로 잠시 바꾼다. 래퍼 모듈과 달리 파라미터·속성 접근·`isinstance`가 그대로 유지된다 (구현 시 변경) |
+| 모듈 이름 매핑 = **동일 경로 우선 + 규칙 파일** | mlx-lm은 대부분 HF와 같은 경로(`model.layers.N.self_attn.q_proj`)를 쓴다. 다른 경우만 JSON 규칙(`match`/`replace`/`ignore`)으로 보완 (의존성 없이 처리하려고 YAML 대신 JSON) |
 | isolated 모드 베타 범위 = **단일 텐서 입력 모듈** | Linear, Embedding, RMSNorm/LayerNorm, MLP 블록. mask·position·cache를 받는 attention/decoder layer는 W2 |
 | CI 테스트 모델 = **로컬에서 생성한 tiny random 모델** | 네트워크·대용량 다운로드 없이 CI에서 재현. `transformers` config로 2-layer 모델 생성 → safetensors 저장 → mlx-lm 로드 |
-| 의존성은 extra로 분리 | `cumlx-lab[capture]` = torch, transformers, safetensors / `[diff]` = mlx, mlx-lm, safetensors. 코어는 numpy만 |
+| 의존성은 extra로 분리 | `cumlx-lab[capture]` = torch, transformers / `[diff]` = mlx(Linux는 `mlx[cpu]`), mlx-lm. safetensors는 NumPy만으로 직접 구현해 코어는 numpy만 |
 | 검증기 자체를 **오류 주입(fault injection)**으로 검증 | 검증기가 틀리면 의미가 없다. 일부러 망가뜨린 포팅본을 정확히 지목하는지 테스트한다 (§4) |
 
-### 2.1 모듈 구성
+### 2.1 모듈 구성 (구현 기준)
 
 ```text
 src/cumlx/
-  cli.py                 cumlx capture | diff | conform | report
-  trace/format.py        manifest 스키마, safetensors 읽기/쓰기, 버전
-  trace/torch_capture.py forward hook 기록기 (입력·출력·dtype·shape)
-  trace/mlx_probe.py     Probe 래퍼, 모듈 트리 순회·교체
-  diff/mapping.py        이름 매핑 (동일 경로 + YAML 규칙)
-  diff/metrics.py        rel_l2, max_abs, cosine, 임계값 판정
-  diff/runner.py         chain / isolated 실행
-  conform/vectors.py     FP4 경계값 테스트 벡터 (quant.py 재사용)
-  conform/targets.py     mx.dequantize, 체크포인트 bytes 대상 검사
-  report/                JSON, Markdown (W3: HTML)
+  errors.py              안정된 exit code, error code, hint
+  cli/main.py            파서, describe, stdout 보호(JSON 1개만), envelope 출력
+  cli/output.py          cumlx.result.v1 envelope, --max-items 절단, text 렌더러
+  cli/commands.py        doctor | fixture | capture | diff | conform | report | selftest
+  verify/safetensors_io.py  NumPy 전용 safetensors 읽기/쓰기 (BF16 읽기 지원)
+  verify/trace.py        manifest v1, 샘플 파일, SHA-256 검증, 출력 디렉터리 안전장치
+  verify/capture_torch.py   forward hook 기록기, HF 로더, MLX 가중치 주입(양자화 반영 golden)
+  verify/mlx_port.py     mlx-lm/사용자 loader, probe, port dtype 판정, dequantize
+  verify/mapping.py      이름 매핑 (동일 경로 + JSON 규칙)
+  verify/metrics.py      rel_l2, max_abs, cosine, 임계값 profile
+  verify/diff.py         chain / isolated 실행, first_divergence 위치 추정
+  verify/conform.py      FP4 decode 전수 비교, NVFP4 global scale 규약 검사
+  verify/faults.py       오류 주입 F1~F8
+  verify/selftest.py     검증기 자체 검증
+  verify/report.py       Markdown 보고서
 기존 quant.py, reference.py는 그대로 재사용
 ```
 
@@ -158,12 +180,12 @@ src/cumlx/
 
 #### 베타 Gate (D7) — 모두 만족해야 베타 선언
 
-- [ ] `cumlx capture` → `cumlx diff`가 tiny 모델과 실제 0.5~1B 모델에서 끝까지 동작
-- [ ] isolated 모드: 오류 주입 F1~F6을 **6/6 정확한 모듈로 지목**
-- [ ] 깨끗한 bf16 포팅본: 기본 임계값에서 **false alarm 0**
-- [ ] `cumlx conform --target mlx`가 nvfp4/mxfp4 양쪽에서 실행되고 결과를 보고 (불일치를 찾으면 그 자체가 성과)
-- [ ] CPU CI에서 capture·diff·conform 테스트 통과 (MLX CPU wheel이 안 되면 macOS runner로 대체)
-- [ ] 기존 테스트 109개 계속 통과
+- [ ] `cumlx capture` → `cumlx diff`가 tiny 모델과 실제 0.5~1B 모델에서 끝까지 동작 — tiny ✅, 실제 모델 ⛔ (네트워크 차단)
+- [x] isolated 모드: 오류 주입 F1~F6을 **6/6 정확한 모듈로 지목** (F7·F8 포함 8/8)
+- [ ] 깨끗한 bf16 포팅본: 기본 임계값에서 **false alarm 0** — float32 tiny에서만 확인, bf16 실제 모델은 D6과 함께
+- [x] `cumlx conform --target mlx`가 nvfp4/mxfp4 양쪽에서 실행되고 결과를 보고 (NVFP4 global_scale 규약 차이 발견)
+- [ ] CPU CI에서 capture·diff·conform 테스트 통과 — job 작성, 로컬 동일 명령 통과, 원격 실행 대기
+- [x] 기존 테스트 109개 계속 통과 (현재 전체 의존성 153 passed)
 
 #### 베타가 늦어질 때 줄이는 순서
 
@@ -254,11 +276,11 @@ cumlx conform --target mlx
 | F1 | Linear 가중치 전치 (정방 행렬) | 해당 `*_proj` | ✅ |
 | F2 | bias 누락 | 해당 Linear | ✅ |
 | F3 | RMSNorm epsilon 변경 / weight 누락 | 해당 norm | ✅ |
-| F4 | MXFP4 E8M0 scale 지수 ±1 | 해당 양자화 Linear | ✅ |
-| F5 | NVFP4 global scale 누락 | 해당 양자화 Linear | ✅ |
+| F4 | MXFP4 E8M0 scale 지수 +1 | 해당 양자화 Linear | ✅ |
+| F5 | NVFP4 E4M3 block scale code +8 (×2). MLX `QuantizedLinear`에는 global scale이 없어서 원안(global scale 누락)은 conform 검사로 옮김 | 해당 양자화 Linear | ✅ |
 | F6 | 활성화 함수 교체 (SiLU → GELU) | 해당 MLP | ✅ |
-| F7 | RoPE theta 변경 | 해당 attention | W2 |
-| F8 | attention mask 누락 (causal) | 해당 attention | W2 |
+| F7 | RoPE theta 변경 | 해당 attention (chain+isolated, medium) | ✅ 앞당김 |
+| F8 | attention mask 누락 (causal) | 해당 attention (chain+isolated, medium) | ✅ 앞당김 |
 | F9 | MoE expert 순서 뒤섞기 | 해당 MoE 블록 | W2 |
 | F10 | nibble 순서 반전 (low/high) | 해당 양자화 Linear | W2 |
 
@@ -305,7 +327,9 @@ cumlx conform --target mlx
 
 | 리스크 | 가능성 | 영향 | 대응 |
 |---|---|---|---|
-| Linux에서 MLX CPU wheel을 쓸 수 없음 | 중 | 중 | D1에 확인. 안 되면 L1을 macOS runner로 옮기고 Linux CI는 capture·metrics만 |
+| Linux에서 MLX CPU wheel을 쓸 수 없음 | ~~중~~ 해소 | 중 | D1 확인 완료: `mlx[cpu]` 0.32.4 동작 |
+| 개발 환경에서 HF Hub 접근 불가 | 확정 | 중 | `huggingface.co` 허용 또는 Mac/CI에서 D6 실행. tiny fixture로 나머지 개발은 계속 |
+| tiny fixture가 결함을 가림 | 확인됨 | 중 | HF 기본 초기화(std 0.02)에서는 attention이 거의 균등해 RoPE 결함이 안 보였다. `initializer_range=0.25`, 랜덤 norm/bias로 해결. 실제 모델 검증이 필요한 이유 |
 | HF ↔ mlx-lm 모듈 경로가 모델마다 다름 | 높음 | 중 | 동일 경로 우선 + YAML 규칙. 매핑 실패는 "미검증"으로 보고 (조용히 건너뛰지 않음) |
 | 다중 입력 모듈 재생이 어려움 (mask, cache) | 높음 | 중 | 베타는 단일 입력 모듈로 한정, W2에서 모델 계열별 adapter |
 | trace 용량이 큼 | 높음 | 중 | 짧은 프롬프트, fp16 저장 옵션, `--layers` 부분 기록 |

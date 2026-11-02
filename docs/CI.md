@@ -16,6 +16,11 @@ credentials, and 10-minute job timeouts. No deployment or PyPI publication occur
   into a clean venv, and run `scripts/wheel_smoke.py` from outside the checkout
   with Python isolated mode. Validate all 16 packaged sources and both FP4 formats.
 - Store JUnit/environment reports and Python distributions as 14-day Actions artifacts.
+- Verifier end-to-end (`verifier` job): install CPU-only PyTorch and MLX CPU, require
+  `cumlx doctor --require capture,diff,conform`, run `pytest -m e2e --require-e2e`
+  (skips fail), `cumlx selftest`, and `cumlx conform --target mlx`. Conform findings
+  about MLX (exit 1) are stored as evidence and do not fail CI; other non-zero exits do.
+  This proves the verifier on tiny random models only, not on real checkpoints or Metal.
 
 ## Physical GPU tests (separate, manual)
 
@@ -38,6 +43,9 @@ python -m compileall -q src tests scripts benchmarks
 python scripts/generate_kernels.py
 git diff --exit-code -- src/cumlx/kernels
 python -m pytest -q -m 'not gpu'
+python -m pip install -e '.[dev,capture,diff]'   # verifier e2e (Linux: mlx[cpu])
+python -m pytest -q -m e2e --require-e2e
+cumlx selftest
 python -m build
 python -m twine check dist/*
 ```

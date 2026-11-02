@@ -1,4 +1,22 @@
-# CUMLX kernels v0.3
+# CUMLX v0.4 (dev)
+
+**CUDA→MLX 포팅 동등성 검증기 (베타 준비) + Packed FP4 커널 lab**
+
+CUMLX는 모델을 변환하지 않습니다. mlx-lm 등 어떤 도구로 변환했든, MLX 포팅본이 원본 PyTorch(CUDA) 모델과 **같은 계산을 하는지 모듈 단위로 비교**하고, 다르면 **처음 어긋난 모듈**을 찾습니다. 방향과 일정은 [1개월 로드맵](docs/ROADMAP-1MONTH.md)에 있습니다.
+
+```bash
+python -m pip install -e '.[capture,diff]'        # torch, transformers, mlx, mlx-lm
+cumlx doctor --require capture,diff
+cumlx capture <원본 HF id 또는 경로> --prompt "Hello" -o golden/
+cumlx diff golden/ <MLX 포팅본> -o report/       # exit 0 ok · 1 diverged · 5 incomplete
+cumlx selftest                                   # 깨끗한 포팅 통과 + 오류 주입 8종 위치 검출
+```
+
+CLI는 AI 에이전트가 쓰기 좋게 설계했습니다. stdout에는 JSON 문서 1개만 나가고, exit code가 고정되어 있으며, 모든 오류에 해결 hint가 붙고, `next_steps`로 다음 명령을 제안하고, `--max-items`로 출력 길이를 제한합니다. 사용법은 [CLI 문서](docs/CLI.md)와 [AGENTS.md](AGENTS.md)를 보십시오. 검증 범위는 Linux MLX CPU 백엔드와 tiny 모델까지이며, Apple Silicon 실행과 실제 공개 모델 검증은 아직 하지 않았습니다.
+
+---
+
+## FP4 커널 lab (v0.3에서 유지)
 
 **Packed FP4 커널 구현 패키지 — CPU 검증 완료 범위와 GPU 미검증 범위를 분리합니다.**
 
