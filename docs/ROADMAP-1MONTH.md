@@ -28,15 +28,15 @@
 | W3 | **upstream 보고** | ⛔ 미완료 | mlx-lm 정책이 AI의 게시물 작성을 금지. 사용자가 직접 작성해야 함 |
 | W3 | CUDA golden 측정 | ✅ | V100, Qwen2.5-0.5B. 반복 실행 동일, CPU와 최대 1.9e-5. [결과](CUDA-GOLDEN.md) |
 | W4 | GitHub Action | ✅ 저장소 내부 | `action.yml`, `examples/port-ci`, CI의 `Action test`. 깨끗한 포팅 통과, 결함 포팅 실패 |
-| W4 | **별도 예제 저장소 적용** | ⛔ 미완료 | 접근 설정 변경과 저장소 생성이 권한에서 차단됨. 사용자 승인 필요 |
+| W4 | **별도 예제 저장소 적용** | ⛔ 미완료 | 저장소 생성이 권한에서 차단됨. `scripts/create_example_repo.sh`를 사용자가 실행하면 끝남 (GitHub에 만들기 직전까지 확인함) |
 | W4 | MCP 서버와 에이전트 스킬 | ✅ | `cumlx-mcp`, `skills/cumlx-verifier` |
 | W4 | `check_op` API | ✅ | `cumlx.check_op` |
 | W4 | 부분 기록 | ✅ | `--layers`, `W_PARTIAL_TRACE` |
 | W4 | 문서 | ✅ | 사용 사례 중심 README, [trace 명세](TRACE-FORMAT.md) |
 | 추가 | 최신 Hugging Face 모델 측정 | ✅ | 12개: 7개 ok, 4개 비교 불가(부분 체크포인트), 1개 mlx-lm 로드 불가. [결과](../validation/latest-models.json). 측정 후 삭제 |
 | 추가 | CUDA 전용 프로그램 사용 검토 | ✅ | `cumlx scan`, `cumlx port`, [검토 문서](PORTING-CUDA-MODELS.md). Isaac Sim은 Mac 직접 실행 불가, 정책 추론 경로는 직접 확인 |
-| 릴리스 | **PyPI 게시** | ⛔ 미완료 | 계정과 공개 결정 필요. 저장소도 비공개. GitHub 태그와 Release까지 수행 |
-| 릴리스 | **보고서와 명세의 외부 공개** | ⛔ 미완료 | 저장소가 비공개. 공유용 보고서 페이지는 만들었고(비공개 링크), 공유와 공개 전환은 사용자 결정 |
+| 릴리스 | **PyPI 게시** | ⛔ 미완료 | PyPI 토큰이 이 장비에 없음. 이름 `cumlx-lab`은 비어 있음. GitHub 태그와 Release까지 수행 |
+| 릴리스 | **보고서와 명세의 외부 공개** | ⛔ 미완료 | 공개 전환이 권한에서 차단됨. 사전 검사는 끝남: 비밀 정보 없음, 기록의 임시 경로 2줄에 사용자 이름만 있음 |
 
 ---
 
