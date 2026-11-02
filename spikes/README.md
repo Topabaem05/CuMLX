@@ -18,5 +18,6 @@ python spikes/collect.py -o validation/spikes.json <work dir>/results.jsonl
 | `probe_kernelport.py` | Does kernelport pass correct Metal ports and fail a wrong one? |
 | `probe_woof.py` | Does woof's translator run kernels that it was not written for? |
 | `probe_genesis.py` | What is the Go2 throughput on Metal and CPU? |
+| `probe_isaac_sim.py` | Does Isaac Sim run? Use `isaac_sim_container.sh` on a Mac. It is separate from `run_all.sh`, because it needs about 19 GB and your acceptance of the NVIDIA EULA. |
 
 The `probe_` prefix stops a script from shadowing the package that it imports. Delete the work directory afterwards: it took 4.8 GB. Genesis also creates `~/.cache/genesis`. In `validation/spikes.json` the last run is the complete reproduction from an empty directory, and the earlier runs repeat the throughput measurement.

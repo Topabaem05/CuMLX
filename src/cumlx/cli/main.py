@@ -85,6 +85,10 @@ COMMANDS: dict[str, dict[str, Any]] = {
         summary='Triage a CUDA repository or an HF model: read its source as text and rank the work to run it on Apple Silicon.',
         requires=[], stage='beta',
         examples=['cumlx scan ./some-cuda-repo', 'cumlx scan Qwen/Qwen3-0.6B']),
+    'recipe': dict(
+        summary='Name what to use on Apple Silicon for a CUDA dependency, and show whether each option was run or only read about.',
+        requires=[], stage='beta',
+        examples=['cumlx recipe', 'cumlx recipe bitsandbytes', 'cumlx recipe ./some-cuda-repo --verified-only', 'cumlx recipe scan.json']),
     'port': dict(
         summary='Convert a model with mlx-lm and prove the result: convert, compare weights, capture a golden, diff.',
         requires=['capture', 'diff'], stage='beta',
@@ -225,6 +229,13 @@ def build_parser() -> AgentArgumentParser:
     p.add_argument('--revision', help='HF revision')
     p.add_argument('--include-tests', action='store_true', help='also read test directories')
     p.add_argument('-o', '--output', help='write every finding to this JSON file')
+    p.add_argument('--overwrite', action='store_true')
+
+    p = add('recipe')
+    p.add_argument('target', nargs='?', help='a package or recipe name, a directory, an HF id, or a `cumlx scan -o` report. Omit it to list the catalog')
+    p.add_argument('--verified-only', action='store_true', help='keep only options that were run on Apple Silicon')
+    p.add_argument('--revision', help='HF revision')
+    p.add_argument('-o', '--output', help='write every recipe to this JSON file')
     p.add_argument('--overwrite', action='store_true')
 
     p = add('port')

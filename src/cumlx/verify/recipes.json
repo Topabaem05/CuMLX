@@ -1,0 +1,1169 @@
+{
+ "schema": "cumlx.recipes.v1",
+ "recipes": [
+  {
+   "id": "transformers-model",
+   "replaces": "A PyTorch model that mlx-lm implements",
+   "tier": "model",
+   "outcome": "substitute",
+   "aliases": [
+    "mlx-lm",
+    "mlx_lm",
+    "llm",
+    "text-model"
+   ],
+   "scan_rules": [],
+   "packages": [],
+   "options": [
+    {
+     "name": "mlx-lm through cumlx port",
+     "how": "cumlx port <model> -o port/",
+     "install": "pip install 'cumlx-lab[capture,diff]'",
+     "license": "MIT",
+     "evidence": "run",
+     "source": "validation/latest-models.json",
+     "grade": "A",
+     "limits": "Text models that mlx-lm implements; short prompts"
+    }
+   ],
+   "verify": "cumlx port runs the comparison itself",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "vision-model",
+   "replaces": "A vision-language model that mlx-lm does not implement",
+   "tier": "model",
+   "outcome": "substitute",
+   "aliases": [
+    "mlx-vlm",
+    "mlx_vlm",
+    "vlm"
+   ],
+   "scan_rules": [],
+   "packages": [],
+   "options": [
+    {
+     "name": "mlx-vlm",
+     "how": "python -m mlx_vlm.convert --hf-path <model>",
+     "install": "pip install mlx-vlm",
+     "license": "MIT",
+     "evidence": "docs",
+     "source": "https://github.com/Blaizzy/mlx-vlm",
+     "grade": null,
+     "target_grade": "A",
+     "limits": "CUMLX has not compared any mlx-vlm port"
+    }
+   ],
+   "verify": "cumlx capture <original> -o golden/ && cumlx diff golden/ <port> -o report/",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "diffusers-model",
+   "replaces": "A diffusion pipeline",
+   "tier": "model",
+   "outcome": "substitute",
+   "aliases": [
+    "diffusers",
+    "mflux",
+    "flux",
+    "stable-diffusion"
+   ],
+   "scan_rules": [],
+   "packages": [],
+   "options": [
+    {
+     "name": "mflux",
+     "how": "mflux-generate --model <model>",
+     "install": "pip install mflux",
+     "license": "MIT",
+     "evidence": "docs",
+     "source": "https://github.com/mflux-community/mflux",
+     "grade": null,
+     "target_grade": "B",
+     "limits": "Supports its own list of models; CUMLX has not compared it"
+    }
+   ],
+   "verify": "Compare images from the same seed and prompt; CUMLX has no tool for this yet",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "torch-cuda-device",
+   "replaces": "torch.cuda, .cuda() and device=\"cuda\"",
+   "tier": "device",
+   "outcome": "substitute",
+   "aliases": [
+    "cuda",
+    "torch.cuda",
+    "device"
+   ],
+   "scan_rules": [
+    "torch-cuda-device"
+   ],
+   "packages": [],
+   "options": [
+    {
+     "name": "PyTorch MPS",
+     "how": "Select the device from a setting and use \"mps\"",
+     "install": "pip install torch",
+     "license": "BSD-3-Clause",
+     "evidence": "run",
+     "source": "validation/REPORT.md",
+     "grade": "A",
+     "limits": "One model compared across devices. MPS lacks some operators"
+    }
+   ],
+   "verify": "cumlx capture <model> --device mps -o golden-mps/ && cumlx tracediff golden-cpu/ golden-mps/",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "cuda-amp-backends",
+   "replaces": "torch.cuda.amp, autocast(\"cuda\") and cuDNN settings",
+   "tier": "device",
+   "outcome": "substitute",
+   "aliases": [
+    "amp",
+    "autocast",
+    "cudnn"
+   ],
+   "scan_rules": [
+    "cuda-amp-backends"
+   ],
+   "packages": [],
+   "options": [
+    {
+     "name": "torch.amp on MPS",
+     "how": "Use torch.autocast(\"mps\", dtype=torch.float16) and guard cuDNN settings on the device",
+     "install": "",
+     "license": "BSD-3-Clause",
+     "evidence": "docs",
+     "source": "https://pytorch.org/docs/stable/amp.html",
+     "grade": null,
+     "target_grade": "A",
+     "limits": "MPS and MLX have no cuDNN"
+    }
+   ],
+   "verify": "cumlx capture <original> -o golden/ && cumlx diff golden/ <port> -o report/",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "bitsandbytes",
+   "replaces": "bitsandbytes quantization and optimizers",
+   "tier": "library",
+   "outcome": "substitute",
+   "aliases": [
+    "bnb"
+   ],
+   "scan_rules": [
+    "bitsandbytes"
+   ],
+   "packages": [
+    "bitsandbytes"
+   ],
+   "options": [
+    {
+     "name": "MLX quantization",
+     "how": "cumlx port <model> --q-bits 4 -o port/",
+     "install": "pip install 'cumlx-lab[capture,diff]'",
+     "license": "MIT",
+     "evidence": "run",
+     "source": "validation/latest-models.json",
+     "grade": "A",
+     "limits": "The format is MLX quantization, not bitsandbytes NF4. The golden uses the port weights, so it does not measure quantization loss"
+    },
+    {
+     "name": "bitsandbytes macOS wheel",
+     "how": "pip install bitsandbytes",
+     "install": "pip install bitsandbytes",
+     "license": "MIT",
+     "evidence": "docs",
+     "source": "https://pypi.org/project/bitsandbytes/#files",
+     "grade": null,
+     "target_grade": "B",
+     "limits": "PyPI has a macOS arm64 wheel. Its GPU support on Mac was not checked"
+    },
+    {
+     "name": "mps-bitsandbytes",
+     "how": "Import it in place of bitsandbytes",
+     "install": "pip install mps-bitsandbytes",
+     "license": "MIT on PyPI only",
+     "evidence": "docs",
+     "source": "https://pypi.org/project/mps-bitsandbytes/",
+     "grade": null,
+     "target_grade": "B",
+     "limits": "One small project. PyPI says MIT, and its GitHub repository has no licence file. Install it yourself"
+    }
+   ],
+   "verify": "cumlx capture <original> -o golden/ && cumlx diff golden/ <port> -o report/",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "flash-attn",
+   "replaces": "FlashAttention CUDA kernels",
+   "tier": "library",
+   "outcome": "substitute",
+   "aliases": [
+    "flash_attn",
+    "flash-attention",
+    "flash_attention_2"
+   ],
+   "scan_rules": [
+    "flash-attn-import"
+   ],
+   "packages": [
+    "flash-attn",
+    "flash_attn"
+   ],
+   "options": [
+    {
+     "name": "MLX scaled dot product attention",
+     "how": "cumlx port <model> -o port/",
+     "install": "pip install 'cumlx-lab[capture,diff]'",
+     "license": "MIT",
+     "evidence": "run",
+     "source": "validation/latest-models.json",
+     "grade": "A",
+     "limits": "For models that mlx-lm implements"
+    },
+    {
+     "name": "PyTorch sdpa on MPS",
+     "how": "attn_implementation=\"sdpa\"",
+     "install": "",
+     "license": "BSD-3-Clause",
+     "evidence": "docs",
+     "source": "https://pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html",
+     "grade": null,
+     "target_grade": "A",
+     "limits": "Not compared by CUMLX on MPS"
+    },
+    {
+     "name": "mps-flash-attn",
+     "how": "Import it in place of flash_attn",
+     "install": "pip install mps-flash-attn",
+     "license": "MIT",
+     "evidence": "docs",
+     "source": "https://pypi.org/project/mps-flash-attn/",
+     "grade": null,
+     "target_grade": "A",
+     "limits": "One small project; not run by CUMLX"
+    }
+   ],
+   "verify": "cumlx capture <original> -o golden/ && cumlx diff golden/ <port> -o report/",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "xformers",
+   "replaces": "xFormers memory-efficient attention",
+   "tier": "library",
+   "outcome": "substitute",
+   "aliases": [],
+   "scan_rules": [
+    "xformers"
+   ],
+   "packages": [
+    "xformers"
+   ],
+   "options": [
+    {
+     "name": "PyTorch sdpa",
+     "how": "attn_implementation=\"sdpa\", or the default attention processor in diffusers",
+     "install": "",
+     "license": "BSD-3-Clause",
+     "evidence": "docs",
+     "source": "https://pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html",
+     "grade": null,
+     "target_grade": "A",
+     "limits": ""
+    }
+   ],
+   "verify": "cumlx capture <original> -o golden/ && cumlx diff golden/ <port> -o report/",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "apex",
+   "replaces": "NVIDIA Apex mixed precision",
+   "tier": "library",
+   "outcome": "substitute",
+   "aliases": [],
+   "scan_rules": [
+    "apex"
+   ],
+   "packages": [],
+   "options": [
+    {
+     "name": "torch.amp",
+     "how": "Replace apex.amp with torch.autocast",
+     "install": "",
+     "license": "BSD-3-Clause",
+     "evidence": "docs",
+     "source": "https://pytorch.org/docs/stable/amp.html",
+     "grade": null,
+     "target_grade": "A",
+     "limits": "Apex is deprecated in favour of torch.amp upstream"
+    }
+   ],
+   "verify": "cumlx capture <original> -o golden/ && cumlx diff golden/ <port> -o report/",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "deepspeed",
+   "replaces": "DeepSpeed distributed training",
+   "tier": "library",
+   "outcome": "remove",
+   "aliases": [],
+   "scan_rules": [
+    "deepspeed"
+   ],
+   "packages": [
+    "deepspeed"
+   ],
+   "options": [
+    {
+     "name": "Remove it",
+     "how": "Load the model without DeepSpeed for single-device inference",
+     "install": "",
+     "license": "",
+     "evidence": "docs",
+     "source": "https://pypi.org/project/deepspeed/",
+     "grade": null,
+     "target_grade": "A",
+     "limits": "Distributed training has no substitute on one Mac"
+    }
+   ],
+   "verify": "cumlx capture <original> -o golden/ && cumlx diff golden/ <port> -o report/",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "cupy",
+   "replaces": "CuPy GPU arrays",
+   "tier": "library",
+   "outcome": "substitute",
+   "aliases": [],
+   "scan_rules": [
+    "cupy-rapids"
+   ],
+   "packages": [
+    "cupy",
+    "cupy-cuda12x",
+    "cupy-cuda13x"
+   ],
+   "options": [
+    {
+     "name": "woof CuPy facade over MLX",
+     "how": "WOOF_BACKEND=mlx, then import woof before cupy",
+     "install": "pip install metal-woof",
+     "license": "Apache-2.0",
+     "evidence": "run",
+     "source": "validation/spikes.json",
+     "grade": "C",
+     "limits": "Only asarray, asnumpy and kernel launch were run. It is part of a weather model package and installs its dependencies"
+    },
+    {
+     "name": "mlx.core or NumPy",
+     "how": "Replace cupy with mlx.core; much array code maps directly",
+     "install": "pip install mlx",
+     "license": "MIT",
+     "evidence": "docs",
+     "source": "https://github.com/ml-explore/mlx",
+     "grade": null,
+     "target_grade": "A",
+     "limits": "mlx.core is not a complete NumPy API"
+    }
+   ],
+   "verify": "cumlx.check_op(torch_fn, mlx_fn, inputs), against a golden recorded on an NVIDIA GPU",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "rapids",
+   "replaces": "RAPIDS cuDF, cuML and cuGraph",
+   "tier": "library",
+   "outcome": "substitute",
+   "aliases": [
+    "cudf",
+    "cuml",
+    "cugraph"
+   ],
+   "scan_rules": [
+    "cupy-rapids"
+   ],
+   "packages": [
+    "cudf",
+    "cuml",
+    "cugraph"
+   ],
+   "options": [
+    {
+     "name": "pandas or polars, scikit-learn, networkx",
+     "how": "Use the CPU library with the same API family",
+     "install": "",
+     "license": "BSD-3-Clause and MIT",
+     "evidence": "docs",
+     "source": "https://docs.rapids.ai/",
+     "grade": null,
+     "target_grade": "B",
+     "limits": "They run on the CPU. There is no Metal substitute, so expect it to be slower"
+    }
+   ],
+   "verify": "Compare results on a sample, with a tolerance you set first",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "onnxruntime-gpu",
+   "replaces": "ONNX Runtime on CUDA",
+   "tier": "library",
+   "outcome": "substitute",
+   "aliases": [],
+   "scan_rules": [
+    "cuda-pip-wheels"
+   ],
+   "packages": [
+    "onnxruntime-gpu"
+   ],
+   "options": [
+    {
+     "name": "onnxruntime with CoreML",
+     "how": "pip install onnxruntime, then providers=[\"CoreMLExecutionProvider\"]",
+     "install": "pip install onnxruntime",
+     "license": "MIT",
+     "evidence": "docs",
+     "source": "https://onnxruntime.ai/docs/execution-providers/CoreML-ExecutionProvider.html",
+     "grade": null,
+     "target_grade": "B",
+     "limits": "CoreML may run only part of a graph"
+    }
+   ],
+   "verify": "Compare outputs on the same inputs with a tolerance you set first",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "tensorflow-gpu",
+   "replaces": "TensorFlow on CUDA",
+   "tier": "library",
+   "outcome": "substitute",
+   "aliases": [],
+   "scan_rules": [
+    "cuda-pip-wheels"
+   ],
+   "packages": [
+    "tensorflow-gpu"
+   ],
+   "options": [
+    {
+     "name": "tensorflow-metal",
+     "how": "pip install tensorflow tensorflow-metal",
+     "install": "pip install tensorflow-metal",
+     "license": "",
+     "evidence": "docs",
+     "source": "https://pypi.org/project/tensorflow-metal/",
+     "grade": null,
+     "target_grade": "B",
+     "limits": "The last release on PyPI is from 2025-01. Check that it supports your TensorFlow version"
+    }
+   ],
+   "verify": "Compare outputs on the same inputs with a tolerance you set first",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "nvidia-dali",
+   "replaces": "NVIDIA DALI data loading",
+   "tier": "library",
+   "outcome": "substitute",
+   "aliases": [
+    "dali"
+   ],
+   "scan_rules": [
+    "cuda-pip-wheels"
+   ],
+   "packages": [
+    "nvidia-dali",
+    "nvidia-dali-cuda110",
+    "nvidia-dali-cuda120"
+   ],
+   "options": [
+    {
+     "name": "torchvision and torch DataLoader",
+     "how": "Replace the DALI pipeline with CPU decoding",
+     "install": "",
+     "license": "BSD-3-Clause",
+     "evidence": "docs",
+     "source": "https://pytorch.org/vision/stable/",
+     "grade": null,
+     "target_grade": "C",
+     "limits": "No GPU decoding, so loading can be slower. Decoded pixels can differ"
+    }
+   ],
+   "verify": "Measure throughput and compare decoded samples",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "nvidia-cublas",
+   "replaces": "NVIDIA cuBLAS wheels",
+   "tier": "library",
+   "outcome": "substitute",
+   "aliases": [
+    "cublas"
+   ],
+   "scan_rules": [
+    "cuda-pip-wheels"
+   ],
+   "packages": [
+    "nvidia-cublas",
+    "nvidia-cublas-cu12"
+   ],
+   "options": [
+    {
+     "name": "MLX or Accelerate through NumPy",
+     "how": "Use mlx.core.linalg, or NumPy built with Accelerate",
+     "install": "pip install mlx",
+     "license": "MIT",
+     "evidence": "docs",
+     "source": "https://github.com/ml-explore/mlx",
+     "grade": null,
+     "target_grade": "A",
+     "limits": ""
+    }
+   ],
+   "verify": "cumlx.check_op(torch_fn, mlx_fn, inputs), against a golden recorded on an NVIDIA GPU",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "pynvml",
+   "replaces": "pynvml and nvidia-ml-py GPU monitoring",
+   "tier": "library",
+   "outcome": "remove",
+   "aliases": [
+    "nvidia-ml-py",
+    "nvml"
+   ],
+   "scan_rules": [
+    "cuda-pip-wheels"
+   ],
+   "packages": [
+    "pynvml",
+    "nvidia-ml-py"
+   ],
+   "options": [
+    {
+     "name": "Remove it or guard it",
+     "how": "Guard the import. On a Mac, read memory through psutil or mx.metal.device_info",
+     "install": "",
+     "license": "",
+     "evidence": "docs",
+     "source": "https://pypi.org/project/nvidia-ml-py/",
+     "grade": null,
+     "target_grade": "C",
+     "limits": "Monitoring only"
+    }
+   ],
+   "verify": "The program starts without the import",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "cuda-kernels",
+   "replaces": "Hand-written CUDA kernels (.cu files)",
+   "tier": "kernel",
+   "outcome": "substitute",
+   "aliases": [
+    "cuda-kernel",
+    "kernel",
+    ".cu"
+   ],
+   "scan_rules": [
+    "cuda-kernel-source",
+    "cuda-source-files"
+   ],
+   "packages": [],
+   "options": [
+    {
+     "name": "Hand rewrite in Metal",
+     "how": "Rewrite with mx.fast.metal_kernel, then compare with cumlx.check_op",
+     "install": "pip install mlx",
+     "license": "MIT",
+     "evidence": "run",
+     "source": "validation/REPORT.md",
+     "grade": "A",
+     "limits": "CUMLX kernel lab: 8 kernels, compared with a reference on Metal"
+    },
+    {
+     "name": "woof translator",
+     "how": "woof.backend.metal.loader.load_unit(name, source)",
+     "install": "pip install metal-woof",
+     "license": "Apache-2.0",
+     "evidence": "run",
+     "source": "validation/spikes.json",
+     "grade": "A",
+     "limits": "extern \"C\" kernels in its own form. Of 17 foreign kernels, none compiled as they are. They stopped on templates, intrinsics and host code"
+    },
+    {
+     "name": "kernelport",
+     "how": "kernelport scan, validate, write-port, verify",
+     "install": "pip install 'kernelport[metal]'",
+     "license": "MIT",
+     "evidence": "run",
+     "source": "validation/spikes.json",
+     "grade": "A",
+     "limits": "12 stored Metal ports pass and a wrong one fails. You write the port. Original kernels were not run on CUDA"
+    },
+    {
+     "name": "Slang",
+     "how": "Write new kernels in Slang and generate Metal and CUDA",
+     "install": "",
+     "license": "Apache-2.0 WITH LLVM-exception",
+     "evidence": "docs",
+     "source": "https://github.com/shader-slang/slang",
+     "grade": null,
+     "target_grade": "A",
+     "limits": "It is a new source language, not a translator from CUDA C++"
+    }
+   ],
+   "verify": "cumlx.check_op(torch_fn, mlx_fn, inputs), against a golden recorded on an NVIDIA GPU",
+   "limits": "Raw warp-level operations such as __match_any_sync have no direct Metal equivalent.",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "cuda-build",
+   "replaces": "A build that compiles CUDA code",
+   "tier": "kernel",
+   "outcome": "substitute",
+   "aliases": [
+    "cudaextension",
+    "cmake-cuda"
+   ],
+   "scan_rules": [
+    "cuda-build"
+   ],
+   "packages": [],
+   "options": [
+    {
+     "name": "A Metal target or a CPU fallback",
+     "how": "Make the CUDA extension optional, and add a target for each kernel you rewrite",
+     "install": "",
+     "license": "",
+     "evidence": "docs",
+     "source": "https://developer.apple.com/metal/",
+     "grade": null,
+     "target_grade": "C",
+     "limits": "The build is only the start. Each kernel is still a rewrite"
+    }
+   ],
+   "verify": "The package builds and installs on a Mac; then check each kernel",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "nvrtc-ptx",
+   "replaces": "Runtime CUDA compilation (NVRTC and PTX)",
+   "tier": "kernel",
+   "outcome": "substitute",
+   "aliases": [
+    "nvrtc",
+    "ptx"
+   ],
+   "scan_rules": [
+    "nvrtc-ptx"
+   ],
+   "packages": [],
+   "options": [
+    {
+     "name": "woof translator at load time",
+     "how": "woof.backend.metal.loader.load_unit(name, source)",
+     "install": "pip install metal-woof",
+     "license": "Apache-2.0",
+     "evidence": "run",
+     "source": "validation/spikes.json",
+     "grade": "A",
+     "limits": "Works from CUDA C++ source, in woof form. Prebuilt PTX cannot be translated"
+    }
+   ],
+   "verify": "cumlx.check_op(torch_fn, mlx_fn, inputs), against a golden recorded on an NVIDIA GPU",
+   "limits": "A closed PTX or cubin file has no path to Metal.",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "warp",
+   "replaces": "NVIDIA Warp",
+   "tier": "kernel",
+   "outcome": "substitute",
+   "aliases": [
+    "warp-lang"
+   ],
+   "scan_rules": [
+    "warp-cuda"
+   ],
+   "packages": [
+    "warp-lang"
+   ],
+   "options": [
+    {
+     "name": "Warp on the Mac CPU",
+     "how": "Use device=\"cpu\"",
+     "install": "pip install warp-lang",
+     "license": "Apache-2.0",
+     "evidence": "run",
+     "source": "validation/REPORT.md",
+     "grade": "C",
+     "limits": "CPU only; cuda:0 is refused. One small scene"
+    },
+    {
+     "name": "Quadrants on Metal",
+     "how": "Rewrite kernels in Quadrants",
+     "install": "pip install quadrants",
+     "license": "Apache-2.0",
+     "evidence": "run",
+     "source": "validation/spikes.json",
+     "grade": "A",
+     "limits": "One test kernel, Metal against CPU. Warp kernels are not converted automatically"
+    }
+   ],
+   "verify": "cumlx.check_op(torch_fn, mlx_fn, inputs), against a golden recorded on an NVIDIA GPU",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "newton",
+   "replaces": "Newton physics engine",
+   "tier": "kernel",
+   "outcome": "substitute",
+   "aliases": [
+    "newton-physics"
+   ],
+   "scan_rules": [],
+   "packages": [
+    "newton"
+   ],
+   "options": [
+    {
+     "name": "Newton on the Mac CPU",
+     "how": "Run on the CPU device",
+     "install": "pip install newton",
+     "license": "Apache-2.0",
+     "evidence": "run",
+     "source": "validation/REPORT.md",
+     "grade": "C",
+     "limits": "CPU only, because it is built on Warp. One small scene"
+    }
+   ],
+   "verify": "Compare trajectories with a tolerance you set first",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "isaac-sim",
+   "replaces": "NVIDIA Isaac Sim and Omniverse Kit",
+   "tier": "platform",
+   "outcome": "none",
+   "aliases": [
+    "isaacsim",
+    "omniverse",
+    "omni",
+    "kit",
+    "carb",
+    "isaac sim"
+   ],
+   "scan_rules": [
+    "omniverse-kit"
+   ],
+   "packages": [
+    "isaacsim"
+   ],
+   "options": [
+    {
+     "name": "Isaac Sim in a Linux arm64 container, CPU PhysX",
+     "how": "OMNI_KIT_ACCEPT_EULA=YES bash spikes/isaac_sim_container.sh",
+     "install": "Docker with a Linux arm64 VM, about 19 GB",
+     "license": "NVIDIA proprietary; you accept its EULA",
+     "evidence": "run",
+     "source": "validation/isaac-sim.json",
+     "grade": "C",
+     "limits": "NVIDIA does not support this. Kit and CPU PhysX ran, including an Isaac Lab USD. No GPU, RTX or cameras; about 600 error lines, and some extensions fail to load"
+    },
+    {
+     "name": "Stream from an RTX machine",
+     "how": "Run Isaac Sim on an NVIDIA machine and use the Isaac Sim WebRTC client on the Mac",
+     "install": "",
+     "license": "",
+     "evidence": "docs",
+     "source": "https://docs.isaacsim.omniverse.nvidia.com/6.0.0/installation/manual_livestream_clients.html",
+     "grade": null,
+     "target_grade": null,
+     "limits": "The simulation does not run on the Mac"
+    },
+    {
+     "name": "Move the trained policy to MLX",
+     "how": "See examples/robot-policy",
+     "install": "pip install 'cumlx-lab[capture,diff]'",
+     "license": "MIT",
+     "evidence": "run",
+     "source": "validation/REPORT.md",
+     "grade": "A",
+     "limits": "Random weights in rsl_rl shape; no real checkpoint"
+    },
+    {
+     "name": "Load the USD asset in Genesis",
+     "how": "scene.add_stage(gs.morphs.USD(file=path))",
+     "install": "pip install genesis-world usd-core",
+     "license": "Apache-2.0",
+     "evidence": "run",
+     "source": "validation/spikes.json",
+     "grade": "C",
+     "limits": "A different simulator. One simple articulation; PhysX settings are not carried over"
+    }
+   ],
+   "verify": "No port exists to verify. Verify each replaced part",
+   "limits": "There is no macOS build. A Linux container runs only the CPU physics part. CUMLX does not claim Isaac Sim compatibility.",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "isaac-lab",
+   "replaces": "NVIDIA Isaac Lab tasks",
+   "tier": "platform",
+   "outcome": "substitute",
+   "aliases": [
+    "isaaclab"
+   ],
+   "scan_rules": [
+    "isaac-lab"
+   ],
+   "packages": [
+    "isaaclab",
+    "isaaclab-tasks",
+    "isaaclab-rl"
+   ],
+   "options": [
+    {
+     "name": "Genesis on Metal",
+     "how": "Rewrite the task in Genesis",
+     "install": "pip install genesis-world",
+     "license": "Apache-2.0",
+     "evidence": "run",
+     "source": "validation/spikes.json",
+     "grade": "C",
+     "limits": "Throughput measured on Go2 only. Task definitions do not convert automatically yet"
+    },
+    {
+     "name": "IsaacLab-MLX fork",
+     "how": "Run its mac-sim backend",
+     "install": "",
+     "license": "BSD-3-Clause",
+     "evidence": "docs",
+     "source": "https://github.com/RobotFlow-Labs/IsaacLab-mlx",
+     "grade": null,
+     "target_grade": "B",
+     "limits": "Cartpole, double pendulum and quadcopter only. No update since 2026-03"
+    }
+   ],
+   "verify": "Compare trajectories or policy reward with a tolerance you set first",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "optix-rtx",
+   "replaces": "RTX ray tracing, OptiX and RTX sensors",
+   "tier": "platform",
+   "outcome": "substitute",
+   "aliases": [
+    "optix",
+    "rtx",
+    "rtx-sensor",
+    "ray-tracing"
+   ],
+   "scan_rules": [
+    "optix-rtx"
+   ],
+   "packages": [],
+   "options": [
+    {
+     "name": "Mitsuba on Metal",
+     "how": "mi.set_variant(\"metal_ad_rgb\")",
+     "install": "pip install mitsuba",
+     "license": "BSD-3-Clause",
+     "evidence": "run",
+     "source": "validation/spikes.json",
+     "grade": "C",
+     "limits": "Agrees with Mitsuba on the CPU (52.1 dB). It was not compared with RTX, and values will differ. Hardware ray tracing use was read from its documents"
+    }
+   ],
+   "verify": "Compare images with PSNR and a tolerance you set first",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "physx-gpu",
+   "replaces": "PhysX GPU dynamics",
+   "tier": "platform",
+   "outcome": "substitute",
+   "aliases": [
+    "physx",
+    "gpu-dynamics"
+   ],
+   "scan_rules": [
+    "physx-gpu"
+   ],
+   "packages": [],
+   "options": [
+    {
+     "name": "Genesis on Metal",
+     "how": "gs.init(backend=gs.metal)",
+     "install": "pip install genesis-world",
+     "license": "Apache-2.0",
+     "evidence": "run",
+     "source": "validation/spikes.json",
+     "grade": "C",
+     "limits": "A different solver. Go2, 4096 environments: 81,000 to 133,000 env-steps/s"
+    },
+    {
+     "name": "MuJoCo on the CPU",
+     "how": "Use mujoco",
+     "install": "pip install mujoco",
+     "license": "Apache-2.0",
+     "evidence": "run",
+     "source": "validation/REPORT.md",
+     "grade": "C",
+     "limits": "A different solver. CPU only"
+    }
+   ],
+   "verify": "Compare trajectories with a tolerance you set first",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "nvenc-nvdec",
+   "replaces": "NVIDIA video encode and decode",
+   "tier": "platform",
+   "outcome": "substitute",
+   "aliases": [
+    "nvenc",
+    "nvdec",
+    "cuvid"
+   ],
+   "scan_rules": [
+    "nvenc-nvdec"
+   ],
+   "packages": [],
+   "options": [
+    {
+     "name": "VideoToolbox",
+     "how": "Use the h264_videotoolbox or hevc_videotoolbox encoder in FFmpeg or PyAV",
+     "install": "pip install av",
+     "license": "BSD-3-Clause",
+     "evidence": "docs",
+     "source": "https://developer.apple.com/documentation/videotoolbox",
+     "grade": null,
+     "target_grade": "C",
+     "limits": "Output bytes differ from NVENC"
+    }
+   ],
+   "verify": "Compare decoded frames with PSNR",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "gsplat",
+   "replaces": "gsplat Gaussian Splatting rasterizer",
+   "tier": "library",
+   "outcome": "substitute",
+   "aliases": [
+    "3dgs",
+    "gaussian-splatting",
+    "splatting"
+   ],
+   "scan_rules": [
+    "gsplat"
+   ],
+   "packages": [
+    "gsplat"
+   ],
+   "options": [
+    {
+     "name": "msplat",
+     "how": "Train with msplat",
+     "install": "pip install msplat",
+     "license": "Apache-2.0",
+     "evidence": "docs",
+     "source": "https://github.com/rayanht/msplat",
+     "grade": null,
+     "target_grade": "B",
+     "limits": "Its own training pipeline, not a drop-in gsplat"
+    },
+    {
+     "name": "metalsplat",
+     "how": "Use it as the rasterizer",
+     "install": "",
+     "license": "MIT",
+     "evidence": "docs",
+     "source": "https://github.com/tchauffi/metalsplat",
+     "grade": null,
+     "target_grade": "B",
+     "limits": "Not on PyPI; install from GitHub"
+    }
+   ],
+   "verify": "Compare rendered views with PSNR",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "nvdiffrast",
+   "replaces": "nvdiffrast differentiable rasterizer",
+   "tier": "kernel",
+   "outcome": "substitute",
+   "aliases": [],
+   "scan_rules": [
+    "nvdiffrast"
+   ],
+   "packages": [
+    "nvdiffrast"
+   ],
+   "options": [
+    {
+     "name": "mlx3D",
+     "how": "Use its mesh rasterizer",
+     "install": "pip install mlx3d",
+     "license": "MIT",
+     "evidence": "docs",
+     "source": "https://github.com/amirhossein-razlighi/mlx3D",
+     "grade": null,
+     "target_grade": "B",
+     "limits": "A different API. Not compared with nvdiffrast. Translating nvdiffrast itself failed in M0"
+    }
+   ],
+   "verify": "Compare rendered images with PSNR",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "pytorch3d",
+   "replaces": "PyTorch3D",
+   "tier": "library",
+   "outcome": "substitute",
+   "aliases": [],
+   "scan_rules": [
+    "pytorch3d"
+   ],
+   "packages": [
+    "pytorch3d"
+   ],
+   "options": [
+    {
+     "name": "mlx3D",
+     "how": "Use its PyTorch3D-style workflow",
+     "install": "pip install mlx3d",
+     "license": "MIT",
+     "evidence": "docs",
+     "source": "https://github.com/amirhossein-razlighi/mlx3D",
+     "grade": null,
+     "target_grade": "B",
+     "limits": "Covers part of the PyTorch3D API"
+    }
+   ],
+   "verify": "cumlx.check_op(torch_fn, mlx_fn, inputs), against a golden recorded on an NVIDIA GPU",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "triton",
+   "replaces": "OpenAI Triton kernels",
+   "tier": "kernel",
+   "outcome": "substitute",
+   "aliases": [],
+   "scan_rules": [
+    "triton"
+   ],
+   "packages": [
+    "triton"
+   ],
+   "options": [
+    {
+     "name": "mx.fast.metal_kernel",
+     "how": "Rewrite each kernel in Metal",
+     "install": "pip install mlx",
+     "license": "MIT",
+     "evidence": "docs",
+     "source": "https://ml-explore.github.io/mlx/build/html/dev/custom_metal_kernels.html",
+     "grade": null,
+     "target_grade": "A",
+     "limits": "PyPI has no macOS wheel for Triton, so nothing converts automatically"
+    }
+   ],
+   "verify": "cumlx.check_op(torch_fn, mlx_fn, inputs), against a golden recorded on an NVIDIA GPU",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "mmcv-ops",
+   "replaces": "mmcv CUDA operators such as deformable convolution",
+   "tier": "library",
+   "outcome": "substitute",
+   "aliases": [
+    "deform-conv",
+    "mmcv"
+   ],
+   "scan_rules": [
+    "mmcv-ops"
+   ],
+   "packages": [
+    "mmcv",
+    "mmcv-full"
+   ],
+   "options": [
+    {
+     "name": "mps-deform-conv and related mps-* packages",
+     "how": "Use them in place of the operator",
+     "install": "pip install mpsops",
+     "license": "MIT on PyPI only",
+     "evidence": "docs",
+     "source": "https://pypi.org/project/mpsops/",
+     "grade": null,
+     "target_grade": "A",
+     "limits": "Small projects. PyPI says MIT; some GitHub repositories have no licence file. Install them yourself"
+    }
+   ],
+   "verify": "cumlx.check_op(torch_fn, mlx_fn, inputs), against a golden recorded on an NVIDIA GPU",
+   "limits": "",
+   "checked": "2026-11-02"
+  },
+  {
+   "id": "openusd",
+   "replaces": "OpenUSD scene files. They are not a CUDA dependency, and usd-core runs on a Mac",
+   "tier": "library",
+   "outcome": "substitute",
+   "aliases": [
+    "usd",
+    "usd-core",
+    "pxr"
+   ],
+   "scan_rules": [],
+   "packages": [],
+   "options": [
+    {
+     "name": "usd-core",
+     "how": "from pxr import Usd",
+     "install": "pip install usd-core",
+     "license": "TOST-1.0",
+     "evidence": "run",
+     "source": "validation/spikes.json",
+     "grade": "C",
+     "limits": "Read and write only. It does not run Omniverse extensions"
+    }
+   ],
+   "verify": "Open the stage and check the prims you need",
+   "limits": "",
+   "checked": "2026-11-02"
+  }
+ ]
+}

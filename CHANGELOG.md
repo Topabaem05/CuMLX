@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0 (2026-11-02)
+
+### Added
+
+- `cumlx recipe`: name what to use on Apple Silicon for a CUDA dependency. The catalog has 33 recipes. Each option states whether it was run on Apple Silicon (`evidence: run`, with its file under `validation/` and a measured grade) or only read about (`evidence: docs`). `--verified-only` keeps what was run. A test refuses a catalog that claims a run without evidence.
+- `cumlx scan` reads declared dependencies from `requirements*.txt`, `pyproject.toml` and `environment*.yml`, and links each finding to its recipes. New rules: `gsplat`, `pytorch3d`, `mmcv-ops`, `nvdiffrast`, `triton`, `isaac-lab`.
+- `cumlx port` names a converter for a vision model or a diffusers pipeline when mlx-lm does not implement it.
+- `spikes/isaac_sim_container.sh`: run Isaac Sim 6.2 in a Linux arm64 container on a Mac. Kit and CPU PhysX run; RTX and cameras do not. NVIDIA does not support this. The script never accepts the EULA for you.
+- `docs/ROADMAP-PLATFORM.md`: the next goal, running RTX and CUDA workloads on Apple Silicon, with the measured M0 results in `validation/spikes.json`.
+
 ## 0.4.1 (2026-11-02)
 
 ### Added

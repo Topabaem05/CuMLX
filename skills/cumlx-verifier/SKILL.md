@@ -9,7 +9,7 @@ Prove a port before you report it as correct. A successful conversion or a plaus
 
 ## Shortcut
 
-For a model that mlx-lm implements, `cumlx port <model> -o out/` runs the steps below in one command. Add `--q-bits 4` to quantize. `cumlx scan <path or HF id>` ranks the work for anything else, and never runs the scanned code.
+For a model that mlx-lm implements, `cumlx port <model> -o out/` runs the steps below in one command. Add `--q-bits 4` to quantize. `cumlx recipe <name or path>` names a substitute for a CUDA dependency and says whether it was run or only read about. `cumlx scan <path or HF id>` ranks the work for anything else, and never runs the scanned code.
 
 ## Procedure
 

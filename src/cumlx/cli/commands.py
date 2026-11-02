@@ -347,12 +347,40 @@ def run_scan(args) -> Result:
     r = Result('scan', summary=f"tier {rep['tier']}: {rep['recommendation']}")
     r.data = {'tier': rep['tier'], 'recommendation': rep['recommendation'], 'model': rep['model'], 'tiers': rep['tiers'],
               'files_scanned': rep['files_scanned'], 'cuda_source_files': rep['cuda_source_files'], 'limits': rep['limits'],
+              'dependencies': rep['dependencies'], 'uncovered': rep['uncovered'],
               'findings': cap(rep['findings'], args.max_items, r)}
     if args.output:
         Path(args.output).write_text(json.dumps(rep, indent=1) + '\n')
         r.artifact('scan_report', args.output)
     if rep['tier'] == 'model':
         r.suggest(f"cumlx port {_q(args.target)} -o port/", 'convert this model with mlx-lm and verify the result')
+    elif rep['findings']:
+        r.suggest(f'cumlx recipe {_q(args.target)}', 'show what to use on Apple Silicon for each finding, and how far each was checked')
+    return r
+
+
+# --------------------------------------------------------------------------- recipe
+def run_recipe(args) -> Result:
+    from ..verify.recipes import lookup
+    if args.output and Path(args.output).exists() and not args.overwrite:
+        raise CumlxError('E_OUTPUT_EXISTS', f'{args.output} exists', hint='pass --overwrite or choose a new path')
+    rep = lookup(args.target, verified_only=args.verified_only, revision=args.revision)
+    counts = rep['counts']
+    r = Result('recipe', summary=(f"{counts['recipes']} recipe(s): {counts['with_run_evidence']} with an option run on Apple Silicon, "
+                                  f"{counts['docs_only']} from documents only, {counts['no_substitute']} with no substitute."))
+    r.data = {'query': rep['query'], 'kind': rep['kind'], 'counts': counts, 'tier': rep['tier'], 'recommendation': rep['recommendation'],
+              'uncovered': rep['uncovered'], 'limits': rep['limits'], 'recipes': cap(rep['recipes'], args.max_items, r)}
+    if counts['docs_only']:
+        names = [x['id'] for x in rep['recipes'] if x['best_evidence'] == 'docs']
+        r.warn('W_RECIPE_NOT_RUN', f'{len(names)} recipe(s) rest on documents only. CUMLX did not run them.', recipes=names)
+    if counts['no_substitute']:
+        names = [x['id'] for x in rep['recipes'] if x['outcome'] == 'none']
+        r.warn('W_NO_SUBSTITUTE', f'{", ".join(names)} has no substitute on Apple Silicon. The options are workarounds.', recipes=names)
+    if rep['uncovered']:
+        r.warn('W_NO_RECIPE', f"The catalog has no recipe for: {', '.join(rep['uncovered'])}.", findings=rep['uncovered'])
+    if args.output:
+        Path(args.output).write_text(json.dumps(rep, indent=1) + '\n')
+        r.artifact('recipe_report', args.output)
     return r
 
 
@@ -384,9 +412,17 @@ def run_port(args) -> Result:
     if model.get('mlx_lm_supports') is None:
         raise missing_dependency('mlx_lm', 'diff', purpose='cumlx port')
     if not model['mlx_lm_supports'] or model['needs_remote_code']:
-        why = 'needs remote code' if model['needs_remote_code'] else f"has model type {model['model_type']!r}, which mlx-lm does not implement"
-        raise CumlxError('E_MODEL_LOAD', f'{args.model} {why}, so there is no converter to run',
-                         hint=f'cumlx scan {_q(args.model)} ranks the work; write the port by hand, then verify it with `cumlx diff`',
+        family = model.get('family')
+        if model['needs_remote_code']:
+            why = 'needs remote code'
+        elif family == 'diffusers':
+            why = 'is a diffusers pipeline, which mlx-lm does not implement'
+        else:
+            why = f"has model type {model['model_type']!r}, which mlx-lm does not implement"
+        recipe = {'diffusers': 'diffusers-model', 'vision': 'vision-model'}.get(family)
+        hint = (f'`cumlx recipe {recipe}` names a converter for this family; verify its result with `cumlx diff` where the module names can be mapped' if recipe
+                else f'cumlx scan {_q(args.model)} ranks the work; write the port by hand, then verify it with `cumlx diff`')
+        raise CumlxError('E_MODEL_LOAD', f'{args.model} {why}, so there is no converter to run', hint=hint,
                          details={'tier': triage['tier'], 'model': model})
     inputs = [x for p in args.prompt for x in ('--prompt', p)] + [x for t in args.token_ids for x in ('--token-ids', t)]
     if not inputs:

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cumlx-lab"
-version = "0.4.1"
+version = "0.5.0"
 description = "CUDA-to-MLX porting parity verifier and experimental packed FP4 kernels"
 requires-python = ">=3.10"
 readme = "README.md"
@@ -32,7 +32,7 @@ cuda = ["mlx[cuda12]==0.32.2; sys_platform == 'linux'"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-cumlx = ["kernels/*.metal", "kernels/*.cu", "kernels/*.h", "py.typed"]
+cumlx = ["kernels/*.metal", "kernels/*.cu", "kernels/*.h", "py.typed", "verify/recipes.json"]
 
 [tool.pytest.ini_options]
 addopts = "-ra"

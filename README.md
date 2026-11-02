@@ -42,9 +42,12 @@ CUDA 전용 프로젝트는 먼저 작업량을 봅니다. 소스를 텍스트�
 
 ```bash
 cumlx scan ./some-cuda-repo
+cumlx recipe ./some-cuda-repo    # 발견한 항목마다 무엇으로 대체할지 안내
 ```
 
 `model`, `device`, `library`, `kernel`, `platform` 중 하나로 분류합니다. `platform`은 RTX, Omniverse처럼 옮길 수 없는 경우입니다.
+
+`cumlx recipe`는 선택지마다 근거를 표시합니다. `evidence: run`은 Apple Silicon에서 실행한 결과가 `validation/`에 있다는 뜻이고, `evidence: docs`는 문서만 읽었다는 뜻입니다. `--verified-only`를 주면 실행한 것만 남습니다.
 
 **Isaac Sim은 Mac에서 직접 실행할 수 없습니다.** `pip install isaacsim`은 Mac에서 코드 없는 빈 패키지를 설치합니다. RTX 장비에서 실행하고 Mac에서 스트리밍하거나, [학습된 정책만 MLX로 옮겨](examples/robot-policy/) 쓰십시오. [검토 문서](docs/PORTING-CUDA-MODELS.md)를 보십시오.
 
@@ -93,7 +96,7 @@ assert report['verdict'] == 'ok', report
 ### 포팅 저장소의 CI에 넣는다
 
 ```yaml
-- uses: Topabaem05/CuMLX@v0.4.1
+- uses: Topabaem05/CuMLX@v0.5.0
   with:
     original: Qwen/Qwen2.5-0.5B
     port: ./my-port

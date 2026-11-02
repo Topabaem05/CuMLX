@@ -7,7 +7,7 @@
 1. **범용 CUDA 변환기는 만들지 않습니다.** 대신 `cumlx scan`(작업량 분류)과 `cumlx port`(변환과 증명을 명령 하나로)를 추가했습니다.
 2. **mlx-lm이 구현한 모델은 이미 쉽게 변환됩니다.** `cumlx port`로 변환하고 바로 검증합니다.
 3. **손으로 쓴 CUDA 커널이 있으면 자동 변환이 되지 않습니다.** 커널을 하나씩 다시 쓰고 `cumlx.check_op`으로 검증해야 합니다.
-4. **Isaac Sim은 Mac에서 직접 실행할 수 없습니다.** NVIDIA RTX와 Omniverse 런타임에 묶여 있기 때문입니다. RTX 장비에서 실행하고 Mac에서 스트리밍하거나, 학습된 정책만 MLX로 옮겨 쓸 수 있습니다. 정책 경로는 직접 확인했습니다.
+4. **Isaac Sim은 Mac에서 그대로 실행할 수 없습니다.** macOS용이 없습니다. Linux 컨테이너에서는 CPU PhysX까지 돌지만, RTX와 카메라는 안 됩니다. 전체 기능은 RTX 장비에서 실행하고 Mac에서 스트리밍하거나, 학습된 정책만 MLX로 옮겨 쓸 수 있습니다. 컨테이너와 정책 경로는 직접 확인했습니다.
 
 ## 난이도 4단계
 
@@ -37,7 +37,7 @@
 
 ## 왜 범용 변환기를 만들지 않는가
 
-- **변환 자체는 이미 여러 프로젝트가 합니다.** 모델은 mlx-lm과 mlx-vlm이 맡습니다. 커널은 K-Search, KForge, kernelport가 있습니다. 이 도구들은 직접 실행해 보지 않았습니다.
+- **변환 자체는 이미 여러 프로젝트가 합니다.** 모델은 mlx-lm과 mlx-vlm이 맡습니다. 커널은 K-Search, KForge, kernelport가 있습니다. kernelport와 woof는 [M0](ROADMAP-PLATFORM.md)에서 실행했고, K-Search와 KForge는 실행하지 않았습니다.
 - **커널 번역은 기계적이지 않습니다.** 공유 메모리, 스레드 그룹, TF32 같은 차이 때문에 문법을 바꿔도 값이 달라질 수 있습니다. 앞선 사례로 woof는 커널 222개가 컴파일에 성공했지만 일부 값이 틀렸습니다.
 - **CUMLX의 가치는 변환 결과의 증명입니다.** 이번 검증에서도 mlx-lm이 오류 없이 틀린 RoPE base를 쓰는 사례를 찾았습니다. 변환기를 하나 더 만들어도 이 문제는 줄지 않습니다.
 
@@ -45,6 +45,7 @@
 
 ```bash
 cumlx scan Qwen/Qwen3-0.6B                       # 작업량 확인 (가중치 다운로드 없음)
+cumlx recipe ./some-cuda-repo                    # 발견 항목별 대체품과 근거
 cumlx port Qwen/Qwen3-0.6B -o port/              # mlx-lm 변환 + 가중치 비교 + golden 기록 + diff
 cumlx port Qwen/Qwen3-0.6B --q-bits 4 -o port4/  # 양자화. golden에 포팅본 가중치를 넣음
 ```
@@ -53,15 +54,16 @@ cumlx port Qwen/Qwen3-0.6B --q-bits 4 -o port4/  # 양자화. golden에 포팅�
 
 ## Isaac Sim
 
-**Mac에서 직접 실행할 수는 없습니다. 다른 방식으로 사용할 수 있습니다.** 아래 표의 "직접 실행"은 2026-11-02에 M5 Pro에서 실제로 돌려 본 결과입니다.
+**macOS에서 그대로 실행할 수는 없습니다. 일부는 Linux 컨테이너에서 돌고, 나머지는 다른 방식으로 사용합니다.** 아래 표의 "직접 실행"은 2026-11-02에 M5 Pro에서 실제로 돌려 본 결과입니다.
 
 | 항목 | 결과 | 확인 방법 |
 |---|---|---|
 | Isaac Sim을 Mac에서 실행 | **불가.** x86_64 RTX GPU와 DGX Spark만 지원합니다 | [공식 요구 사항](https://docs.isaacsim.omniverse.nvidia.com/6.0.0/installation/requirements.html) |
-| `pip install isaacsim` | **설치되는 듯 보이지만 빈 패키지입니다.** 최신판 6.2의 wheel은 Linux와 Windows용뿐이라, Mac에서는 코드가 없는 6.0.0.0 소스 패키지가 골라집니다 | PyPI 파일 목록과 패키지 내용 확인 |
+| macOS에 `uv pip install isaacsim` | **실패합니다.** wheel은 Linux와 Windows용뿐이라 6.0.0.0 stub이 골라지고, `Didn't find wheel for isaacsim 6.0.0.0` 오류가 납니다 | 직접 실행 |
+| Mac의 Linux arm64 컨테이너, GPU 없음 | **일부 동작.** Kit 시작 약 30초, CPU PhysX 동작, Isaac Lab cartpole USD 시뮬레이션 동작. RTX(`No device could be created`)와 카메라는 실패. 로그에 오류 약 600줄이 있고 일부 확장은 로드되지 않습니다. NVIDIA 지원 구성이 아닙니다 | 직접 실행, [측정값](../validation/isaac-sim.json), `spikes/isaac_sim_container.sh` |
 | RTX 센서와 렌더링 | 불가. RT core가 필요합니다 | 공식 요구 사항 |
 | 소스 변환 | 불가. 저장소는 Apache 2.0이지만 Omniverse Kit SDK 등 다른 라이선스의 구성 요소가 필요하고, 파일 1141개가 Omniverse를 사용합니다 | 저장소 `LICENSE`, `cumlx scan` |
-| 보유한 Tesla V100에서 실행 | 요구 사항 미달. RT core가 없고 공식 최소 사양은 GeForce RTX 4080입니다 | 공식 요구 사항. 실행하지 않음 |
+| 보유한 Tesla V100에서 실행 | 공식 요구 사항 미달입니다(최소 GeForce RTX 4080, RT core 없음). 다만 드라이버는 `VK_KHR_ray_tracing_pipeline`을 노출합니다. **실행 결과는 아직 없습니다** | `vulkaninfo` 확인, 실행 대기 |
 
 ### 쓸 수 있는 방법
 

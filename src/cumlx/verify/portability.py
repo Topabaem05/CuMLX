@@ -66,6 +66,12 @@ RULES: list[Rule] = [
        'Use NumPy or `mlx.core`. CuPy array code often maps directly', PY),
     _r('cuda-pip-wheels', 'library', r'onnxruntime-gpu|tensorflow-gpu|nvidia-dali|nvidia-cublas|pynvml|nvidia-ml-py', 'A dependency that needs the NVIDIA stack',
        'Use the CPU, CoreML or Metal build, or remove it', ('.txt', '.toml', '.cfg', '.yaml', '.yml', '.py')),
+    _r('gsplat', 'library', r'\bimport gsplat\b|\bfrom gsplat\b|\bgsplat[>=<~!\s]', 'The gsplat Gaussian Splatting rasterizer', 'Use a Metal rasterizer', BUILD),
+    _r('pytorch3d', 'library', r'\bimport pytorch3d\b|\bfrom pytorch3d\b', 'PyTorch3D', 'Use an MLX or MPS 3D library', BUILD),
+    _r('mmcv-ops', 'library', r'\bfrom mmcv\.ops\b|\bimport mmcv\.ops\b|\bmmcv-full\b', 'mmcv CUDA operators', 'Replace each operator on MPS or MLX', BUILD),
+    _r('nvdiffrast', 'kernel', r'\bimport nvdiffrast\b|\bfrom nvdiffrast\b', 'The nvdiffrast differentiable rasterizer. It has no Mac build',
+       'Use a Metal rasterizer, and compare rendered images', BUILD),
+    _r('triton', 'kernel', r'\bimport triton\b|\bfrom triton\b', 'OpenAI Triton kernels. PyPI has no macOS wheel', 'Rewrite each kernel in Metal', BUILD),
     _r('cuda-kernel-source', 'kernel', r'\b__global__\b|\bcudaLaunchKernel\b|\bcudaMemcpy\b|\bCUDA_CALLABLE\b|__device__\s', 'Hand-written CUDA kernel code',
        'Rewrite in Metal or `mx.fast.metal_kernel`, then compare with `cumlx.check_op`', ('.cu', '.cuh', '.cpp', '.cc', '.h', '.hpp', '.c')),
     _r('cuda-build', 'kernel', r'\bCUDAExtension\b|\bfind_package\(\s*CUDA\b|\bcuda_add_library\b|\bCUDA_ARCHITECTURES\b|\benable_language\(\s*CUDA\b',
@@ -76,6 +82,7 @@ RULES: list[Rule] = [
        'Run it on the Mac CPU if that is fast enough, or rewrite its kernels in MLX', PY),
     _r('omniverse-kit', 'platform', r'\bimport omni\.|\bfrom omni\.|\bimport carb\b|\bfrom carb\b|\bomni\.kit\.|\bimport isaacsim\b|\bfrom isaacsim\b',
        'NVIDIA Omniverse Kit or Isaac Sim runtime. It is not available for macOS', 'Keep this part on an NVIDIA machine, or replace the runtime', PY),
+    _r('isaac-lab', 'platform', r'\bimport isaaclab\w*|\bfrom isaaclab\w*', 'NVIDIA Isaac Lab tasks. They need Isaac Sim', 'Rewrite the task for a simulator that runs on the Mac', BUILD),
     _r('optix-rtx', 'platform', r'\boptix\w*\(|\bOptixDeviceContext\b|<optix\.h>|\bRtxSensor\b|\bRTX Lidar\b|isaacsim\.sensors\.rtx', 'Ray tracing on NVIDIA RT cores',
        'Replace with a renderer that runs on Metal, or keep it on an NVIDIA machine', ('.py', '.cpp', '.cc', '.h', '.hpp', '.cu', '.cuh', '.toml', '.kit')),
     _r('physx-gpu', 'platform', r'\benable_gpu_dynamics\b|\bPxCudaContextManager\b|\bPxgDynamics\b|\bgpu_found_lost_pairs\b|\bphysxScene:enableGPUDynamics\b',
@@ -99,7 +106,7 @@ def _source_files(root: Path, include_tests: bool):
 
 
 def scan_files(root: Path, *, include_tests: bool = False, max_examples: int = 5) -> dict[str, Any]:
-    hits: dict[str, dict[str, Any]] = defaultdict(lambda: {'files': 0, 'matches': 0, 'examples': []})
+    hits: dict[str, dict[str, Any]] = defaultdict(lambda: {'files': 0, 'matches': 0, 'examples': [], 'matched': set()})
     scanned = 0
     cuda_sources = 0
     for path in _source_files(root, include_tests):
@@ -119,10 +126,12 @@ def scan_files(root: Path, *, include_tests: bool = False, max_examples: int = 5
                 hit = hits[rule.id]
                 hit['files'] += 1
                 hit['matches'] += len(found)
+                hit['matched'].update(found)
                 if len(hit['examples']) < max_examples:
                     hit['examples'].append(str(path.relative_to(root)))
     by_id = {r.id: r for r in RULES}
-    findings = [{'id': rid, 'tier': by_id[rid].tier, 'meaning': by_id[rid].meaning, 'action': by_id[rid].action, **h} for rid, h in hits.items()]
+    findings = [{'id': rid, 'tier': by_id[rid].tier, 'meaning': by_id[rid].meaning, 'action': by_id[rid].action,
+                 **h, 'matched': sorted(h['matched'])[:20]} for rid, h in hits.items()]
     if cuda_sources:
         findings.append({'id': 'cuda-source-files', 'tier': 'kernel', 'meaning': 'The tree holds .cu or .cuh files', 'files': cuda_sources,
                          'matches': cuda_sources, 'examples': [], 'action': 'Count them first: each kernel needs a rewrite and a check_op comparison'})
@@ -160,6 +169,9 @@ def _resolve(target: str, revision: str | None) -> tuple[Path, str]:
 
 def _model_block(root: Path, kind: str) -> dict[str, Any] | None:
     config_path = root / 'config.json'
+    if (root / 'model_index.json').is_file():
+        return {'source': kind, 'model_type': None, 'architectures': None, 'family': 'diffusers', 'needs_remote_code': False,
+                'mlx_lm_installed': mlx_lm_architectures() is not None, 'mlx_lm_supports': False}
     if not config_path.is_file():
         return None
     try:
@@ -171,6 +183,7 @@ def _model_block(root: Path, kind: str) -> dict[str, Any] | None:
     known = mlx_lm_architectures()
     model_type = config.get('model_type')
     return {'source': kind, 'model_type': model_type, 'architectures': config.get('architectures'),
+            'family': 'vision' if 'vision_config' in config else 'text',
             'needs_remote_code': bool(config.get('auto_map')), 'mlx_lm_installed': known is not None,
             'mlx_lm_supports': None if known is None else model_type in known}
 
@@ -194,13 +207,35 @@ def recommend(model: dict | None, findings: list[dict]) -> tuple[str, str]:
     return 'device', 'No CUDA dependency was found in the source. A dependency can still need CUDA; verify the result.'
 
 
+def _dependency_findings(root: Path, findings: list[dict[str, Any]], catalog: dict[str, Any]) -> tuple[list[str], list[dict[str, Any]]]:
+    """Declared dependencies, and a finding for each one that the text rules did not already cover."""
+    from .recipes import declared_dependencies, find, for_finding
+
+    names = declared_dependencies(root)
+    covered = {r['id'] for f in findings for r in for_finding(f, catalog)}
+    extra = []
+    for name in names:
+        recipe = find(name, catalog)
+        if recipe and name in {n.lower() for n in recipe['packages']} and recipe['id'] not in covered:
+            covered.add(recipe['id'])
+            extra.append({'id': f"dep-{recipe['id']}", 'recipe': recipe['id'], 'tier': recipe['tier'], 'meaning': f"Declared dependency: {recipe['replaces']}",
+                          'action': f"cumlx recipe {recipe['id']}", 'files': 1, 'matches': 1, 'examples': [], 'matched': [name]})
+    return names, extra
+
+
 def scan(target: str, *, revision: str | None = None, include_tests: bool = False) -> dict[str, Any]:
+    from .recipes import annotate_scan, load_catalog
+
     root, kind = _resolve(target, revision)
     if root.is_file():
         raise CumlxError('E_USAGE', f'{target} is a file', hint='pass a directory or an HF id')
     files = scan_files(root, include_tests=include_tests)
+    catalog = load_catalog()
+    dependencies, extra = _dependency_findings(root, files['findings'], catalog)
+    files['findings'] = sorted(files['findings'] + extra, key=lambda f: (-TIER_ORDER.index(f['tier']), -f['files']))
     model = _model_block(root, kind)
     tier, advice = recommend(model, files['findings'])
-    return {'schema': SCHEMA, 'target': target, 'tier': tier, 'recommendation': advice, 'model': model, **files,
-            'tiers': {t: sum(f['files'] for f in files['findings'] if f['tier'] == t) for t in TIER_ORDER[1:]},
-            'limits': 'A text scan. It does not read dependencies and proves nothing about behavior.'}
+    report = {'schema': SCHEMA, 'target': target, 'tier': tier, 'recommendation': advice, 'model': model, 'dependencies': dependencies, **files,
+              'tiers': {t: sum(f['files'] for f in files['findings'] if f['tier'] == t) for t in TIER_ORDER[1:]},
+              'limits': 'A text scan. It reads declared direct dependencies only, not what they pull in, and proves nothing about behavior.'}
+    return annotate_scan(report, catalog)

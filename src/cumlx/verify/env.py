@@ -23,6 +23,7 @@ REQUIREMENTS = {
     'conform': ['mlx'],
     'weights': ['mlx', 'mlx_lm'],
     'scan': [],
+    'recipe': [],
     'port': ['torch', 'transformers', 'mlx', 'mlx_lm'],
 }
 

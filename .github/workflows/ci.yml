@@ -33,7 +33,7 @@ jobs:
         run: >-
           python -m mypy src/cumlx/verify/checkpoint.py src/cumlx/verify/checkop.py src/cumlx/verify/report_html.py
           src/cumlx/verify/trace_compare.py src/cumlx/verify/metrics.py src/cumlx/verify/mapping.py
-          src/cumlx/verify/weights.py src/cumlx/verify/portability.py src/cumlx/mcp_server.py
+          src/cumlx/verify/weights.py src/cumlx/verify/portability.py src/cumlx/verify/recipes.py src/cumlx/mcp_server.py
       - name: Python syntax
         run: python -m compileall -q src tests scripts benchmarks
       - name: Check generated sources match the generator

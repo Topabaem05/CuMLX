@@ -1,0 +1,98 @@
+{
+ "schema": "cumlx.isaac-sim.v1",
+ "date": "2026-11-02",
+ "note": "Isaac Sim 6.2.0.0 run by hand with the NVIDIA EULA accepted by the user. NVIDIA does not support the Mac container. spikes/isaac_sim_container.sh reproduces it.",
+ "mac_native": {
+  "command": "uv pip install isaacsim",
+  "result": "fails",
+  "reason": "No macOS wheel exists. The resolver picks the 6.0.0.0 stub, which raises \"Didn't find wheel for isaacsim 6.0.0.0\"."
+ },
+ "mac_linux_container": {
+  "environment": {
+   "host": "Apple M5 Pro, macOS 27.0.1",
+   "vm": "colima, aarch64, 4 CPUs, 8 GiB",
+   "os": "Ubuntu 24.04",
+   "gpu": null,
+   "install_size": "19 GB"
+  },
+  "install": {
+   "plain_pypi": "fails: opencv-python-headless-noffmpeg==4.14.0.94rc3 is not on PyPI",
+   "with_nvidia_index": "ok, with --extra-index-url https://pypi.nvidia.com",
+   "needs": "LD_PRELOAD=/lib/aarch64-linux-gnu/libgomp.so.1, build-essential and python3.12-dev"
+  },
+  "runs": 2,
+  "kit_start_seconds": [
+   32.7,
+   29.1,
+   31.6
+  ],
+  "freefall": {
+   "z_after_240_steps_at_1_240s": 94.99281311035156,
+   "exact_after_1s": 95.095,
+   "abs_error_m": 0.10218688964843636,
+   "steps_per_s": [
+    724.0,
+    661.0
+   ],
+   "no_gravity_moved_m": 0.0,
+   "note": "The error is about 2 steps of motion at this speed. The cause was not investigated; World.reset may step the scene."
+  },
+  "cartpole_isaaclab_usd": {
+   "dofs": [
+    "slider_to_cart",
+    "cart_to_pole"
+   ],
+   "pole_rad_at_0.25_0.5_0.75_1s": [
+    0.18634876608848572,
+    0.5592215657234192,
+    1.5098652839660645,
+    3.310114622116089
+   ],
+   "no_gravity": [
+    0.10000000149011612,
+    0.10000000149011612,
+    0.10000000149011612,
+    0.10000000149011612
+   ],
+   "repeat_runs_identical": true
+  },
+  "camera": {
+   "result": "fails",
+   "error": "AttributeError: module 'omni.replicator.core' has no attribute 'create'"
+  },
+  "rtx": {
+   "result": "fails",
+   "error": "[omni.rtx] No device could be created"
+  },
+  "error_lines_in_log": [
+   602,
+   598
+  ],
+  "failed_extensions_seen": [
+   "omni.hydra.rtx native plugin",
+   "omni.sensors.nv.common native plugin",
+   "isaacsim.core.experimental.*",
+   "isaacsim.replicator.*",
+   "isaacsim.robot.wheeled_robots nodes"
+  ]
+ },
+ "compare_same_asset": {
+  "genesis_metal_pole_rad_at_0.25_0.5_0.75_1s": [
+   0.15396195650100708,
+   0.36387404799461365,
+   0.8954561948776245,
+   1.9679027795791626
+  ],
+  "physx_cpu_pole_rad_at_0.25_0.5_0.75_1s": [
+   0.18634876608848572,
+   0.5592215657234192,
+   1.5098652839660645,
+   3.310114622116089
+  ],
+  "note": "Not the same physics. Isaac Sim may have stepped during World.reset, and the asset import, solver and integrator differ. The cause was not investigated."
+ },
+ "v100": {
+  "result": "pending",
+  "reason": "Two other training jobs held the GPU when the install finished."
+ }
+}

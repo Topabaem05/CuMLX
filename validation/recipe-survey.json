@@ -1,0 +1,422 @@
+{
+ "schema": "cumlx.recipe-survey.v1",
+ "date": "2026-11-02",
+ "note": "cumlx recipe on real repositories. Text scan only; nothing was built or run. It shows that each finding has a recipe, and does not show that a recipe works for that repository.",
+ "repos": [
+  {
+   "repo": "isaac-sim/IsaacSim",
+   "commit": "5ef464e8d7",
+   "tier": "platform",
+   "findings": [
+    {
+     "id": "omniverse-kit",
+     "files": 1141,
+     "recipes": [
+      "isaac-sim"
+     ]
+    },
+    {
+     "id": "optix-rtx",
+     "files": 51,
+     "recipes": [
+      "optix-rtx"
+     ]
+    },
+    {
+     "id": "physx-gpu",
+     "files": 4,
+     "recipes": [
+      "physx-gpu"
+     ]
+    },
+    {
+     "id": "warp-cuda",
+     "files": 166,
+     "recipes": [
+      "warp"
+     ]
+    },
+    {
+     "id": "cuda-kernel-source",
+     "files": 40,
+     "recipes": [
+      "cuda-kernels"
+     ]
+    },
+    {
+     "id": "cuda-source-files",
+     "files": 14,
+     "recipes": [
+      "cuda-kernels"
+     ]
+    },
+    {
+     "id": "cuda-build",
+     "files": 1,
+     "recipes": [
+      "cuda-build"
+     ]
+    },
+    {
+     "id": "cuda-pip-wheels",
+     "files": 8,
+     "recipes": [
+      "onnxruntime-gpu",
+      "nvidia-cublas",
+      "pynvml"
+     ]
+    },
+    {
+     "id": "gsplat",
+     "files": 1,
+     "recipes": [
+      "gsplat"
+     ]
+    },
+    {
+     "id": "torch-cuda-device",
+     "files": 27,
+     "recipes": [
+      "torch-cuda-device"
+     ]
+    },
+    {
+     "id": "cuda-amp-backends",
+     "files": 1,
+     "recipes": [
+      "cuda-amp-backends"
+     ]
+    }
+   ],
+   "uncovered": [],
+   "counts": {
+    "recipes": 12,
+    "with_run_evidence": 6,
+    "docs_only": 6,
+    "no_substitute": 1
+   }
+  },
+  {
+   "repo": "NVIDIA/warp",
+   "commit": "9dbca3c028",
+   "tier": "kernel",
+   "findings": [
+    {
+     "id": "warp-cuda",
+     "files": 205,
+     "recipes": [
+      "warp"
+     ]
+    },
+    {
+     "id": "cuda-kernel-source",
+     "files": 66,
+     "recipes": [
+      "cuda-kernels"
+     ]
+    },
+    {
+     "id": "nvrtc-ptx",
+     "files": 15,
+     "recipes": [
+      "nvrtc-ptx"
+     ]
+    },
+    {
+     "id": "cuda-source-files",
+     "files": 15,
+     "recipes": [
+      "cuda-kernels"
+     ]
+    },
+    {
+     "id": "triton",
+     "files": 1,
+     "recipes": [
+      "triton"
+     ]
+    },
+    {
+     "id": "torch-cuda-device",
+     "files": 25,
+     "recipes": [
+      "torch-cuda-device"
+     ]
+    }
+   ],
+   "uncovered": [],
+   "counts": {
+    "recipes": 5,
+    "with_run_evidence": 4,
+    "docs_only": 1,
+    "no_substitute": 0
+   }
+  },
+  {
+   "repo": "Dao-AILab/flash-attention",
+   "commit": "54b044c8cf",
+   "tier": "kernel",
+   "findings": [
+    {
+     "id": "cuda-source-files",
+     "files": 613,
+     "recipes": [
+      "cuda-kernels"
+     ]
+    },
+    {
+     "id": "cuda-kernel-source",
+     "files": 22,
+     "recipes": [
+      "cuda-kernels"
+     ]
+    },
+    {
+     "id": "nvrtc-ptx",
+     "files": 11,
+     "recipes": [
+      "nvrtc-ptx"
+     ]
+    },
+    {
+     "id": "triton",
+     "files": 10,
+     "recipes": [
+      "triton"
+     ]
+    },
+    {
+     "id": "cuda-build",
+     "files": 4,
+     "recipes": [
+      "cuda-build"
+     ]
+    },
+    {
+     "id": "warp-cuda",
+     "files": 1,
+     "recipes": [
+      "warp"
+     ]
+    },
+    {
+     "id": "flash-attn-import",
+     "files": 68,
+     "recipes": [
+      "flash-attn"
+     ]
+    },
+    {
+     "id": "apex",
+     "files": 4,
+     "recipes": [
+      "apex"
+     ]
+    },
+    {
+     "id": "xformers",
+     "files": 2,
+     "recipes": [
+      "xformers"
+     ]
+    },
+    {
+     "id": "cuda-pip-wheels",
+     "files": 1,
+     "recipes": [
+      "pynvml"
+     ]
+    },
+    {
+     "id": "deepspeed",
+     "files": 1,
+     "recipes": [
+      "deepspeed"
+     ]
+    },
+    {
+     "id": "torch-cuda-device",
+     "files": 36,
+     "recipes": [
+      "torch-cuda-device"
+     ]
+    },
+    {
+     "id": "cuda-amp-backends",
+     "files": 2,
+     "recipes": [
+      "cuda-amp-backends"
+     ]
+    }
+   ],
+   "uncovered": [],
+   "counts": {
+    "recipes": 12,
+    "with_run_evidence": 5,
+    "docs_only": 7,
+    "no_substitute": 0
+   }
+  },
+  {
+   "repo": "NVlabs/nvdiffrast",
+   "commit": "253ac4fcea",
+   "tier": "kernel",
+   "findings": [
+    {
+     "id": "cuda-kernel-source",
+     "files": 12,
+     "recipes": [
+      "cuda-kernels"
+     ]
+    },
+    {
+     "id": "nvdiffrast",
+     "files": 5,
+     "recipes": [
+      "nvdiffrast"
+     ]
+    },
+    {
+     "id": "cuda-source-files",
+     "files": 5,
+     "recipes": [
+      "cuda-kernels"
+     ]
+    },
+    {
+     "id": "cuda-build",
+     "files": 1,
+     "recipes": [
+      "cuda-build"
+     ]
+    },
+    {
+     "id": "torch-cuda-device",
+     "files": 6,
+     "recipes": [
+      "torch-cuda-device"
+     ]
+    }
+   ],
+   "uncovered": [],
+   "counts": {
+    "recipes": 4,
+    "with_run_evidence": 2,
+    "docs_only": 2,
+    "no_substitute": 0
+   }
+  },
+  {
+   "repo": "facebookresearch/sam2",
+   "commit": "2b90b9f5ce",
+   "tier": "kernel",
+   "findings": [
+    {
+     "id": "cuda-build",
+     "files": 1,
+     "recipes": [
+      "cuda-build"
+     ]
+    },
+    {
+     "id": "cuda-kernel-source",
+     "files": 1,
+     "recipes": [
+      "cuda-kernels"
+     ]
+    },
+    {
+     "id": "cuda-source-files",
+     "files": 1,
+     "recipes": [
+      "cuda-kernels"
+     ]
+    },
+    {
+     "id": "torch-cuda-device",
+     "files": 8,
+     "recipes": [
+      "torch-cuda-device"
+     ]
+    },
+    {
+     "id": "cuda-amp-backends",
+     "files": 2,
+     "recipes": [
+      "cuda-amp-backends"
+     ]
+    }
+   ],
+   "uncovered": [],
+   "counts": {
+    "recipes": 4,
+    "with_run_evidence": 2,
+    "docs_only": 2,
+    "no_substitute": 0
+   }
+  },
+  {
+   "repo": "isaac-sim/IsaacLab",
+   "commit": "c498443e0b",
+   "tier": "platform",
+   "findings": [
+    {
+     "id": "isaac-lab",
+     "files": 1132,
+     "recipes": [
+      "isaac-lab"
+     ]
+    },
+    {
+     "id": "omniverse-kit",
+     "files": 63,
+     "recipes": [
+      "isaac-sim"
+     ]
+    },
+    {
+     "id": "physx-gpu",
+     "files": 2,
+     "recipes": [
+      "physx-gpu"
+     ]
+    },
+    {
+     "id": "warp-cuda",
+     "files": 329,
+     "recipes": [
+      "warp"
+     ]
+    },
+    {
+     "id": "cuda-pip-wheels",
+     "files": 3,
+     "recipes": [
+      "pynvml"
+     ]
+    },
+    {
+     "id": "torch-cuda-device",
+     "files": 70,
+     "recipes": [
+      "torch-cuda-device"
+     ]
+    },
+    {
+     "id": "cuda-amp-backends",
+     "files": 2,
+     "recipes": [
+      "cuda-amp-backends"
+     ]
+    }
+   ],
+   "uncovered": [],
+   "counts": {
+    "recipes": 7,
+    "with_run_evidence": 5,
+    "docs_only": 2,
+    "no_substitute": 1
+   }
+  }
+ ]
+}

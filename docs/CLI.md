@@ -24,6 +24,7 @@ Linux에서는 `diff` extra가 `mlx[cpu]`를 설치합니다. 같은 환경에 �
 | `conform` | MLX의 NVFP4/MXFP4 decode를 CUMLX bit-정확 코덱과 CPU·GPU에서 전수 비교. `--checkpoint`와 `--against`를 주면 ModelOpt 원본과 MLX repack의 bytes를 비교 | diff |
 | `tracediff` | golden trace 두 개를 비교. CUDA와 CPU capture의 차이처럼 기준 자체의 흔들림을 측정 | - |
 | `scan` | CUDA 저장소나 HF 모델의 소스를 텍스트로 읽어, Apple Silicon으로 옮기는 작업량을 분류. 대상 코드는 실행하지 않음 | - |
+| `recipe` | CUDA 의존성에 대해 Apple Silicon에서 쓸 대체품을 안내. 선택지마다 직접 실행했는지 문서만 읽었는지 표시 | - |
 | `port` | mlx-lm으로 변환한 뒤 가중치 비교, golden 기록, diff까지 한 번에 실행 | capture, diff |
 | `weights` | 모델을 실행하지 않고 원본 safetensors와 포팅본 가중치를 비교. 전치·부호·scale 오류를 이름으로 지목 | diff |
 | `report` | 기존 `report.json` 요약 (`--max-items`로 다시 읽기) | - |

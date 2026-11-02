@@ -59,7 +59,7 @@ Read these before you trust a result:
 
 - `W_MODULE_BOUNDARY_DIFFERS`: an output is a constant multiple of the golden and its parent matches. The factor sits in another module in that framework. This is not a defect.
 
-To start from a CUDA project: `cumlx scan <path or HF id>` ranks the work (model, device, library, kernel, platform) without running the code. `cumlx port <model> -o out/` converts with mlx-lm and proves the result in one command. It refuses a model that mlx-lm does not implement. See `docs/PORTING-CUDA-MODELS.md`.
+To start from a CUDA project: `cumlx scan <path or HF id>` ranks the work (model, device, library, kernel, platform) without running the code. `cumlx recipe <name, path or scan report>` names what to use on Apple Silicon. Read `evidence` on each option: `run` was executed on Apple Silicon within the stated `limits`, and `docs` was only read about. Do not report a `docs` option as working. `outcome: none` means there is no substitute. `cumlx port <model> -o out/` converts with mlx-lm and proves the result in one command. It refuses a model that mlx-lm does not implement. See `docs/PORTING-CUDA-MODELS.md`.
 
 Other commands: `cumlx conform --checkpoint <modelopt> --against <mlx-repack>` compares an NVFP4 repack with its original, byte by byte. `cumlx tracediff A B` measures how far a golden moves between devices. `cumlx.check_op(torch_fn, mlx_fn, inputs)` compares one op. `cumlx-mcp` serves every command as an MCP tool. `skills/cumlx-verifier/SKILL.md` is a skill for porting agents. `docs/TRACE-FORMAT.md` is the trace specification.
 
