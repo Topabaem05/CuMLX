@@ -1,0 +1,188 @@
+{
+ "schema": "cumlx.validation.run-compare-limits.v1",
+ "date": "2026-11-03",
+ "machine": "Apple M5 Pro, 48 GB, torch 2.15.0",
+ "purpose": "Fixture measurements behind the limits in src/cumlx/verify/run_compare.py. The limits were set from these and before any open-source script ran.",
+ "fixture": "A 2-layer MLP, 400 AdamW steps, 5 seeds, synthetic data. CPU and MPS only: no CUDA device took part, so these numbers are not evidence about CUDA.",
+ "limits": {
+  "step_rel": [
+   0.0001,
+   0.0001
+  ],
+  "min_seeds": 3,
+  "windows": 4,
+  "standard_errors": 3.0,
+  "rel_floor": 0.01,
+  "inconclusive_rel": 0.1
+ },
+ "cases": {
+  "right, no dropout, cpu vs mps": {
+   "verdict": "ok",
+   "grade": "A",
+   "reason": "the first two steps gave the same loss at each seed",
+   "worst_step_rel": 1.7193548636680545e-07,
+   "numeric_pass": true,
+   "statistical_state": "pass",
+   "windows": [
+    {
+     "window": 1,
+     "golden_mean": 0.6507,
+     "candidate_mean": 0.6507,
+     "difference": 1.702e-08,
+     "allowed": 0.05151,
+     "result": "pass"
+    },
+    {
+     "window": 2,
+     "golden_mean": 0.1709,
+     "candidate_mean": 0.1709,
+     "difference": 1.164e-08,
+     "allowed": 0.009017,
+     "result": "pass"
+    },
+    {
+     "window": 3,
+     "golden_mean": 0.1061,
+     "candidate_mean": 0.1061,
+     "difference": 1.691e-08,
+     "allowed": 0.002196,
+     "result": "pass"
+    },
+    {
+     "window": 4,
+     "golden_mean": 0.08106,
+     "candidate_mean": 0.08106,
+     "difference": 1.998e-08,
+     "allowed": 0.003494,
+     "result": "pass"
+    }
+   ]
+  },
+  "learning rate wrong by 20%": {
+   "verdict": "diverged",
+   "grade": null,
+   "reason": "window 1 of 4: golden mean 0.65073, candidate mean 0.74106, allowed difference 0.0543",
+   "worst_step_rel": 0.0035149079129441207,
+   "numeric_pass": false,
+   "statistical_state": "fail",
+   "windows": [
+    {
+     "window": 1,
+     "golden_mean": 0.6507,
+     "candidate_mean": 0.7411,
+     "difference": 0.09034,
+     "allowed": 0.05433,
+     "result": "fail"
+    },
+    {
+     "window": 2,
+     "golden_mean": 0.1709,
+     "candidate_mean": 0.2123,
+     "difference": 0.04136,
+     "allowed": 0.01083,
+     "result": "fail"
+    },
+    {
+     "window": 3,
+     "golden_mean": 0.1061,
+     "candidate_mean": 0.1279,
+     "difference": 0.0218,
+     "allowed": 0.002626,
+     "result": "fail"
+    },
+    {
+     "window": 4,
+     "golden_mean": 0.08106,
+     "candidate_mean": 0.09651,
+     "difference": 0.01545,
+     "allowed": 0.003222,
+     "result": "fail"
+    }
+   ]
+  },
+  "learning rate wrong by 5%": {
+   "verdict": "diverged",
+   "grade": null,
+   "reason": "window 3 of 4: golden mean 0.10614, candidate mean 0.11067, allowed difference 0.00225",
+   "worst_step_rel": 0.0008748103690346038,
+   "numeric_pass": false,
+   "statistical_state": "fail",
+   "windows": [
+    {
+     "window": 1,
+     "golden_mean": 0.6507,
+     "candidate_mean": 0.6711,
+     "difference": 0.02033,
+     "allowed": 0.05221,
+     "result": "pass"
+    },
+    {
+     "window": 2,
+     "golden_mean": 0.1709,
+     "candidate_mean": 0.1795,
+     "difference": 0.00851,
+     "allowed": 0.009332,
+     "result": "pass"
+    },
+    {
+     "window": 3,
+     "golden_mean": 0.1061,
+     "candidate_mean": 0.1107,
+     "difference": 0.004532,
+     "allowed": 0.002246,
+     "result": "fail"
+    },
+    {
+     "window": 4,
+     "golden_mean": 0.08106,
+     "candidate_mean": 0.08431,
+     "difference": 0.003245,
+     "allowed": 0.003389,
+     "result": "pass"
+    }
+   ]
+  },
+  "right, dropout on the device, cpu vs mps": {
+   "verdict": "ok",
+   "grade": "B",
+   "reason": "the training curves agree in all 4 windows over 5 seeds",
+   "worst_step_rel": 0.02431061653607252,
+   "numeric_pass": false,
+   "statistical_state": "pass",
+   "windows": [
+    {
+     "window": 1,
+     "golden_mean": 0.6723,
+     "candidate_mean": 0.6701,
+     "difference": 0.002166,
+     "allowed": 0.04991,
+     "result": "pass"
+    },
+    {
+     "window": 2,
+     "golden_mean": 0.1971,
+     "candidate_mean": 0.1964,
+     "difference": 0.0007398,
+     "allowed": 0.008343,
+     "result": "pass"
+    },
+    {
+     "window": 3,
+     "golden_mean": 0.1382,
+     "candidate_mean": 0.1363,
+     "difference": 0.001978,
+     "allowed": 0.005311,
+     "result": "pass"
+    },
+    {
+     "window": 4,
+     "golden_mean": 0.1144,
+     "candidate_mean": 0.1136,
+     "difference": 0.0007555,
+     "allowed": 0.007307,
+     "result": "pass"
+    }
+   ]
+  }
+ }
+}

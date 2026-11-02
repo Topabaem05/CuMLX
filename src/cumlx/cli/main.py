@@ -93,7 +93,12 @@ COMMANDS: dict[str, dict[str, Any]] = {
         summary='Run an unmodified PyTorch script that assumes CUDA on MPS, and record each redirected call. Running is not proof.',
         requires=['run'], stage='experimental',
         examples=['cumlx run train.py --target mps --report run-report.json', 'cumlx run train.py -- --epochs 1 --lr 1e-3',
-                  'cumlx run --module my.pkg.train', 'cumlx run train.py --substitute flash_attn=mps_flash_attn']),
+                  'cumlx run --module my.pkg.train', 'cumlx run train.py --substitute flash_attn=mps_flash_attn',
+                  'cumlx run train.py --trace-losses --seed 1 --report mps/seed1.json']),
+    'rundiff': dict(
+        summary='Compare the loss traces of `cumlx run` on CUDA and on the target, and give a proof grade.',
+        requires=[], stage='experimental',
+        examples=['cumlx rundiff golden-cuda/ runs-mps/', 'cumlx rundiff cuda/seed0.json mps/seed0.json']),
     'port': dict(
         summary='Convert a model with mlx-lm and prove the result: convert, compare weights, capture a golden, diff.',
         requires=['capture', 'diff'], stage='beta',
@@ -247,12 +252,18 @@ def build_parser() -> AgentArgumentParser:
     p.add_argument('script', nargs='?', help='the Python file to run. It is executed with your permissions')
     p.add_argument('script_args', nargs='*', help='arguments for the script. Put them after --')
     p.add_argument('--module', help='run this module like python -m, instead of a file')
-    p.add_argument('--target', choices=['mps', 'cpu'], default='mps', help='the device that stands in for CUDA')
+    p.add_argument('--target', choices=['mps', 'cpu', 'cuda'], default='mps', help='the device that stands in for CUDA. cuda redirects nothing and records a golden on a real CUDA machine')
+    p.add_argument('--trace-losses', action='store_true', help='record each scalar given to backward() in the report, for `cumlx rundiff`')
+    p.add_argument('--seed', type=int, metavar='N', help='seed torch, NumPy and random with N at the start, and add N to each integer seed that the script sets')
     p.add_argument('--report', default='run-report.json', help='where to write the report of redirected calls')
     p.add_argument('--overwrite', action='store_true')
     p.add_argument('--allow-cpu-fallback', action='store_true', help='let operations that MPS lacks run on the CPU. Off by default, so a missing operation is an error')
     p.add_argument('--substitute', action='append', default=[], metavar='NAME=MODULE', help='serve MODULE when the script imports NAME. Repeatable')
     p.add_argument('--timeout', type=float, help='stop the script after this many seconds')
+
+    p = add('rundiff')
+    p.add_argument('golden', help='a run report, or a directory of them, from `cumlx run --trace-losses --target cuda`')
+    p.add_argument('candidate', help='a run report, or a directory of them, from the target')
 
     p = add('port')
     p.add_argument('model', help='HF id or local directory of the ORIGINAL model')

@@ -135,6 +135,7 @@ Apple M5 Pro 한 대에서 직접 실행했습니다. 재현 방법은 [spikes/]
 - Mac 컨테이너(arm64)와 V100 서버(x86_64)의 CPU PhysX 값이 출력된 모든 자릿수까지 같습니다. 작은 장면 2개의 결과입니다. 이 경로는 M4에서 Isaac 쪽 기준 물리로 쓸 수 있습니다.
 - 같은 cartpole USD의 막대 각도가 1초 후 PhysX 3.31 rad, Genesis 1.97 rad로 다릅니다. 원인은 조사하지 않았습니다. M4의 등급 B 비교에서 먼저 풀어야 합니다.
 - **Isaac Lab을 Isaac Sim 없이 Mac CPU에서 실행했습니다.** Newton으로 cartpole을 100회 학습하는 데 약 18초 걸렸고, 처리량은 환경 256개에서 약 4만 step/s입니다. 시드 3개 모두 보상이 올랐고, 마지막 에피소드 길이는 300, 293, 246입니다(최대 300). 수동 구성이며 NVIDIA가 지원하지 않습니다. `uv sync`는 macOS를 거부합니다. 측정값은 `validation/isaac-lab-mac.json`, 재현은 `spikes/isaac_lab_mac.sh`입니다.
+- **같은 경로로 Unitree Go2 평지 보행을 학습했습니다.** CPU 물리라 약 3,700 step/s이고, 환경 4096개 × 300회에 약 2.2시간 걸렸습니다. MLX로 돌린 정책은 시뮬레이션에서 명령 +0.8 m/s에 +0.74, -0.8에 -0.87, 0에 0.00으로 따라가고, 넘어짐은 환경당 0.07회 이하입니다. 대조군은 모두 약 0 m/s입니다. 환경 1024개 × 300회 정책은 서기만 하고 걷지 못했습니다. 시드 1개, CPU 물리이며 실제 로봇이나 PhysX와는 비교하지 않았습니다. 측정값은 `validation/isaac-lab-go2.json`입니다.
 - 그 체크포인트의 MLX 정책이 rsl_rl 원본 출력과 7.9e-8까지 일치합니다. 이 정책이 Newton 환경을 직접 제어해 시드 3개에서 막대를 100% 세웠습니다. 힘을 주지 않는 대조군은 0%, 1회차 체크포인트는 5%입니다.
 
 **범위 결정 (2026-11-03):** Isaac Sim과 Isaac Lab의 macOS 작업이 커지면 별도 저장소로 분리합니다. CuMLX에는 검증기와 레시피에 필요한 결과만 남깁니다.
@@ -182,7 +183,7 @@ cumlx run train.py --target mps --report run-report.json
 완료 조건:
 
 - [ ] 수정하지 않은 오픈소스 스크립트 5개 실행, `run-report.json` 생성. 재현 스크립트는 `spikes/m2_scripts.sh`이며, 아직 실행하지 않았습니다
-- [ ] 그중 3개 이상을 V100 CUDA golden과 비교해 등급 A 또는 B
+- [ ] 그중 3개 이상을 V100 CUDA golden과 비교해 등급 A 또는 B. 비교 도구 `cumlx rundiff`와 허용치는 준비했습니다(fixture만, CUDA 없음). 실제 비교는 아직 하지 않았습니다
 - [x] 지원하지 않는 호출이 오류로 끝나는 테스트 (조용한 CPU 폴백 없음)
 - [x] 호환 계층을 끄면 원래 동작과 같음을 테스트로 확인. `cumlx`를 import해도 torch가 바뀌지 않고, `uninstall()`이 모든 속성을 되돌립니다
 
@@ -224,9 +225,9 @@ Isaac Sim 대체가 아니라, **Isaac Lab 스타일 학습 작업을 Mac에서 
 
 완료 조건:
 
-- [ ] cartpole, 사족 보행 작업이 Mac GPU에서 학습 완료. cartpole은 Newton으로 **CPU에서만** 학습했으므로 이 항목은 미달입니다
+- [ ] cartpole, 사족 보행 작업이 Mac GPU에서 학습 완료. cartpole과 Go2 모두 Newton으로 **CPU에서만** 학습했으므로 이 항목은 미달입니다
 - [ ] 기준 물리(MuJoCo)와의 궤적 오차를 사전에 정한 허용치로 등급 B 판정
-- [x] 실제 Isaac Lab 체크포인트 하나를 MLX에서 실행, 등급 A. cartpole 4-32-32-1, rsl_rl 출력과 최악 7.9e-8. 사족 보행 정책은 아직 없습니다
+- [x] 실제 Isaac Lab 체크포인트 하나를 MLX에서 실행, 등급 A. cartpole 4-32-32-1, rsl_rl 출력과 최악 7.9e-8. Go2 사족 보행 정책도 MLX에서 최악 2.48e-7이지만, 기준은 rsl_rl 출력이 아니라 직접 만든 torch 구현입니다
 - [ ] 처리량(env-step/s)을 여러 번 측정해 범위로 공개. 목표: 4096 환경에서 10만 step/s 이상. M0의 Go2 임의 행동은 8.1만~13.3만이며, 정책 추론은 포함하지 않았습니다
 
 ### M5. 레이트레이싱과 센서 (01/12 ~ 01/23) → `v0.9.0`

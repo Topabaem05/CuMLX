@@ -16,7 +16,7 @@ DEPENDENCIES = {
 }
 # command -> required modules
 REQUIREMENTS = {
-    'describe': [], 'doctor': [], 'report': [], 'selftest': [], 'tracediff': [],
+    'describe': [], 'doctor': [], 'report': [], 'selftest': [], 'tracediff': [], 'rundiff': [],
     'fixture': ['torch', 'transformers'],
     'capture': ['torch', 'transformers'],
     'diff': ['mlx', 'mlx_lm'],

@@ -1,0 +1,540 @@
+{
+ "schema": "cumlx.validation.isaac_lab_go2.v1",
+ "date": "2026-11-03",
+ "machine": "Apple M5 Pro, 48 GB, macOS 27.0.1. Physics and PPO on the CPU; MLX policy on the GPU",
+ "verdict": "It walks in simulation: the 4096-env policy run in MLX measured +0.74 m/s at +0.8, -0.87 m/s at -0.8 and 0.00 m/s at 0, with at most 0.07 falls per env in 1000 steps, while the 1024-env policy and both controls stayed near 0 m/s (one seed, Newton on the CPU, no hardware).",
+ "task": "Isaac-Velocity-Flat-UnitreeGo2",
+ "physics": "newton_mjwarp",
+ "isaac_lab_commit": "c498443e0b833515e1976db9eb3edcd8dabb4cb7",
+ "versions": {
+  "torch": "2.11.0",
+  "mlx": "0.32.4",
+  "warp-lang": "1.17.0",
+  "newton": "1.8.0.dev0",
+  "mujoco": "3.15.0",
+  "mujoco-warp": "3.15.0",
+  "usd-core": "26.8",
+  "rsl-rl-lib": "5.5.1"
+ },
+ "supported_by_nvidia": false,
+ "isaac_sim_or_kit_used": false,
+ "training": {
+  "config": "UnitreeGo2FlatPPORunnerCfg as shipped: 300 iterations, actor 48-128-128-128-12 with ELU, no observation normalizer. The training commands were not stored; the logs report the env counts and seed 42.",
+  "env_4096": {
+   "envs": 4096,
+   "iterations": 300,
+   "steps_per_env_per_iteration": 24,
+   "env_steps_total": 29491200,
+   "seed": 42,
+   "log": "~/cumlx-isaaclab/go2/official/learn_4096.log",
+   "run": "2026-11-03_00-51-54",
+   "checkpoints": "run/logs/rsl_rl/unitree_go2_flat/2026-11-03_00-51-54/",
+   "wall_seconds": 7767.12,
+   "steps_per_second": {
+    "median": 3713.0,
+    "min": 3239,
+    "max": 4489,
+    "total_over_wall": 3797
+   },
+   "last_mean_reward": 22.38,
+   "last_mean_episode_length": 963.27,
+   "last_error_vel_xy": 0.2263,
+   "last_success_rate": 0.9763,
+   "last_termination_base_contact": 0.0957,
+   "at_iteration": {
+    "50": {
+     "mean_reward": -10.14,
+     "error_vel_xy": 0.7427
+    },
+    "100": {
+     "mean_reward": 6.0,
+     "error_vel_xy": 0.6533
+    },
+    "150": {
+     "mean_reward": 11.54,
+     "error_vel_xy": 0.5137
+    },
+    "200": {
+     "mean_reward": 15.18,
+     "error_vel_xy": 0.4009
+    },
+    "250": {
+     "mean_reward": 19.28,
+     "error_vel_xy": 0.2901
+    },
+    "299": {
+     "mean_reward": 22.38,
+     "error_vel_xy": 0.2263
+    }
+   }
+  },
+  "env_1024": {
+   "envs": 1024,
+   "iterations": 300,
+   "steps_per_env_per_iteration": 24,
+   "env_steps_total": 7372800,
+   "seed": 42,
+   "log": "~/cumlx-isaaclab/go2/official/learn_1024.log",
+   "run": "2026-11-03_00-14-15",
+   "checkpoints": "official/stand_1024_model_{0,299}.pt",
+   "wall_seconds": 1970.06,
+   "steps_per_second": {
+    "median": 3777.0,
+    "min": 2660,
+    "max": 4174,
+    "total_over_wall": 3742
+   },
+   "last_mean_reward": 7.12,
+   "last_mean_episode_length": 896.13,
+   "last_error_vel_xy": 0.7508,
+   "last_success_rate": 0.1285,
+   "last_termination_base_contact": 0.2053,
+   "at_iteration": {
+    "50": {
+     "mean_reward": -14.27,
+     "error_vel_xy": 0.7437
+    },
+    "100": {
+     "mean_reward": -1.59,
+     "error_vel_xy": 0.7648
+    },
+    "150": {
+     "mean_reward": 4.67,
+     "error_vel_xy": 0.7605
+    },
+    "200": {
+     "mean_reward": 7.1,
+     "error_vel_xy": 0.694
+    },
+    "250": {
+     "mean_reward": 5.39,
+     "error_vel_xy": 0.7086
+    },
+    "299": {
+     "mean_reward": 7.12,
+     "error_vel_xy": 0.7508
+    }
+   }
+  },
+  "note": "In the 4096-env run the reward still rose and error_vel_xy still fell at the last iteration, so training had not levelled off at 300 iterations."
+ },
+ "checkpoints_sha256": {
+  "env_4096/model_0.pt": "03bf3540c0b70a163f8efa485d5d5a596804d8cfc660e75be0442b627b8bcc23",
+  "env_4096/model_299.pt": "db57ed4e38bf3f1498cfdf2430e16fb3113b09caa75576e90696b12482db737a",
+  "env_1024/stand_1024_model_0.pt": "9634e6f46e7aca688d498fb19e7cfe4296b51df2edf2cc85aa84e4eef251d5f5",
+  "env_1024/stand_1024_model_299.pt": "d4ef73ebbb5d3dd2ed16f247e78239c01b81d56ce5dad83cc8f9f51d786ea159"
+ },
+ "policy_in_mlx": {
+  "tool": "examples/robot-policy/verify_policy.py --checkpoint model_299.pt",
+  "accepted": true,
+  "verdict": "ok",
+  "worst_rel_l2": 2.476016134367747e-07,
+  "threshold": 0.0001,
+  "batches": [
+   1,
+   16,
+   4096
+  ],
+  "device": "gpu",
+  "reference": "the torch version in verify_policy.py, on random observations, not rsl_rl's own module. No golden from spikes/rsl_rl_golden.py was recorded for this checkpoint.",
+  "closed_loop_worst_rel_l2": 4.906684694105934e-07,
+  "closed_loop_note": "The same reference on the observations each rollout visited."
+ },
+ "closed_loop_mlx_controls_newton": {
+  "script": "spikes/isaac_lab_mlx_loop.py",
+  "protocol": {
+   "envs": 128,
+   "steps": 1000,
+   "seed": 7,
+   "simulated_seconds": 20.0,
+   "env_config": "The training config: observation noise on, push_robot every 10 to 15 s, episode limit 20 s. Heading control off and standing envs off, so the command is fixed.",
+   "measured_forward_mps": "mean of body-frame x speed over all envs, after step 100",
+   "velocity_error_mps": "mean norm of commanded minus measured body-frame xy speed, after step 100",
+   "base_height_m": "mean world z of the base, after step 100",
+   "falls_per_env": "terminated_per_env: non-timeout terminations (base_contact in this task) divided by envs. A reset env can fall again.",
+   "seconds_per_run": "about 40 s of stepping"
+  },
+  "side_by_side": {
+   "env_4096_300_iterations": [
+    {
+     "run": "fwd",
+     "role": "trained, +0.8",
+     "commanded_mps": 0.8,
+     "measured_forward_mps": 0.7399,
+     "velocity_error_mps": 0.164,
+     "base_height_m": 0.3543,
+     "falls_per_env": 0.03125,
+     "timeouts_per_env": 0.96875,
+     "reward_per_env_step": 0.03366
+    },
+    {
+     "run": "back",
+     "role": "trained, -0.8",
+     "commanded_mps": -0.8,
+     "measured_forward_mps": -0.8695,
+     "velocity_error_mps": 0.1002,
+     "base_height_m": 0.3662,
+     "falls_per_env": 0.0,
+     "timeouts_per_env": 1.0,
+     "reward_per_env_step": 0.0386
+    },
+    {
+     "run": "stop",
+     "role": "trained, 0",
+     "commanded_mps": 0.0,
+     "measured_forward_mps": -0.0006,
+     "velocity_error_mps": 0.0364,
+     "base_height_m": 0.3656,
+     "falls_per_env": 0.0703125,
+     "timeouts_per_env": 0.9296875,
+     "reward_per_env_step": 0.04216
+    },
+    {
+     "run": "early",
+     "role": "first iteration, control",
+     "commanded_mps": 0.8,
+     "measured_forward_mps": 0.0013,
+     "velocity_error_mps": 0.7992,
+     "base_height_m": 0.2434,
+     "falls_per_env": 0.0078125,
+     "timeouts_per_env": 0.9921875,
+     "reward_per_env_step": -0.00135
+    },
+    {
+     "run": "zero",
+     "role": "no action, control",
+     "commanded_mps": 0.8,
+     "measured_forward_mps": 0.0019,
+     "velocity_error_mps": 0.7985,
+     "base_height_m": 0.2479,
+     "falls_per_env": 0.0,
+     "timeouts_per_env": 1.0,
+     "reward_per_env_step": -0.00016
+    }
+   ],
+   "env_1024_300_iterations": [
+    {
+     "run": "fwd",
+     "role": "trained, +0.8",
+     "commanded_mps": 0.8,
+     "measured_forward_mps": 0.019,
+     "velocity_error_mps": 0.7865,
+     "base_height_m": 0.3297,
+     "falls_per_env": 1.15625,
+     "timeouts_per_env": 0.15625,
+     "reward_per_env_step": 0.00627
+    },
+    {
+     "run": "back",
+     "role": "trained, -0.8",
+     "commanded_mps": -0.8,
+     "measured_forward_mps": -0.0011,
+     "velocity_error_mps": 0.7996,
+     "base_height_m": 0.3496,
+     "falls_per_env": 0.03125,
+     "timeouts_per_env": 0.96875,
+     "reward_per_env_step": 0.01387
+    },
+    {
+     "run": "stop",
+     "role": "trained, 0",
+     "commanded_mps": 0.0,
+     "measured_forward_mps": 0.004,
+     "velocity_error_mps": 0.038,
+     "base_height_m": 0.3398,
+     "falls_per_env": 0.265625,
+     "timeouts_per_env": 0.765625,
+     "reward_per_env_step": 0.03821
+    },
+    {
+     "run": "early",
+     "role": "first iteration, control",
+     "commanded_mps": 0.8,
+     "measured_forward_mps": 0.0014,
+     "velocity_error_mps": 0.7992,
+     "base_height_m": 0.2494,
+     "falls_per_env": 0.0625,
+     "timeouts_per_env": 0.9375,
+     "reward_per_env_step": -0.00062
+    },
+    {
+     "run": "zero",
+     "role": "no action, control",
+     "commanded_mps": 0.8,
+     "measured_forward_mps": 0.0019,
+     "velocity_error_mps": 0.7985,
+     "base_height_m": 0.2479,
+     "falls_per_env": 0.0,
+     "timeouts_per_env": 1.0,
+     "reward_per_env_step": -0.00016
+    }
+   ]
+  },
+  "repeatability": "The zero-action control gave the same reward_per_env_step (-0.0001606726199752302) and speed in the old and the new run, to every printed digit.",
+  "raw": {
+   "env_4096_300_iterations": {
+    "fwd": {
+     "controller": "mlx",
+     "checkpoint": "model_299.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": 0.033660377838881685,
+     "terminated_per_env": 0.03125,
+     "timed_out_per_env": 0.96875,
+     "seconds": 39.57,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": 0.8,
+     "mean_forward_speed": 0.739915769977702,
+     "mean_velocity_error": 0.16397923736108674,
+     "mean_base_height": 0.3543387208051152,
+     "window": "after step 100",
+     "mlx_vs_torch_worst_rel_l2": 2.742534377375705e-07,
+     "mlx_inference_ms_per_step": 0.77,
+     "mlx_device": "gpu",
+     "role": "trained, +0.8"
+    },
+    "back": {
+     "controller": "mlx",
+     "checkpoint": "model_299.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": 0.038603695452824466,
+     "terminated_per_env": 0.0,
+     "timed_out_per_env": 1.0,
+     "seconds": 39.45,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": -0.8,
+     "mean_forward_speed": -0.869517056490812,
+     "mean_velocity_error": 0.10019743550154898,
+     "mean_base_height": 0.36615966200828554,
+     "window": "after step 100",
+     "mlx_vs_torch_worst_rel_l2": 2.6619164827934583e-07,
+     "mlx_inference_ms_per_step": 0.7725,
+     "mlx_device": "gpu",
+     "role": "trained, -0.8"
+    },
+    "stop": {
+     "controller": "mlx",
+     "checkpoint": "model_299.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": 0.04215612052474171,
+     "terminated_per_env": 0.0703125,
+     "timed_out_per_env": 0.9296875,
+     "seconds": 39.18,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": 0.0,
+     "mean_forward_speed": -0.0006289216382234978,
+     "mean_velocity_error": 0.03635517798985044,
+     "mean_base_height": 0.3656203064322472,
+     "window": "after step 100",
+     "mlx_vs_torch_worst_rel_l2": 2.615293226426729e-07,
+     "mlx_inference_ms_per_step": 0.765,
+     "mlx_device": "gpu",
+     "role": "trained, 0"
+    },
+    "early": {
+     "controller": "mlx",
+     "checkpoint": "model_0.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": -0.00135352621540369,
+     "terminated_per_env": 0.0078125,
+     "timed_out_per_env": 0.9921875,
+     "seconds": 40.06,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": 0.8,
+     "mean_forward_speed": 0.001250306316651404,
+     "mean_velocity_error": 0.7991653451654646,
+     "mean_base_height": 0.2434294260872735,
+     "window": "after step 100",
+     "mlx_vs_torch_worst_rel_l2": 4.906684694105934e-07,
+     "mlx_inference_ms_per_step": 0.7711,
+     "mlx_device": "gpu",
+     "role": "first iteration, control"
+    },
+    "zero": {
+     "controller": "zero",
+     "checkpoint": null,
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": -0.0001606726199752302,
+     "terminated_per_env": 0.0,
+     "timed_out_per_env": 1.0,
+     "seconds": 38.73,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": 0.8,
+     "mean_forward_speed": 0.001947886695238089,
+     "mean_velocity_error": 0.7984547993871901,
+     "mean_base_height": 0.24793349150154326,
+     "window": "after step 100",
+     "role": "no action, control"
+    }
+   },
+   "env_1024_300_iterations": {
+    "fwd": {
+     "controller": "mlx",
+     "checkpoint": "model_299.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": 0.00627357714305981,
+     "terminated_per_env": 1.15625,
+     "timed_out_per_env": 0.15625,
+     "seconds": 40.43,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": 0.8,
+     "mean_forward_speed": 0.019010515111602014,
+     "mean_velocity_error": 0.7864911154243681,
+     "mean_base_height": 0.3297076745496856,
+     "window": "after step 100",
+     "mlx_vs_torch_worst_rel_l2": 2.3845939267630456e-07,
+     "mlx_inference_ms_per_step": 0.8619,
+     "mlx_device": "gpu",
+     "role": "trained, +0.8"
+    },
+    "back": {
+     "controller": "mlx",
+     "checkpoint": "model_299.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": 0.01386801092477981,
+     "terminated_per_env": 0.03125,
+     "timed_out_per_env": 0.96875,
+     "seconds": 42.53,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": -0.8,
+     "mean_forward_speed": -0.0011175857330898806,
+     "mean_velocity_error": 0.7995698883136113,
+     "mean_base_height": 0.3495588253935178,
+     "window": "after step 100",
+     "mlx_vs_torch_worst_rel_l2": 2.4477321858284995e-07,
+     "mlx_inference_ms_per_step": 0.7195,
+     "mlx_device": "gpu",
+     "role": "trained, -0.8"
+    },
+    "stop": {
+     "controller": "mlx",
+     "checkpoint": "model_299.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": 0.038205332258716224,
+     "terminated_per_env": 0.265625,
+     "timed_out_per_env": 0.765625,
+     "seconds": 43.26,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": 0.0,
+     "mean_forward_speed": 0.003969286558777741,
+     "mean_velocity_error": 0.03804739326652554,
+     "mean_base_height": 0.3398302306400405,
+     "window": "after step 100",
+     "mlx_vs_torch_worst_rel_l2": 2.3489407396937168e-07,
+     "mlx_inference_ms_per_step": 0.7621,
+     "mlx_device": "gpu",
+     "role": "trained, 0"
+    },
+    "early": {
+     "controller": "mlx",
+     "checkpoint": "model_0.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": -0.0006239041481458116,
+     "terminated_per_env": 0.0625,
+     "timed_out_per_env": 0.9375,
+     "seconds": 42.51,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": 0.8,
+     "mean_forward_speed": 0.0013927844940917567,
+     "mean_velocity_error": 0.7991510560115178,
+     "mean_base_height": 0.24944216385483742,
+     "window": "after step 100",
+     "mlx_vs_torch_worst_rel_l2": 4.779301434609806e-07,
+     "mlx_inference_ms_per_step": 0.7972,
+     "mlx_device": "gpu",
+     "role": "first iteration, control"
+    },
+    "zero": {
+     "controller": "zero",
+     "checkpoint": null,
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": -0.0001606726199752302,
+     "terminated_per_env": 0.0,
+     "timed_out_per_env": 1.0,
+     "seconds": 40.03,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": 0.8,
+     "mean_forward_speed": 0.001947886695238089,
+     "mean_velocity_error": 0.7984547993871901,
+     "mean_base_height": 0.24793349150154326,
+     "window": "after step 100",
+     "role": "no action, control"
+    }
+   }
+  },
+  "outputs": {
+   "env_4096": "~/cumlx-isaaclab/go2/loop4096/*.json",
+   "env_1024": "~/cumlx-isaaclab/go2/loop/*.json"
+  }
+ },
+ "commands": {
+  "cwd": "~/cumlx-isaaclab/go2, with <repo> = the CuMLX checkout",
+  "verify": "PYTHONPATH=<repo>/src venv/bin/python <repo>/examples/robot-policy/verify_policy.py --checkpoint run/logs/rsl_rl/unitree_go2_flat/2026-11-03_00-51-54/model_299.pt",
+  "forward": "ISAACSIM_ASSET_ROOT=$PWD/assets venv/bin/python <repo>/spikes/isaac_lab_mlx_loop.py --controller mlx --checkpoint run/logs/rsl_rl/unitree_go2_flat/2026-11-03_00-51-54/model_299.pt --forward 0.8 --output loop4096/fwd.json --num_envs 128 --steps 1000 --task Isaac-Velocity-Flat-UnitreeGo2 --device cpu presets=newton_mjwarp",
+  "back": "ISAACSIM_ASSET_ROOT=$PWD/assets venv/bin/python <repo>/spikes/isaac_lab_mlx_loop.py --controller mlx --checkpoint run/logs/rsl_rl/unitree_go2_flat/2026-11-03_00-51-54/model_299.pt --forward=-0.8 --output loop4096/back.json --num_envs 128 --steps 1000 --task Isaac-Velocity-Flat-UnitreeGo2 --device cpu presets=newton_mjwarp",
+  "stop": "ISAACSIM_ASSET_ROOT=$PWD/assets venv/bin/python <repo>/spikes/isaac_lab_mlx_loop.py --controller mlx --checkpoint run/logs/rsl_rl/unitree_go2_flat/2026-11-03_00-51-54/model_299.pt --forward 0 --output loop4096/stop.json --num_envs 128 --steps 1000 --task Isaac-Velocity-Flat-UnitreeGo2 --device cpu presets=newton_mjwarp",
+  "early": "ISAACSIM_ASSET_ROOT=$PWD/assets venv/bin/python <repo>/spikes/isaac_lab_mlx_loop.py --controller mlx --checkpoint run/logs/rsl_rl/unitree_go2_flat/2026-11-03_00-51-54/model_0.pt --forward 0.8 --output loop4096/early.json --num_envs 128 --steps 1000 --task Isaac-Velocity-Flat-UnitreeGo2 --device cpu presets=newton_mjwarp",
+  "zero": "ISAACSIM_ASSET_ROOT=$PWD/assets venv/bin/python <repo>/spikes/isaac_lab_mlx_loop.py --controller zero --forward 0.8 --output loop4096/zero.json --num_envs 128 --steps 1000 --task Isaac-Velocity-Flat-UnitreeGo2 --device cpu presets=newton_mjwarp",
+  "video": "cd loop4096/video (holding a copy of model_299.pt); ISAACSIM_ASSET_ROOT=~/cumlx-isaaclab/go2/assets ../../venv/bin/isaaclab play --rl_library rsl_rl --task Isaac-Velocity-Flat-UnitreeGo2 --checkpoint $PWD/model_299.pt --device cpu --num_envs 16 --video newton_gl --video_length 300 presets=newton_mjwarp env.commands.base_velocity.rel_standing_envs=0.0 env.commands.base_velocity.heading_command=false 'env.commands.base_velocity.ranges.lin_vel_x=[0.8,0.8]' 'env.commands.base_velocity.ranges.lin_vel_y=[0.0,0.0]' 'env.commands.base_velocity.ranges.ang_vel_z=[0.0,0.0]' 'env.commands.base_velocity.ranges.heading=[0.0,0.0]'",
+  "env_1024_note": "The commands of the 1024-env runs were not stored. Their JSONs record the same task, env count, steps and seed."
+ },
+ "video": {
+  "path": "~/Movies/cumlx/go2_4096envs_300iters.mp4",
+  "sha256": "7c23159d7ee9ac02abc83de17e76057be2d6dad9f92f93ab67b7e1011c8369f7",
+  "frames": 300,
+  "fps": 50,
+  "seconds": 6.0,
+  "size": [
+   1920,
+   1080
+  ],
+  "envs": 16,
+  "command_mps": 0.8,
+  "policy_runtime": "torch through the Isaac Lab play script, NOT MLX. The MLX numbers above are the closed-loop runs.",
+  "checked": "Frames 20 and 290 were looked at: the robots are upright, have moved from their start positions, and the command and measured arrows overlap. The rest of the clip was not looked at. The same command overrides were resolved through resolve_task_config and gave the fixed 0.8 m/s ranges."
+ },
+ "not_shown": [
+  "A second seed. Every closed-loop number here is from seed 7, so run-to-run spread is unknown",
+  "Any speed other than +0.8, -0.8 and 0, lateral commands, or yaw commands. Training sampled all of these in [-1, 1]",
+  "Yaw drift, and distance travelled in the world frame. The speed is body-frame x speed",
+  "Gait quality: foot slip, joint torques, energy, or contact timing",
+  "Agreement with rsl_rl's own actor module on this checkpoint: the reference was the torch version in verify_policy.py",
+  "A longer run: one 1000-step window is about one 20 s episode",
+  "More than 128 environments in the closed loop",
+  "The closed loop with the Isaac Lab play config. The training config was used, with noise and pushes on",
+  "Agreement with PhysX, or any other simulator",
+  "The real robot. Nothing here is a sim-to-real result",
+  "The cause of the difference between +0.74 at +0.8 and -0.87 at -0.8",
+  "Newton on Metal: physics is CPU only",
+  "Support: NVIDIA does not list macOS, and a later Isaac Lab commit can break this"
+ ]
+}

@@ -44,6 +44,7 @@ ERROR_CODES: dict[str, tuple[ExitCode, str]] = {
     'E_RUN_UNSUPPORTED': (ExitCode.ENVIRONMENT, 'The script called a CUDA API with no equivalent on the target.'),
     'E_RUN_MPS_OP_MISSING': (ExitCode.ENVIRONMENT, 'The script used an operation that MPS does not implement.'),
     'E_RUN_MPS_DTYPE': (ExitCode.ENVIRONMENT, 'The script used a data type that MPS does not have.'),
+    'E_RUN_NOT_COMPARABLE': (ExitCode.INPUT, 'These run reports are not runs of one script with one set of arguments, or one of them failed.'),
     'E_RUN_MISSING_PACKAGE': (ExitCode.ENVIRONMENT, 'The script imports a package that is not installed.'),
     'E_SIZE_LIMIT': (ExitCode.USAGE, 'The operation would exceed a configured size limit.'),
     'E_INTERNAL': (ExitCode.INTERNAL, 'Unexpected internal error.'),

@@ -408,11 +408,19 @@ def run_run(args) -> Result:
         raise missing_dependency('torch', 'capture', purpose='cumlx run') from None
     if args.target == 'mps' and not torch.backends.mps.is_available():
         raise CumlxError('E_BACKEND_UNAVAILABLE', 'MPS is not available on this machine', hint='use --target cpu')
+    device_name = None
+    if args.target == 'cuda':
+        if not torch.cuda.is_available():
+            raise CumlxError('E_BACKEND_UNAVAILABLE', 'CUDA is not available on this machine', hint='--target cuda records a golden on a real CUDA device. Use --target mps here')
+        device_name = torch.cuda.get_device_name(0)
+    if args.seed is not None and args.seed < 0:
+        raise CumlxError('E_USAGE', '--seed must not be negative')
 
     # The script's stdout must not enter the one JSON document on stdout.
     stdout = sys.stderr if args.format == 'json' else None
     rep = runner.run_script(args.script, args.module, list(args.script_args), target=args.target, substitutes=substitutes,
-                            allow_cpu_fallback=args.allow_cpu_fallback, timeout=args.timeout, stdout=stdout)
+                            allow_cpu_fallback=args.allow_cpu_fallback, timeout=args.timeout, stdout=stdout,
+                            trace_losses=args.trace_losses, seed=args.seed, device_name=device_name)
     report_path.write_text(json.dumps(rep, indent=1) + '\n')
     calls = rep['calls']
     by_kind: dict[str, int] = {}
@@ -421,7 +429,7 @@ def run_run(args) -> Result:
     failure = runner.classify_failure(rep)
     r = Result('run')
     r.data = {'target': args.target, 'script_exit_code': rep['script_exit_code'], 'seconds': rep['seconds'], 'processes': rep['processes'],
-              'kinds': by_kind, 'policy': rep['policy'], 'environment_changes': rep['environment_changes'], 'verified': False,
+              'kinds': by_kind, 'seed': args.seed, 'losses_recorded': len(rep['loss_trace']['values']) if args.trace_losses else None, 'policy': rep['policy'], 'environment_changes': rep['environment_changes'], 'verified': False,
               'calls': cap(calls, args.max_items, r)}
     r.artifact('run_report', str(report_path))
     if failure:
@@ -562,6 +570,23 @@ def run_tracediff(args) -> Result:
                  f"{s['above_threshold']} of {s['compared']} outputs above {rep['threshold_rel_l2']:g}")
     r.data = {'verdict': rep['verdict'], 'summary': s, 'threshold_rel_l2': rep['threshold_rel_l2'],
               'a': rep['a']['source'], 'b': rep['b']['source'], 'worst': cap(rep['worst'], args.max_items, r)}
+    return r
+
+
+# --------------------------------------------------------------------------- rundiff
+def run_rundiff(args) -> Result:
+    from ..verify.run_compare import compare_runs, load_runs
+    rep = compare_runs(load_runs(args.golden), load_runs(args.candidate))
+    r = Result('rundiff', exit_code=VERDICT_EXIT[rep['verdict']])
+    grade = f"grade {rep['grade']}" if rep['grade'] else 'no grade'
+    r.summary = f"{rep['verdict']}, {grade}: {rep['reason']}"
+    r.data = rep
+    if rep['golden']['target'] != 'cuda':
+        r.warn('W_RUNDIFF_GOLDEN_NOT_CUDA', f"The golden ran on {rep['golden']['target']}, so this result says nothing about CUDA.")
+    if rep['grade'] == 'A':
+        r.warn('W_RUNDIFF_FIRST_STEPS_ONLY', 'Grade A here covers the first steps of training only. Later steps can move apart through rounding.')
+    if rep['statistical']:
+        r.warn('W_RUNDIFF_ONE_STREAM', 'All losses of a run form one stream. A script with two optimizers, such as a GAN, is compared on their average.')
     return r
 
 

@@ -91,6 +91,8 @@ cumlx port Qwen/Qwen3-0.6B --q-bits 4 -o port4/  # 양자화. golden에 포팅�
 
 cartpole 하나, CPU 물리의 결과입니다. Warp에 Metal 백엔드가 없어 물리는 GPU로 돌지 않습니다. PhysX와 같은 물리인지는 비교하지 않았고, NVIDIA가 지원하지 않으므로 이후 커밋에서 깨질 수 있습니다. [측정값](../validation/isaac-lab-mac.json)
 
+사족 보행도 시험했습니다. Unitree Go2 평지 보행을 환경 4096개 × 300회(약 2.2시간) 학습한 정책은 MLX에서 명령 +0.8 m/s에 +0.74, -0.8에 -0.87로 따라갑니다. 시뮬레이션, 시드 1개의 결과이고, 환경 1024개 × 300회 정책은 걷지 못했습니다. [측정값](../validation/isaac-lab-go2.json)
+
 **C. Mac의 물리 엔진.** 모두 CPU입니다.
 
 | 엔진 | 결과 (M5 Pro) | 한계 |

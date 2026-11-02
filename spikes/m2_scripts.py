@@ -4,9 +4,12 @@
 This is the M2 gate in docs/ROADMAP-PLATFORM.md. It clones each repository at a fixed commit, builds a
 venv, and runs each script. One failure does not stop the others. A failure stays a failure.
 
-    python spikes/m2_scripts.py --work ~/cumlx-m2-scripts
+    python spikes/m2_scripts.py --work ~/cumlx-m2-scripts                  # on the Mac, target mps
+    python spikes/m2_scripts.py --work ~/cumlx-m2-scripts --target cuda    # the golden, on a CUDA machine
+    cumlx rundiff cuda-reports/nanogpt_train mps-reports/nanogpt_train     # the comparison
 
-It runs third-party code with your permissions, and it downloads MNIST.
+A script that trains runs once per seed, with its losses recorded. It runs third-party code with your
+permissions, and it downloads MNIST.
 """
 from __future__ import annotations
 
@@ -32,16 +35,16 @@ REPOSITORIES = {
 SCRIPTS = [
     {'name': 'nanogpt_train', 'repo': 'nanoGPT', 'cwd': '.', 'before': ['data/shakespeare_char/prepare.py'], 'script': 'train.py',
      'args': ['config/train_shakespeare_char.py', '--n_layer=2', '--n_head=2', '--n_embd=64', '--block_size=32', '--batch_size=12',
-              '--max_iters=20', '--eval_interval=10', '--eval_iters=2', '--compile=False', '--dropout=0.0', '--always_save_checkpoint=True'],
-     'timeout': 600, 'progress': r'iter (\d+): loss ([\d.]+)'},
+              '--max_iters=200', '--eval_interval=100', '--eval_iters=2', '--compile=False', '--dropout=0.0', '--always_save_checkpoint=True'],
+     'timeout': 1200, 'trains': True, 'progress': r'iter (\d+): loss ([\d.]+)'},
     {'name': 'nanogpt_sample', 'repo': 'nanoGPT', 'cwd': '.', 'script': 'sample.py',
      'args': ['--out_dir=out-shakespeare-char', '--num_samples=1', '--max_new_tokens=40', '--compile=False'], 'timeout': 300},
     {'name': 'mingpt_adder', 'repo': 'minGPT', 'cwd': '.', 'script': 'projects/adder/adder.py', 'pythonpath': '.',
-     'args': ['--trainer.max_iters=50', '--trainer.batch_size=64', '--model.model_type=gpt-nano'], 'timeout': 600,
+     'args': ['--trainer.max_iters=50', '--trainer.batch_size=64', '--model.model_type=gpt-nano'], 'timeout': 600, 'trains': True,
      'progress': r'iter (\d+): train loss ([\d.]+)'},
-    {'name': 'gan_mnist', 'repo': 'PyTorch-GAN', 'cwd': 'implementations/gan', 'script': 'gan.py', 'args': ['--n_epochs', '1'], 'timeout': 1200,
+    {'name': 'gan_mnist', 'repo': 'PyTorch-GAN', 'cwd': 'implementations/gan', 'script': 'gan.py', 'args': ['--n_epochs', '1'], 'timeout': 1200, 'trains': True,
      'progress': r'\[D loss: ([\d.]+)\]'},
-    {'name': 'cnn_mnist', 'repo': 'pytorch-tutorial', 'cwd': 'tutorials/02-intermediate/convolutional_neural_network', 'script': 'main.py', 'args': [], 'timeout': 1200,
+    {'name': 'cnn_mnist', 'repo': 'pytorch-tutorial', 'cwd': 'tutorials/02-intermediate/convolutional_neural_network', 'script': 'main.py', 'args': [], 'timeout': 1200, 'trains': True,
      'progress': r'Loss: ([\d.]+)', 'final': r'Test Accuracy[^:]*: ([\d.]+) ?%'},
 ]
 
@@ -61,7 +64,7 @@ def progress_of(text: str, pattern: str | None, final: str | None = None) -> dic
     return out
 
 
-def run_one(entry: dict, sources: Path, python: Path, reports: Path) -> dict:
+def run_one(entry: dict, sources: Path, python: Path, reports: Path, target: str, seed: int | None) -> dict:
     cwd = sources / entry['repo'] / entry['cwd']
     name = entry['name']
     before_code = 0
@@ -72,22 +75,28 @@ def run_one(entry: dict, sources: Path, python: Path, reports: Path) -> dict:
     env = dict(os.environ, PYTHONUNBUFFERED='1')
     if entry.get('pythonpath'):
         env['PYTHONPATH'] = entry['pythonpath']
-    report = reports / f'{name}.json'
-    argv = [str(python), '-m', 'cumlx', 'run', entry['script'], '--report', str(report), '--overwrite', '--format', 'json',
+    folder = reports / name
+    folder.mkdir(exist_ok=True)
+    label = 'run' if seed is None else f'seed{seed}'
+    report = folder / f'{label}.json'
+    argv = [str(python), '-m', 'cumlx', 'run', entry['script'], '--target', target, '--report', str(report), '--overwrite', '--format', 'json',
             '--max-items', '-1', '--timeout', str(entry['timeout'])]
+    if seed is not None:
+        argv += ['--seed', str(seed), '--trace-losses']
     if entry['args']:
         argv += ['--', *entry['args']]
     start = time.monotonic()
-    with (reports / f'{name}.out').open('w') as stdout, (reports / f'{name}.err').open('w') as stderr:
+    out_path, err_path = folder / f'{label}.out', folder / f'{label}.err'
+    with out_path.open('w') as stdout, err_path.open('w') as stderr:
         code = subprocess.run(argv, cwd=cwd, env=env, stdout=stdout, stderr=stderr, check=False).returncode
     seconds = round(time.monotonic() - start, 1)
-    text = (reports / f'{name}.err').read_text(errors='replace')
+    text = err_path.read_text(errors='replace')
     try:
-        doc = json.loads((reports / f'{name}.out').read_text())
+        doc = json.loads(out_path.read_text())
     except json.JSONDecodeError:
-        return {'name': name, 'status': 'no_result', 'exit_code': code, 'seconds': seconds, 'tail': text[-800:]}
+        return {'name': name, 'seed': seed, 'status': 'no_result', 'exit_code': code, 'seconds': seconds, 'tail': text[-800:]}
     kinds = doc['data'].get('kinds') or {}
-    return {'name': name, 'status': doc['status'], 'exit_code': code, 'seconds': seconds, 'errors': doc['errors'], 'warnings': [w['code'] for w in doc['warnings']],
+    return {'name': name, 'seed': seed, 'target': target, 'status': doc['status'], 'exit_code': code, 'seconds': seconds, 'errors': doc['errors'], 'warnings': [w['code'] for w in doc['warnings']],
             'kinds': kinds, 'processes': doc['data'].get('processes'), 'progress': progress_of(text, entry.get('progress'), entry.get('final')),
             'tail': text[-600:] if code else ''}
 
@@ -95,6 +104,9 @@ def run_one(entry: dict, sources: Path, python: Path, reports: Path) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--work', type=Path, required=True)
+    parser.add_argument('--target', choices=['mps', 'cpu', 'cuda'], default='mps')
+    parser.add_argument('--seeds', default='0,1,2', help='comma-separated seeds for the scripts that train')
+    parser.add_argument('--only', help='comma-separated script names')
     parser.add_argument('--manifest', type=Path, help='JSON list of entries in place of SCRIPTS, with sources already in place. Used by the tests')
     args = parser.parse_args(argv)
     work = args.work.resolve()
@@ -120,12 +132,17 @@ def main(argv: list[str] | None = None) -> int:
                 subprocess.run(['git', 'clone', '-q', '--filter=blob:none', '--no-checkout', url, str(target)], check=True)
             subprocess.run(['git', '-C', str(target), '-c', 'advice.detachedHead=false', 'checkout', '-q', commit], check=True)
         entries, commits = SCRIPTS, {k: v[1] for k, v in REPOSITORIES.items()}
+    if args.only:
+        wanted = set(args.only.split(','))
+        entries = [entry for entry in entries if entry['name'] in wanted]
+    seeds = [int(seed) for seed in args.seeds.split(',')]
+    plan = [(entry, seed) for entry in entries for seed in (seeds if entry.get('trains') else [None])]
     results = []
-    for entry in entries:
-        print(f"[{entry['name']}] running", flush=True)
-        result = run_one(entry, sources, python, reports)
+    for entry, seed in plan:
+        print(f"[{entry['name']} seed {seed}] running", flush=True)
+        result = run_one(entry, sources, python, reports, args.target, seed)
         results.append(result)
-        print(f"[{entry['name']}] {result['status']} exit {result['exit_code']} {result.get('seconds', '')}s", flush=True)
+        print(f"[{entry['name']} seed {seed}] {result['status']} exit {result['exit_code']} {result.get('seconds', '')}s", flush=True)
         summary_path.write_text(json.dumps({'schema': 'cumlx.spike.m2_scripts.v1', 'commits': commits, 'edited_scripts': 0, 'results': results}, indent=1) + '\n')
     passed = sum(r['exit_code'] == 0 for r in results)
     print(f'[done] {passed} of {len(results)} ran to the end. Result: {summary_path}', flush=True)

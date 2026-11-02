@@ -22,6 +22,7 @@ import importlib.machinery
 import importlib.util
 import inspect
 import json
+import math
 import os
 import sys
 import threading
@@ -32,6 +33,10 @@ from typing import Any
 ENV_TARGET = 'CUMLX_RUN_TARGET'
 ENV_EVENTS = 'CUMLX_RUN_EVENTS'
 ENV_SUBSTITUTE = 'CUMLX_RUN_SUBSTITUTE'
+ENV_TRACE_LOSSES = 'CUMLX_RUN_TRACE_LOSSES'
+ENV_SEED = 'CUMLX_RUN_SEED'
+# With this target nothing is redirected. It records the golden run on a real CUDA machine.
+NO_REDIRECT = 'cuda'
 DEVICE_NAMES = {'mps': 'MPS (cumlx run)', 'cpu': 'CPU (cumlx run)'}
 # Exceptions and helpers that stay as they are, so that `except torch.cuda.OutOfMemoryError` keeps working.
 KEEP = {'CudaError', 'DeferredCudaCallError', 'OutOfMemoryError'}
@@ -64,6 +69,9 @@ class _Recorder:
             self.counts[key] = self.counts.get(key, 0) + 1
         if first:
             self._write({'event': 'call', 'kind': kind, 'name': name, 'to': to, 'site': _call_site()})
+
+    def loss(self, value: float) -> None:
+        self._write({'event': 'loss', 'value': value if math.isfinite(value) else None})
 
     def flush(self) -> None:
         for (kind, name, to), count in self.counts.items():
@@ -383,6 +391,65 @@ def uninstall() -> None:
     _state = None
 
 
+def _trace_losses(torch: Any, recorder: _Recorder) -> None:
+    """Record each scalar given to backward(). It stays for the life of the process, and only with --trace-losses."""
+    real_backward = torch.Tensor.backward
+    # Under a torch function mode, the real backward() dispatches to this attribute a second time.
+    local = threading.local()
+
+    def backward(self: Any, *args: Any, **kwargs: Any) -> Any:
+        if getattr(local, 'inside', False):
+            return real_backward(self, *args, **kwargs)
+        local.inside = True
+        try:
+            if self.numel() == 1:
+                unscaled = getattr(self, '_cumlx_unscaled', None)
+                recorder.loss(float(self.detach()) if unscaled is None else unscaled)
+            return real_backward(self, *args, **kwargs)
+        finally:
+            local.inside = False
+    torch.Tensor.backward = backward
+    # One side can use a scale factor and the other none. The value to compare is the one before scaling.
+    scaler = torch.amp.grad_scaler.GradScaler
+    real_scale = scaler.scale
+
+    def scale(self: Any, outputs: Any) -> Any:
+        scaled = real_scale(self, outputs)
+        if scaled is not outputs and isinstance(outputs, torch.Tensor) and outputs.numel() == 1:
+            scaled._cumlx_unscaled = float(outputs.detach())
+        return scaled
+    scaler.scale = scale
+
+
+def _shift_seed(owner: Any, name: str, offset: int) -> None:
+    """Add the offset to an integer seed. A seed that is None or an array stays as it is."""
+    real = getattr(owner, name)
+
+    def seeded(seed: Any = None, *args: Any, **kwargs: Any) -> Any:
+        if isinstance(seed, int) and not isinstance(seed, bool):
+            seed += offset
+        return real(seed, *args, **kwargs)
+    setattr(owner, name, seeded)
+
+
+def _seed_torch(torch: Any, offset: int) -> None:
+    for owner, name in ((torch, 'manual_seed'), (torch.random, 'manual_seed'), (torch.cuda, 'manual_seed'), (torch.cuda, 'manual_seed_all'), (torch.mps, 'manual_seed')):
+        _shift_seed(owner, name, offset)
+    torch.manual_seed(0)
+
+
+def _seed_python(offset: int) -> None:
+    import random
+    _shift_seed(random, 'seed', offset)
+    random.seed(0)
+    try:
+        import numpy
+    except ImportError:
+        return
+    _shift_seed(numpy.random, 'seed', offset)
+    numpy.random.seed(0)
+
+
 class _AliasLoader(importlib.abc.Loader):
     """Serve a module under another name, for an explicit --substitute."""
 
@@ -402,10 +469,12 @@ class _AliasLoader(importlib.abc.Loader):
 class _Hooks(importlib.abc.MetaPathFinder):
     """Install the layer when torch has been imported, and resolve substitutions."""
 
-    def __init__(self, target: str, recorder: _Recorder, substitutes: dict[str, str]) -> None:
+    def __init__(self, target: str, recorder: _Recorder, substitutes: dict[str, str], trace_losses: bool = False, seed: int | None = None) -> None:
         self.target = target
         self.recorder = recorder
         self.substitutes = substitutes
+        self.trace_losses = trace_losses
+        self.seed = seed
 
     def find_spec(self, name: str, path: Any = None, target: Any = None) -> Any:
         if name == 'torch':
@@ -434,7 +503,12 @@ class _Hooks(importlib.abc.MetaPathFinder):
             def exec_module(self, module: Any) -> None:
                 inner.exec_module(module)
                 module.__spec__.loader = inner
-                install(module, hooks.target, hooks.recorder)
+                if hooks.target != NO_REDIRECT:
+                    install(module, hooks.target, hooks.recorder)
+                if hooks.trace_losses:
+                    _trace_losses(module, hooks.recorder)
+                if hooks.seed is not None:
+                    _seed_torch(module, hooks.seed)
 
         spec.loader = _Loader()
         return spec
@@ -452,6 +526,10 @@ def activate() -> None:
         previous(kind, value, tb)
     sys.excepthook = hook
     substitutes = json.loads(os.environ.get(ENV_SUBSTITUTE) or '{}')
-    sys.meta_path.insert(0, _Hooks(target, recorder, substitutes))
+    seed = os.environ.get(ENV_SEED)
+    offset = int(seed) if seed else None
+    if offset is not None:
+        _seed_python(offset)
+    sys.meta_path.insert(0, _Hooks(target, recorder, substitutes, os.environ.get(ENV_TRACE_LOSSES) == '1', offset))
 
 

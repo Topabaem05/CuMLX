@@ -812,7 +812,7 @@
      "evidence": "run",
      "source": "validation/isaac-lab-mac.json",
      "grade": "A",
-     "limits": "One real rsl_rl checkpoint, cartpole, 4-32-32-1, compared with rsl_rl's own outputs. No normalizer, no recurrent policy"
+     "limits": "Two real rsl_rl checkpoints. Cartpole 4-32-32-1 was compared with rsl_rl's own outputs. Go2 flat was compared with the torch version in the example only. No normalizer, no recurrent policy"
     },
     {
      "name": "Load the USD asset in Genesis",

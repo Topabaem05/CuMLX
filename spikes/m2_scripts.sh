@@ -3,6 +3,7 @@
 #
 #   sh spikes/m2_scripts.sh           # starts the run in ~/cumlx-m2-scripts
 #   sh spikes/m2_scripts.sh status    # shows the state of the run
+#   sh spikes/m2_scripts.sh --target cuda    # other arguments go to spikes/m2_scripts.py
 #
 # Delete the folder when the test is finished: rm -rf ~/cumlx-m2-scripts
 set -u
@@ -33,8 +34,9 @@ if [ ! -x "$REPO/.venv/bin/python" ]; then
     echo "error: $REPO/.venv/bin/python not found" >&2
     exit 3
 fi
+[ "${1:-}" = "start" ] && shift
 mkdir -p "$ROOT"
-PYTHONUNBUFFERED=1 nohup "$REPO/.venv/bin/python" "$REPO/spikes/m2_scripts.py" --work "$ROOT" >"$ROOT/run.log" 2>&1 &
+PYTHONUNBUFFERED=1 nohup "$REPO/.venv/bin/python" "$REPO/spikes/m2_scripts.py" --work "$ROOT" "$@" >"$ROOT/run.log" 2>&1 &
 echo $! >"$ROOT/run.pid"
 sleep 1
 if ! running; then

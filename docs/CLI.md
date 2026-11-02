@@ -23,6 +23,7 @@ Linux에서는 `diff` extra가 `mlx[cpu]`를 설치합니다. 같은 환경에 �
 | `diff` | MLX 포팅본을 같은 입력으로 실행해 비교하고 처음 어긋난 모듈을 찾음 | diff |
 | `conform` | MLX의 NVFP4/MXFP4 decode를 CUMLX bit-정확 코덱과 CPU·GPU에서 전수 비교. `--checkpoint`와 `--against`를 주면 ModelOpt 원본과 MLX repack의 bytes를 비교 | diff |
 | `tracediff` | golden trace 두 개를 비교. CUDA와 CPU capture의 차이처럼 기준 자체의 흔들림을 측정 | - |
+| `rundiff` | `cumlx run`의 손실 기록을 CUDA와 대상 장치에서 비교해 증명 등급을 매김 | - |
 | `scan` | CUDA 저장소나 HF 모델의 소스를 텍스트로 읽어, Apple Silicon으로 옮기는 작업량을 분류. 대상 코드는 실행하지 않음 | - |
 | `run` | CUDA를 전제한 PyTorch 스크립트를 수정 없이 MPS에서 실행하고, 바꾼 호출을 모두 기록. 실행은 증명이 아닙니다 | `torch` |
 | `recipe` | CUDA 의존성에 대해 Apple Silicon에서 쓸 대체품을 안내. 선택지마다 직접 실행했는지 문서만 읽었는지 표시 | - |
@@ -90,6 +91,34 @@ cumlx run train.py --substitute flash_attn=mps_flash_attn   # 패키지 대체�
 - 컴파일된 CUDA 확장과 `python -I` 하위 프로세스에는 적용되지 않습니다.
 - `torch.cuda.memory` 같은 하위 모듈을 직접 부르면 바꾸지 않습니다.
 - MCP에서는 `--allow-code-execution`을 줄 때만 보입니다. 파일을 실행하는 명령이기 때문입니다.
+
+## cumlx rundiff
+
+`cumlx run`이 끝까지 돌아도 결과가 같다는 뜻은 아닙니다. 이 명령은 같은 스크립트를 CUDA와 대상 장치에서 돌린 손실 기록을 비교합니다.
+
+```bash
+# CUDA 장비에서 (아무것도 바꾸지 않고 기록만 합니다)
+cumlx run train.py --target cuda --trace-losses --seed 0 --report golden/seed0.json
+# Mac에서
+cumlx run train.py --trace-losses --seed 0 --report mps/seed0.json
+# 시드 1, 2도 같게 실행한 뒤
+cumlx rundiff golden/ mps/
+```
+
+- `--trace-losses`는 `Tensor.backward()`에 들어온 스칼라를 모두 기록합니다. `GradScaler`를 쓰면 스케일 전 값을 기록합니다.
+- `--seed N`은 시작할 때 torch, NumPy, random을 N으로 시드하고, 스크립트가 정하는 정수 시드에 N을 더합니다. 스크립트가 직접 만든 `torch.Generator`와 NumPy `RandomState`는 바꾸지 않습니다.
+
+| 결과 | 조건 | exit |
+|---|---|---|
+| 등급 A | 같은 시드에서 1, 2번째 손실의 상대 차이가 모두 1e-4 이하 | 0 |
+| 등급 B | 시드 3개 이상에서, 학습을 4등분한 구간의 평균 손실이 모두 허용 범위 안 | 0 |
+| `diverged` | 한 구간이라도 허용 범위 밖이거나, 대상 쪽에만 NaN이나 Inf가 있음 | 1 |
+| `incomplete` | 시드 부족, 시드가 스크립트에 닿지 않음, 잡음이 너무 큼, backward 횟수가 다름, 프로세스 여러 개 | 5 |
+| `E_RUN_NOT_COMPARABLE` | 스크립트나 인자가 다르거나, 실패한 실행이 섞임 | 4 |
+
+허용 범위는 차이의 표준오차 3배와 golden 평균의 1% 중 큰 값입니다. 허용 범위가 golden 평균의 10%를 넘으면 합격시키지 않습니다. 이 값은 오픈소스 스크립트를 재기 전에 고정했고, 결과를 본 뒤 바꾸지 않습니다. 근거는 [fixture 측정값](../validation/run-compare-limits.json)입니다. 여기서 CPU와 MPS의 차이는 2번째 스텝에서 최대 1.7e-7이고, 학습률이 5% 틀린 경우도 `diverged`입니다. 이 측정에 CUDA는 없었습니다.
+
+**한계.** 등급 A는 처음 두 스텝만 보장합니다(`W_RUNDIFF_FIRST_STEPS_ONLY`). 등급 B는 잡음보다 작은 차이를 찾지 못합니다. 한 실행의 손실은 하나로 묶으므로 GAN처럼 옵티마이저가 둘이면 평균으로 비교합니다(`W_RUNDIFF_ONE_STREAM`). 손실만 비교하므로, 샘플링 결과나 저장한 모델은 비교하지 않습니다. golden이 CUDA가 아니면 `W_RUNDIFF_GOLDEN_NOT_CUDA`를 표시합니다.
 
 ## 권장 순서
 
