@@ -73,8 +73,23 @@ cumlx port Qwen/Qwen3-0.6B --q-bits 4 -o port4/  # 양자화. golden에 포팅�
 | **A. RTX 장비에서 실행하고 Mac에서 스트리밍** | Isaac Sim 전체 기능. [공식 스트리밍 클라이언트](https://docs.isaacsim.omniverse.nvidia.com/6.0.0/installation/manual_livestream_clients.html)가 macOS용으로 있습니다 | 문서로 확인. RTX 장비가 없어 실행하지 못함 |
 | **B. 학습은 NVIDIA 장비, 정책 추론은 Mac** | 학습된 로봇 정책을 MLX로 실행 | **직접 실행.** 아래 참조 |
 | **C. Mac에서 다른 물리 엔진 사용** | 렌더링 없는 물리 시뮬레이션 | **직접 실행.** 아래 참조 |
+| **D. Isaac Sim 없이 Isaac Lab을 Mac CPU에서 실행** | cartpole 학습과 MLX 정책 제어 | **직접 실행.** 미지원 구성. 아래 참조 |
 
-**B. 정책을 MLX로 옮기기.** [examples/robot-policy/verify_policy.py](../examples/robot-policy/verify_policy.py)는 rsl_rl 기본 구조(관측 48, 은닉 512-256-128, ELU, 행동 12)의 정책을 MLX로 옮기고 `cumlx.check_op`으로 비교합니다. 배치 크기 1, 16, 4096에서 최악 오차는 5.2e-7이고, 활성화 함수를 잘못 옮기면 실패합니다. 랜덤 가중치로 실행했습니다. `--checkpoint`로 실제 체크포인트를 넣을 수 있지만 실제 체크포인트로는 실행하지 않았습니다.
+**B. 정책을 MLX로 옮기기.** [examples/robot-policy/verify_policy.py](../examples/robot-policy/verify_policy.py)는 rsl_rl 기본 구조(관측 48, 은닉 512-256-128, ELU, 행동 12)의 정책을 MLX로 옮기고 `cumlx.check_op`으로 비교합니다. 배치 크기 1, 16, 4096에서 최악 오차는 5.2e-7이고, 활성화 함수를 잘못 옮기면 실패합니다. 랜덤 가중치로 실행한 결과입니다.
+
+실제 체크포인트(`--checkpoint`, `--golden`)도 실행했습니다. D에서 학습한 cartpole 정책(4-32-32-1)을 rsl_rl 원본 코드의 출력과 비교한 최악 오차는 7.9e-8입니다. 다른 체크포인트, 틀린 활성화 함수, 가중치 하나의 1% 오차는 모두 실패로 판정됩니다. 관측 정규화 층이 있는 체크포인트는 거부합니다.
+
+**D. Isaac Sim 없이 Isaac Lab 실행.** [spikes/isaac_lab_mac.sh](../spikes/isaac_lab_mac.sh)가 환경을 만들고 cartpole을 학습합니다. Isaac Lab의 `uv sync`는 지원 환경에 macOS가 없어 실패하므로, 의존성을 직접 구성합니다. Mac wheel이 없는 패키지를 빼고 `usd-core`로 대체하며, Kit에 내장된 `OmniPBR.mdl`은 빈 파일로 둡니다. Isaac Lab 소스는 고치지 않았습니다.
+
+| 측정 (M5 Pro, 물리는 CPU, 환경 256개) | 결과 |
+|---|---|
+| 100회 학습 | 약 18초, 약 4만 step/s |
+| 마지막 에피소드 길이 (최대 300) | 시드 42: 300, 시드 1: 293, 시드 2: 246. 처음에는 8~10 |
+| MLX 정책이 900 step 제어 (시드 3개) | 마지막 100 step에서 막대가 모두 직립, 평균 각도 0.004 rad, 카트 이탈 0회 |
+| 대조: 힘을 주지 않음 (시드 2개) | 직립 0%, 평균 각도 2.69 rad |
+| 대조: 1회차 체크포인트 | 직립 5%, 환경당 카트 이탈 6.8회 |
+
+cartpole 하나, CPU 물리의 결과입니다. Warp에 Metal 백엔드가 없어 물리는 GPU로 돌지 않습니다. PhysX와 같은 물리인지는 비교하지 않았고, NVIDIA가 지원하지 않으므로 이후 커밋에서 깨질 수 있습니다. [측정값](../validation/isaac-lab-mac.json)
 
 **C. Mac의 물리 엔진.** 모두 CPU입니다.
 

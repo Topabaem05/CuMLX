@@ -810,9 +810,9 @@
      "install": "pip install 'cumlx-lab[capture,diff]'",
      "license": "MIT",
      "evidence": "run",
-     "source": "validation/REPORT.md",
+     "source": "validation/isaac-lab-mac.json",
      "grade": "A",
-     "limits": "Random weights in rsl_rl shape; no real checkpoint"
+     "limits": "One real rsl_rl checkpoint, cartpole, 4-32-32-1, compared with rsl_rl's own outputs. No normalizer, no recurrent policy"
     },
     {
      "name": "Load the USD asset in Genesis",
@@ -846,6 +846,16 @@
     "isaaclab-rl"
    ],
    "options": [
+    {
+     "name": "Isaac Lab with Newton on the CPU, without Isaac Sim",
+     "how": "Build the environment with spikes/isaac_lab_mac.py in the CUMLX repository, then run isaaclab train with presets=newton_mjwarp",
+     "install": "",
+     "license": "BSD-3-Clause",
+     "evidence": "run",
+     "source": "validation/isaac-lab-mac.json",
+     "grade": "C",
+     "limits": "Cartpole only, 256 environments, CPU only. NVIDIA does not support macOS, and the environment is hand-built with a placeholder asset. No renderer. Physics was not compared with PhysX"
+    },
     {
      "name": "Genesis on Metal",
      "how": "Rewrite the task in Genesis",

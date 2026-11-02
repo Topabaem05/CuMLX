@@ -1,0 +1,247 @@
+{
+ "schema": "cumlx.validation.isaac_lab_mac.v1",
+ "date": "2026-11-02",
+ "machine": "Apple M5 Pro, macOS 27.0.1. Physics and PPO on the CPU; MLX policy on the GPU",
+ "isaac_lab_commit": "c498443e0b833515e1976db9eb3edcd8dabb4cb7",
+ "supported_by_nvidia": false,
+ "isaac_sim_or_kit_used": false,
+ "environment": {
+  "how": "spikes/isaac_lab_mac.py. Isaac Lab's lock file names Linux and Windows only, and uv refuses macOS with that setting, so the environment is hand-built",
+  "removed_no_macos_wheel": [
+   "omniverseclient",
+   "usd-exchange",
+   "usd-optimize"
+  ],
+  "added": "usd-core==26.8",
+  "versions": {
+   "mujoco": "mujoco==3.15.0",
+   "mujoco-warp": "mujoco-warp==3.15.0",
+   "newton": "newton @ git+https://github.com/newton-physics/newton.git@42f7def118c2c4299ce493457bafd4e8a22a696e",
+   "rsl-rl-lib": "rsl-rl-lib==5.5.1",
+   "torch": "torch==2.11.0",
+   "usd-core": "usd-core==26.8",
+   "warp-lang": "warp-lang==1.17.0"
+  },
+  "isaac_lab_source_modified": false,
+  "asset_change": "Empty placeholder for OmniPBR.mdl, which is built into Kit and absent from the asset server. Isaac Lab asks omni.client about a missing local file, and omni.client has no macOS wheel. No renderer ran.",
+  "placeholders": [
+   "Isaac/IsaacLab/Environments/Grid/default_ground_plane_checker_v1/OmniPBR.mdl",
+   "Isaac/IsaacLab/Robots/Classic/Cartpole/Props/OmniPBR.mdl"
+  ]
+ },
+ "first_attempt": {
+  "result": "failed in 14.4 s at environment creation",
+  "error": "ModuleNotFoundError: No module named 'omni'",
+  "cause": "OmniPBR.mdl, fixed with the placeholder"
+ },
+ "smoke": {
+  "status": "ok",
+  "seconds": 42.7,
+  "iterations_seen": 5,
+  "reward_first": 0.39,
+  "reward_last": -1.23
+ },
+ "training": {
+  "task": "Isaac-Cartpole-Direct",
+  "physics": "newton_mjwarp",
+  "device": "cpu",
+  "envs": 256,
+  "iterations": 100,
+  "episode_length_limit": 300,
+  "seed_42": {
+   "iterations": 100,
+   "reward_first": 0.1,
+   "reward_last": 4.95,
+   "episode_length_first": 9.21,
+   "episode_length_last": 300.0,
+   "episode_length_at": {
+    "10": 86.55,
+    "30": 207.91,
+    "50": 297.67,
+    "70": 300.0,
+    "100": 300.0
+   },
+   "steps_per_second": {
+    "median": 40007,
+    "min": 23115,
+    "max": 43530
+   },
+   "learn_stage_seconds": 17.8
+  },
+  "seed_1": {
+   "iterations": 100,
+   "reward_first": 0.08,
+   "reward_last": 4.79,
+   "episode_length_first": 8.0,
+   "episode_length_last": 293.38,
+   "episode_length_at": {
+    "10": 106.95,
+    "30": 83.7,
+    "50": 138.63,
+    "70": 295.96,
+    "100": 293.38
+   },
+   "steps_per_second": {
+    "median": 38490,
+    "min": 32828,
+    "max": 40752
+   }
+  },
+  "seed_2": {
+   "iterations": 100,
+   "reward_first": 0.11,
+   "reward_last": 3.87,
+   "episode_length_first": 9.57,
+   "episode_length_last": 245.6,
+   "episode_length_at": {
+    "10": 79.32,
+    "30": 108.19,
+    "50": 127.39,
+    "70": 241.62,
+    "100": 245.6
+   },
+   "steps_per_second": {
+    "median": 38431,
+    "min": 34113,
+    "max": 40374
+   }
+  }
+ },
+ "policy_in_mlx": {
+  "grade": "A",
+  "reference": "rsl_rl 5.5.1 MLPModel on torch 2.11.0, spikes/rsl_rl_golden.py",
+  "checkpoint": "validation/isaac-lab-mac/model_99.pt",
+  "golden": "validation/isaac-lab-mac/golden.npz",
+  "shape": "4-32-32-1, ELU",
+  "batches": [
+   1,
+   16,
+   4096
+  ],
+  "worst_rel_l2": 7.907580625889751e-08,
+  "threshold": 0.0001,
+  "wrong_cases": {
+   "model_0.pt against the golden of model_99.pt": 1.077727445148474,
+   "relu instead of elu": 0.655,
+   "one weight 1% off": 0.00022,
+   "observation normalizer in the checkpoint": "refused",
+   "observation that was not recorded": "refused"
+  }
+ },
+ "closed_loop_mlx_controls_newton": {
+  "script": "spikes/isaac_lab_mlx_loop.py",
+  "note": "900 steps are 3 episodes. Pole values are over the last 100 steps. Isaac Lab warned that the environment seed was unset; env.reset was seeded.",
+  "runs": [
+   {
+    "controller": "mlx",
+    "checkpoint": "model_99.pt",
+    "envs": 256,
+    "steps": 900,
+    "seed": 7,
+    "device": "cpu",
+    "reward_per_env_step": 0.01652014101545016,
+    "terminated_per_env": 0.0,
+    "timed_out_per_env": 3.0,
+    "mean_abs_pole_rad_last_100": 0.0037396724382415415,
+    "upright_fraction_last_100": 1.0,
+    "seconds": 5.24,
+    "mlx_vs_torch_worst_rel_l2": 1.2514461559476331e-05,
+    "mlx_inference_ms_per_step": 0.892,
+    "mlx_device": "gpu",
+    "checkpoint_role": "trained"
+   },
+   {
+    "controller": "mlx",
+    "checkpoint": "model_99.pt",
+    "envs": 256,
+    "steps": 900,
+    "seed": 8,
+    "device": "cpu",
+    "reward_per_env_step": 0.016517402562830182,
+    "terminated_per_env": 0.0,
+    "timed_out_per_env": 3.0,
+    "mean_abs_pole_rad_last_100": 0.0035078661073930564,
+    "upright_fraction_last_100": 1.0,
+    "seconds": 5.01,
+    "mlx_vs_torch_worst_rel_l2": 1.3374324225878809e-05,
+    "mlx_inference_ms_per_step": 0.6315,
+    "mlx_device": "gpu",
+    "checkpoint_role": "trained"
+   },
+   {
+    "controller": "mlx",
+    "checkpoint": "model_99.pt",
+    "envs": 256,
+    "steps": 900,
+    "seed": 9,
+    "device": "cpu",
+    "reward_per_env_step": 0.016519811018887495,
+    "terminated_per_env": 0.0,
+    "timed_out_per_env": 3.0,
+    "mean_abs_pole_rad_last_100": 0.0038139309687539934,
+    "upright_fraction_last_100": 1.0,
+    "seconds": 4.95,
+    "mlx_vs_torch_worst_rel_l2": 1.3094447240291629e-05,
+    "mlx_inference_ms_per_step": 0.6251,
+    "mlx_device": "gpu",
+    "checkpoint_role": "trained"
+   },
+   {
+    "controller": "mlx",
+    "checkpoint": "model_0.pt",
+    "envs": 256,
+    "steps": 900,
+    "seed": 7,
+    "device": "cpu",
+    "reward_per_env_step": -0.02157116086978931,
+    "terminated_per_env": 6.78515625,
+    "timed_out_per_env": 0.00390625,
+    "mean_abs_pole_rad_last_100": 1.252156183719635,
+    "upright_fraction_last_100": 0.0509765625,
+    "seconds": 5.32,
+    "mlx_vs_torch_worst_rel_l2": 2.5938641101674875e-07,
+    "mlx_inference_ms_per_step": 0.6193,
+    "mlx_device": "gpu",
+    "checkpoint_role": "first iteration, control"
+   },
+   {
+    "controller": "zero",
+    "checkpoint": null,
+    "envs": 256,
+    "steps": 900,
+    "seed": 7,
+    "device": "cpu",
+    "reward_per_env_step": -0.07244485106710474,
+    "terminated_per_env": 0.0,
+    "timed_out_per_env": 3.0,
+    "mean_abs_pole_rad_last_100": 2.6845315146446227,
+    "upright_fraction_last_100": 0.0,
+    "seconds": 4.2,
+    "checkpoint_role": "no force, control"
+   },
+   {
+    "controller": "zero",
+    "checkpoint": null,
+    "envs": 256,
+    "steps": 900,
+    "seed": 8,
+    "device": "cpu",
+    "reward_per_env_step": -0.07280218363053993,
+    "terminated_per_env": 0.0,
+    "timed_out_per_env": 3.0,
+    "mean_abs_pole_rad_last_100": 2.691367084980011,
+    "upright_fraction_last_100": 0.0,
+    "seconds": 4.25,
+    "checkpoint_role": "no force, control"
+   }
+  ]
+ },
+ "not_shown": [
+  "Newton on Metal: Warp has no Metal backend, so physics is CPU only",
+  "Agreement with PhysX. The policy was not run on another simulator, and Newton was not added to the PhysX 3.31 rad against Genesis 1.97 rad comparison",
+  "Any task other than cartpole",
+  "More than 256 environments",
+  "Cameras or rendering",
+  "Support: NVIDIA does not list macOS, and a later Isaac Lab commit can break this"
+ ]
+}

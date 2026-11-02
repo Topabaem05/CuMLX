@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `spikes/isaac_lab_mac.sh`: train Isaac Lab cartpole on a Mac CPU with Newton, without Isaac Sim. NVIDIA does not support this, and Isaac Lab's `uv sync` refuses macOS, so it builds the environment by hand.
+- `spikes/rsl_rl_golden.py` and `verify_policy.py --golden`: compare an MLX policy with rsl_rl's own outputs. Before this, the reference was a torch version written in the same file.
+- `spikes/isaac_lab_mlx_loop.py`: let an MLX policy control an Isaac Lab environment, with controls.
+
+### Fixed
+
+- `examples/robot-policy` refused real rsl_rl 5 checkpoints: it expected `model_state_dict` and `actor.N`, but rsl_rl 5 writes `actor_state_dict` and `mlp.N`. Only random weights had been tried. It now also refuses an observation normalizer, which it would otherwise have left out with no error.
+- The README said that `pip install isaacsim` installs an empty package on a Mac. It fails.
+
 ## 0.5.0 (2026-11-02)
 
 ### Added
