@@ -4,15 +4,26 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cumlx-lab"
-version = "0.3.0.dev0"
-description = "Experimental packed FP4 kernels for MLX Metal and native CUDA"
+version = "0.4.0.dev0"
+description = "CUDA-to-MLX porting parity verifier and experimental packed FP4 kernels"
 requires-python = ">=3.10"
 readme = "README.md"
 license = {text = "MIT"}
 dependencies = ["numpy>=1.24"]
 
+[project.scripts]
+cumlx = "cumlx.cli:entrypoint"
+
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+# Golden capture from the original PyTorch model.
+capture = ["torch>=2.2", "transformers>=4.45"]
+# MLX port execution. On Linux this installs the CPU backend; do not combine with the cuda extra.
+diff = [
+    "mlx>=0.30; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "mlx[cpu]>=0.30; sys_platform == 'linux'",
+    "mlx-lm>=0.30",
+]
 metal = ["mlx==0.32.2; sys_platform == 'darwin' and platform_machine == 'arm64'"]
 cuda = ["mlx[cuda12]==0.32.2; sys_platform == 'linux'"]
 
@@ -26,7 +37,10 @@ cumlx = ["kernels/*.metal", "kernels/*.cu", "kernels/*.h", "py.typed"]
 addopts = "-ra"
 testpaths = ["tests"]
 pythonpath = ["src"]
-markers = ["gpu: requires a real selected Metal or CUDA GPU"]
+markers = [
+    "gpu: requires a real selected Metal or CUDA GPU",
+    "e2e: needs the capture and diff extras (torch, transformers, mlx, mlx-lm)",
+]
 
 [tool.ruff]
 target-version = "py310"

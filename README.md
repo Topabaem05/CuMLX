@@ -1,4 +1,22 @@
-# CUMLX kernels v0.3
+# CUMLX v0.4 (dev)
+
+**CUDA→MLX 포팅 동등성 검증기 (베타 준비) + Packed FP4 커널 lab**
+
+CUMLX는 모델을 변환하지 않습니다. mlx-lm 등 어떤 도구로 변환했든, MLX 포팅본이 원본 PyTorch(CUDA) 모델과 **같은 계산을 하는지 모듈 단위로 비교**하고, 다르면 **처음 어긋난 모듈**을 찾습니다. 방향과 일정은 [1개월 로드맵](docs/ROADMAP-1MONTH.md)에 있습니다.
+
+```bash
+python -m pip install -e '.[capture,diff]'        # torch, transformers, mlx, mlx-lm
+cumlx doctor --require capture,diff
+cumlx capture <원본 HF id 또는 경로> --prompt "Hello" -o golden/
+cumlx diff golden/ <MLX 포팅본> -o report/       # exit 0 ok · 1 diverged · 5 incomplete
+cumlx selftest                                   # 깨끗한 포팅 통과 + 오류 주입 8종 위치 검출
+```
+
+CLI는 AI 에이전트가 쓰기 좋게 설계했습니다. stdout에는 JSON 문서 1개만 나가고, exit code가 고정되어 있으며, 모든 오류에 해결 hint가 붙고, `next_steps`로 다음 명령을 제안하고, `--max-items`로 출력 길이를 제한합니다. 사용법은 [CLI 문서](docs/CLI.md)와 [AGENTS.md](AGENTS.md)를 보십시오. 검증 범위는 Linux MLX CPU 백엔드와 tiny 모델까지이며, Apple Silicon 실행과 실제 공개 모델 검증은 아직 하지 않았습니다.
+
+---
+
+## FP4 커널 lab (v0.3에서 유지)
 
 **Packed FP4 커널 구현 패키지 — CPU 검증 완료 범위와 GPU 미검증 범위를 분리합니다.**
 
@@ -139,7 +157,7 @@ python benchmarks/bench_fp4.py --backend metal --m 1 --n 512 --k 1024 --output b
 
 다음 gate는 실제 Metal/CUDA에서 전체 GPU 테스트를 실행하고, benchmark profile별 수치·메모리·성능을 기록하는 것입니다. 그 뒤에만 SIMD reduction, vectorized loads, matrix instructions, MoE gather 및 CUDA-facing frontend를 확장합니다.
 
-[커널 상세 설계](docs/KERNEL-DESIGN.md) · [구현 계획](docs/IMPLEMENTATION-PLAN.md) · [원본 자료](SOURCES.md)
+[커널 상세 설계](docs/KERNEL-DESIGN.md) · [구현 계획](docs/IMPLEMENTATION-PLAN.md) · [1개월 로드맵 (포팅 검증기)](docs/ROADMAP-1MONTH.md) · [원본 자료](SOURCES.md)
 
 `provenance/SOURCE-ARCHIVES.json`은 전달받은 원본 ZIP의 SHA-256을 기록합니다. 바이너리 ZIP과 이전 wheel은 Git에 중복 저장하지 않으며, distributions는 CI artifact로 생성합니다. 과거 설계와 CPU 검증이 실제 GPU 검증을 대신하지 않습니다. CUMLX는 Apple 또는 NVIDIA 공식 프로젝트가 아닙니다.
 
