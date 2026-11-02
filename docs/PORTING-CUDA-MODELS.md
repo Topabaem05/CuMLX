@@ -63,7 +63,8 @@ cumlx port Qwen/Qwen3-0.6B --q-bits 4 -o port4/  # 양자화. golden에 포팅�
 | Mac의 Linux arm64 컨테이너, GPU 없음 | **일부 동작.** Kit 시작 약 30초, CPU PhysX 동작, Isaac Lab cartpole USD 시뮬레이션 동작. RTX(`No device could be created`)와 카메라는 실패. 로그에 오류 약 600줄이 있고 일부 확장은 로드되지 않습니다. NVIDIA 지원 구성이 아닙니다 | 직접 실행, [측정값](../validation/isaac-sim.json), `spikes/isaac_sim_container.sh` |
 | RTX 센서와 렌더링 | 불가. RT core가 필요합니다 | 공식 요구 사항 |
 | 소스 변환 | 불가. 저장소는 Apache 2.0이지만 Omniverse Kit SDK 등 다른 라이선스의 구성 요소가 필요하고, 파일 1141개가 Omniverse를 사용합니다 | 저장소 `LICENSE`, `cumlx scan` |
-| 보유한 Tesla V100에서 실행 | 공식 요구 사항 미달입니다(최소 GeForce RTX 4080, RT core 없음). 다만 드라이버는 `VK_KHR_ray_tracing_pipeline`을 노출합니다. **실행 결과는 아직 없습니다** | `vulkaninfo` 확인, 실행 대기 |
+| 보유한 Tesla V100에서 실행 | **물리만 동작.** Kit과 CPU PhysX는 돌지만, RTX는 `Skipping unsupported non-RTX GPU`로 거부되고 카메라는 값을 돌려주지 않습니다. 드라이버가 `VK_KHR_ray_tracing_pipeline`을 노출해도 마찬가지입니다 | 직접 실행, [측정값](../validation/isaac-sim.json) |
+| Mac 컨테이너와 V100의 CPU PhysX 비교 | **출력된 모든 자릿수까지 같습니다.** 자유 낙하 높이와 막대 각도 4개를 비교했고, 작은 장면 2개뿐입니다. GPU PhysX는 어디서도 실행하지 못했습니다 | 직접 실행 |
 
 ### 쓸 수 있는 방법
 

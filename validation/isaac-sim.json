@@ -35,7 +35,7 @@
     661.0
    ],
    "no_gravity_moved_m": 0.0,
-   "note": "The error is about 2 steps of motion at this speed. The cause was not investigated; World.reset may step the scene."
+   "note": "The same 0.10 m offset appears on x86_64, so it does not come from the Mac container. The cause was not investigated; World.reset may step the scene."
   },
   "cartpole_isaaclab_usd": {
    "dofs": [
@@ -92,7 +92,52 @@
   "note": "Not the same physics. Isaac Sim may have stepped during World.reset, and the asset import, solver and integrator differ. The cause was not investigated."
  },
  "v100": {
-  "result": "pending",
-  "reason": "Two other training jobs held the GPU when the install finished."
+  "environment": {
+   "gpu": "Tesla V100-SXM2-16GB",
+   "driver": "580.178.04",
+   "os": "Ubuntu 24.04",
+   "machine": "x86_64"
+  },
+  "runs": 1,
+  "kit_start_seconds": [
+   37.4
+  ],
+  "freefall": {
+   "z_after_240_steps_at_1_240s": 94.99281311035156,
+   "steps_per_s": [
+    370.7
+   ],
+   "no_gravity_moved_m": 0.0
+  },
+  "cartpole_isaaclab_usd": {
+   "pole_rad_at_0.25_0.5_0.75_1s": [
+    0.18634876608848572,
+    0.5592215657234192,
+    1.5098652839660645,
+    3.310114622116089
+   ],
+   "no_gravity": [
+    0.10000000149011612,
+    0.10000000149011612,
+    0.10000000149011612,
+    0.10000000149011612
+   ]
+  },
+  "rtx": {
+   "result": "fails",
+   "error": "[omni.rtx] Skipping unsupported non-RTX GPU: Tesla V100-SXM2-16GB; No device could be created"
+  },
+  "camera": {
+   "result": "fails",
+   "error": "No exception, but get_rgba returned None after 30 frames"
+  },
+  "error_lines_in_log": [
+   2
+  ],
+  "note": "The driver exposes VK_KHR_ray_tracing_pipeline, but Isaac Sim refuses the GPU. PhysX ran on the CPU here too."
+ },
+ "compare_arm64_x86_64": {
+  "result": "identical in every printed digit, for the free fall height and 4 pole angles",
+  "scope": "CPU PhysX in Isaac Sim 6.2, 2 small scenes. GPU PhysX was not run anywhere."
  }
 }

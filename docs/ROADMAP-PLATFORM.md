@@ -131,6 +131,8 @@ Apple M5 Pro 한 대에서 직접 실행했습니다. 재현 방법은 [spikes/]
 **M0 이후 Isaac Sim 시험 (2026-11-02):**
 
 - Linux arm64 컨테이너에서 Isaac Sim 6.2의 Kit과 CPU PhysX가 돌았습니다. RTX와 카메라는 실패했습니다. 재현 스크립트는 `spikes/isaac_sim_container.sh`이고, EULA 동의는 실행하는 사람이 직접 설정해야 합니다.
+- V100에서도 Kit과 CPU PhysX만 돕니다. RTX는 `Skipping unsupported non-RTX GPU`로 거부됩니다. 따라서 M5의 V100 비교는 Mitsuba CUDA로만 가능합니다.
+- Mac 컨테이너(arm64)와 V100 서버(x86_64)의 CPU PhysX 값이 출력된 모든 자릿수까지 같습니다. 작은 장면 2개의 결과입니다. 이 경로는 M4에서 Isaac 쪽 기준 물리로 쓸 수 있습니다.
 - 같은 cartpole USD의 막대 각도가 1초 후 PhysX 3.31 rad, Genesis 1.97 rad로 다릅니다. 원인은 조사하지 않았습니다. M4의 등급 B 비교에서 먼저 풀어야 합니다.
 - Isaac Lab 3.0은 Isaac Sim 없이 Newton 백엔드로 실행하는 경로를 문서화합니다. Newton은 Mac CPU에서 돌아가므로 M4의 새 후보입니다. **실행하지 않았습니다.**
 
@@ -291,4 +293,4 @@ RTX가 필요하던 렌더링 경로를 Metal 레이트레이싱으로 대체합
 |---|---|---|
 | **제품 범위** | 검증기 하나로 둘지, 패키지를 나눌지 | `cumlx-lab`에 extras로 시작, 커지면 분리 |
 | **kernelport와의 관계** | 연동 또는 자체 구현 | 연동. 번역은 woof, 포트 검증과 시험 케이스는 kernelport를 쓰고, CUDA golden과 보고서는 CUMLX가 맡음. 단, wheel에 zoo가 없고 프로젝트가 작아 버전을 고정 |
-| **M5 기준 장비** | RTX 센서와 직접 비교하려면 RTX 장비가 필요. V100은 RT core가 없음 | 우선 Mitsuba CUDA 비교만. 장비가 생기면 추가 |
+| **M5 기준 장비** | RTX 센서와 직접 비교하려면 RTX 장비가 필요. V100은 Isaac Sim이 RTX를 거부함(실행 확인) | 우선 Mitsuba CUDA 비교만. 장비가 생기면 추가 |

@@ -790,8 +790,8 @@
      "license": "NVIDIA proprietary; you accept its EULA",
      "evidence": "run",
      "source": "validation/isaac-sim.json",
-     "grade": "C",
-     "limits": "NVIDIA does not support this. Kit and CPU PhysX ran, including an Isaac Lab USD. No GPU, RTX or cameras; about 600 error lines, and some extensions fail to load"
+     "grade": "A",
+     "limits": "NVIDIA does not support this. CPU PhysX matched x86_64 on a V100 machine in every printed digit, on 2 small scenes only. No GPU PhysX, RTX or cameras. About 600 error lines, and some extensions fail to load"
     },
     {
      "name": "Stream from an RTX machine",

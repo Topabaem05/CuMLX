@@ -29,6 +29,8 @@ mlx 0.32.4 (kernel tests also on 0.32.2), mlx-lm 0.32.2. These are local runs; C
 | `cumlx port` on SmolLM2-135M, 4 bits | ok: 730 pass, 0 fail, and the port generated text | One run |
 | Isaac Sim on macOS | Install fails: no wheel exists, and the 6.0.0.0 stub raises `Didn't find wheel` | Executed with uv |
 | Isaac Sim 6.2 in a Linux arm64 container on the Mac (`isaac-sim.json`) | Kit starts in about 30 s, CPU PhysX runs, and an Isaac Lab cartpole falls under gravity only. Repeat runs match. RTX and cameras fail, with about 600 error lines | No GPU; NVIDIA does not support this; 2 full runs |
+| Isaac Sim 6.2 on the Tesla V100 (`isaac-sim.json`) | Kit and CPU PhysX run. RTX refuses the GPU (`Skipping unsupported non-RTX GPU`), and the camera returns nothing | 1 run |
+| CPU PhysX, Mac container against V100 | Free fall height and 4 pole angles identical in every printed digit | arm64 against x86_64; 2 small scenes; GPU PhysX not run |
 | Same cartpole USD, PhysX against Genesis | Pole at 1 s: 3.31 rad against 1.97 rad | Not the same physics; cause not investigated |
 | Physics on this Mac | MuJoCo 3.17: about 722,000 steps/s on a cartpole. Newton 1.7 on Warp 1.19: a falling box rests at z = 0.2; `cuda:0` is refused | CPU only; one small scene each |
 | Robot policy in MLX (`examples/robot-policy`) | rsl_rl default shape, batches 1, 16 and 4096: worst 5.2e-7; a wrong activation fails | Random weights; no real checkpoint |
