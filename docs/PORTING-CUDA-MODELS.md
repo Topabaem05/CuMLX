@@ -7,7 +7,7 @@
 1. **범용 CUDA 변환기는 만들지 않습니다.** 대신 `cumlx scan`(작업량 분류)과 `cumlx port`(변환과 증명을 명령 하나로)를 추가했습니다.
 2. **mlx-lm이 구현한 모델은 이미 쉽게 변환됩니다.** `cumlx port`로 변환하고 바로 검증합니다.
 3. **손으로 쓴 CUDA 커널이 있으면 자동 변환이 되지 않습니다.** 커널을 하나씩 다시 쓰고 `cumlx.check_op`으로 검증해야 합니다.
-4. **Isaac Sim은 변환할 수 없습니다.** 코드 문제가 아니라 NVIDIA RTX와 Omniverse 런타임에 묶여 있기 때문입니다. 시뮬레이션은 NVIDIA 장비에 두고, 학습된 정책만 옮기는 구성이 현실적입니다.
+4. **Isaac Sim은 Mac에서 직접 실행할 수 없습니다.** NVIDIA RTX와 Omniverse 런타임에 묶여 있기 때문입니다. RTX 장비에서 실행하고 Mac에서 스트리밍하거나, 학습된 정책만 MLX로 옮겨 쓸 수 있습니다. 정책 경로는 직접 확인했습니다.
 
 ## 난이도 4단계
 
@@ -53,22 +53,43 @@ cumlx port Qwen/Qwen3-0.6B --q-bits 4 -o port4/  # 양자화. golden에 포팅�
 
 ## Isaac Sim
 
-**변환할 수 없습니다.** 근거는 다음과 같습니다.
+**Mac에서 직접 실행할 수는 없습니다. 다른 방식으로 사용할 수 있습니다.** 아래 표의 "직접 실행"은 2026-11-02에 M5 Pro에서 실제로 돌려 본 결과입니다.
 
-| 구성 요소 | 상태 (2026-11-02 확인) | 근거 |
+| 항목 | 결과 | 확인 방법 |
 |---|---|---|
-| Isaac Sim | macOS 미지원. x86_64 RTX GPU와 DGX Spark만 지원 | [공식 요구 사항](https://docs.isaacsim.omniverse.nvidia.com/6.0.0/installation/requirements.html) |
-| RTX 센서와 렌더링 | RT core가 필요합니다. RT core가 없는 A100, H100도 지원하지 않습니다 | 공식 요구 사항 |
-| 소스 코드 | 저장소는 Apache 2.0이지만, 빌드와 실행에 Omniverse Kit SDK 등 다른 라이선스의 구성 요소가 필요합니다 | 저장소 `LICENSE` |
-| Omniverse 의존 | 파일 1141개가 사용합니다 (테스트, 문서, 도구 제외) | `cumlx scan` |
-| Warp | Mac에서 CPU만 지원합니다. `cuda:0`은 거부합니다 | 직접 실행 (Warp 1.19.0, M5 Pro) |
-| Newton | macOS는 CPU 전용입니다 | [Newton README](https://github.com/newton-physics/newton) |
+| Isaac Sim을 Mac에서 실행 | **불가.** x86_64 RTX GPU와 DGX Spark만 지원합니다 | [공식 요구 사항](https://docs.isaacsim.omniverse.nvidia.com/6.0.0/installation/requirements.html) |
+| `pip install isaacsim` | **설치되는 듯 보이지만 빈 패키지입니다.** 최신판 6.2의 wheel은 Linux와 Windows용뿐이라, Mac에서는 코드가 없는 6.0.0.0 소스 패키지가 골라집니다 | PyPI 파일 목록과 패키지 내용 확인 |
+| RTX 센서와 렌더링 | 불가. RT core가 필요합니다 | 공식 요구 사항 |
+| 소스 변환 | 불가. 저장소는 Apache 2.0이지만 Omniverse Kit SDK 등 다른 라이선스의 구성 요소가 필요하고, 파일 1141개가 Omniverse를 사용합니다 | 저장소 `LICENSE`, `cumlx scan` |
+| 보유한 Tesla V100에서 실행 | 요구 사항 미달. RT core가 없고 공식 최소 사양은 GeForce RTX 4080입니다 | 공식 요구 사항. 실행하지 않음 |
 
-### 현실적인 구성
+### 쓸 수 있는 방법
 
-1. **시뮬레이션은 NVIDIA 장비, 정책 추론은 Mac.** Isaac Lab에서 학습한 정책 네트워크는 대개 작은 신경망입니다. 이 부분은 MLX로 옮길 수 있고, `cumlx.check_op`이나 사용자 loader와 `cumlx diff`로 검증할 수 있습니다. 이 경로는 아직 실행해 보지 않았습니다.
-2. **Mac에서 물리 시뮬레이션이 필요하면 CPU로 실행합니다.** Warp와 Newton은 Mac CPU에서 동작합니다. Warp의 CPU 실행은 직접 확인했습니다. Newton은 README로만 확인했습니다. 대규모 병렬 학습 속도는 기대하기 어렵습니다.
-3. **IsaacLab-MLX 참고.** 공개 fork [IsaacLab-MLX](https://github.com/RobotFlow-Labs/IsaacLab-mlx)가 cartpole, 2중 진자, 쿼드콥터 경로를 Mac에서 실행한다고 설명합니다. 전체 Isaac Sim 호환, RTX 센서, Warp 커널은 지원하지 않는다고 명시합니다. 저장소 설명만 읽었고 실행하지 않았습니다.
+| 방법 | 무엇을 얻는가 | 상태 |
+|---|---|---|
+| **A. RTX 장비에서 실행하고 Mac에서 스트리밍** | Isaac Sim 전체 기능. [공식 스트리밍 클라이언트](https://docs.isaacsim.omniverse.nvidia.com/6.0.0/installation/manual_livestream_clients.html)가 macOS용으로 있습니다 | 문서로 확인. RTX 장비가 없어 실행하지 못함 |
+| **B. 학습은 NVIDIA 장비, 정책 추론은 Mac** | 학습된 로봇 정책을 MLX로 실행 | **직접 실행.** 아래 참조 |
+| **C. Mac에서 다른 물리 엔진 사용** | 렌더링 없는 물리 시뮬레이션 | **직접 실행.** 아래 참조 |
+
+**B. 정책을 MLX로 옮기기.** [examples/robot-policy/verify_policy.py](../examples/robot-policy/verify_policy.py)는 rsl_rl 기본 구조(관측 48, 은닉 512-256-128, ELU, 행동 12)의 정책을 MLX로 옮기고 `cumlx.check_op`으로 비교합니다. 배치 크기 1, 16, 4096에서 최악 오차는 5.2e-7이고, 활성화 함수를 잘못 옮기면 실패합니다. 랜덤 가중치로 실행했습니다. `--checkpoint`로 실제 체크포인트를 넣을 수 있지만 실제 체크포인트로는 실행하지 않았습니다.
+
+**C. Mac의 물리 엔진.** 모두 CPU입니다.
+
+| 엔진 | 결과 (M5 Pro) | 한계 |
+|---|---|---|
+| MuJoCo 3.17 | 카트폴 약 72만 step/s | 단일 환경 CPU. GPU 병렬 학습은 아님 |
+| Newton 1.7 / Warp 1.19 | 상자 낙하 시뮬레이션이 바닥에서 멈춤(z = 0.2). 커널 컴파일 포함 약 50 step/s | `cuda:0`은 거부. Metal 미지원 |
+| Isaac Sim의 RTX 센서 | 대체 없음 | 렌더링이 필요하면 A를 쓰십시오 |
+
+공개 fork [IsaacLab-MLX](https://github.com/RobotFlow-Labs/IsaacLab-mlx)는 cartpole, 2중 진자, 쿼드콥터 경로를 Mac에서 실행한다고 설명합니다. 전체 Isaac Sim 호환, RTX 센서, Warp 커널은 지원하지 않는다고 명시합니다. 저장소 설명만 읽었고 실행하지 않았습니다.
+
+### 다른 CUDA 전용 프로그램
+
+같은 순서로 판단하십시오.
+
+1. `cumlx scan`으로 단계를 봅니다.
+2. `platform`이면 NVIDIA 장비에서 실행하고 Mac은 원격 클라이언트로 씁니다. 신경망 부분만 분리할 수 있으면 B를 적용합니다.
+3. `kernel`이면 그 커널이 선택 기능인지 먼저 확인합니다. 필요하면 다시 쓰고 `check_op`으로 검증합니다.
 
 ## 다음 단계 후보
 
@@ -76,7 +97,7 @@ cumlx port Qwen/Qwen3-0.6B --q-bits 4 -o port4/  # 양자화. golden에 포팅�
 
 | 후보 | 효과 | 비고 |
 |---|---|---|
-| 정책 네트워크 예제 | 1번 구성의 검증 방법 제시 | 공개된 Isaac Lab 정책으로 실행 필요 |
+| 실제 Isaac Lab 정책으로 실행 | B 경로의 실전 확인 | 예제는 준비됨. 체크포인트 필요 |
 | mlx-lm 미지원 아키텍처용 포팅 템플릿 | `model` 밖의 모델 작업량 감소 | `--loader python:...`와 연결 |
 | 커널 번역 도구와 연동 | `kernel` 단계 자동화 | kernelport 등을 먼저 평가 |
 | 의존 패키지까지 스캔 | 분류 정확도 향상 | 설치 없이 메타데이터 읽기 필요 |

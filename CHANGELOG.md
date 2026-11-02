@@ -1,12 +1,13 @@
 # Changelog
 
-## Unreleased
+## 0.4.1 (2026-11-02)
 
 ### Added
 
 - `cumlx scan`: rank the work to run a CUDA project or model on Apple Silicon, from a text scan. It never runs the scanned code.
 - `cumlx port`: convert with mlx-lm and prove the result in one command. It refuses a model that mlx-lm does not implement.
-- `docs/PORTING-CUDA-MODELS.md`: what can be converted, and why Isaac Sim cannot.
+- `docs/PORTING-CUDA-MODELS.md`: what can be converted, and how to use Isaac Sim from a Mac.
+- `examples/robot-policy`: move a robot policy from Isaac Lab to MLX and prove that it computes the same.
 - Mixtral (`block_sparse_moe`) and channels-last convolution support in `weights`, `diff` and `--weights-from-mlx`.
 
 ### Fixed

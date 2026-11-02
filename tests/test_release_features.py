@@ -603,3 +603,25 @@ def test_quantized_mixtral_golden_holds_the_quantized_experts(tmp_path, e2e):
     w.finish()
     rep = run_diff(str(golden), 'q', model=port)
     assert rep['verdict'] == 'ok', rep['first_divergence']
+
+
+# --------------------------------------------------------------- robot policy
+@pytest.mark.e2e
+def test_robot_policy_example_passes_and_a_wrong_policy_fails(e2e):
+    import importlib.util
+
+    import mlx.nn as nn
+
+    from cumlx import check_op
+    spec = importlib.util.spec_from_file_location('verify_policy', ROOT / 'examples' / 'robot-policy' / 'verify_policy.py')
+    policy = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(policy)
+    layers = policy.actor_layers(policy.random_state())
+    assert [w.shape for w, _ in layers][0] == (512, 48) and layers[-1][0].shape == (12, 128)
+    x = [np.random.default_rng(0).normal(size=(16, 48)).astype(np.float32)]
+    good = check_op(policy.torch_policy(layers), policy.mlx_policy(layers), x)
+    assert good['verdict'] == 'ok' and good['worst_rel_l2'] < 1e-4
+    bad = check_op(policy.torch_policy(layers), policy.mlx_policy(layers, activation=nn.relu), x)
+    assert bad['verdict'] == 'diverged'
+    with pytest.raises(SystemExit):
+        policy.actor_layers({'critic.0.weight': None})

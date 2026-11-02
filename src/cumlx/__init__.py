@@ -3,7 +3,7 @@ from .quant import FP4Matrix, quantize, dequantize, load_fp4, save_fp4
 from .planning import KernelPlan, plan_linear
 from . import reference
 
-__version__ = '0.4.0'
+__version__ = '0.4.1'
 __all__ = ['FP4Matrix', 'quantize', 'dequantize', 'load_fp4', 'save_fp4',
            'KernelPlan', 'plan_linear', 'reference', 'MLXBackend', 'check_op']
 

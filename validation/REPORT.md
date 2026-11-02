@@ -27,6 +27,10 @@ mlx 0.32.4 (kernel tests also on 0.32.2), mlx-lm 0.32.2. These are local runs; C
 | Recent HF models (`latest-models.json`) | 12 models: 7 ok on both the implementation and a 4-bit conversion; 4 refused as partial checkpoints; 1 not loadable by mlx-lm | Short prompts; one revision of each |
 | `cumlx scan` on 5 repositories (`scan-cuda-repos.json`) | IsaacSim `platform`; warp, flash-attention, nvdiffrast, sam2 `kernel` | Text scan; nothing was built or run |
 | `cumlx port` on SmolLM2-135M, 4 bits | ok: 730 pass, 0 fail, and the port generated text | One run |
+| Isaac Sim on this Mac | Not runnable. `isaacsim` on macOS resolves to an empty 6.0.0.0 source package; the runtime wheels are Linux and Windows only | Package contents were read, not executed |
+| Physics on this Mac | MuJoCo 3.17: about 722,000 steps/s on a cartpole. Newton 1.7 on Warp 1.19: a falling box rests at z = 0.2; `cuda:0` is refused | CPU only; one small scene each |
+| Robot policy in MLX (`examples/robot-policy`) | rsl_rl default shape, batches 1, 16 and 4096: worst 5.2e-7; a wrong activation fails | Random weights; no real checkpoint |
+| Isaac Sim streamed to a Mac | **Not run.** No RTX machine; the client is documented for macOS | |
 | Other NVIDIA and Apple GPU generations, padded inputs, large MoE | **Not run** | |
 
 Evidence: [real models](dogfood-macos-m5-pro.json), [public ports](public-ports.json), [NVFP4 repack](checkpoint-dory-nvfp4.json), [large capture](large-capture-qwen2.5-7b.json), [agent demo](mcp-agent-demo.md), [upstream finding](upstream/README.md). `scripts/dogfood_real_model.py`, `scripts/public_port_campaign.py` and `scripts/measure_large_capture.py` reproduce them.

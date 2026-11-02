@@ -44,7 +44,9 @@ CUDA 전용 프로젝트는 먼저 작업량을 봅니다. 소스를 텍스트�
 cumlx scan ./some-cuda-repo
 ```
 
-`model`, `device`, `library`, `kernel`, `platform` 중 하나로 분류합니다. `platform`은 RTX, Omniverse처럼 옮길 수 없는 경우입니다. Isaac Sim이 여기에 해당합니다. [검토 문서](docs/PORTING-CUDA-MODELS.md)를 보십시오.
+`model`, `device`, `library`, `kernel`, `platform` 중 하나로 분류합니다. `platform`은 RTX, Omniverse처럼 옮길 수 없는 경우입니다.
+
+**Isaac Sim은 Mac에서 직접 실행할 수 없습니다.** `pip install isaacsim`은 Mac에서 코드 없는 빈 패키지를 설치합니다. RTX 장비에서 실행하고 Mac에서 스트리밍하거나, [학습된 정책만 MLX로 옮겨](examples/robot-policy/) 쓰십시오. [검토 문서](docs/PORTING-CUDA-MODELS.md)를 보십시오.
 
 ### 모델을 MLX로 옮겼다
 
@@ -91,7 +93,7 @@ assert report['verdict'] == 'ok', report
 ### 포팅 저장소의 CI에 넣는다
 
 ```yaml
-- uses: Topabaem05/CuMLX@v0.4.0
+- uses: Topabaem05/CuMLX@v0.4.1
   with:
     original: Qwen/Qwen2.5-0.5B
     port: ./my-port
