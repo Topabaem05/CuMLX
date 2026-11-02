@@ -1,0 +1,858 @@
+{
+ "schema": "cumlx.spikes.v1",
+ "date": "2026-11-02",
+ "environment": {
+  "chip": "Apple M5 Pro",
+  "macos": "27.0.1",
+  "python": "3.12"
+ },
+ "versions": {
+  "genesis-world": "1.4.5",
+  "torch": "2.15.0",
+  "mitsuba": "3.9.1",
+  "usd-core": "26.11",
+  "quadrants": "1.3.3",
+  "mujoco": "3.17.0",
+  "metal-woof": "1.1.5.2",
+  "kernelport": "0.1.0"
+ },
+ "runs": [
+  [
+   {
+    "probe": "usd",
+    "version": [
+     0,
+     26,
+     11
+    ],
+    "rigid_body": true
+   },
+   {
+    "probe": "mitsuba",
+    "version": "3.9.1",
+    "variants": [
+     "scalar_rgb",
+     "scalar_spectral",
+     "scalar_spectral_polarized",
+     "llvm_ad_rgb",
+     "llvm_ad_mono",
+     "llvm_ad_mono_polarized",
+     "llvm_ad_spectral",
+     "llvm_ad_spectral_polarized",
+     "metal_ad_rgb",
+     "metal_ad_mono",
+     "metal_ad_mono_polarized",
+     "metal_ad_spectral",
+     "metal_ad_spectral_polarized"
+    ]
+   },
+   {
+    "probe": "mitsuba",
+    "variant": "metal_ad_rgb",
+    "shape": [
+     256,
+     256,
+     3
+    ],
+    "spp": 1024,
+    "mean": 0.14707766473293304,
+    "seconds": 0.2787115419632755,
+    "mega_paths_per_s": 240.7825077041216
+   },
+   {
+    "probe": "mitsuba",
+    "variant": "scalar_rgb",
+    "shape": [
+     256,
+     256,
+     3
+    ],
+    "spp": 1024,
+    "mean": 0.14706535637378693,
+    "seconds": 15.25997237500269,
+    "mega_paths_per_s": 4.397705470943762
+   },
+   {
+    "probe": "mitsuba",
+    "gate": "mean difference under 5%",
+    "value": 8.369312426534206e-05,
+    "psnr_db": 52.1349333071406,
+    "pass": true
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "backend": "metal",
+    "envs": 512,
+    "env_steps_per_s": 125156.06312545533,
+    "compile_and_warm_s": 26.321590915962588,
+    "height_mean": 0.21035100519657135,
+    "height_std": 0.0
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "backend": "metal",
+    "envs": 4096,
+    "env_steps_per_s": 397453.3934619066,
+    "compile_and_warm_s": 3.0754804160096683,
+    "height_mean": 0.21035100519657135,
+    "height_std": 0.0
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "backend": "cpu",
+    "envs": 512,
+    "env_steps_per_s": 38192.89186352996,
+    "compile_and_warm_s": 3.506657833000645,
+    "height_mean": 0.21035100519657135,
+    "height_std": 2.9802322387695312e-08
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "backend": "cpu",
+    "envs": 4096,
+    "env_steps_per_s": 13155.724539282164,
+    "compile_and_warm_s": 7.948104958049953,
+    "height_mean": 0.21035100519657135,
+    "height_std": 2.9802322387695312e-08
+   },
+   {
+    "probe": "genesis",
+    "envs": 512,
+    "metal_over_cpu": 3.2769464949828975,
+    "gate": "at least 3x at 4096",
+    "pass": null
+   },
+   {
+    "probe": "genesis",
+    "envs": 4096,
+    "metal_over_cpu": 30.211440827537533,
+    "gate": "at least 3x at 4096",
+    "pass": true
+   }
+  ],
+  [
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "stand",
+    "backend": "metal",
+    "envs": 512,
+    "env_steps_per_s": 52629.33825061568,
+    "compile_and_warm_s": 5.774504708009772,
+    "height_mean": 0.21035100519657135,
+    "height_std": 0.0
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "stand",
+    "backend": "metal",
+    "envs": 4096,
+    "env_steps_per_s": 167164.4893317532,
+    "compile_and_warm_s": 5.621683374978602,
+    "height_mean": 0.21035100519657135,
+    "height_std": 0.0
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "stand",
+    "backend": "cpu",
+    "envs": 512,
+    "env_steps_per_s": 17623.162570515622,
+    "compile_and_warm_s": 7.279940750042442,
+    "height_mean": 0.21035100519657135,
+    "height_std": 2.9802322387695312e-08
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "stand",
+    "backend": "cpu",
+    "envs": 4096,
+    "env_steps_per_s": 11132.625484542901,
+    "compile_and_warm_s": 13.388283499982208,
+    "height_mean": 0.21035100519657135,
+    "height_std": 2.9802322387695312e-08
+   },
+   {
+    "probe": "genesis",
+    "mode": "stand",
+    "envs": 512,
+    "metal_over_cpu": 2.986373078045993,
+    "gate": "at least 3x at 4096",
+    "pass": null
+   },
+   {
+    "probe": "genesis",
+    "mode": "stand",
+    "envs": 4096,
+    "metal_over_cpu": 15.015729179415297,
+    "gate": "at least 3x at 4096",
+    "pass": true
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "random",
+    "backend": "metal",
+    "envs": 512,
+    "env_steps_per_s": 29063.764328026355,
+    "compile_and_warm_s": 5.016357082989998,
+    "height_mean": 0.10197051614522934,
+    "height_std": 0.0495259128510952
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "random",
+    "backend": "metal",
+    "envs": 4096,
+    "env_steps_per_s": 81403.70782580887,
+    "compile_and_warm_s": 5.528164832969196,
+    "height_mean": 0.10223926603794098,
+    "height_std": 0.05016770958900452
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "random",
+    "backend": "cpu",
+    "envs": 512,
+    "env_steps_per_s": 15342.290969097112,
+    "compile_and_warm_s": 6.704296125040855,
+    "height_mean": 0.10163648426532745,
+    "height_std": 0.04958831146359444
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "random",
+    "backend": "cpu",
+    "envs": 4096,
+    "env_steps_per_s": 12916.66057060762,
+    "compile_and_warm_s": 14.78558233298827,
+    "height_mean": 0.1021590307354927,
+    "height_std": 0.05016171932220459
+   },
+   {
+    "probe": "genesis",
+    "mode": "random",
+    "envs": 512,
+    "metal_over_cpu": 1.8943562201086808,
+    "gate": "at least 3x at 4096",
+    "pass": null
+   },
+   {
+    "probe": "genesis",
+    "mode": "random",
+    "envs": 4096,
+    "metal_over_cpu": 6.302225515706922,
+    "gate": "at least 3x at 4096",
+    "pass": true
+   }
+  ],
+  [
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "stand",
+    "backend": "metal",
+    "envs": 512,
+    "env_steps_per_s": 45939.891927535675,
+    "compile_and_warm_s": 5.7891671669785865,
+    "height_mean": 0.21035100519657135,
+    "height_std": 0.0
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "stand",
+    "backend": "metal",
+    "envs": 4096,
+    "env_steps_per_s": 150442.60922706814,
+    "compile_and_warm_s": 5.301515583007131,
+    "height_mean": 0.21035100519657135,
+    "height_std": 0.0
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "stand",
+    "backend": "cpu",
+    "envs": 512,
+    "env_steps_per_s": 23286.265505619427,
+    "compile_and_warm_s": 5.359922083036508,
+    "height_mean": 0.21035100519657135,
+    "height_std": 2.9802322387695312e-08
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "stand",
+    "backend": "cpu",
+    "envs": 4096,
+    "env_steps_per_s": 14266.373883791479,
+    "compile_and_warm_s": 10.801248332951218,
+    "height_mean": 0.21035100519657135,
+    "height_std": 2.9802322387695312e-08
+   },
+   {
+    "probe": "genesis",
+    "mode": "stand",
+    "envs": 512,
+    "metal_over_cpu": 1.9728320935123533,
+    "gate": "at least 3x at 4096",
+    "pass": null
+   },
+   {
+    "probe": "genesis",
+    "mode": "stand",
+    "envs": 4096,
+    "metal_over_cpu": 10.545259114370415,
+    "gate": "at least 3x at 4096",
+    "pass": true
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "random",
+    "backend": "metal",
+    "envs": 512,
+    "env_steps_per_s": 20219.917597528663,
+    "compile_and_warm_s": 5.195693165995181,
+    "height_mean": 0.10197051614522934,
+    "height_std": 0.0495259128510952
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "random",
+    "backend": "metal",
+    "envs": 4096,
+    "env_steps_per_s": 133261.5747523471,
+    "compile_and_warm_s": 5.064700709015597,
+    "height_mean": 0.10223928093910217,
+    "height_std": 0.05016772076487541
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "random",
+    "backend": "cpu",
+    "envs": 512,
+    "env_steps_per_s": 20530.438837236557,
+    "compile_and_warm_s": 5.176676292030606,
+    "height_mean": 0.10163648426532745,
+    "height_std": 0.04958831146359444
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "random",
+    "backend": "cpu",
+    "envs": 4096,
+    "env_steps_per_s": 13154.333696324056,
+    "compile_and_warm_s": 10.937959916016553,
+    "height_mean": 0.1021590307354927,
+    "height_std": 0.05016171932220459
+   },
+   {
+    "probe": "genesis",
+    "mode": "random",
+    "envs": 512,
+    "metal_over_cpu": 0.9848750802567019,
+    "gate": "at least 3x at 4096",
+    "pass": null
+   },
+   {
+    "probe": "genesis",
+    "mode": "random",
+    "envs": 4096,
+    "metal_over_cpu": 10.130621423233828,
+    "gate": "at least 3x at 4096",
+    "pass": true
+   }
+  ],
+  [
+   {
+    "probe": "usd",
+    "version": [
+     0,
+     26,
+     11
+    ],
+    "rigid_body": true
+   },
+   {
+    "probe": "usd_genesis",
+    "joints": [
+     "/cartpole/slider/slider_to_cart",
+     "/cartpole/cart/cart_to_pole"
+    ],
+    "pole_rad_with_gravity": [
+     0.15396195650100708,
+     0.36387404799461365,
+     0.8954561948776245,
+     1.9679027795791626
+    ],
+    "pole_rad_without_gravity": [
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612,
+     0.10000000149011612
+    ]
+   },
+   {
+    "probe": "usd_genesis",
+    "gate": "falls past 0.5 rad; stays at 0.1 rad without gravity",
+    "pass": true
+   },
+   {
+    "probe": "mitsuba",
+    "version": "3.9.1",
+    "variants": [
+     "scalar_rgb",
+     "scalar_spectral",
+     "scalar_spectral_polarized",
+     "llvm_ad_rgb",
+     "llvm_ad_mono",
+     "llvm_ad_mono_polarized",
+     "llvm_ad_spectral",
+     "llvm_ad_spectral_polarized",
+     "metal_ad_rgb",
+     "metal_ad_mono",
+     "metal_ad_mono_polarized",
+     "metal_ad_spectral",
+     "metal_ad_spectral_polarized"
+    ]
+   },
+   {
+    "probe": "mitsuba",
+    "variant": "metal_ad_rgb",
+    "shape": [
+     256,
+     256,
+     3
+    ],
+    "spp": 1024,
+    "mean": 0.14707766473293304,
+    "seconds": 0.28056829096749425,
+    "mega_paths_per_s": 239.18905364745947
+   },
+   {
+    "probe": "mitsuba",
+    "variant": "scalar_rgb",
+    "shape": [
+     256,
+     256,
+     3
+    ],
+    "spp": 1024,
+    "mean": 0.14706535637378693,
+    "seconds": 16.348470916971564,
+    "mega_paths_per_s": 4.104901574026314
+   },
+   {
+    "probe": "mitsuba",
+    "gate": "mean difference under 5%",
+    "value": 8.369312426534206e-05,
+    "psnr_db": 52.1349333071406,
+    "pass": true
+   },
+   {
+    "probe": "quadrants",
+    "arch": "cpu",
+    "ms_per_iteration": 1.6568562481552362
+   },
+   {
+    "probe": "quadrants",
+    "arch": "metal",
+    "ms_per_iteration": 1.018900002236478
+   },
+   {
+    "probe": "quadrants",
+    "gate": "rel_l2 under 1e-5",
+    "value": 6.95906513625111e-08,
+    "pass": true
+   },
+   {
+    "probe": "kernelport",
+    "exit": 0,
+    "rows": {
+     "cumsum": {
+      "original": "UNVERIFIED",
+      "port": "PASS",
+      "cases": "14/14"
+     },
+     "embedding_gather": {
+      "original": "UNVERIFIED",
+      "port": "PASS",
+      "cases": "21/21"
+     },
+     "layernorm": {
+      "original": "UNVERIFIED",
+      "port": "PASS",
+      "cases": "24/24"
+     },
+     "matmul_naive": {
+      "original": "UNVERIFIED",
+      "port": "PASS",
+      "cases": "16/16"
+     },
+     "reduce_sum": {
+      "original": "UNVERIFIED",
+      "port": "PASS",
+      "cases": "16/16"
+     },
+     "relu": {
+      "original": "UNVERIFIED",
+      "port": "PASS",
+      "cases": "21/21"
+     },
+     "rmsnorm": {
+      "original": "UNVERIFIED",
+      "port": "PASS",
+      "cases": "24/24"
+     },
+     "rope": {
+      "original": "UNVERIFIED",
+      "port": "PASS",
+      "cases": "21/21"
+     },
+     "saxpy": {
+      "original": "UNVERIFIED",
+      "port": "PASS",
+      "cases": "21/21"
+     },
+     "softmax": {
+      "original": "UNVERIFIED",
+      "port": "PASS",
+      "cases": "24/24"
+     },
+     "transpose": {
+      "original": "UNVERIFIED",
+      "port": "PASS",
+      "cases": "14/14"
+     },
+     "vector_add": {
+      "original": "UNVERIFIED",
+      "port": "PASS",
+      "cases": "21/21"
+     }
+    }
+   },
+   {
+    "probe": "kernelport",
+    "control": "wrong vector_add",
+    "exit": 1,
+    "rows": {
+     "vector_add": {
+      "original": "UNVERIFIED",
+      "port": "FAIL",
+      "cases": "0/21"
+     }
+    }
+   },
+   {
+    "probe": "kernelport",
+    "gate": "all stored ports pass; the wrong port fails",
+    "pass": true
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "stand",
+    "backend": "metal",
+    "envs": 512,
+    "env_steps_per_s": 37503.0523689424,
+    "compile_and_warm_s": 30.683166665956378,
+    "height_mean": 0.21035100519657135,
+    "height_std": 0.0
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "stand",
+    "backend": "metal",
+    "envs": 4096,
+    "env_steps_per_s": 129843.85027244627,
+    "compile_and_warm_s": 12.36185474996455,
+    "height_mean": 0.21035100519657135,
+    "height_std": 0.0
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "stand",
+    "backend": "cpu",
+    "envs": 512,
+    "env_steps_per_s": 24266.480550724926,
+    "compile_and_warm_s": 14.818169999984093,
+    "height_mean": 0.21035100519657135,
+    "height_std": 2.9802322387695312e-08
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "stand",
+    "backend": "cpu",
+    "envs": 4096,
+    "env_steps_per_s": 14067.816135376228,
+    "compile_and_warm_s": 10.683895249967463,
+    "height_mean": 0.21035100519657135,
+    "height_std": 2.9802322387695312e-08
+   },
+   {
+    "probe": "genesis",
+    "mode": "stand",
+    "envs": 512,
+    "metal_over_cpu": 1.5454673079002408,
+    "gate": "at least 3x at 4096",
+    "pass": null
+   },
+   {
+    "probe": "genesis",
+    "mode": "stand",
+    "envs": 4096,
+    "metal_over_cpu": 9.229851245064893,
+    "gate": "at least 3x at 4096",
+    "pass": true
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "random",
+    "backend": "metal",
+    "envs": 512,
+    "env_steps_per_s": 21217.470843074057,
+    "compile_and_warm_s": 10.69520158402156,
+    "height_mean": 0.10197051614522934,
+    "height_std": 0.0495259128510952
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "random",
+    "backend": "metal",
+    "envs": 4096,
+    "env_steps_per_s": 114772.05983270588,
+    "compile_and_warm_s": 5.888191125006415,
+    "height_mean": 0.10223925113677979,
+    "height_std": 0.05016772076487541
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "random",
+    "backend": "cpu",
+    "envs": 512,
+    "env_steps_per_s": 19873.19613749468,
+    "compile_and_warm_s": 5.648807124991436,
+    "height_mean": 0.10163648426532745,
+    "height_std": 0.04958831146359444
+   },
+   {
+    "probe": "genesis",
+    "scene": "go2",
+    "mode": "random",
+    "backend": "cpu",
+    "envs": 4096,
+    "env_steps_per_s": 13736.729821381437,
+    "compile_and_warm_s": 10.758235000015702,
+    "height_mean": 0.1021590307354927,
+    "height_std": 0.05016171932220459
+   },
+   {
+    "probe": "genesis",
+    "mode": "random",
+    "envs": 512,
+    "metal_over_cpu": 1.0676426024419463,
+    "gate": "at least 3x at 4096",
+    "pass": null
+   },
+   {
+    "probe": "genesis",
+    "mode": "random",
+    "envs": 4096,
+    "metal_over_cpu": 8.355122458189529,
+    "gate": "at least 3x at 4096",
+    "pass": true
+   },
+   {
+    "probe": "woof",
+    "case": "silu_mul",
+    "rel_l2": 4.982062019000443e-08
+   },
+   {
+    "probe": "woof",
+    "case": "silu_mul_wrong_control",
+    "rel_l2": 1.0790151854455938
+   },
+   {
+    "probe": "woof",
+    "case": "rms_norm",
+    "rel_l2": 3.824316610817614e-08
+   },
+   {
+    "probe": "woof",
+    "case": "fp4_decode",
+    "rel_l2": 0.0
+   },
+   {
+    "probe": "woof",
+    "foreign": "foreign/connected_components.cu",
+    "translated": false,
+    "reason": "TranslationError: preprocessing failed:\n<stdin>:9:10: fatal error: 'ATen/cuda/CUDAContext.h' file not found\n    9 | #include <ATen/cuda/CUDAContext.h>\n      |          ^~~~~~~~~~~~~~~~~~~~~~~~~\n1 error generated.\n"
+   },
+   {
+    "probe": "woof",
+    "foreign": "common/interpolate.cu",
+    "translated": false,
+    "reason": "TranslationError: the unit does not parse as C++ against cuda_decls.h:\n  292:150: use of undeclared identifier '__match_any_sync'\n      bool _ca_leader; float* _ca_ptr; do { int tidx = threadIdx.x + blockDim.x * threadIdx.y; int lane = tidx & 31; int warp = tidx >> 5; int tmask = __match_any_syn"
+   },
+   {
+    "probe": "woof",
+    "foreign": "common/rasterize.cu",
+    "translated": false,
+    "reason": "TranslationError: the unit does not parse as C++ against cuda_decls.h:\n  299:150: use of undeclared identifier '__match_any_sync'\n      bool _ca_leader; float* _ca_ptr; do { int tidx = threadIdx.x + blockDim.x * threadIdx.y; int lane = tidx & 31; int warp = tidx >> 5; int tmask = __match_any_syn"
+   },
+   {
+    "probe": "woof",
+    "foreign": "common/antialias.cu",
+    "translated": false,
+    "reason": "TranslationError: the unit does not parse as C++ against cuda_decls.h:\n  585:154: use of undeclared identifier '__match_any_sync'\n      bool _ca_leader; float* _ca_ptr; do { int tidx = threadIdx.x + blockDim.x * threadIdx.y; int lane = tidx & 31; int warp = tidx >> 5; int tmask = __match_any_syn"
+   },
+   {
+    "probe": "woof",
+    "foreign": "common/texture_kernel.cu",
+    "translated": false,
+    "reason": "TranslationError: the unit does not parse as C++ against cuda_decls.h:\n  263:15: use of undeclared identifier '__frcp_rz'\n      float m = __frcp_rz(fabsf(c)) * .5;\n  287:15: use of undeclared identifier '__frcp_rz'\n      float m = __frcp_rz(fabsf(c));\n  311:15: use of undeclared identifier '__frcp_r"
+   },
+   {
+    "probe": "woof",
+    "foreign": "cumsum/kernel.cu",
+    "translated": true,
+    "kernels": [
+     "cumsum"
+    ],
+    "msl_lines": 1229,
+    "metal_compile": "CompileError: Metal did not compile the translation of 'cumsum/kernel.cu' (MSL saved to woof-metal-c3d0839de0f56505.metal):\n[woof.backend.metal] no kernel cumsum in its library"
+   },
+   {
+    "probe": "woof",
+    "foreign": "embedding_gather/kernel.cu",
+    "translated": true,
+    "kernels": [
+     "embedding_gather"
+    ],
+    "msl_lines": 1213,
+    "metal_compile": "CompileError: Metal did not compile the translation of 'embedding_gather/kernel.cu' (MSL saved to woof-metal-17b24fcc196b0fe9.metal):\n[woof.backend.metal] no kernel embedding_gather in its library"
+   },
+   {
+    "probe": "woof",
+    "foreign": "layernorm/kernel.cu",
+    "translated": true,
+    "kernels": [
+     "layernorm"
+    ],
+    "msl_lines": 1240,
+    "metal_compile": "CompileError: Metal did not compile the translation of 'layernorm/kernel.cu' (MSL saved to woof-metal-fc449cbb9ac38393.metal):\nprogram_source:1231:18: error: no matching function for call to 'block_sum'\nprogram_source:1237:25: error: no matching funct"
+   },
+   {
+    "probe": "woof",
+    "foreign": "matmul_naive/kernel.cu",
+    "translated": true,
+    "kernels": [
+     "matmul_naive"
+    ],
+    "msl_lines": 1218,
+    "metal_compile": "CompileError: Metal did not compile the translation of 'matmul_naive/kernel.cu' (MSL saved to woof-metal-a79cecf249cf220f.metal):\n[woof.backend.metal] no kernel matmul_naive in its library"
+   },
+   {
+    "probe": "woof",
+    "foreign": "reduce_sum/kernel.cu",
+    "translated": true,
+    "kernels": [
+     "reduce_sum"
+    ],
+    "msl_lines": 1216,
+    "metal_compile": "CompileError: Metal did not compile the translation of 'reduce_sum/kernel.cu' (MSL saved to woof-metal-50a8513a6916d6aa.metal):\n[woof.backend.metal] no kernel reduce_sum in its library"
+   },
+   {
+    "probe": "woof",
+    "foreign": "relu/kernel.cu",
+    "translated": true,
+    "kernels": [
+     "relu"
+    ],
+    "msl_lines": 1212,
+    "metal_compile": "CompileError: Metal did not compile the translation of 'relu/kernel.cu' (MSL saved to woof-metal-b38e95efcbee09e2.metal):\n[woof.backend.metal] no kernel relu in its library"
+   },
+   {
+    "probe": "woof",
+    "foreign": "rmsnorm/kernel.cu",
+    "translated": true,
+    "kernels": [
+     "rmsnorm"
+    ],
+    "msl_lines": 1237,
+    "metal_compile": "CompileError: Metal did not compile the translation of 'rmsnorm/kernel.cu' (MSL saved to woof-metal-c0bbaf5b2e5f9e32.metal):\nprogram_source:1233:34: error: use of undeclared identifier 'rsqrtf'; did you mean 'sqrtf'?"
+   },
+   {
+    "probe": "woof",
+    "foreign": "rope/kernel.cu",
+    "translated": true,
+    "kernels": [
+     "rope"
+    ],
+    "msl_lines": 1226,
+    "metal_compile": "CompileError: Metal did not compile the translation of 'rope/kernel.cu' (MSL saved to woof-metal-8d636d0b153ef3ed.metal):\n[woof.backend.metal] no kernel rope in its library"
+   },
+   {
+    "probe": "woof",
+    "foreign": "saxpy/kernel.cu",
+    "translated": true,
+    "kernels": [
+     "saxpy"
+    ],
+    "msl_lines": 1213,
+    "metal_compile": "CompileError: Metal did not compile the translation of 'saxpy/kernel.cu' (MSL saved to woof-metal-902df94eb818c801.metal):\n[woof.backend.metal] no kernel saxpy in its library"
+   },
+   {
+    "probe": "woof",
+    "foreign": "softmax/kernel.cu",
+    "translated": true,
+    "kernels": [
+     "softmax"
+    ],
+    "msl_lines": 2854,
+    "metal_compile": "CompileError: Metal did not compile the translation of 'softmax/kernel.cu' (MSL saved to woof-metal-bb236d27aa2b1283.metal):\n[woof.backend.metal] no kernel softmax in its library"
+   },
+   {
+    "probe": "woof",
+    "foreign": "transpose/kernel.cu",
+    "translated": true,
+    "kernels": [
+     "transpose"
+    ],
+    "msl_lines": 1219,
+    "metal_compile": "CompileError: Metal did not compile the translation of 'transpose/kernel.cu' (MSL saved to woof-metal-a79213c8131c515e.metal):\n[woof.backend.metal] no kernel transpose in its library"
+   },
+   {
+    "probe": "woof",
+    "foreign": "vector_add/kernel.cu",
+    "translated": true,
+    "kernels": [
+     "vector_add"
+    ],
+    "msl_lines": 1212,
+    "metal_compile": "CompileError: Metal did not compile the translation of 'vector_add/kernel.cu' (MSL saved to woof-metal-9d8ad95123cb697c.metal):\n[woof.backend.metal] no kernel vector_add in its library"
+   }
+  ]
+ ]
+}

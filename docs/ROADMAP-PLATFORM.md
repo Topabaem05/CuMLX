@@ -7,7 +7,7 @@
 
 지금까지 CUMLX는 옮긴 결과를 검증하는 도구였습니다. 이제 옮기는 일까지 맡습니다. 직접 다 만들지 않고, 이미 있는 오픈소스를 묶고 빈 곳만 구현합니다. 검증기는 그대로 핵심입니다. 옮겼다는 말을 믿을 수 있게 만드는 부분이기 때문입니다.
 
-**이 문서의 상태:** 계획입니다. 아래 기능은 아직 구현하지 않았습니다. 후보 프로젝트는 대부분 문서로만 확인했고, M0에서 직접 실행합니다.
+**이 문서의 상태:** M0을 실행해 결과를 반영한 계획입니다. M1 이후의 기능은 아직 구현하지 않았습니다. M0에서 실행하지 않은 후보는 문서로만 확인했습니다.
 
 ## 1. 원칙
 
@@ -66,19 +66,20 @@
 
 ## 4. 통합 후보
 
-상태 열의 "문서"는 문서로만 확인, "실행"은 이 Mac에서 직접 실행했다는 뜻입니다. 모두 2026-11-02 기준입니다.
+상태 열의 "문서"는 문서로만 확인, "실행"은 이 Mac에서 직접 실행했다는 뜻입니다. 모두 2026-11-02 기준입니다. 측정값은 [validation/spikes.json](../validation/spikes.json)에 있습니다.
 
 | 영역 | 프로젝트 | 라이선스 | 상태 | 쓰는 방법 |
 |---|---|---|---|---|
-| **물리** | [Genesis](https://github.com/Genesis-Embodied-AI/genesis-world) ★30k | Apache-2.0 | 문서: Apple Metal, USD 지원 | 1순위 시뮬레이터 |
+| **물리** | [Genesis](https://github.com/Genesis-Embodied-AI/genesis-world) ★30k | Apache-2.0 | **실행**: Metal에서 Go2 4096개, Isaac USD 불러오기 | 1순위 시뮬레이터 |
 | 물리 | [MuJoCo](https://github.com/google-deepmind/mujoco) ★16k | Apache-2.0 | **실행** (CPU 약 72만 step/s) | 등급 B의 기준 물리 |
 | 물리 | [Newton](https://github.com/newton-physics/newton), [Warp](https://github.com/NVIDIA/warp) | Apache-2.0 | **실행** (Mac은 CPU만) | 호환 대상, Metal 없음 |
-| **GPU 언어** | [Quadrants](https://github.com/Genesis-Embodied-AI/quadrants) ★228 | Apache-2.0 | 문서: CUDA, Metal 공통 | Warp 스타일 커널의 이식 대상 |
-| **레이트레이싱** | [Mitsuba 3.9](https://github.com/mitsuba-renderer/mitsuba3), [Dr.Jit](https://github.com/mitsuba-renderer/drjit) | BSD 3조항 형식, BSD-3-Clause | 문서: Metal 하드웨어 레이트레이싱 (2026-08) | RTX 대체 1순위 |
-| 렌더링 | Genesis Nyx, Luisa | 확인 필요 | Mac 지원 미확인 | M5에서 평가 |
-| **장면** | [OpenUSD](https://github.com/PixarAnimationStudios/OpenUSD) ★7.6k | TOST 1.0 | 문서: `usd-core` Mac wheel, Hgi Metal | Isaac 자산 읽기 |
-| **커널 번역** | [woof fork](https://github.com/jacobbieker/woof) `backend/translate` ★1 | Apache-2.0 | 문서: `.cu`→MSL, CuPy 계층, fp64 소프트 구현 | 번역기 1순위. 날씨 모델에서 분리해야 함 |
-| 커널 증명 | [kernelport](https://github.com/PS12007/kernelport) ★0 | MIT | 문서: Metal 검증, 실제 CUDA 기준값 | 연동 후보. 겹치는 부분이 큼 |
+| **GPU 언어** | [Quadrants](https://github.com/Genesis-Embodied-AI/quadrants) ★228 | Apache-2.0 | **실행**: Metal과 CPU 차이 7.0e-8 | Warp 스타일 커널의 이식 대상 |
+| **레이트레이싱** | [Mitsuba 3.9](https://github.com/mitsuba-renderer/mitsuba3), [Dr.Jit](https://github.com/mitsuba-renderer/drjit) | BSD 3조항 형식, BSD-3-Clause | **실행**: `metal_ad_rgb` 렌더링. 하드웨어 레이트레이싱 사용 여부는 문서로만 확인 | RTX 대체 1순위 |
+| 렌더링 | [LuisaRender](https://github.com/LuisaGroup/LuisaRender) ★629 | BSD-3-Clause | Mac 지원 미확인 | M5에서 평가 |
+| 렌더링 | Genesis Nyx (`gs-nyx` 0.1.9) | 표기 없음 | PyPI에 Linux, Windows wheel만 있음 | 제외 |
+| **장면** | [OpenUSD](https://github.com/PixarAnimationStudios/OpenUSD) ★7.6k | TOST 1.0 | **실행**: `usd-core` 읽기, 쓰기 | Isaac 자산 읽기 |
+| **커널 번역** | [woof fork](https://github.com/jacobbieker/woof) `backend/translate` ★1 | Apache-2.0 | **실행**: 전용 형식 커널은 정확, 외부 커널 17개는 그대로 실패 (M0) | 번역기 1순위. 전처리 계층을 직접 만들어야 함 |
+| 커널 증명 | [kernelport](https://github.com/PS12007/kernelport) ★0 | MIT | **실행**: Metal 포트 12개 PASS, 틀린 포트 FAIL. 원본 CUDA 검증은 미실행 | 연동 후보. 겹치는 부분이 큼 |
 | 커널 작성 | [Slang](https://github.com/shader-slang/slang) ★5.8k | Apache-2.0 WITH LLVM-exception | 문서: Metal, CUDA 동시 출력 | 새로 쓰는 커널 |
 | **PyTorch 대체** | [mps-bitsandbytes 등 mpsops](https://pypi.org/project/mpsops/) ★11 | **표기 없음** | 문서 | 사용자 직접 설치만. 포함 배포 불가 |
 | 3D | [mlx3D](https://github.com/amirhossein-razlighi/mlx3D) ★43 | MIT | 문서: PyTorch3D 스타일, 3DGS 커널 | PyTorch3D, nvdiffrast 대체 후보 |
@@ -96,22 +97,41 @@
 
 날짜는 목표치입니다. 각 마일스톤은 완료 조건을 모두 만족해야 끝납니다.
 
-### M0. 가정 검증 (11/03 ~ 11/07)
+### M0. 가정 검증 (완료 2026-11-02)
 
-계획의 근거를 직접 실행해 확인합니다. 스크립트는 [spikes/](../spikes/)에 있고 **아직 실행하지 않았습니다.** 패키지를 설치해 실행하는 권한이 필요합니다.
+Apple M5 Pro 한 대에서 직접 실행했습니다. 재현 방법은 [spikes/](../spikes/), 측정값은 [validation/spikes.json](../validation/spikes.json)에 있습니다.
 
-| 확인할 것 | 계속 진행 조건 | 조건 미달 시 |
-|---|---|---|
-| Mitsuba `metal_ad_rgb` 렌더링 | Cornell box가 렌더링되고, LLVM 대비 평균 차이 5% 이내 | M5를 CPU 경로로 축소 |
-| Genesis Metal 병렬 물리 | `n_envs=4096`이 실행되고 CPU 대비 처리량 3배 이상 | M4를 MuJoCo CPU 중심으로 재설계 |
-| Quadrants Metal | CPU 결과와 일치, 오차 1e-5 이내 | Warp 커널 이식을 M3으로 합침 |
-| OpenUSD | Isaac 자산 하나를 읽고 Genesis로 불러옴 | URDF, MJCF 우선 |
-| woof 번역기 | `.cu` 하나를 앱 없이 번역, 실행 | kernelport 중심으로 M3 재설계 |
-| kernelport | 예제 커널 하나를 Metal에서 PASS | 자체 검증기만 사용 |
-| 라이선스 | 각 후보를 `LICENSE` 파일로 확인 | 해당 후보 제외 |
+| 확인할 것 | 계속 진행 조건 | 측정 결과 | 판정 |
+|---|---|---|---|
+| Mitsuba `metal_ad_rgb` | Cornell box 렌더링, CPU 대비 평균 차이 5% 이내 | 차이 0.008%, PSNR 52.1 dB. Metal 약 240 Mpath/s, CPU `scalar_rgb` 약 4 Mpath/s | **통과** |
+| Genesis 병렬 물리 | 4096개 환경, CPU 대비 3배 이상 | Go2 임의 행동에서 Metal 8.1만~13.3만, CPU 1.3만~1.4만 env-step/s. 6.3~10.1배 | **통과** |
+| Quadrants Metal | CPU와 오차 1e-5 이내 | 7.0e-8 | **통과** |
+| OpenUSD | Isaac 자산을 읽어 Genesis로 불러옴 | Isaac Lab cartpole의 관절 2개 로드. 막대가 중력으로 쓰러지고, 중력을 끄면 그대로 있음 | **통과** |
+| woof 번역기 | `.cu` 하나를 앱 없이 번역, 실행 | CUMLX 커널 3개 정확 (최악 5.0e-8), 틀린 커널은 1.08로 검출 | **통과, 단 아래 제약** |
+| kernelport | 예제 커널을 Metal에서 PASS | 12개 PASS. 일부러 틀린 포트는 0/21로 FAIL | **통과, 단 아래 제약** |
+| 라이선스 | 각 후보를 `LICENSE`로 확인 | 4절에 반영. `gs-nyx`, `mps-*` 일부는 표기 없음 | 표기 없는 것은 제외 또는 직접 설치만 |
 
-- [ ] 표의 항목을 모두 실행하고 `validation/spikes.json`에 기록
-- [ ] 이 로드맵을 결과에 맞게 수정
+**결과가 계획을 바꾼 부분:**
+
+- **M3의 위험이 가장 큽니다.** woof는 자기 형식의 커널만 바로 처리합니다. 외부 커널 17개 중 **그대로 Metal에서 컴파일된 것은 0개**입니다. 빠진 헤더는 빈 파일로 넘어가도, 다음 벽이 있습니다.
+
+  | 커널 | 멈춘 이유 | 필요한 일 |
+  |---|---|---|
+  | kernelport 10개 | 템플릿이라 인스턴스가 생기지 않음. `vector_add`를 `float`로 풀면 오차 0으로 실행됨 | 템플릿 인스턴스 생성 |
+  | kernelport 2개 | 생성된 MSL 오류 (`rsqrtf` 없음, `block_sum` 호출 불일치) | 내장 함수 보완 |
+  | nvdiffrast 4개 | `__match_any_sync`, `__frcp_rz` 미지원. 앞의 것은 warp 단위 동기화 | Metal 대응 설계 또는 거부 |
+  | sam2 1개 | 호스트 코드와 섞여 있고 `ATen` 헤더를 포함 | 장치 코드 분리 |
+
+  실패는 모두 이유를 밝힌 오류였습니다. 잘못 번역된 코드가 조용히 실행된 경우는 없었습니다. 외부 커널의 값은 아직 비교하지 못했습니다.
+- **M4는 환경 수가 많아야 이득입니다.** 512개에서는 Metal이 CPU의 1.0~1.9배(임의 행동)에 그칩니다.
+- **Genesis 처리량은 흔들립니다.** 같은 장면을 반복하면 최대 3배까지 차이가 납니다(서 있는 장면, Metal 4096개: 13만~39.7만). 원인은 찾지 못했고, 최고값은 첫 실행의 값입니다. 앞으로는 여러 번 재서 범위로 보고합니다.
+- **Genesis Metal과 CPU의 통계는 가깝습니다.** 임의 행동 4096개의 평균 높이 차이는 0.08%이고, 같은 백엔드 반복은 소수 7자리까지 같습니다. 등급 B의 첫 근거지만, 허용치는 아직 정하지 않았습니다.
+- **조건 하나를 바꿨습니다.** Mitsuba의 비교 기준을 `llvm_ad_rgb`에서 `scalar_rgb`로 바꿨습니다. 이 Mac에 `libLLVM`이 없기 때문입니다. Genesis 비교는 CPU 512개 대 Metal 4096개에서 같은 환경 수로 고쳤습니다. 3배 기준은 그대로입니다.
+
+**확인하지 못한 것:** 실제 CUDA에서의 kernelport 원본 검증, 복잡한 USD 자산(cartpole 하나만 시험), Mitsuba가 실제로 하드웨어 레이트레이싱을 쓰는지, 정책 추론을 포함한 처리량, `mps-*`, metalsplat, mlx3D 실행(M2 첫 작업으로 넘김).
+
+- [x] 표의 항목을 모두 실행하고 `validation/spikes.json`에 기록
+- [x] 이 로드맵을 결과에 맞게 수정
 
 ### M1. 레시피 카탈로그 (11/10 ~ 11/14) → `v0.5.0`
 
@@ -136,6 +156,7 @@
 cumlx run train.py --target mps --report run-report.json
 ```
 
+- 첫 작업: M0에서 실행하지 않은 `mps-*`, metalsplat, mlx3D를 실행해 레시피에 넣을지 결정
 - `.cuda()`, `device="cuda"`, `torch.cuda.*`, `autocast("cuda")`를 MPS로 연결
 - `flash_attn`, `bitsandbytes`, `pytorch3d`, `gsplat` 등을 import 시점에 레시피의 대체품으로 연결
 - 바꾼 호출을 모두 `run-report.json`에 기록
@@ -164,7 +185,9 @@ cumlx kernel port kernels/foo.cu -o foo.metal                  # 번역
 cumlx kernel verify foo.metal kgolden/                         # Mac: 비교
 ```
 
-- woof 번역기를 분리해 어댑터로 연결 (M0 결과에 따름)
+- woof 번역기를 어댑터로 연결. `metal-woof`는 netCDF4, cdsapi 같은 날씨 모델 의존성까지 설치하므로 분리 방법을 먼저 정함
+- 번역 전 처리 계층을 직접 구현: 표준 헤더 대체, 템플릿 인스턴스 생성, 호스트 코드 분리, PTX 내장 함수 대응 (M0에서 드러난 벽)
+- warp 단위 동작처럼 Metal 대응이 없는 기능은 이유를 밝히고 거부
 - 연산 단위 golden 형식 `cumlx.opgolden.v1`을 trace 명세에 추가
 - `torch.mps.compile_shader`, `mx.fast.metal_kernel`로 실행
 - fp64, FTZ, 실행 순서 차이는 보고서에 명시
@@ -175,7 +198,8 @@ cumlx kernel verify foo.metal kgolden/                         # Mac: 비교
 
 - [ ] V100에서 원본을 실행해 기록한 커널 golden 20개 이상
 - [ ] 그중 번역 후 등급 A가 70% 이상, 실패한 커널은 이유를 분류해 보고
-- [ ] 실제 저장소 하나의 커널 전체를 처리 (sam2 또는 nvdiffrast)
+- [ ] kernelport zoo 12개를 수정 없이 번역, 실행하고 V100 기준값과 비교
+- [ ] 실제 저장소 하나의 커널 전체를 처리 (sam2 또는 nvdiffrast). **위험:** M0에서 둘 다 실패했습니다. 일정 안에 안 되면 미달로 보고하고 기준을 낮추지 않습니다
 - [ ] 값이 틀린 번역을 일부러 넣으면 찾아냄 (결함 주입 5종)
 
 ### M4. 로봇 시뮬레이션 (12/22 ~ 2027/01/09) → `v0.8.0`
@@ -192,7 +216,7 @@ Isaac Sim 대체가 아니라, **Isaac Lab 스타일 학습 작업을 Mac에서 
 - [ ] cartpole, 사족 보행 작업이 Mac GPU에서 학습 완료
 - [ ] 기준 물리(MuJoCo)와의 궤적 오차를 사전에 정한 허용치로 등급 B 판정
 - [ ] 실제 Isaac Lab 체크포인트 하나를 MLX에서 실행, 등급 A
-- [ ] 처리량(env-step/s)을 측정해 공개. 목표: 4096 환경에서 10만 step/s 이상
+- [ ] 처리량(env-step/s)을 여러 번 측정해 범위로 공개. 목표: 4096 환경에서 10만 step/s 이상. M0의 Go2 임의 행동은 8.1만~13.3만이며, 정책 추론은 포함하지 않았습니다
 
 ### M5. 레이트레이싱과 센서 (01/12 ~ 01/23) → `v0.9.0`
 
@@ -237,7 +261,8 @@ RTX가 필요하던 렌더링 경로를 Metal 레이트레이싱으로 대체합
 
 | 위험 | 가능성 | 대응 |
 |---|---|---|
-| 문서와 달리 Metal 경로가 불완전 | 높음 | M0에서 먼저 실행하고 계획 수정. 어댑터로 교체 가능하게 설계 |
+| 커널 자동 번역의 범위가 좁음 | 높음 (M0 확인) | 전처리 계층 구현. 안 되는 커널은 이유를 밝혀 거부. 일정이 넘치면 M3의 범위를 줄이고 보고 |
+| 문서와 달리 Metal 경로가 불완전 | 중간 | M0에서 네 후보는 실행으로 확인. `mps-*`, metalsplat, mlx3D는 M2에서 먼저 실행 |
 | 작은 프로젝트가 중단됨 (woof ★1, kernelport ★0, mpsops) | 높음 | 버전 고정, 어댑터 격리. 라이선스가 허용하면 fork 가능 |
 | 자동 번역이 값을 틀림 | 높음 | CUDA golden으로 항상 검증. 틀린 결과는 FAIL로 보고 |
 | CUDA에 맞춘 알고리즘이 Metal에서 느림 | 중간 | 측정하고 공개. 속도를 약속하지 않음 |
@@ -259,5 +284,5 @@ RTX가 필요하던 렌더링 경로를 Metal 레이트레이싱으로 대체합
 | 항목 | 내용 | 권장 |
 |---|---|---|
 | **제품 범위** | 검증기 하나로 둘지, 패키지를 나눌지 | `cumlx-lab`에 extras로 시작, 커지면 분리 |
-| **kernelport와의 관계** | 연동 또는 자체 구현 | M0 후 결정. 우선 연동 |
+| **kernelport와의 관계** | 연동 또는 자체 구현 | 연동. 번역은 woof, 포트 검증과 시험 케이스는 kernelport를 쓰고, CUDA golden과 보고서는 CUMLX가 맡음. 단, wheel에 zoo가 없고 프로젝트가 작아 버전을 고정 |
 | **M5 기준 장비** | RTX 센서와 직접 비교하려면 RTX 장비가 필요. V100은 RT core가 없음 | 우선 Mitsuba CUDA 비교만. 장비가 생기면 추가 |

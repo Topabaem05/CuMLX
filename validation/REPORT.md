@@ -30,10 +30,13 @@ mlx 0.32.4 (kernel tests also on 0.32.2), mlx-lm 0.32.2. These are local runs; C
 | Isaac Sim on this Mac | Not runnable. `isaacsim` on macOS resolves to an empty 6.0.0.0 source package; the runtime wheels are Linux and Windows only | Package contents were read, not executed |
 | Physics on this Mac | MuJoCo 3.17: about 722,000 steps/s on a cartpole. Newton 1.7 on Warp 1.19: a falling box rests at z = 0.2; `cuda:0` is refused | CPU only; one small scene each |
 | Robot policy in MLX (`examples/robot-policy`) | rsl_rl default shape, batches 1, 16 and 4096: worst 5.2e-7; a wrong activation fails | Random weights; no real checkpoint |
+| Platform candidates, M0 (`spikes.json`) | Mitsuba Metal against CPU: 0.008% mean difference, 52.1 dB. Quadrants Metal against CPU: 7.0e-8. Isaac Lab cartpole USD loads into Genesis and falls under gravity only. kernelport: 12 Metal ports pass and a wrong port fails | One Mac, Python 3.12, small scenes; kernelport originals not run on CUDA |
+| Genesis throughput, M0 | Go2, 4096 environments, random actions: Metal 81,000 to 133,000 env-steps/s, CPU 13,000 to 14,000, 3 runs. At 512 environments Metal is only 1.0 to 1.9 times the CPU | Repeat runs of the standing scene differ by up to 3 times, cause not found; no policy inference |
+| woof translator, M0 | 3 CUMLX kernels correct on Metal, worst 5.0e-8; a wrong kernel measured 1.08. Of 17 foreign kernels, none compiled as they are. All refusals named a reason | Foreign kernels were not compared by value; one was run after a manual edit |
 | Isaac Sim streamed to a Mac | **Not run.** No RTX machine; the client is documented for macOS | |
 | Other NVIDIA and Apple GPU generations, padded inputs, large MoE | **Not run** | |
 
-Evidence: [real models](dogfood-macos-m5-pro.json), [public ports](public-ports.json), [NVFP4 repack](checkpoint-dory-nvfp4.json), [large capture](large-capture-qwen2.5-7b.json), [agent demo](mcp-agent-demo.md), [upstream finding](upstream/README.md). `scripts/dogfood_real_model.py`, `scripts/public_port_campaign.py` and `scripts/measure_large_capture.py` reproduce them.
+Evidence: [real models](dogfood-macos-m5-pro.json), [public ports](public-ports.json), [NVFP4 repack](checkpoint-dory-nvfp4.json), [large capture](large-capture-qwen2.5-7b.json), [agent demo](mcp-agent-demo.md), [upstream finding](upstream/README.md), [platform spikes](spikes.json). `scripts/dogfood_real_model.py`, `scripts/public_port_campaign.py` and `scripts/measure_large_capture.py` reproduce them.
 The numbers and the reasoning for thresholds are in [the CLI document](../docs/CLI.md#검증-기록-2026-11-02).
 
 ### Defects that real hardware and real models exposed
