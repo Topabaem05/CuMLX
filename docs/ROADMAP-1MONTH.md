@@ -27,15 +27,14 @@
 | W3 | 실제 불일치 발견 | ✅ | mlx-lm이 transformers 5의 `rope_parameters`를 놓침. [근거](../validation/upstream/README.md) |
 | W3 | **upstream 보고** | ⛔ 미완료 | mlx-lm 정책이 AI의 게시물 작성을 금지. 사용자가 직접 작성해야 함 |
 | W3 | **CUDA golden 측정** | ⛔ 미완료 | V100 장비에 쓰기 권한 승인 필요. [절차](CUDA-GOLDEN.md)와 `tracediff`는 준비됨. MPS로 도구 확인 |
-| W3 | **self-hosted runner 등록** | ⛔ 미완료 | 사용자 장비에 상주 서비스 설치. 사용자 결정 필요. GPU 테스트는 로컬에서 실행함 |
 | W4 | GitHub Action | ✅ 저장소 내부 | `action.yml`, `examples/port-ci`, CI의 `Action test`. 깨끗한 포팅 통과, 결함 포팅 실패 |
-| W4 | **별도 예제 저장소 적용** | ⛔ 미완료 | CuMLX가 비공개라 Actions 접근 설정 변경이 필요. 사용자 승인 필요 |
+| W4 | **별도 예제 저장소 적용** | ⛔ 미완료 | 접근 설정 변경과 저장소 생성이 권한에서 차단됨. 사용자 승인 필요 |
 | W4 | MCP 서버와 에이전트 스킬 | ✅ | `cumlx-mcp`, `skills/cumlx-verifier` |
 | W4 | `check_op` API | ✅ | `cumlx.check_op` |
 | W4 | 부분 기록 | ✅ | `--layers`, `W_PARTIAL_TRACE` |
 | W4 | 문서 | ✅ | 사용 사례 중심 README, [trace 명세](TRACE-FORMAT.md) |
 | 릴리스 | **PyPI 게시** | ⛔ 미완료 | 계정과 공개 결정 필요. 저장소도 비공개. GitHub 태그와 Release까지 수행 |
-| 릴리스 | **보고서와 명세의 공개** | ⛔ 미완료 | 저장소가 비공개. 공개 전환은 사용자 결정 |
+| 릴리스 | **보고서와 명세의 외부 공개** | ⛔ 미완료 | 저장소가 비공개. 공유용 보고서 페이지는 만들었고(비공개 링크), 공유와 공개 전환은 사용자 결정 |
 
 ---
 
@@ -337,7 +336,7 @@ cumlx conform --target mlx
 개정 1의 지적 사항 중 아래는 여전히 유효하며 W3~W4 또는 백로그에서 처리한다.
 
 - ~~MLX 버전 정확 일치 강제~~ → 0.32.2 이상 0.33 미만 허용으로 완화함 (`check_mlx_version`)
-- GPU self-hosted runner 미등록 → 사용자 결정 필요. GPU 테스트는 로컬에서 실행함
+- GPU self-hosted runner 미등록 → 백로그로 옮김. 사용자 장비에 상주 서비스를 설치하는 일이라 사용자가 결정한다. GPU 테스트는 로컬에서 실행함
 - ~~Ruff 규칙 확대, 타입 검사 도입~~ → 검증기·CLI에 확대, mypy는 새 모듈부터 CI 적용함
 
 ---
@@ -367,6 +366,7 @@ cumlx conform --target mlx
 3. 자동 원인 추정: 오차 패턴으로 "전치 의심", "scale 지수 오류 의심" 등 힌트 제시
 4. NF4/INT4/GGUF 형식 conform
 5. 기존 FP4 커널 성능 작업 (SIMD reduction, 벡터 load, matrix 명령)
+6. GPU self-hosted runner 등록과 정기 실행
 
 ---
 
