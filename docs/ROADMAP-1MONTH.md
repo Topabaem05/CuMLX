@@ -1,312 +1,303 @@
-# CUMLX 1개월 로드맵 — 부족한 점, 개선 방향, 테스팅 마일스톤
+# CUMLX 1개월 로드맵 — CUDA→MLX 포팅 동등성 검증기
 
-작성일: 2026-11-02 · 대상 기간: 2026-11-02 ~ 2026-11-30 (4주 + 릴리스일)
+작성일: 2026-11-02 (개정 2) · 기간: 2026-11-02 ~ 2026-11-30
+**베타: 2026-11-08 (D7)** · 정식: 2026-11-30 (`v0.4.0`)
 기준 커밋: `22fe8ce` (v0.3.0.dev0)
 
-> **목표 비전:** CUDA를 전제로 만든 AI 모델·오픈소스를 **명령어 한 번**으로 MLX용으로 변환해 Apple Silicon에서 효율적으로 실행한다.
->
-> **현재 위치:** NVFP4/MXFP4 packed 커널 **연구실(kernel lab)** 단계. CPU 기준 구현과 GPU 커널 소스는 있지만, 변환 명령어·모델 로더·모델 실행 경로는 없고 GPU 실행은 한 번도 검증하지 않았다.
+> **한 줄 정의:** CUDA로 만든 모델을 *누가 어떻게* MLX로 옮겼든, **원본과 같은 동작을 하는지 레이어 단위로 증명하고, 다르면 어디서 처음 달라졌는지 찾아 주는 도구.**
 
 ---
 
-## 0. 요약
+## 0. 방향을 바꾼 이유
 
-| 항목 | 판단 |
+개정 1에서는 "변환기(`cumlx convert`) + ModelOpt NVFP4 import + CUDA 의존성 스캐너"를 제안했다. 조사 결과 이 영역은 이미 여러 프로젝트가 진행 중이다.
+
+| 영역 | 이미 존재하는 것 |
 |---|---|
-| 가장 큰 격차 | "한 번에 변환"할 **제품 층(CLI·체크포인트 어댑터·모델 그래프)이 전혀 없음** |
-| 가장 큰 리스크 | GPU 커널 **미검증**(컴파일조차 안 해봄). 그 위에 무엇을 쌓아도 사상누각 |
-| 차별점 부재 | `mlx-lm`의 `convert -q`가 이미 "HF → MLX 양자화"를 한 줄로 해준다. CUMLX만의 가치를 정의해야 함 |
-| 1개월 현실적 목표 | **"NVIDIA용 NVFP4 체크포인트(및 일반 HF LLM)를 `cumlx convert` 한 줄로 MLX에서 실행"** + **CUDA 의존성 스캐너** + **실제 GPU 검증 증거** |
-| 1개월 비목표 | 임의 `.cu` 커스텀 커널 자동 번역, `torch.cuda` 위장 런타임, 학습/backward, 멀티 GPU |
+| HF LLM → MLX 변환·실행 | mlx-lm (`convert`, `load`), mlx-vlm |
+| NVIDIA NVFP4 체크포인트 → MLX | mlx-lm·mlx-vlm·oMLX의 계열별 지원, HF의 NVFP4→MLX repack 모음 |
+| PyTorch 모델 포팅 | mlx-porting-skill, Claude 포팅 스킬, 마이그레이션 가이드 |
+| CUDA 커널 → Metal | kernelport(0.1), K-Search 연구, woof의 프로젝트별 번역 |
+| CUDA 전용 op 대체 | mpsops, flash-attn-mps (PyTorch MPS 대상) |
+
+반면 **변환 결과가 맞는지 증명하는 도구는 비어 있다.** 실제로 변환 쪽에서는 버그가 계속 발견되고 있다.
+
+- mlx-vlm: ModelOpt NVFP4 AWQ 로딩·입력 스케일링 수정 (PR #2582)
+- oMLX / mlxcel: MoE expert별 global scale 로딩 수정
+- woof: 222개 커널 번역·컴파일 성공, 그러나 일부 커널은 값이 틀림
+- mlx-serve: 번역 계층이 eval 시점에야 실패
+
+CUMLX가 이미 가진 자산은 커널 속도가 아니라 **검증 체계**다.
+
+- `quant.py`: NVFP4/MXFP4 bit-정확 코덱 (nibble 순서, scale 해석, `-0`, 포화 처리)
+- `reference.py`: float64 oracle
+- "skip은 pass가 아니다", "암묵적 fallback 금지" 원칙
+
+따라서 CUMLX는 **변환기와 경쟁하지 않고, 모든 변환기 뒤에 붙는 검증 계층**이 된다.
 
 ---
 
-## 1. 현재 상태 분석
+## 1. 제품 정의
 
-### 1.1 구성 (총 약 2,400줄)
-
-| 층 | 파일 | 상태 |
-|---|---|---|
-| FP4 코덱·직렬화 | `src/cumlx/quant.py` | CPU 검증 완료. 단일 행렬 `.npz` 컨테이너만 지원 |
-| 고정밀 참조 | `src/cumlx/reference.py` | float64 oracle. 완료 |
-| 디스패치 | `src/cumlx/planning.py` | M 값만 보는 고정 휴리스틱 |
-| 스케줄 시뮬레이터 | `src/cumlx/simulation.py` | 인덱스·커버리지 검사용(순수 Python 루프) |
-| MLX 런처 | `src/cumlx/mlx_backend.py` | 작성됨, **하드웨어 미실행** |
-| 커널 | `src/cumlx/kernels/*.metal, *.cu` (8종 × 2) | 작성됨, **컴파일·실행 미검증** |
-| 커널 생성기 | `scripts/generate_kernels.py` | CI에서 byte 일치 검사 |
-| 벤치마크 | `benchmarks/bench_fp4.py` | 정확성 gate 포함, 실행 기록 없음 |
-| CI | `.github/workflows/ci.yml`, `gpu.yml` | CPU CI 정상, GPU는 self-hosted runner 미등록 |
-
-### 1.2 실측 확인 (2026-11-02, Linux x86_64, Python 3.11, MLX 없음)
-
-```text
-python -m pytest -q -m 'not gpu'
-109 passed, 35 deselected in 3.08s
-```
-
-35개 GPU 테스트는 한 번도 실행되지 않았다. 즉 **커널 정확성에 대한 증거는 0**이다.
-
-### 1.3 잘 된 점 (유지할 것)
-
-- 수치 계약이 엄밀하다: nibble 순서, scale 해석, 홀수 K 패딩, `-0` 보존, 포화 처리 등을 문서와 테스트로 고정.
-- "검증 안 한 것을 검증했다고 말하지 않는" 문화: `allow_unvalidated=True`, `--require-gpu`, CPU fallback 금지.
-- 커널 소스를 생성기로 관리하고 CI에서 drift를 막는다.
-- float64 oracle과 tolerance 기반 비교로 커널 오차와 양자화 오차를 분리한다.
-
----
-
-## 2. 비전 대비 격차
-
-"CUDA 전용 모델 → 명령어 한 번 → MLX에서 효율적으로 실행"을 단계로 나누면 다음과 같다.
-
-| 단계 | 필요 기능 | 현재 | 격차 |
-|---|---|---|---|
-| ① 진단 | 대상 저장소/모델의 CUDA 의존성 분석 (`torch.cuda`, `.cuda()`, flash-attn, bitsandbytes, triton, xformers, 커스텀 `.cu`) | 없음 | **전무** |
-| ② 입력 | HF Hub ID/로컬 경로, `safetensors`, `config.json`, sharded index 로딩 | 자체 `.npz` 단일 행렬만 | **전무** |
-| ③ 가중치 변환 | 모델 전체 Linear 일괄 양자화, 사전 양자화 체크포인트(NVIDIA ModelOpt NVFP4 등) 가져오기 | 행렬 1개 CPU 양자화 | 큼 |
-| ④ 저장 포맷 | 멀티 텐서 컨테이너, 레이어 메타데이터, mmap/lazy 로딩 | 단일 행렬 `.npz` | 큼 |
-| ⑤ 모델 그래프 | 아키텍처(Llama/Qwen/Mistral 등), attention, RoPE, KV cache, sampling | 없음 (Linear/RMSNorm/SiLU 커널만) | **전무** |
-| ⑥ 커널 | Packed FP4 GEMV/GEMM, norm, 활성화 | 소스만 있음, 미검증 | 중간 |
-| ⑦ 실행 UX | `cumlx convert`, `cumlx run/generate`, `cumlx doctor` | `[project.scripts]` 없음 | **전무** |
-| ⑧ 검증 | 커널 정확성 → 레이어 → 모델(perplexity/토큰 일치) → 성능 | CPU 단위 테스트만 | 큼 |
-
----
-
-## 3. 부족한 점 (상세)
-
-### 3.1 제품·포지셔닝
-
-1. **차별점이 정의되지 않았다.** `mlx-lm`(`mlx_lm.convert --quantize`)이 이미 HF 모델을 한 줄로 MLX 양자화 모델로 바꾼다. MLX 자체도 `mx.quantize`/`quantized_matmul`에 `mxfp4`/`nvfp4` 모드를 제공한다(SOURCES.md S3, S4). CUMLX가 "또 하나의 FP4 커널"이면 존재 이유가 약하다.
-   - 후보 차별점 (권장 순):
-     - (a) **CUDA 전용으로 배포된 사전 양자화 체크포인트**(NVIDIA ModelOpt NVFP4 등)를 **재양자화 없이** Mac에서 실행. "CUDA용 모델을 MLX로"라는 비전과 정확히 맞는다.
-     - (b) **CUDA 의존성 스캐너 + 자동 패치 제안**: 일반 PyTorch 저장소에서 무엇이 막히는지 보고하고, `device="cuda"` → `mps`/MLX 경로로 바꿀 수 있는 부분을 자동 처리.
-     - (c) global scale을 포함한 NVFP4 의미의 **정확한 재현**(MLX native QMM은 `global_scale` 인자가 없어 출력에 따로 곱함 — `mlx_backend.py:native_linear`).
-2. **"명령어 한 번"에 해당하는 진입점이 없다.** `pyproject.toml`에 `[project.scripts]`가 없다.
-3. 패키지 이름이 `cumlx-lab`, README 첫 문장이 "커널 구현 패키지"라서 사용자가 기대하는 "변환 도구"와 다르다.
-
-### 3.2 모델 지원
-
-4. 체크포인트 로더가 자체 `.npz`(`quant.py:load_fp4`) 하나뿐이다. `safetensors`, sharded index, `config.json`을 읽지 못한다.
-5. 컨테이너가 **행렬 1개 = 파일 1개**다. 수백 개 Linear를 가진 모델을 담을 포맷이 없다.
-6. Attention, RoPE, softmax, embedding, KV cache, MoE 라우팅이 없다. 지금 커널만으로는 어떤 모델도 끝까지 실행할 수 없다.
-7. `MLXBackend.linear`가 **2D 입력만** 받는다(`mlx_backend.py:195`). 실제 모델은 `[B, L, D]` 3D 텐서를 쓴다.
-8. 출력이 항상 float32다(`mlx_backend.py:170`). fp16/bf16 모델 파이프라인에서는 매 레이어마다 cast가 추가되어 메모리·대역폭을 낭비한다.
-9. 크기 한계: `N*K ≤ 2^31-1`(`quant.py:150`, `planning.py:31`). 대형 vocab의 `lm_head`(예: 256k × 16k)는 넘는다. 분할 처리나 int64 인덱스 프로파일이 필요하다.
-
-### 3.3 커널·런타임
-
-10. **GPU 컴파일조차 안 해봤다.** Metal 셰이더 문법 오류, MLX 템플릿 상수 이름 불일치 같은 1차 실패가 남아 있을 가능성이 높다.
-11. MLX 버전을 **정확히 일치**(`== 0.32.2`)하지 않으면 생성자가 예외를 던진다(`mlx_backend.py:96`). 사용자 환경에서 MLX가 한 번만 올라가도 도구 전체가 동작하지 않는다. 호환 범위 + 경고 정책으로 바꿔야 한다.
-12. `backend.quantize`가 `.item()`으로 **동기화**한다(`mlx_backend.py:233`). 토큰 생성 루프에서 매 스텝 CPU-GPU 왕복이 생겨 lazy graph 이점이 사라진다.
-13. 성능 관점의 미완성 (설계 문서 §13에서 스스로 인정):
-    - 128-lane shared memory tree reduction만 사용 (SIMD/warp reduction 미사용).
-    - packed weight를 **byte 단위**로 읽음 (uint32/uint64 벡터 load 없음). `fp4_tiled`는 원소마다 같은 byte를 다시 읽고 decode한다.
-    - GEMV는 출력 열마다 workgroup 1개이며 activation `x`를 shared memory에 staging하지 않는다.
-    - Tiled GEMM이 scalar FMA 기반 (simdgroup matrix / Tensor Core 미사용) → prefill에서 native보다 느릴 가능성이 크다.
-    - GPU quantizer는 thread 하나가 block 하나를 맡아 인접 thread의 메모리 접근이 G 간격으로 떨어진다(비연속 접근).
-14. 디스패치가 M만 본다(`planning.py:33`). K/N 크기·장치 세대를 반영한 autotune이 없다.
-15. W4A4에서 activation 양자화와 GEMM이 별도 launch다 (fusion 없음).
-
-### 3.4 검증·CI
-
-16. GPU CI가 self-hosted runner를 전제로 하지만 **등록된 runner가 없다.** 사실상 GPU 테스트는 영원히 안 도는 구조다.
-17. GPU 없이도 할 수 있는 검증을 하지 않는다:
-    - CUDA: `nvcc`/NVRTC는 GPU 없이 **device 코드 컴파일**이 가능하다. MLX가 생성하는 signature를 흉내 낸 wrapper로 `.cu` 본문을 컴파일하면 문법·타입 오류를 CPU CI에서 잡을 수 있다.
-    - Metal: macOS runner에서 `xcrun metal`로 오프라인 컴파일 가능 여부를 확인한다 (GitHub 호스팅 macOS runner의 GPU 실행 가능 여부는 **미확인** — W1에 확인).
-18. 모델 수준 지표(perplexity 차이, greedy 토큰 일치율, tok/s, peak memory)를 측정하는 harness가 없다.
-19. 성능 회귀 감지 체계가 없다 (기준선 JSON 저장·비교 없음).
-
-### 3.5 코드 품질·개발 경험
-
-20. Ruff 규칙이 문법 오류 수준(E9/F63/F7/F82)뿐이다. `planning.py`, `reference.py`는 한 줄에 여러 문장을 넣는 압축 스타일이라 기여자가 읽기 어렵다.
-21. 타입 검사(mypy/pyright)가 없다. `py.typed`를 배포하면서 타입을 검증하지 않는다.
-22. CPU `quantize`가 단일 스레드 NumPy이고 전체 FP32 가중치를 메모리에 올린다. 70B급 모델 변환 시 시간·메모리가 문제가 된다 (layer 단위 streaming 필요).
-23. 문서가 "하지 않은 것" 목록에 치우쳐 있고, 사용자 관점의 Quickstart(모델 하나 변환해서 돌리기)가 없다.
-
----
-
-## 4. 개선 방향
-
-### 4.1 원칙
-
-1. **바퀴를 다시 만들지 않는다.** 모델 그래프·tokenizer·sampling은 `mlx-lm`을 재사용하고, CUMLX는 *변환기 + FP4 Linear 제공자 + 진단기*에 집중한다.
-2. **검증 먼저, 최적화 나중.** 실제 GPU 정확성 gate를 통과하기 전에는 커널 최적화를 시작하지 않는다 (기존 원칙 유지).
-3. **fallback은 명시적으로.** CUMLX 커널이 해당 shape/장치에서 미검증이면 MLX native QMM으로 *명시적으로* 내려가고, 보고서에 그 사실을 기록한다. 사용자 입장에서 "일단 돌아가는" 경험을 확보한다.
-4. 기존의 정직한 증거 문화(`validation/REPORT.md`)를 모델 수준까지 확장한다.
-
-### 4.2 목표 아키텍처
-
-```text
-cumlx scan <repo|hf-id>      ── CUDA 의존성 보고서 (JSON + 사람이 읽는 표)
-        │
-cumlx convert <hf-id|path>   ── ① config/safetensors 로딩 (lazy, shard 단위)
-        │                       ② 어댑터 선택: dense FP16/BF16 → CUMLX 양자화
-        │                                     ModelOpt NVFP4  → 재양자화 없이 정규화
-        │                       ③ 멀티 텐서 컨테이너 저장 (safetensors + 메타데이터)
-        ▼
-cumlx run / generate         ── mlx-lm 아키텍처 로드
-                                 └ nn.Linear → CumlxFP4Linear 교체
-                                     ├ 검증된 shape → CUMLX 커널
-                                     └ 그 외        → MLX native QMM (명시적, 로그 기록)
-cumlx doctor                 ── 환경·MLX 버전·GPU·커널 자가 진단
-cumlx bench                  ── 레이어/모델 벤치마크, 기준선 비교
-```
-
-### 4.3 1개월 범위 결정
-
-| 포함 (MVP) | 제외 (백로그) |
-|---|---|
-| Apple Silicon + Metal 우선 | CUDA 백엔드 성능 작업 (정확성 검증만) |
-| Llama 계열 dense 아키텍처 1~2종 (예: Llama 3.x, Qwen 2.5/3) | MoE, 멀티모달, diffusion, whisper |
-| dense HF → NVFP4/MXFP4 변환 | NxFP4/NF4/INT4 |
-| ModelOpt NVFP4 체크포인트 import (형식 일치 여부를 W1에 검증) | TransformerEngine 2D/swizzled layout |
-| `scan` 정적 분석 (보고만) | 임의 `.cu` → Metal 자동 번역, `torch.cuda` 위장 |
-| 추론 전용 | 학습, backward, LoRA |
-
----
-
-## 5. 주차별 마일스톤
-
-각 주는 **Exit Gate**를 통과해야 다음 주로 넘어간다. Gate를 못 넘으면 범위를 줄이고 다음 주 첫 이틀을 gate 완료에 쓴다.
-
-### W1 (11/02 ~ 11/08) — 실제 GPU 검증과 기반 정리
-
-**목표:** "커널이 실제로 돈다"는 첫 증거를 만든다.
-
-| 작업 | 산출물 |
-|---|---|
-| Apple Silicon 장비 1대를 self-hosted runner(`metal` label)로 등록 | `gpu.yml` 첫 실행 기록 |
-| 35개 GPU 테스트 실행, 실패 원인 분류(컴파일/런처/수치) 후 수정 | `validation/REPORT.md` 갱신 |
-| CUDA 본문을 MLX signature wrapper로 감싸 `nvcc -c`(GPU 없이) 컴파일하는 CI job 추가 | `ci.yml`에 `cuda-compile` job |
-| MLX 버전 정책 변경: `==` → 테스트된 범위 + 범위 밖은 경고 | `mlx_backend.py` |
-| `bench_fp4.py`로 M ∈ {1, 4, 32, 512}, (N,K) ∈ {(4096,4096), (11008,4096), (4096,11008)} 측정 | `validation/bench-w1.json` |
-| ModelOpt NVFP4 체크포인트 1개를 받아 텐서 이름·dtype·nibble 순서·scale 의미를 CUMLX 계약과 대조 | `docs/ADAPTER-MODELOPT.md` (일치/불일치 표) |
-
-**테스팅 마일스톤 T1**
-- [ ] Metal에서 GPU 테스트 35/35 통과 (skip 0, `--require-gpu`)
-- [ ] `test_gpu_decode_all_bytes`, `test_gpu_quantizer`는 bitwise 일치
-- [ ] CUDA `.cu` 본문 8개 전부 device compile 성공 (CPU CI)
-- [ ] 벤치마크 JSON에 CUMLX vs MLX native QMM vs dense 비교 수치 기록 (정확성 gate 통과한 후보만)
-
-**Exit Gate:** Metal 정확성 테스트 전부 통과. 실패하면 W2의 모델 통합은 MLX native QMM fallback으로만 진행.
-
----
-
-### W2 (11/09 ~ 11/15) — 변환 파이프라인 (`cumlx convert`)
-
-**목표:** HF 모델 하나를 한 줄로 CUMLX 포맷으로 바꾼다.
-
-| 작업 | 산출물 |
-|---|---|
-| `[project.scripts] cumlx = "cumlx.cli:main"` 추가, `convert`/`doctor` 서브커맨드 | `src/cumlx/cli.py` |
-| `safetensors` + sharded index lazy 로더 (shard 단위 streaming, 전체 FP32 상주 금지) | `src/cumlx/io/hf.py` |
-| 멀티 텐서 컨테이너: safetensors 기반, 레이어별 format/shape/global_scale/checksum 메타데이터 | `src/cumlx/io/container.py` |
-| 양자화 정책: 어떤 Linear를 FP4로 할지 (embedding·lm_head·norm은 기본 제외, 설정 가능) | `src/cumlx/policy.py` |
-| 어댑터 1: dense FP16/BF16 → NVFP4/MXFP4 | `src/cumlx/adapters/dense.py` |
-| 어댑터 2: ModelOpt NVFP4 → CUMLX 정규화 (W1 대조 결과가 일치할 때만) | `src/cumlx/adapters/modelopt.py` |
-| CPU `quantize` 가속: block 루프 벡터화 + 레이어 단위 병렬 처리 | `quant.py` |
-
-**테스팅 마일스톤 T2**
-- [ ] 작은 모델(예: 0.5B~1B 공개 모델) 변환 → 재로드 → 모든 텐서 checksum 일치
-- [ ] 변환 전후 각 Linear의 CPU oracle 출력 비교: 상대 오차 분포 기록 (FP4 양자화 오차 기준선)
-- [ ] ModelOpt 어댑터: 원본 NVFP4 바이트를 **그대로** 보존 (재양자화 없음, payload/scale bitwise 동일)
-- [ ] 7B 모델 변환 시 peak RSS ≤ 원본 BF16 크기의 1.5배, 시간 측정 기록
-- [ ] 손상 파일·잘못된 shape·지원하지 않는 dtype에 대해 명확한 오류 메시지 (negative test)
-
-**Exit Gate:** `cumlx convert <소형 모델>`이 끝까지 성공하고 재로드 검증을 통과.
-
----
-
-### W3 (11/16 ~ 11/22) — 모델 실행 (`cumlx run`)과 정확도
-
-**목표:** 변환한 모델로 실제 텍스트를 생성하고, 품질을 숫자로 증명한다.
-
-| 작업 | 산출물 |
-|---|---|
-| `CumlxFP4Linear(nn.Module)`: 3D 입력 reshape, bias, 출력 dtype 선택(fp16/bf16) | `src/cumlx/nn.py` |
-| `mlx-lm` 모델 로드 후 Linear 교체 훅, 미검증 shape는 native QMM으로 명시적 fallback | `src/cumlx/integrations/mlx_lm.py` |
-| `cumlx run <변환 경로> --prompt ...` / `cumlx generate` | `cli.py` |
-| 커널 출력 dtype 템플릿화 (float32 고정 해제) | `kernels/*`, 생성기 |
-| `backend.quantize`의 `.item()` 동기화 제거 (검증은 debug 모드에서만) | `mlx_backend.py` |
-| 모델 평가 harness: perplexity(wikitext-2 일부), greedy 토큰 일치율 | `benchmarks/eval_model.py` |
-
-**테스팅 마일스톤 T3**
-- [ ] 레이어 단위: 실제 모델의 모든 Linear shape에 대해 CUMLX 커널 vs CPU oracle tolerance 통과
-- [ ] 동일 FP4 가중치에서 CUMLX 경로 vs MLX native QMM 경로의 logits 차이 ≤ 기준 (예: max abs 1e-2, 정해진 프롬프트 세트)
-- [ ] Perplexity: BF16 원본 대비 증가율 기록. 목표 NVFP4 ≤ +5%, MXFP4 ≤ +8% (모델별로 조정, **목표치이며 보장 아님**)
-- [ ] Greedy decode 128 토큰: 동일 FP4 가중치의 native QMM 경로와 토큰 일치율 ≥ 95%
-- [ ] 출력 dtype fp16/bf16에서도 W1 GPU 테스트 전부 재통과
-- [ ] 엔드투엔드 smoke: `cumlx convert && cumlx run`이 CI(GPU runner)에서 통과
-
-**Exit Gate:** 소형 모델 1개가 CUMLX 경로로 의미 있는 텍스트를 생성하고 perplexity 목표 이내.
-
----
-
-### W4 (11/23 ~ 11/29) — 성능, 진단기, 릴리스 준비
-
-**목표:** "효율적"이라는 말을 측정값으로 뒷받침하고, `scan`으로 비전의 진단 단계를 연다.
-
-| 작업 | 산출물 |
-|---|---|
-| GEMV 최적화 1순위: uint32 벡터 load + SIMD reduction (`simd_sum`) | `fp4_gemv.metal` |
-| 디스패치 테이블: W1/W3 벤치마크로 shape별 최속 후보 선택 (CUMLX vs native) | `planning.py` |
-| `cumlx scan <path|hf-id>`: AST 기반 CUDA 의존성 탐지 (`torch.cuda.*`, `.cuda()`, `device='cuda'`, `flash_attn`, `bitsandbytes`, `triton`, `xformers`, `apex`, `*.cu`, `load_inline`) + 대체 경로 제안 | `src/cumlx/scan.py` |
-| 성능 회귀 기준선 JSON 저장·비교 스크립트 | `benchmarks/compare.py` |
-| 사용자 Quickstart 중심 README 재작성, 패키지 이름 검토 | `README.md` |
-
-**테스팅 마일스톤 T4**
-- [ ] Decode(M=1) tok/s: CUMLX 경로 ≥ MLX native QMM 경로의 0.9배 (못 미치면 디스패치가 native를 선택하도록 하고 그 사실을 기록)
-- [ ] Peak memory: FP4 모델 실행 시 BF16 대비 ≤ 35% (가중치 기준)
-- [ ] 최적화된 GEMV가 W1 정확성 테스트 전부 재통과 (최적화가 정확성을 깨지 않음)
-- [ ] `scan` 정답 세트: 공개 저장소 10개에 수동 라벨링한 CUDA 의존성 목록 대비 recall ≥ 90%, precision ≥ 80%
-- [ ] 성능 회귀 비교: 기준선 대비 10% 이상 느려지면 실패하는 GPU CI step
-
-**Exit Gate (11/30 릴리스):** 아래 "완료 정의"를 모두 만족하면 `v0.4.0` 태그.
-
-### 완료 정의 (Definition of Done, 11/30)
+### 1.1 핵심 명령 (베타 범위)
 
 ```bash
-pip install cumlx-lab
-cumlx doctor
-cumlx scan ./some-cuda-project
-cumlx convert <hf-model-id> --format nvfp4 -o ./model-cumlx
-cumlx run ./model-cumlx --prompt "Hello"
+# ① 원본(PyTorch, CUDA 또는 CPU)에서 모듈별 입출력을 golden trace로 기록
+cumlx capture <hf-id|path> --prompts prompts.txt -o golden/
+
+# ② MLX 포팅본을 같은 입력으로 실행하고 레이어별로 비교
+cumlx diff golden/ <mlx-model-path> -o report/
+
+# ③ FP4 형식 정합성 검사 (MLX 내장 dequantize, 체크포인트 bytes)
+cumlx conform --target mlx
+cumlx conform --checkpoint <path>
 ```
 
-- 위 다섯 줄이 Apple Silicon Mac에서 동작한다.
-- `validation/REPORT.md`에 커밋 SHA별 GPU 테스트 수, perplexity, tok/s, peak memory가 기록되어 있다.
-- 미검증 경로는 문서와 런타임 로그 모두에서 "미검증"으로 표시된다.
+### 1.2 diff의 두 가지 모드
+
+| 모드 | 방식 | 용도 |
+|---|---|---|
+| **chain** (전체 실행) | 같은 token id를 MLX 모델에 넣고 모든 모듈 출력을 golden과 비교 | 최종 출력이 같은지 확인. 오차가 누적되어 원인 위치는 흐려짐 |
+| **isolated** (모듈 단독 재생) | 각 모듈에 **golden 입력**을 직접 넣고 출력만 비교 | 오차 누적 없이 **잘못된 모듈을 정확히 지목**. 이 도구의 핵심 기능 |
+
+### 1.3 판정 지표
+
+모듈마다 아래 값을 계산하고 dtype별 기본 임계값과 비교한다.
+
+| 지표 | 정의 |
+|---|---|
+| `rel_l2` | ‖mlx − golden‖₂ / ‖golden‖₂ |
+| `max_abs` | max \|mlx − golden\| |
+| `cosine` | 두 출력 벡터의 cosine 유사도 |
+| `first_divergence` | 실행 순서상 처음으로 임계값을 넘은 모듈 (isolated 모드 기준) |
+
+기본 임계값 (베타 초기값. W2에서 실측으로 보정):
+
+| 비교 조건 | `rel_l2` 상한 |
+|---|---|
+| fp32 ↔ fp32 | 1e-5 |
+| bf16/fp16 포팅 | 1e-2 |
+| 양자화 포팅 (4bit/FP4) | **양자화 기대 오차 기반** (W2, §5 참조) |
+
+### 1.4 범위
+
+| 포함 | 제외 |
+|---|---|
+| PyTorch(HF transformers) → MLX(mlx-lm 형식) 모델 | 변환기 자체 (mlx-lm 등에 맡김) |
+| Llama/Qwen 계열 dense → W2부터 MoE | 학습, backward |
+| FP4(NVFP4/MXFP4) 정합성 | NF4, INT4 (백로그) |
+| 단일 장치 추론 | 멀티 GPU, 분산 |
+| 결과 보고 (JSON/Markdown → HTML) | 자동 수정 |
 
 ---
 
-## 6. 테스팅 전략
+## 2. 1주 베타를 위한 설계 결정
 
-### 6.1 테스트 피라미드
+1주 안에 핵심 기능이 동작하도록 **새로 만들 것을 최소화**하고, 위험한 의존성을 피한다.
+
+| 결정 | 이유 |
+|---|---|
+| 기존 GPU 커널(`MLXBackend`)에 **의존하지 않는다** | 커널은 아직 미검증. 검증기는 MLX 기본 op로 동작하는 어떤 모델에든 적용 가능해야 한다 |
+| trace 형식 = `safetensors` + `manifest.json` | numpy만으로 읽고 쓸 수 있고 (`safetensors.numpy`) torch·mlx 양쪽에서 쉽게 로드된다 |
+| golden 생성은 **CPU float32 PyTorch**로 시작 | 베타에서 CUDA 장비가 없어도 된다. CUDA capture는 W3에 추가 (같은 형식) |
+| PyTorch 쪽 기록 = `register_forward_hook` | 표준 API, 모델 코드 수정 불필요 |
+| MLX 쪽 기록 = **Probe 래퍼 모듈** | MLX `nn.Module`에는 forward hook이 없다. 자식 모듈을 `Probe(inner, name)`로 바꿔 끼워 출력만 기록한다 |
+| 모듈 이름 매핑 = **동일 경로 우선 + 규칙 파일** | mlx-lm은 대부분 HF와 같은 경로(`model.layers.N.self_attn.q_proj`)를 쓴다. 다른 경우만 YAML 규칙으로 보완 |
+| isolated 모드 베타 범위 = **단일 텐서 입력 모듈** | Linear, Embedding, RMSNorm/LayerNorm, MLP 블록. mask·position·cache를 받는 attention/decoder layer는 W2 |
+| CI 테스트 모델 = **로컬에서 생성한 tiny random 모델** | 네트워크·대용량 다운로드 없이 CI에서 재현. `transformers` config로 2-layer 모델 생성 → safetensors 저장 → mlx-lm 로드 |
+| 의존성은 extra로 분리 | `cumlx-lab[capture]` = torch, transformers, safetensors / `[diff]` = mlx, mlx-lm, safetensors. 코어는 numpy만 |
+| 검증기 자체를 **오류 주입(fault injection)**으로 검증 | 검증기가 틀리면 의미가 없다. 일부러 망가뜨린 포팅본을 정확히 지목하는지 테스트한다 (§4) |
+
+### 2.1 모듈 구성
+
+```text
+src/cumlx/
+  cli.py                 cumlx capture | diff | conform | report
+  trace/format.py        manifest 스키마, safetensors 읽기/쓰기, 버전
+  trace/torch_capture.py forward hook 기록기 (입력·출력·dtype·shape)
+  trace/mlx_probe.py     Probe 래퍼, 모듈 트리 순회·교체
+  diff/mapping.py        이름 매핑 (동일 경로 + YAML 규칙)
+  diff/metrics.py        rel_l2, max_abs, cosine, 임계값 판정
+  diff/runner.py         chain / isolated 실행
+  conform/vectors.py     FP4 경계값 테스트 벡터 (quant.py 재사용)
+  conform/targets.py     mx.dequantize, 체크포인트 bytes 대상 검사
+  report/                JSON, Markdown (W3: HTML)
+기존 quant.py, reference.py는 그대로 재사용
+```
+
+### 2.2 trace manifest (v1)
+
+```json
+{
+  "schema": "cumlx.trace.v1",
+  "source": {"framework": "torch", "version": "...", "device": "cpu", "dtype": "float32",
+             "model": "<hf-id or path>", "revision": "<sha>"},
+  "inputs": {"prompts_sha256": "...", "token_ids": "inputs.safetensors"},
+  "modules": [
+    {"name": "model.layers.0.self_attn.q_proj", "order": 12, "type": "Linear",
+     "in": ["t/000012.in.0"], "out": "t/000012.out", "shape": [1, 7, 64], "dtype": "float32"}
+  ]
+}
+```
+
+---
+
+## 3. 일정
+
+### 3.1 베타 주간 (D1~D7: 11/02 ~ 11/08) — 핵심 기능 동작
+
+| 일 | 작업 | 그날의 완료 기준 |
+|---|---|---|
+| **D1** 11/02 월 | CLI 골격(`[project.scripts] cumlx`), trace 형식·manifest, `metrics.py`, extras 정의. Linux에서 MLX CPU wheel 설치 가능 여부 확인 | 합성 데이터로 metrics·format 단위 테스트 통과 |
+| **D2** 11/03 화 | `capture`: forward hook 기록기, tiny random Llama 생성 스크립트 | tiny 모델 capture → manifest·텐서 재로드 일치 |
+| **D3** 11/04 수 | `mlx_probe.py`, `mapping.py`, **chain 모드** diff | 같은 tiny 모델의 mlx-lm 버전 chain diff 실행, 모든 모듈 매핑 성공 |
+| **D4** 11/05 목 | **isolated 모드** (단일 입력 모듈), `first_divergence`, JSON/Markdown 보고서 | 깨끗한 포팅본에서 false alarm 0 |
+| **D5** 11/06 금 | `conform`: FP4 경계값 벡터 → `mx.dequantize`(nvfp4/mxfp4) 대조. 오류 주입 테스트 스위트 | §4 오류 주입 F1~F6 검출 |
+| **D6** 11/07 토 | 실제 소형 모델 dogfooding: Qwen2.5-0.5B 또는 Llama-3.2-1B (HF CPU fp32 vs mlx-lm bf16 / 4bit) | 실제 모델에서 보고서 생성, 발견된 버그 수정 |
+| **D7** 11/08 일 | Quickstart 문서, 알려진 한계 목록, `v0.4.0b1` 태그 | **베타 Gate 통과** |
+
+#### 베타 Gate (D7) — 모두 만족해야 베타 선언
+
+- [ ] `cumlx capture` → `cumlx diff`가 tiny 모델과 실제 0.5~1B 모델에서 끝까지 동작
+- [ ] isolated 모드: 오류 주입 F1~F6을 **6/6 정확한 모듈로 지목**
+- [ ] 깨끗한 bf16 포팅본: 기본 임계값에서 **false alarm 0**
+- [ ] `cumlx conform --target mlx`가 nvfp4/mxfp4 양쪽에서 실행되고 결과를 보고 (불일치를 찾으면 그 자체가 성과)
+- [ ] CPU CI에서 capture·diff·conform 테스트 통과 (MLX CPU wheel이 안 되면 macOS runner로 대체)
+- [ ] 기존 테스트 109개 계속 통과
+
+#### 베타가 늦어질 때 줄이는 순서
+
+1. D6 실제 모델 → tiny 모델만으로 베타, 실제 모델은 W2 첫날
+2. Markdown 보고서 → JSON만
+3. `conform` → W2로 이동 (capture + diff만으로도 핵심 가치는 성립)
+
+**절대 줄이지 않는 것:** isolated 모드와 오류 주입 테스트. 이 둘이 없으면 "검증기"가 아니다.
+
+---
+
+### 3.2 W2 (11/09 ~ 11/15) — 베타 강화: 커버리지와 양자화
+
+| 작업 | 설명 |
+|---|---|
+| 다중 입력 모듈 isolated 재생 | attention, decoder layer: hidden state + mask + position ids/RoPE 입력까지 기록·재생 |
+| decode 단계 capture | KV cache를 사용하는 토큰 1개 생성 단계도 기록 (prefill과 별도 trace) |
+| **양자화 기대 오차 oracle** | MLX 포팅본의 양자화 가중치를 dequantize → PyTorch 원본 모델에 주입 → 그 출력을 "양자화 golden"으로 사용. **양자화 손실**과 **구현 버그**를 분리한다 |
+| 정적 가중치 diff | 실행 없이 MLX 가중치(dequantize)와 HF 가중치를 비교. 전치·scale·순서 오류를 빠르게 검출 |
+| MoE 지원 | expert별 모듈 이름, router 출력 기록, expert별 global scale 검사 |
+| 임계값 보정 | 깨끗한 포팅본 5개 이상에서 오차 분포 측정 → dtype·모듈 타입별 기본값 갱신 |
+
+**테스팅 마일스톤 T2**
+- [ ] 오류 주입 F1~F10 전체 10/10 지목 (attention·MoE 관련 F7~F10 포함)
+- [ ] 4bit 포팅본: 양자화 golden 기준 비교에서 깨끗한 포팅 false alarm 0, F4·F5(scale 오류) 검출
+- [ ] 정적 가중치 diff: 전치·scale 오류를 1분 이내 검출 (1B 모델 기준)
+- [ ] MoE 모델 1개(소형)에서 capture·diff 동작
+
+---
+
+### 3.3 W3 (11/16 ~ 11/22) — 실전 적용 캠페인
+
+| 작업 | 설명 |
+|---|---|
+| **공개 포팅본 3~5개 검증** | HF의 NVFP4→MLX repack, mlx-lm 커뮤니티 변환본, MoE 포팅본 등 |
+| 발견한 문제를 upstream에 보고 | 재현 trace와 보고서를 첨부한 issue/PR |
+| CUDA 장비에서 capture | 같은 trace 형식으로 CUDA golden 생성. CPU golden과의 차이 기록 (CUDA 비결정성 측정 포함) |
+| `conform --checkpoint` | ModelOpt NVFP4 원본 bytes를 CUMLX 코덱으로 독립 decode → MLX repack 가중치와 bit 비교 |
+| HTML 보고서 | 모듈별 오차 그래프, first divergence 강조, trace 링크 |
+| **자체 커널 dogfooding** | 기존 FP4 GPU 커널(`MLXBackend`)을 검증기로 검증. Apple Silicon 실기 GPU 테스트 35개 실행 |
+
+**테스팅 마일스톤 T3**
+- [ ] 공개 포팅본 3개 이상에 대한 검증 보고서 공개
+- [ ] **upstream에 보고한 실제 불일치 ≥ 1건** (방향이 맞는지 판단하는 핵심 지표)
+- [ ] CUDA golden vs CPU golden 차이가 기본 임계값 이내임을 문서화 (아니면 임계값 정책 수정)
+- [ ] 기존 GPU 테스트 35개 Metal 실기에서 skip 0으로 실행, 결과 기록
+
+---
+
+### 3.4 W4 (11/23 ~ 11/29) — 통합과 정식 릴리스 준비
+
+| 작업 | 설명 |
+|---|---|
+| GitHub Action | 포팅 저장소 CI에서 `cumlx diff`를 돌리고 회귀 시 실패 |
+| MCP 서버 / 에이전트 스킬 | 포팅 에이전트(mlx-porting-skill, kernelport 등)가 검증 단계에서 호출할 수 있는 인터페이스 |
+| op 단위 API | `cumlx.check_op(torch_fn, mlx_fn, inputs)`: 커스텀 커널 포팅(Metal kernel) 단위 검증 |
+| 성능 | 7B 모델 capture가 디스크·시간 면에서 감당 가능하도록 샘플링·부분 기록 옵션 (`--modules`, `--layers`) |
+| 문서 | 사용 사례 중심 README 재작성, trace 형식 명세 공개 |
+
+**테스팅 마일스톤 T4**
+- [ ] GitHub Action을 예제 저장소에 적용, 오류 주입 PR에서 실패하고 깨끗한 PR에서 통과
+- [ ] MCP 인터페이스로 에이전트가 capture → diff → 보고서 해석까지 수행하는 데모
+- [ ] `check_op`로 기존 `rms_norm`/`silu_mul` Metal 커널 vs PyTorch 비교 통과
+- [ ] 7B 모델: `--layers` 부분 기록으로 trace ≤ 5 GB, capture 10분 이내 (목표치)
+
+### 3.5 정식 릴리스 (11/30, `v0.4.0`) — 완료 정의
+
+```bash
+pip install 'cumlx-lab[capture,diff]'
+cumlx capture Qwen/Qwen2.5-0.5B --prompts prompts.txt -o golden/
+cumlx diff golden/ ./qwen-mlx-4bit -o report/ --mode isolated
+cumlx conform --target mlx
+```
+
+- 위 명령이 Apple Silicon Mac에서 문서대로 동작한다.
+- 오류 주입 10종 모두 검출, 깨끗한 포팅본 false alarm 0.
+- 공개 포팅본 검증 보고서 3개 이상, upstream 보고 1건 이상.
+- 검증하지 않은 영역은 보고서와 문서에 "미검증"으로 표시된다.
+
+---
+
+## 4. 검증기 자체의 검증 — 오류 주입 목록
+
+깨끗한 MLX 포팅본에 일부러 아래 결함을 하나씩 넣고, isolated 모드가 **정확한 모듈**을 `first_divergence`로 지목해야 한다.
+
+| ID | 주입하는 결함 | 기대 지목 위치 | 베타 |
+|---|---|---|---|
+| F1 | Linear 가중치 전치 (정방 행렬) | 해당 `*_proj` | ✅ |
+| F2 | bias 누락 | 해당 Linear | ✅ |
+| F3 | RMSNorm epsilon 변경 / weight 누락 | 해당 norm | ✅ |
+| F4 | MXFP4 E8M0 scale 지수 ±1 | 해당 양자화 Linear | ✅ |
+| F5 | NVFP4 global scale 누락 | 해당 양자화 Linear | ✅ |
+| F6 | 활성화 함수 교체 (SiLU → GELU) | 해당 MLP | ✅ |
+| F7 | RoPE theta 변경 | 해당 attention | W2 |
+| F8 | attention mask 누락 (causal) | 해당 attention | W2 |
+| F9 | MoE expert 순서 뒤섞기 | 해당 MoE 블록 | W2 |
+| F10 | nibble 순서 반전 (low/high) | 해당 양자화 Linear | W2 |
+
+추가 지표:
+- **False alarm rate:** 깨끗한 포팅본에서 임계값을 넘은 모듈 수 / 전체 모듈 수 = 0 (목표)
+- **Chain vs isolated 비교:** chain 모드에서는 결함 이후 모든 모듈이 빨갛게 되지만 isolated 모드에서는 결함 모듈 하나만 빨갛게 됨을 보고서로 보여 준다.
+
+---
+
+## 5. 테스팅 전략
 
 | 층 | 무엇 | 어디서 | 빈도 |
 |---|---|---|---|
-| L0 단위 | 코덱, 직렬화, 어댑터 파싱, CLI 인자 | CPU CI | 모든 PR |
-| L1 컴파일 | CUDA device compile(`nvcc`), Metal offline compile(가능 시) | CPU CI / macOS runner | 모든 PR |
-| L2 커널 정확성 | 기존 35개 + 실제 모델 shape, dtype 3종, format 2종 | GPU runner | main push, 수동 |
-| L3 레이어 | Transformer block 1개: CUMLX vs native vs CPU oracle | GPU runner | main push |
-| L4 모델 | perplexity, greedy 토큰 일치율, 엔드투엔드 CLI | GPU runner | 일 1회 / 릴리스 |
-| L5 성능 | tok/s, prefill latency, peak memory, 기준선 비교 | GPU runner | 일 1회 / 릴리스 |
+| L0 단위 | metrics, trace 형식, 이름 매핑, FP4 벡터 생성, CLI 인자 | CPU CI | 모든 PR |
+| L1 통합(tiny) | tiny random 모델 capture → diff, 오류 주입 F1~F6 | CPU CI (MLX CPU 또는 macOS) | 모든 PR |
+| L2 실제 모델 | 0.5~1B 모델 bf16·4bit 포팅 diff | macOS runner / 개발자 Mac | main push, 일 1회 |
+| L3 양자화 | 양자화 golden oracle, conform | macOS runner | main push |
+| L4 실전 | 공개 포팅본 캠페인 | 수동 | 주 1회 |
+| L5 기존 커널 | `MLXBackend` GPU 테스트 35개 | Metal 실기 | W3부터 주 1회 |
 
-### 6.2 정확성 기준
+**양자화 포팅의 판정 원칙:** 4bit/FP4 포팅본을 fp32 원본과 직접 비교하면 양자화 손실 때문에 항상 오차가 크다. 그래서 W2부터는 *같은 양자화 가중치를 PyTorch에 넣어 만든 golden*과 비교한다. 이 비교에서 남는 오차가 **구현 버그**다.
 
-| 비교 | 기준 | 근거 |
-|---|---|---|
-| decode / quantizer GPU vs CPU | bitwise 동일 | 결정적 연산, 이미 테스트로 고정 |
-| linear GPU vs float64 oracle | `atol=2e-4, rtol=3e-4` (기존) + K에 비례한 오차 상한 추가 검토 | reduction 순서 차이 |
-| CUMLX vs native QMM (동일 FP4 가중치) | logits max abs ≤ 1e-2 | global scale 적용 위치 차이 |
-| 모델 perplexity vs BF16 원본 | NVFP4 ≤ +5%, MXFP4 ≤ +8% (목표) | FP4 양자화 오차 |
+---
 
-### 6.3 성능 측정 규칙
+## 6. 기존 코드의 위치 변화
 
-- 기존 규칙 유지: 매 반복 새 graph, `mx.eval` + synchronize, 정확성 gate를 통과한 후보만 기록.
-- 장비·OS·MLX 버전·커밋 SHA를 결과 JSON에 반드시 포함.
-- 모델 수준은 prefill(512 토큰)과 decode(128 토큰)를 분리해 보고.
-- 메모리는 후보마다 **별도 프로세스**로 측정 (설계 문서 §12에서 지적한 한계 해소).
+| 기존 자산 | 새 역할 |
+|---|---|
+| `quant.py` (FP4 코덱) | `conform`의 독립 decoder, 오류 주입 F4·F5·F10 생성기 |
+| `reference.py` (float64 oracle) | `check_op`과 metrics 정밀도 기준 |
+| `kernels/`, `mlx_backend.py` | 검증 대상(dogfooding). 개발 우선순위는 낮춤 |
+| `planning.py`, `simulation.py` | 유지, 변경 없음 |
+| CI 원칙 (skip ≠ pass, fallback 금지) | 검증기 보고서 원칙으로 확장: 매핑 실패·미기록 모듈은 "미검증"으로 표시하고 통과로 세지 않음 |
+
+개정 1의 지적 사항 중 아래는 여전히 유효하며 W3~W4 또는 백로그에서 처리한다.
+
+- MLX 버전 정확 일치 강제(`mlx_backend.py:96`) → 범위 정책으로 완화 (검증기는 이 클래스를 import하지 않으므로 베타에 영향 없음)
+- GPU self-hosted runner 미등록 → W3 dogfooding 전에 등록
+- Ruff 규칙 확대, 타입 검사 도입 → 새 모듈부터 적용
 
 ---
 
@@ -314,23 +305,35 @@ cumlx run ./model-cumlx --prompt "Hello"
 
 | 리스크 | 가능성 | 영향 | 대응 |
 |---|---|---|---|
-| Apple Silicon GPU runner를 확보하지 못함 | 중 | 치명적 | W1 첫날 확보. 불가하면 개발자 Mac에서 수동 실행 후 원시 로그를 커밋하는 절차로 대체 |
-| 커널이 대량으로 실패 | 중 | 큼 | W2·W3는 MLX native QMM fallback으로 진행해 파이프라인 일정을 지킨다. 커널 수정은 병행 |
-| CUMLX 커널이 native보다 느림 | 높음 | 중 | 디스패치가 native를 선택하게 한다. 차별점은 속도가 아니라 *변환 범위(ModelOpt import, scan)*에 둔다 |
-| ModelOpt NVFP4 layout이 CUMLX 계약과 다름 | 중 | 중 | W1에 대조. 다르면 정규화 어댑터(재배열, 재양자화 없이)를 작성하거나 W2 범위에서 제외 |
-| MLX API 변경 | 중 | 중 | 버전 범위 정책 + 주간 최신 MLX 대상 nightly job |
-| 7B 이상 변환 시 메모리 부족 | 중 | 중 | shard streaming, 레이어 단위 처리 |
-| 범위 확장 압력 (MoE, diffusion 등) | 높음 | 중 | 4.3의 제외 목록을 고정. 요청은 백로그로 이동 |
+| Linux에서 MLX CPU wheel을 쓸 수 없음 | 중 | 중 | D1에 확인. 안 되면 L1을 macOS runner로 옮기고 Linux CI는 capture·metrics만 |
+| HF ↔ mlx-lm 모듈 경로가 모델마다 다름 | 높음 | 중 | 동일 경로 우선 + YAML 규칙. 매핑 실패는 "미검증"으로 보고 (조용히 건너뛰지 않음) |
+| 다중 입력 모듈 재생이 어려움 (mask, cache) | 높음 | 중 | 베타는 단일 입력 모듈로 한정, W2에서 모델 계열별 adapter |
+| trace 용량이 큼 | 높음 | 중 | 짧은 프롬프트, fp16 저장 옵션, `--layers` 부분 기록 |
+| 임계값이 너무 빡빡하거나 느슨함 | 중 | 큼 | 오류 주입 + 깨끗한 포팅본 분포로 보정. 기본값과 근거를 보고서에 기록 |
+| 공개 포팅본에서 버그를 못 찾음 | 중 | 중 | 그래도 "검증 통과" 보고서는 가치가 있음. 대상 범위를 MoE·NVFP4 repack 같은 위험 영역으로 좁힘 |
+| 기존 도구가 같은 기능을 추가 | 중 | 중 | trace 형식을 공개 명세로 만들고 다른 도구에 연동되는 쪽을 택함 (경쟁보다 통합) |
 
 ---
 
-## 8. 1개월 이후 백로그 (우선순위 순)
+## 8. 백로그 (1개월 이후)
 
-1. MoE (expert gather + grouped GEMM) — Qwen-MoE, Mixtral, gpt-oss 계열
-2. Tiled GEMM에 simdgroup matrix 명령 적용 (prefill 성능)
-3. W4A4 activation 양자화 fusion
-4. `scan` → 자동 패치(`--fix`): `device='cuda'` 치환, flash-attn → `mx.fast.scaled_dot_product_attention` 대체 안내
-5. 비 LLM 모델 (Whisper, Stable Diffusion 계열) 변환 템플릿
-6. CUDA 백엔드 성능 작업과 NVIDIA 실장비 검증
-7. 대형 행렬 int64 인덱스 프로파일 (`N*K > 2^31`)
-8. PyTorch 사용자를 위한 브리지 (설계 v0.2의 G3/G4 — 별도 프로젝트 규모)
+1. 비 LLM 모델 (Whisper, diffusion, vision) capture adapter
+2. CUDA 커스텀 커널(`.cu`) ↔ Metal 커널 op 단위 자동 비교 (kernelport 등과 연동)
+3. 자동 원인 추정: 오차 패턴으로 "전치 의심", "scale 지수 오류 의심" 등 힌트 제시
+4. NF4/INT4/GGUF 형식 conform
+5. 기존 FP4 커널 성능 작업 (SIMD reduction, 벡터 load, matrix 명령)
+
+---
+
+## 참고 자료
+
+- mlx-vlm ModelOpt NVFP4 AWQ 수정: https://github.com/Blaizzy/mlx-vlm/pull/2582
+- oMLX ModelOpt NVFP4 expert scale 수정: https://github.com/jundot/omlx/pull/4661
+- mlxcel NVFP4 per-expert global_scale 이슈: https://github.com/lablup/mlxcel/issues/2351
+- NVIDIA NVFP4 → MLX 모음: https://huggingface.co/collections/Brooooooklyn/nvidia-nvfp4-mlx
+- mlx-porting-skill: https://github.com/Amal-David/mlx-porting-skill
+- kernelport: https://pypi.org/project/kernelport/
+- K-Search CUDA→MLX: https://bair.berkeley.edu/blog/2026/07/29/cuda-to-mlx-k-search/
+- woof CUDA→Metal 번역: https://github.com/jacobbieker/woof/pull/139
+- mlx-serve 번역 계층 실패 사례: https://github.com/ddalcu/mlx-serve/pull/820
+- mpsops: https://github.com/mpsops
