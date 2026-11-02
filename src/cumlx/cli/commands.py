@@ -1,13 +1,14 @@
 """Command implementations. Each returns a ``Result``; heavy imports stay inside functions."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import json
 from pathlib import Path
 import re
 import shlex
 import sys
 import tempfile
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 
@@ -66,10 +67,10 @@ def run_doctor(args) -> Result:
 
 # --------------------------------------------------------------------------- fixture
 def run_fixture(args) -> Result:
-    from ..verify.fixtures import make_tiny_llama
+    from ..verify.fixtures import make_tiny_llama, make_tiny_moe
     from ..verify.trace import prepare_output_dir
     out = prepare_output_dir(args.output, overwrite=args.overwrite, marker='.cumlx-fixture')
-    info = make_tiny_llama(out, seed=args.seed)
+    info = {'tiny-llama': make_tiny_llama, 'tiny-moe': make_tiny_moe}[args.kind](out, seed=args.seed)
     (out / '.cumlx-fixture').write_text(json.dumps({'kind': args.kind, 'seed': args.seed}) + '\n')
     r = Result('fixture', summary=f'created {args.kind} at {out}', data=info)
     r.artifact('model', str(out))
@@ -92,11 +93,28 @@ def _parse_token_ids(values: list[str]) -> list[np.ndarray]:
     return out
 
 
+def _parse_layers(value: str | None) -> list[int] | None:
+    if value is None:
+        return None
+    out: set[int] = set()
+    try:
+        for part in value.replace(' ', '').split(','):
+            first, _, last = part.partition('-')
+            out.update(range(int(first), int(last or first) + 1))
+    except ValueError:
+        raise CumlxError('E_USAGE', f'--layers needs indices such as 0,11,20-23, got {value!r}') from None
+    if not out or min(out) < 0:
+        raise CumlxError('E_USAGE', f'--layers needs indices such as 0,11,20-23, got {value!r}')
+    return sorted(out)
+
+
 def run_capture(args) -> Result:
     from ..verify.trace import TraceWriter, check_output_dir, prepare_output_dir
     log = _logger(args)
     if args.max_tokens <= 0:
         raise CumlxError('E_USAGE', '--max-tokens must be positive')
+    if args.decode_steps < 0:
+        raise CumlxError('E_USAGE', '--decode-steps cannot be negative')
     prompts = list(args.prompt)
     if args.prompts_file:
         pf = Path(args.prompts_file)
@@ -104,6 +122,7 @@ def run_capture(args) -> Result:
             raise CumlxError('E_INPUT_NOT_FOUND', f'--prompts-file not found: {pf}')
         prompts += [line for line in pf.read_text(encoding='utf-8').splitlines() if line.strip()]
     token_samples = [ids[:args.max_tokens] for ids in _parse_token_ids(args.token_ids)]
+    layers = _parse_layers(args.layers)
     if not prompts and not token_samples:
         raise CumlxError('E_USAGE', 'no inputs: pass --prompt, --prompts-file or --token-ids',
                          hint=f'cumlx capture {_q(args.model)} --token-ids 1,2,3 -o {_q(args.output)}')
@@ -113,6 +132,7 @@ def run_capture(args) -> Result:
     plan = {'model': args.model, 'output': args.output, 'samples': len(prompts) + len(token_samples),
             'prompt_samples': len(prompts), 'token_id_samples': len(token_samples), 'golden_kind': golden_kind,
             'device': args.device, 'store_dtype': args.store_dtype, 'max_tokens': args.max_tokens,
+            'decode_steps': args.decode_steps, 'layers': layers,
             'include': include, 'exclude': exclude, 'weights_from_mlx': args.weights_from_mlx}
     if args.dry_run:
         r = Result('capture', summary=f"dry run: would record {plan['samples']} sample(s) from {args.model}",
@@ -120,7 +140,13 @@ def run_capture(args) -> Result:
         argv = getattr(args, 'argv', None) or []
         r.suggest('cumlx ' + ' '.join(shlex.quote(a) for a in argv if a != '--dry-run'), 'run the capture for real')
         return r
-    from ..verify.capture_torch import capture_model, load_hf_model, load_mlx_weights_into, resolve_revision, tokenize
+    from ..verify.capture_torch import (
+        capture_model,
+        load_hf_model,
+        load_mlx_weights_into,
+        resolve_revision,
+        tokenize,
+    )
     log(f'loading PyTorch model {args.model} on {args.device}')
     model = load_hf_model(args.model, device=args.device, revision=args.revision,
                           trust_remote_code=args.trust_remote_code)
@@ -151,7 +177,8 @@ def run_capture(args) -> Result:
     out = prepare_output_dir(args.output, overwrite=args.overwrite)
     writer = TraceWriter(out, source=source, golden=golden, max_bytes=args.max_bytes)
     stats = capture_model(model, samples, writer, include=include, exclude=exclude,
-                          store_dtype=args.store_dtype, device=args.device, log=log)
+                          store_dtype=args.store_dtype, device=args.device, decode_steps=args.decode_steps,
+                          layers=layers, log=log)
     manifest = writer.finish()
     r = Result('capture', summary=f"recorded {stats['records']} module calls from {stats['samples']} sample(s) "
                                   f"({stats['replayable']} replayable) into {out}",
@@ -171,6 +198,7 @@ def run_capture(args) -> Result:
 def run_diff(args) -> Result:
     from ..verify.diff import run_diff as diff
     from ..verify.report import compact_records, to_markdown
+    from ..verify.report_html import to_html
     from ..verify.trace import check_output_dir, prepare_output_dir
     include, exclude = _regex(args.include, '--include'), _regex(args.exclude, '--exclude')
     if args.output:
@@ -209,8 +237,10 @@ def run_diff(args) -> Result:
         out = prepare_output_dir(args.output, overwrite=args.overwrite, marker='report.json')
         (out / 'report.json').write_text(json.dumps(_finite(rep), indent=1, ensure_ascii=False) + '\n')
         (out / 'report.md').write_text(to_markdown(rep), encoding='utf-8')
+        (out / 'report.html').write_text(to_html(_finite(rep)), encoding='utf-8')
         r.artifact('report_json', str(out / 'report.json'))
         r.artifact('report_markdown', str(out / 'report.md'))
+        r.artifact('report_html', str(out / 'report.html'))
     if rep['verdict'] == 'diverged':
         if args.output:
             r.suggest(f"cumlx report {_q(Path(args.output) / 'report.json')} --max-items -1",
@@ -232,7 +262,31 @@ def _finite(obj):
 
 
 # --------------------------------------------------------------------------- conform
+def _run_checkpoint(args) -> Result:
+    from ..verify.checkpoint import run_checkpoint, write_report
+    if not args.against:
+        raise CumlxError('E_USAGE', '--checkpoint needs --against REPACK',
+                         hint=f'cumlx conform --checkpoint {_q(args.checkpoint)} --against <mlx-repack>')
+    if args.output and Path(args.output).exists() and not args.overwrite:
+        raise CumlxError('E_OUTPUT_EXISTS', f'{args.output} exists', hint='pass --overwrite or choose a new path')
+    rep = run_checkpoint(args.checkpoint, args.against, revision=args.revision)
+    s = rep['summary']
+    first = rep['first_failure']
+    r = Result('conform', exit_code=VERDICT_EXIT[rep['verdict']])
+    r.summary = (f"{rep['verdict']}: {s['pass']} of {s['quantized']} quantized tensors match the original "
+                 f"({s['bit_identical']} bit-identical), {s['plain_identical']} other tensors identical" +
+                 (f"; first failure `{first['name']}` ({first.get('reason')})" if first else ''))
+    r.data = {'verdict': rep['verdict'], 'summary': s, 'first_failure': first, 'plain': rep['plain'],
+              'failures': cap([x for x in rep['parameters'] if x['status'] == 'fail'], args.max_items, r)}
+    if args.output:
+        write_report(_finite(rep), args.output)
+        r.artifact('checkpoint_report', args.output)
+    return r
+
+
 def run_conform(args) -> Result:
+    if args.checkpoint:
+        return _run_checkpoint(args)
     from ..verify.conform import run_conform as conform
     fmts = tuple(f.strip().lower() for f in args.formats.split(',') if f.strip())
     bad = [f for f in fmts if f not in ('nvfp4', 'mxfp4')]
@@ -280,6 +334,21 @@ def run_weights(args) -> Result:
     if rep['verdict'] == 'ok':
         r.suggest(f'cumlx capture {_q(args.original)} --prompt Hello -o golden/ && cumlx diff golden/ {_q(args.port)}',
                   'the weights are right; now check the code of the port')
+    return r
+
+
+# --------------------------------------------------------------------------- tracediff
+def run_tracediff(args) -> Result:
+    from ..verify.trace_compare import compare_traces
+    if not (args.rel_l2 > 0):
+        raise CumlxError('E_USAGE', '--rel-l2 must be positive')
+    rep = compare_traces(args.a, args.b, rel_l2=args.rel_l2)
+    s = rep['summary']
+    r = Result('tracediff', exit_code=VERDICT_EXIT[rep['verdict']])
+    r.summary = (f"{rep['verdict']}: worst rel_l2 {s['worst_rel_l2']}, median {s['median_rel_l2']}, "
+                 f"{s['above_threshold']} of {s['compared']} outputs above {rep['threshold_rel_l2']:g}")
+    r.data = {'verdict': rep['verdict'], 'summary': s, 'threshold_rel_l2': rep['threshold_rel_l2'],
+              'a': rep['a']['source'], 'b': rep['b']['source'], 'worst': cap(rep['worst'], args.max_items, r)}
     return r
 
 

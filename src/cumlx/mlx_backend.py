@@ -10,13 +10,16 @@ from hashlib import sha256
 from importlib import metadata
 from pathlib import Path
 import platform
+import warnings
 from typing import Any
 import numpy as np
 
 from .quant import FP4Matrix, group_size, normalize_format
 from .planning import plan_linear
 
-TARGET_MLX = '0.32.2'
+TARGET_MLX = '0.32.2'  # the lowest MLX API these kernels were written for
+# All 35 GPU tests passed on these versions (Apple M5 Pro, 2026-11-02). Other 0.32.x releases run with a warning.
+VALIDATED_MLX = ('0.32.2', '0.32.4')
 KERNELS = {
     'fp4_decode': (('wq', 'ws', 'wglobal'), ('y',)),
     'fp4_gemv': (('x', 'wq', 'ws', 'wglobal', 'bias'), ('y',)),
@@ -47,7 +50,7 @@ def environment_report(*, probe: bool = False) -> dict:
         version = None
     report = dict(platform=platform.platform(), machine=platform.machine(),
                   python=platform.python_version(), mlx_installed=version,
-                  mlx_target=TARGET_MLX, device_validation='NOT_RUN',
+                  mlx_target=TARGET_MLX, mlx_validated=list(VALIDATED_MLX), device_validation='NOT_RUN',
                   cuda_facing_pytorch=False, native_fp4_matrix_instruction=False,
                   automatic_cpu_fallback=False,
                   metal_available=None, cuda_available=None)
@@ -85,6 +88,25 @@ class DeviceFP4:
         return group_size(self.format)
 
 
+def check_mlx_version(version: str) -> bool:
+    """Allow the 0.32 API line from TARGET_MLX up. Returns True when this exact version was validated."""
+    def parts(v: str) -> tuple[int, ...]:
+        numbers = []
+        for piece in v.split('.')[:3]:
+            digits = ''.join(ch for ch in piece if ch.isdigit())
+            numbers.append(int(digits or 0))
+        return tuple(numbers)
+    current, lowest = parts(version), parts(TARGET_MLX)
+    if current[:2] != lowest[:2] or current < lowest:
+        raise RuntimeError(f'expected MLX {lowest[0]}.{lowest[1]}.x at or above {TARGET_MLX}, got {version}; '
+                           'revalidate the kernel APIs and run the GPU tests before you allow this version')
+    if version not in VALIDATED_MLX:
+        warnings.warn(f'MLX {version} is in the allowed range, but the GPU tests have not been run on it '
+                      f'(validated: {", ".join(VALIDATED_MLX)})', stacklevel=2)
+        return False
+    return True
+
+
 class MLXBackend:
     def __init__(self, backend: str = 'metal', *, allow_unvalidated: bool = False):
         if backend not in ('metal', 'cuda'):
@@ -92,9 +114,7 @@ class MLXBackend:
         if not allow_unvalidated:
             raise RuntimeError('GPU kernels are unvalidated on hardware; explicit allow_unvalidated=True is required')
         import mlx.core as mx
-        version = metadata.version('mlx')
-        if version != TARGET_MLX:
-            raise RuntimeError(f'expected MLX {TARGET_MLX}, got {version}; revalidate APIs before changing the pin')
+        check_mlx_version(metadata.version('mlx'))
         api = getattr(mx, backend, None)
         if api is None or not api.is_available():
             raise RuntimeError(f'physical {backend} GPU unavailable; no fallback was selected')

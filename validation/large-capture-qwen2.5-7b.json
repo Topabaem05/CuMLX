@@ -1,0 +1,24 @@
+{
+ "schema": "cumlx.large-capture.v1",
+ "model": "Qwen/Qwen2.5-7B",
+ "weights": "random, architecture only",
+ "parameters": 7615616512,
+ "layers_recorded": [
+  0,
+  13,
+  27
+ ],
+ "num_hidden_layers": 28,
+ "hidden_size": 3584,
+ "samples": 3,
+ "tokens_per_sample": 32,
+ "decode_steps": 1,
+ "records": 270,
+ "trace_bytes": 322494324,
+ "capture_seconds": 12.1,
+ "model_build_seconds": 75.2,
+ "device": "cpu",
+ "dtype": "bfloat16",
+ "machine": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+ "torch": "2.15.0"
+}

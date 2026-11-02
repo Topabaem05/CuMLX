@@ -1,6 +1,6 @@
 # `cumlx` CLI — 포팅 동등성 검증기
 
-상태: **베타 준비 (v0.4.0.dev0)**. 검증한 범위만 적습니다. 기준일은 2026-11-02이고, 환경은 Apple M5 Pro(Metal, CPU)와 Linux x86_64 CPU입니다.
+검증한 범위만 적습니다. 기준일은 2026-11-02이고, 환경은 Apple M5 Pro(Metal, CPU)와 Linux x86_64 CPU입니다.
 
 ## 설치
 
@@ -18,13 +18,14 @@ Linux에서는 `diff` extra가 `mlx[cpu]`를 설치합니다. 같은 환경에 �
 |---|---|---|
 | `describe` | 명령·인자·exit code·error code의 기계용 명세 | - |
 | `doctor` | 의존성과 준비된 명령 보고. `--require`로 미준비 시 exit 3 | - |
-| `fixture tiny-llama` | 오프라인 테스트용 2-layer 랜덤 Llama 생성 | capture |
+| `fixture tiny-llama`, `fixture tiny-moe` | 오프라인 테스트용 2-layer 랜덤 Llama 또는 Qwen3 MoE 생성 | capture |
 | `capture` | 원본 PyTorch 모델의 모듈별 입출력을 golden trace로 기록 | capture |
 | `diff` | MLX 포팅본을 같은 입력으로 실행해 비교하고 처음 어긋난 모듈을 찾음 | diff |
-| `conform` | MLX의 NVFP4/MXFP4 decode를 CUMLX bit-정확 코덱과 CPU·GPU에서 전수 비교 | diff |
+| `conform` | MLX의 NVFP4/MXFP4 decode를 CUMLX bit-정확 코덱과 CPU·GPU에서 전수 비교. `--checkpoint`와 `--against`를 주면 ModelOpt 원본과 MLX repack의 bytes를 비교 | diff |
+| `tracediff` | golden trace 두 개를 비교. CUDA와 CPU capture의 차이처럼 기준 자체의 흔들림을 측정 | - |
 | `weights` | 모델을 실행하지 않고 원본 safetensors와 포팅본 가중치를 비교. 전치·부호·scale 오류를 이름으로 지목 | diff |
 | `report` | 기존 `report.json` 요약 (`--max-items`로 다시 읽기) | - |
-| `selftest` | 검증기 자체 검증: 깨끗한 포팅 통과 + 오류 주입 9종 위치 검출 + 정적 가중치 비교 | 전체 기능은 capture+diff |
+| `selftest` | 검증기 자체 검증: 깨끗한 포팅 통과 + 오류 주입 11종 위치 검출 + 정적 가중치 비교 | 전체 기능은 capture+diff |
 
 ## 빠른 시작 (오프라인)
 
@@ -67,6 +68,9 @@ cumlx selftest
   - `chain+isolated` (medium): 재생할 수 없는 모듈의 하위 모듈은 맞지만 chain 출력이 다릅니다. 그 모듈의 자체 코드가 원인입니다.
   - `chain` (medium): chain 모드이거나, isolated 모드에서 네이티브 dtype 출력이 NaN 또는 shape 불일치입니다.
 - 상태: `pass`, `fail`, `unverified`(파라미터가 있는데 비교 못 함 → exit 5), `skipped`(파라미터 없는 보조 모듈), `ignored`(사용자가 제외).
+- **decode 단계:** capture는 기본으로 KV cache 위의 생성 한 단계를 함께 기록합니다(`--decode-steps`). 다음 토큰은 golden logits에서 고르므로 양쪽 입력이 같습니다. diff는 모듈마다 새 KV cache를 만들어 prefill의 golden 입력으로 채운 뒤 다음 입력을 넣습니다. 모든 입력이 golden이라 실패하면 그 모듈의 캐시 처리(위치 오프셋, mask, 캐시 갱신)가 틀린 것입니다. `first_divergence.phase`가 `decode`로 나옵니다. KV cache가 없는 포팅본은 decode 기록이 `unverified`가 되고 `W_DECODE_NOT_RUN`이 나옵니다.
+- **MoE:** HF의 `mlp.experts`를 mlx-lm의 `mlp.switch_mlp`로 자동 매핑합니다. expert는 원본의 라우팅(top-k 인덱스, 가중치)으로 재생하므로 라우터 결함과 expert 결함을 구분합니다. chain 출력은 형태가 달라 비교할 수 없어서 `--mode chain`에서는 experts가 `unverified`입니다.
+- **일부만 기록:** `capture --layers 0,13,27`은 그 decoder layer와 스택 밖의 모듈만 기록해 큰 모델의 trace를 줄입니다. diff는 `W_PARTIAL_TRACE`를 내고, 판정은 기록된 모듈에 대한 것입니다. 기록하지 않은 layer의 결함은 그 layer를 포함하는 모듈의 실패로 나타납니다.
 - weight tying: `lm_head`가 `embed_tokens`와 가중치를 공유하면 capture가 이를 기록하고, diff는 `embed_tokens.as_linear`를 재생해 실제로 비교합니다.
 
 ### 실행 장치와 TF32
@@ -105,45 +109,64 @@ isolated 임계값은 그 실행에서 측정한 **leaf 오차의 중앙값**으
 
 환경: Apple M5 Pro, macOS 27.0.1, Python 3.13, torch 2.15.0, transformers 5.22.1, mlx 0.32.4, mlx-lm 0.32.2. 원본 결과는 [validation/dogfood-macos-m5-pro.json](../validation/dogfood-macos-m5-pro.json)이고 `scripts/dogfood_real_model.py`로 재현합니다.
 
-### 깨끗한 실제 포팅본 (입력 5개, 최대 48 토큰, GPU)
+### 깨끗한 실제 포팅본 (입력 5개, 최대 48 토큰, decode 1단계, GPU)
 
 | 포팅본 / golden | 판정 | isolated 최악 | chain 최악 | native top-1 |
 |---|---|---|---|---|
 | Qwen2.5-0.5B float32 / reference | ok | 1.3e-5 | 2.8e-5 | 64/64 |
-| Qwen2.5-0.5B bf16 / reference | ok (drift 335) | 1.3e-5 | 0.35 | 62/64 |
-| Qwen2.5-0.5B float16 / reference | ok (drift 138) | 1.3e-5 | 5.4e-2 | 64/64 |
-| Qwen2.5-0.5B 4bit / 포팅본 가중치 | ok | 1.4e-5 | 2.0e-5 | 64/64 |
+| Qwen2.5-0.5B bf16 / reference | ok (drift 487) | 1.3e-5 | 0.35 | 62/64 |
+| Qwen2.5-0.5B float16 / reference | ok (drift 174) | 1.3e-5 | 5.4e-2 | 64/64 |
+| Qwen2.5-0.5B 4bit / 포팅본 가중치 | ok | 1.6e-5 | 2.4e-5 | 64/64 |
 | Qwen2.5-0.5B 8bit / 포팅본 가중치 | ok | 2.0e-5 | 5.3e-5 | 64/64 |
-| Qwen2.5-0.5B 4bit+bf16 / 포팅본 가중치 | ok (drift 432) | 1.3e-5 | 0.17 | 63/64 |
-| `mlx-community/Qwen2.5-0.5B-bf16` / reference | ok (drift 335) | 1.3e-5 | 0.35 | 62/64 |
-| SmolLM2-135M float32 / reference | ok | 4.0e-6 | 1.2e-5 | 94/94 |
-| SmolLM2-135M bf16 / reference | ok (drift 129) | 4.0e-6 | 0.14 | 91/94 |
+| Qwen2.5-0.5B 4bit+bf16 / 포팅본 가중치 | ok (drift 803) | 1.3e-5 | 0.17 | 63/64 |
+| SmolLM2-135M float32 / reference | ok | 6.3e-6 | 1.2e-5 | 94/94 |
+| SmolLM2-135M bf16 / reference | ok (drift 196) | 6.3e-6 | 0.14 | 91/94 |
 | SmolLM2-135M 4bit / 포팅본 가중치 | ok | 2.4e-6 | 1.3e-5 | 94/94 |
 
-두 모델의 나머지 포팅본과 CPU 실행까지 합쳐 **26회 전부 ok, 파라미터 커버리지 100%**입니다. 위 표의 공개 포팅본은 로컬 mlx-lm bf16 변환과 수치까지 같았습니다.
+나머지 포팅본과 CPU 실행, float32 원본 시나리오, 공개 tiny MoE를 합쳐 **깨끗한 실행 38회 전부 ok, 파라미터 커버리지 100%**입니다. 공개 tiny MoE의 CPU 실행 2회는 MLX `gather_mm`이 CPU에서 float32만 지원해 실행하지 못했고, 통과로 세지 않았습니다.
 
 float32 원본(가중치를 1% 흔들어 bf16으로 표현할 수 없게 만든 경우)의 float16·bf16 포팅 8회도 전부 ok입니다.
 
-| 포팅본 | 중앙값 | leaf 최악 | composite 최악 | 적용 임계값 (leaf / composite) |
-|---|---|---|---|---|
-| Qwen2.5 float16 | 2.0e-4 | 5.9e-4 | 1.9e-3 | 1.2e-3 / 1.0e-2 |
-| Qwen2.5 bf16 | 1.6e-3 | 4.7e-3 | 7.5e-2 | 9.4e-3 / 1.6e-1 |
-| SmolLM2 float16 | 1.9e-4 | 3.5e-4 | 2.0e-3 | 1.1e-3 / 1.0e-2 |
-| SmolLM2 bf16 | 1.5e-3 | 2.8e-3 | 1.2e-2 | 9.1e-3 / 1.5e-1 |
+| 포팅본 | 중앙값 | isolated 최악 | 적용 임계값 (leaf / composite) |
+|---|---|---|---|
+| Qwen2.5 float16 | 2.0e-4 | 2.9e-3 | 1.2e-3 / 1.0e-2 |
+| Qwen2.5 bf16 | 1.6e-3 | 7.5e-2 | 9.4e-3 / 1.6e-1 |
+| SmolLM2 float16 | 1.9e-4 | 3.5e-3 | 1.1e-3 / 1.0e-2 |
+| SmolLM2 bf16 | 1.5e-3 | 2.6e-2 | 9.1e-3 / 1.5e-1 |
 
 ### 결함 주입 (실제 모델, 중간 layer)
 
-41회 전부 정확한 모듈을 `isolated, high`로 지목했습니다. SmolLM2의 F2 3회는 attention에 bias가 없어 적용할 수 없었고, 통과로 세지 않았습니다.
+50회 전부 정확한 모듈을 `isolated, high`로 지목했습니다. SmolLM2의 F2 3회는 attention에 bias가 없어 적용할 수 없었고, 통과로 세지 않았습니다.
 
 | 결함 | Qwen2.5 rel_l2 | SmolLM2 rel_l2 | 비고 |
 |---|---|---|---|
 | F1 전치 / F2 bias 누락 | 0.50 / 0.40 | 1.78 / 적용 불가 | float32·float16·bf16 포팅 |
 | F3 norm eps / F6 활성화 교체 | 0.37 / 0.29 | 6.1e-3 / 0.20 | float32·float16·bf16 포팅 |
-| F7 RoPE ×10 / F8 mask 누락 | 4.2e-2 / 0.48 | 2.2e-2 / 1.05 | 이전에는 chain+isolated, medium |
+| F7 RoPE ×10 / F8 mask 누락 | 4.2e-2 / 0.48 | 2.2e-2 / 1.05 | |
+| F11 RoPE가 캐시 offset 무시 | 0.61 | 0.36 | prefill은 정상, `phase: decode`로 지목 |
 | F4 MXFP4 scale / F5 NVFP4 scale | 3.9e-3 / 1.6e-3 | 8.9e-3 / 2.0e-3 | 포팅본 가중치 golden에서만 구분 가능 |
 | F10 nibble 반전 | 1.5 | 2.1 | NVFP4·MXFP4 |
+| F9 expert 순서 회전 | - | - | 공개 tiny MoE 3개. `mlp.experts`를 지목, `weights`가 expert 위치를 명시 |
 
 검출 한계(Qwen2.5, 무손실 float32·bf16, 기본 임계값): RoPE base ×1.01, 가중치 ×1.01, 가중치 ×1.002를 모두 정확한 모듈로 지목했습니다.
+
+### 공개 포팅본
+
+[validation/public-ports.json](../validation/public-ports.json)은 `mlx-community`의 포팅본 10개 결과입니다. 9개는 `ok`이고, `TinyLlama-1.1B-Chat-v1.0-4bit`는 2024년 파일명(`weights.00.safetensors`)이라 mlx-lm이 로드하지 못해 **검증하지 못했습니다.**
+
+Dory1.0-4B NVFP4의 MLX repack(`smdesai/...`)은 ModelOpt 원본과 비교했습니다([결과](../validation/checkpoint-dory-nvfp4.json)). 양자화 텐서 288개의 payload·scale bytes가 모두 같고, 복호값 차이는 최대 9.7e-8입니다. 다른 텐서 219개도 동일합니다.
+
+### 실제 불일치
+
+mlx-lm 0.32.2는 transformers 5가 쓴 config의 `rope_parameters`를 많은 모델에서 읽지 않아, 조용히 기본 RoPE base를 씁니다. 근거와 재현은 [validation/upstream](../validation/upstream/README.md)에 있습니다. mlx-lm 정책상 AI가 upstream 게시물을 작성할 수 없어 아직 보고하지 않았습니다.
+
+### 장치 간 golden 차이
+
+Qwen2.5-0.5B, 입력 2개, `cumlx tracediff`로 잰 값입니다. 반복 실행은 CPU와 MPS 모두 완전히 같습니다. MPS와 CPU의 차이는 최대 4.3e-5, 중앙값 1.2e-5로 float32 임계값 1e-4 안입니다. CUDA는 측정하지 않았습니다.
+
+### 큰 모델의 capture
+
+Qwen2.5-7B 구조(파라미터 76억 개, 랜덤 가중치, bf16), `--layers 0,13,27`, 입력 3개, 32 토큰, decode 1단계: trace 322MB, capture 12.1초입니다([결과](../validation/large-capture-qwen2.5-7b.json)). 실제 checkpoint로는 실행하지 않았습니다. 실제 capture는 float32로 로드하므로 메모리 약 30GB가 필요합니다.
 
 ### `drift` 판정의 근거: torch 자체 bf16과의 대조
 
@@ -157,7 +180,7 @@ MLX의 drift는 torch 자체 bf16과 같은 크기입니다.
 
 ### 정적 가중치 비교
 
-Qwen2.5-0.5B의 float32·float16·bf16·4bit·8bit 포팅 모두 290개 파라미터 통과, 프로세스 전체 약 3.3초(M5 Pro, 캐시된 체크포인트)입니다. SmolLM2 포팅도 통과했습니다.
+Qwen2.5-0.5B의 float32·float16·bf16·4bit·8bit 포팅 모두 290개 파라미터 통과, 프로세스 전체 약 3.3초(M5 Pro, 캐시된 체크포인트)입니다. SmolLM2와 공개 포팅본, 공개 tiny MoE도 통과했습니다. MoE는 expert별로 판정합니다.
 
 ### conform 발견 사항 (MLX 0.32.4)
 
@@ -170,17 +193,20 @@ Qwen2.5-0.5B의 float32·float16·bf16·4bit·8bit 포팅 모두 290개 파라�
 
 ### 관찰: 네이티브 저정밀 양자화의 CPU와 GPU 차이
 
-4bit+bf16 포팅본의 네이티브 top-1은 GPU에서 63/64, CPU에서 54/64입니다(SmolLM2 92/94, 76/94). CPU 실행은 166초로 GPU(2.3초)보다 훨씬 느립니다. isolated float32 재생은 양쪽 모두 1.3e-5이므로 가중치와 로직 문제는 아닙니다. 원인은 조사하지 않았습니다.
+4bit+bf16 포팅본의 네이티브 top-1은 GPU에서 63/64, CPU에서 54/64입니다(SmolLM2 92/94, 76/94). CPU 실행은 329초로 GPU(4초)보다 훨씬 느립니다. isolated float32 재생은 양쪽 모두 1.3e-5이므로 가중치와 로직 문제는 아닙니다. 원인은 조사하지 않았습니다.
 
-### 이전 Linux 기록
+### Linux
 
-2026-11-02, Linux x86_64 CPU(mlx 0.32.4 CPU, tiny 모델)에서도 selftest와 e2e를 실행했습니다. 그 뒤로 판정 로직이 바뀌었으므로, 현재 코드의 Linux 결과는 원격 CI로 확인해야 합니다.
+원격 CI는 Linux MLX CPU에서 tiny fixture로 e2e 테스트와 selftest를 실행합니다. 실제 모델은 Linux에서 실행하지 않았습니다.
 
 ## 미완료와 한계
 
-- KV cache를 쓰는 decode 단계는 기록하지 않습니다(prefill만). 패딩 입력도 기록하지 않으므로, `hidden` 재생은 항상 causal mask를 가정합니다.
-- MoE 모델(F9)은 지원하지 않습니다.
+- 패딩 입력은 기록하지 않으므로, 재생은 항상 causal mask를 가정합니다.
+- 학습된 실제 MoE 모델은 검증하지 않았습니다. 공개 tiny random 모델과 fixture만 실행했습니다. transformers 4 계열의 expert별 `ModuleList` 구조는 재생하지 못하고 `unverified`로 나옵니다.
+- bf16 MoE 포팅은 CPU에서 실행되지 않습니다(MLX `gather_mm`이 CPU에서 float32만 지원). `E_MODEL_RUN`으로 보고합니다.
 - `hidden` 재생은 `(x, mask, cache)` 형식을 대상으로 합니다. 형식이 다른 모듈은 재생 오류로 기록되고 chain으로 판정합니다.
 - 이름 매핑은 동일 경로와 JSON 규칙만 지원합니다. mlx-lm 외의 포팅은 `--loader python:pkg.mod:fn`이 필요합니다.
 - `weights`는 safetensors 체크포인트만 읽습니다. 양자화 가중치는 방향과 scale만 판정하므로 작은 값 오류는 놓칠 수 있습니다.
+- `conform --checkpoint`는 row-major low-nibble-first 레이아웃의 ModelOpt NVFP4만 읽습니다.
+- CUDA golden은 측정하지 않았습니다. [측정 절차](CUDA-GOLDEN.md)를 따르십시오.
 - 임계값은 두 모델과 M5 Pro 한 기기의 측정값입니다. 다른 아키텍처와 GPU 세대에서는 재확인이 필요합니다.

@@ -166,7 +166,7 @@ def test_cli_end_to_end(tmp_path, e2e):
 
     assert cli('fixture', 'tiny-llama', '-o', str(tmp_path / 'tiny'))['ok']
     cap = cli('capture', str(tmp_path / 'tiny'), '--token-ids', '1,5,9,23', '-o', str(tmp_path / 'g'))
-    assert cap['ok'] and cap['data']['records'] > 0
+    assert cap['ok'] and cap['data']['records'] > 0 and cap['data']['samples'] == 1
     assert cap['next_steps'][0]['command'].startswith('cumlx diff')
     d = cli('diff', str(tmp_path / 'g'), str(tmp_path / 'tiny'), '-o', str(tmp_path / 'r'))
     assert d['ok'] and d['data']['verdict'] == 'ok'
@@ -445,3 +445,285 @@ def test_static_weights_cli(tiny, tmp_path):
                        capture_output=True, text=True, env=env)
     doc = json.loads(p.stdout)
     assert p.returncode == 0 and doc['data']['verdict'] == 'ok' and json.loads(out.read_text())['parameters']
+
+
+@pytest.fixture(scope='module')
+def golden_decode(tiny, tmp_path_factory):
+    from cumlx.verify.capture_torch import capture_model, load_hf_model
+    from cumlx.verify.trace import TraceWriter, prepare_output_dir
+    out = prepare_output_dir(tmp_path_factory.mktemp('gd') / 'golden', overwrite=True)
+    w = TraceWriter(out, source={'framework': 'torch'}, max_bytes=1 << 30, golden={'kind': 'reference', 'dtype': 'float32'})
+    capture_model(load_hf_model(str(tiny)), [np.asarray(TOKENS), np.asarray(TOKENS[:1])], w, decode_steps=2)
+    w.finish()
+    return out
+
+
+def test_decode_records_are_replayed_on_the_ports_own_cache(golden_decode, tiny):
+    from cumlx.verify.diff import run_diff
+    from cumlx.verify.trace import Trace
+    trace = Trace(golden_decode)
+    sample = trace.manifest.samples[0]
+    assert sample.decode_steps == 2 and trace.tensor(sample, 'decode_token_ids').shape == (1, 2)
+    kinds = {r.replay_kind for r in sample.records if r.phase == 'decode'}
+    assert {'hidden_cached', 'tokens_cached', 'single'} <= kinds
+    rep = run_diff(str(golden_decode), str(tiny))
+    assert rep['verdict'] == 'ok', rep['first_divergence']
+    assert rep['summary']['decode_records'] > 0 and rep['summary']['unverified'] == 0
+    decode = [e for e in rep['records'] if e['phase'] == 'decode' and e['type'] == 'LlamaAttention']
+    assert decode and all(e['isolated']['verdict'] == 'pass' and e['chain']['verdict'] == 'pass' for e in decode)
+    assert run_diff(str(golden_decode), str(tiny), mode='chain')['verdict'] == 'ok'
+
+
+def test_cache_fault_is_invisible_in_prefill_and_located_in_decode(golden, golden_decode, tiny):
+    """Incorrect case: F11 passes a prefill-only golden. That is why the decode phase exists."""
+    from cumlx.verify import faults, mlx_port
+    from cumlx.verify.diff import run_diff
+    target = faults.TINY_LLAMA_TARGETS['F11']
+    def port():
+        m = mlx_port.load_port(str(tiny))
+        faults.inject(m, 'F11', target)
+        return m
+    assert run_diff(str(golden), 'x', model=port())['verdict'] == 'ok'
+    rep = run_diff(str(golden_decode), 'x', model=port())
+    fd = rep['first_divergence']
+    assert rep['verdict'] == 'diverged', fd
+    assert (fd['module'], fd['basis'], fd['confidence'], fd['phase']) == (target, 'isolated', 'high', 'decode')
+    assert all(e['status'] != 'fail' for e in rep['records'] if e['phase'] == 'prefill')
+
+
+def test_port_without_kv_cache_leaves_decode_unverified_not_passed(golden_decode, tiny, monkeypatch):
+    from cumlx.verify import mlx_port
+    from cumlx.verify.diff import run_diff
+    def no_cache(model):
+        raise TypeError('this port has no KV cache')
+    monkeypatch.setattr(mlx_port, 'make_caches', no_cache)
+    rep = run_diff(str(golden_decode), str(tiny), mode='chain')
+    assert rep['verdict'] == 'incomplete' and any(w['code'] == 'W_DECODE_NOT_RUN' for w in rep['warnings'])
+    assert all(e['status'] in ('unverified', 'skipped') for e in rep['records'] if e['phase'] == 'decode')
+    rep = run_diff(str(golden_decode), str(tiny))  # isolated: only modules that need no cache can still pass
+    cached = [e for e in rep['records'] if e['phase'] == 'decode' and e['type'] in ('LlamaAttention', 'LlamaDecoderLayer')]
+    assert cached and all(e['status'] == 'unverified' for e in cached) and rep['verdict'] == 'incomplete'
+
+
+def test_trace_without_decode_stays_readable(golden, tiny):
+    from cumlx.verify.diff import run_diff
+    from cumlx.verify.trace import Trace
+    assert Trace(golden).manifest.samples[0].decode_steps == 0
+    assert run_diff(str(golden), str(tiny))['summary']['decode_records'] == 0
+
+
+@pytest.fixture(scope='module')
+def moe(tmp_path_factory, e2e):
+    from cumlx.verify.capture_torch import capture_model, load_hf_model
+    from cumlx.verify.fixtures import make_tiny_moe
+    from cumlx.verify.trace import TraceWriter, prepare_output_dir
+    root = tmp_path_factory.mktemp('moe')
+    path = root / 'tiny'
+    make_tiny_moe(path)
+    out = prepare_output_dir(root / 'golden', overwrite=True)
+    w = TraceWriter(out, source={'framework': 'torch'}, max_bytes=1 << 30, golden={'kind': 'reference', 'dtype': 'float32'})
+    capture_model(load_hf_model(str(path)), [np.asarray(TOKENS), np.asarray(TOKENS[:4])], w, decode_steps=1)
+    w.finish()
+    return path, out
+
+
+def test_clean_moe_port_passes_with_experts_replayed_on_golden_routing(moe):
+    from cumlx.verify.diff import run_diff
+    from cumlx.verify.weights import run_weights
+    path, golden = moe
+    rep = run_diff(str(golden), str(path))
+    assert rep['verdict'] == 'ok', rep['first_divergence']
+    assert rep['summary']['unverified'] == 0 and rep['summary']['parametrized_coverage'] == 1.0
+    by_name = {e['name']: e for e in rep['records'] if e['sample'] == 's0000' and e['phase'] == 'prefill'}
+    experts = by_name['model.layers.0.mlp.experts']
+    assert experts['mlx_name'] == 'model.layers.0.mlp.switch_mlp' and experts['chain'] is None
+    assert experts['isolated']['verdict'] == 'pass' and experts['isolated']['rel_l2'] < 1e-4
+    assert by_name['model.layers.0.mlp.gate']['isolated']['verdict'] == 'pass'
+    assert rep['mapping']['source'] == 'mlx-lm MoE convention'
+    weights = run_weights(str(path), str(path))
+    assert weights['verdict'] == 'ok' and weights['summary']['extra_in_port'] == 0
+    assert any(r['name'].endswith('experts.3.up_proj.weight') and r['port_name'].endswith('up_proj.weight[3]')
+               for r in weights['parameters'])
+
+
+def test_moe_experts_are_unverified_in_chain_mode_not_passed(moe):
+    from cumlx.verify.diff import run_diff
+    path, golden = moe
+    rep = run_diff(str(golden), str(path), mode='chain')
+    assert rep['verdict'] == 'incomplete'
+    rows = [e for e in rep['records'] if e['name'].endswith('mlp.experts')]
+    assert rows and all(e['status'] == 'unverified' and '--mode isolated' in e['note'] for e in rows)
+
+
+def test_rotated_experts_and_router_faults_are_told_apart(moe):
+    import mlx.core as mx
+    from cumlx.verify import faults, mlx_port
+    from cumlx.verify.diff import run_diff
+    from cumlx.verify.weights import run_weights
+    path, golden = moe
+    inject_at, expected = faults.TINY_MOE_TARGETS['F9']
+    model = mlx_port.load_port(str(path))
+    faults.inject(model, 'F9', inject_at)
+    fd = run_diff(str(golden), 'x', model=model)['first_divergence']
+    assert (fd['module'], fd['basis'], fd['confidence']) == (expected, 'isolated', 'high')
+    first = run_weights(str(path), 'x', model=model)['first_failure']
+    assert 'expert_order' in first['diagnosis'] and '.layers.1.mlp.experts.' in first['name']
+    # A fault in the router alone: the experts stay correct on the golden routing.
+    router = mlx_port.load_port(str(path))
+    gate = mlx_port.named_modules(router)['model.layers.0.mlp.gate']
+    gate.weight = mx.concatenate([gate.weight[1:], gate.weight[:1]], axis=0)
+    rep = run_diff(str(golden), 'x', model=router)
+    fd = rep['first_divergence']
+    assert fd['module'] == 'model.layers.0.mlp.gate' and fd['basis'] == 'isolated'
+    experts = [e for e in rep['records'] if e['name'] == 'model.layers.0.mlp.experts']
+    assert experts and all(e['status'] == 'pass' for e in experts)
+
+
+@pytest.mark.parametrize('mode,kwargs', [('affine', dict(bits=4, group_size=32)), ('nvfp4', dict(bits=4, group_size=16)),
+                                         ('mxfp4', dict(bits=4, group_size=32))])
+def test_quantized_moe_port_and_per_expert_scale_fault(moe, tmp_path, mode, kwargs):
+    import mlx.core as mx
+    import mlx.nn as nn
+    from cumlx.verify import mlx_port
+    from cumlx.verify.capture_torch import capture_model, load_hf_model, load_mlx_weights_into
+    from cumlx.verify.diff import run_diff
+    from cumlx.verify.trace import TraceWriter, prepare_output_dir
+    from cumlx.verify.weights import run_weights
+    path, _ = moe
+
+    def port():
+        m = mlx_port.load_port(str(path))
+        nn.quantize(m, mode=mode, class_predicate=lambda p, x: hasattr(x, 'to_quantized') and 'switch_mlp' in p, **kwargs)
+        return m
+    clean = port()
+    assert mlx_port.port_profile(clean)['profile'] == 'quantized'
+    torch_model = load_hf_model(str(path))
+    info = load_mlx_weights_into(torch_model, mlx_port.dequantized_weights(clean))
+    assert not info['missing_in_port'] and not info['unused_port_weights']
+    g = prepare_output_dir(tmp_path / 'g', overwrite=True)
+    w = TraceWriter(g, source={'framework': 'torch'}, max_bytes=1 << 30, golden={'kind': 'quantization-aware', 'dtype': 'float32'})
+    capture_model(torch_model, [np.asarray(TOKENS)], w)
+    w.finish()
+    rep = run_diff(str(g), 'q', model=clean)
+    assert rep['verdict'] == 'ok', rep['first_divergence']
+    assert run_weights(str(path), 'q', model=clean)['verdict'] == 'ok'
+    # Incorrect case: the block scale of one expert only is doubled.
+    faulty = port()
+    proj = mlx_port.named_modules(faulty)['model.layers.0.mlp.switch_mlp.up_proj']
+    s = proj['scales']
+    bump = 8 if mode == 'nvfp4' else 1
+    new = s.astype(mx.int32) + bump if mode != 'affine' else s * 2
+    mask = mx.zeros_like(s).astype(mx.bool_)
+    mask = mx.concatenate([mx.ones_like(s[:1]).astype(mx.bool_), mask[1:]], axis=0)
+    proj['scales'] = mx.where(mask, new, s.astype(new.dtype)).astype(s.dtype)
+    fd = run_diff(str(g), 'q', model=faulty)['first_divergence']
+    assert fd is not None and fd['module'] == 'model.layers.0.mlp.experts' and fd['basis'] == 'isolated', fd
+    first = run_weights(str(path), 'q', model=faulty)['first_failure']
+    assert first is not None and first['port_name'].endswith('up_proj.weight[0]') and first['status'] == 'fail', first
+
+
+def test_nvfp4_moe_with_one_global_scale_per_expert(moe, tmp_path):
+    """Each expert keeps its own tensor scale. Golden weights must use it, and swapping two scales must be located."""
+    import mlx.core as mx
+    from cumlx.verify import mlx_port
+    from cumlx.verify.capture_torch import capture_model, load_hf_model, load_mlx_weights_into
+    from cumlx.verify.diff import run_diff
+    from cumlx.verify.trace import TraceWriter, prepare_output_dir
+    from cumlx.verify.weights import run_weights
+    path, _ = moe
+
+    def port():
+        m = mlx_port.load_port(str(path))
+        for layer in m.model.layers:
+            for name in ('gate_proj', 'up_proj', 'down_proj'):
+                proj = getattr(layer.mlp.switch_mlp, name)
+                setattr(layer.mlp.switch_mlp, name, proj.to_quantized(group_size=16, bits=4, mode='nvfp4', global_scale=True))
+        return m
+    clean = port()
+    q = clean.model.layers[0].mlp.switch_mlp.up_proj
+    assert q.global_scale is not None and q.global_scale.shape == (4,)
+    assert float(mx.max(q.global_scale) - mx.min(q.global_scale)) > 0  # the experts really differ
+    weights = mlx_port.dequantized_weights(clean)
+    original = np.array(mlx_port.load_port(str(path)).model.layers[0].mlp.switch_mlp.up_proj.weight)
+    key = 'model.layers.0.mlp.switch_mlp.up_proj.weight'
+    assert 'model.layers.0.mlp.switch_mlp.up_proj.global_scale' not in weights
+    assert np.linalg.norm(weights[key] - original) / np.linalg.norm(original) < 0.2  # scale is applied per expert
+    torch_model = load_hf_model(str(path))
+    load_mlx_weights_into(torch_model, weights)
+    g = prepare_output_dir(tmp_path / 'g', overwrite=True)
+    w = TraceWriter(g, source={'framework': 'torch'}, max_bytes=1 << 30, golden={'kind': 'quantization-aware', 'dtype': 'float32'})
+    capture_model(torch_model, [np.asarray(TOKENS)], w)
+    w.finish()
+    rep = run_diff(str(g), 'q', model=clean)
+    assert rep['verdict'] == 'ok', rep['first_divergence']
+    assert run_weights(str(path), 'q', model=clean)['verdict'] == 'ok'
+    faulty = port()
+    bad = faulty.model.layers[0].mlp.switch_mlp.up_proj
+    gs = bad.global_scale
+    bad.global_scale = mx.concatenate([gs[1:2], gs[:1], gs[2:]])
+    fd = run_diff(str(g), 'q', model=faulty)['first_divergence']
+    assert fd['module'] == 'model.layers.0.mlp.experts' and fd['basis'] == 'isolated'
+
+
+def test_op_missing_on_this_device_is_a_model_error_not_an_internal_bug(moe):
+    """MLX gather_mm supports only float32 on the CPU, so a bf16 MoE port cannot run there."""
+    import mlx.core as mx
+    from cumlx.errors import CumlxError
+    from cumlx.verify import mlx_port
+    from cumlx.verify.diff import run_diff
+    path, golden = moe
+    model = mlx_port.load_port(str(path))
+    model.set_dtype(mx.bfloat16)
+    with pytest.raises(CumlxError) as err:
+        run_diff(str(golden), 'bf16', model=model, device='cpu')
+    assert err.value.code == 'E_MODEL_RUN' and '--device' in err.value.hint and 'cpu' in err.value.message
+
+
+def test_rope_base_lost_from_transformers5_config_is_located(tmp_path, e2e):
+    """Real defect in released mlx-lm: a config written by transformers 5 keeps rope_theta in rope_parameters.
+
+    The port's RoPE base decides the expected result, so this test stays correct after mlx-lm fixes it.
+    """
+    import torch
+    from transformers import LlamaConfig, LlamaForCausalLM
+
+    from cumlx.verify import mlx_port
+    from cumlx.verify.diff import run_diff
+    config = LlamaConfig(vocab_size=128, hidden_size=64, intermediate_size=128, num_hidden_layers=1, num_attention_heads=4,
+                         num_key_value_heads=2, tie_word_embeddings=False, initializer_range=0.25)
+    if not isinstance(getattr(config, 'rope_parameters', None), dict):
+        pytest.skip('this transformers version writes a flat rope_theta')
+    config.rope_parameters['rope_theta'] = 500000.0
+    torch.manual_seed(0)
+    original = LlamaForCausalLM(config).float().eval()
+    path = tmp_path / 'tf5'
+    original.save_pretrained(path)
+    golden_dir, _ = _capture(path, tmp_path / 'g')
+    port = mlx_port.load_port(str(path))
+    rep = run_diff(str(golden_dir), 'tf5', model=port)
+    if port.model.layers[0].self_attn.rope.base == 500000.0:
+        assert rep['verdict'] == 'ok', rep['first_divergence']
+    else:
+        fd = rep['first_divergence']
+        assert rep['verdict'] == 'diverged' and fd['module'] == 'model.layers.0.self_attn' and fd['basis'] == 'isolated'
+
+
+def test_static_weights_compare_a_stored_head_with_a_tied_embedding(tmp_path, e2e):
+    """Checkpoints such as Qwen3-0.6B store lm_head.weight, and the port ties it to the embedding."""
+    from cumlx.verify import mlx_port
+    from cumlx.verify.fixtures import make_tiny_llama
+    from cumlx.verify.safetensors_io import load_file, save_file
+    from cumlx.verify.weights import run_weights
+    tied = tmp_path / 'tied'
+    make_tiny_llama(tied, tie_word_embeddings=True)
+    port = mlx_port.load_port(str(tied))
+    tensors = load_file(tied / 'model.safetensors')
+    original = tmp_path / 'original'
+    original.mkdir()
+    save_file({**tensors, 'lm_head.weight': tensors['model.embed_tokens.weight']}, original / 'model.safetensors')
+    rep = run_weights(str(original), 'port', model=port)
+    assert rep['verdict'] == 'ok' and rep['summary']['unverified'] == 0
+    # Incorrect case: the original head differs, so tying the two is wrong.
+    save_file({**tensors, 'lm_head.weight': tensors['model.embed_tokens.weight'] * 2}, original / 'model.safetensors')
+    first = run_weights(str(original), 'port', model=port)['first_failure']
+    assert first['name'] == 'lm_head.weight' and first['port_name'] == 'model.embed_tokens.weight'

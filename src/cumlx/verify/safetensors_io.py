@@ -6,13 +6,14 @@ into that buffer, plus an optional ``__metadata__`` str->str map. Files
 written here load with the official ``safetensors`` package and vice versa.
 
 BF16 tensors are read as float32 (exact widening). This module never writes BF16.
+F8_E4M3 and F8_E8M0 tensors (FP4 block scales) are read as their raw uint8 codes, because NumPy has no such type.
 """
 from __future__ import annotations
 
+from collections.abc import Iterator, Mapping
 import json
 from pathlib import Path
 import struct
-from typing import Iterator, Mapping
 
 import numpy as np
 
@@ -25,7 +26,8 @@ _TO_NUMPY = {
     'BOOL': np.bool_,
 }
 _FROM_NUMPY = {np.dtype(v).str.lstrip('<>|='): k for k, v in _TO_NUMPY.items()}
-_ITEMSIZE = {**{k: np.dtype(v).itemsize for k, v in _TO_NUMPY.items()}, 'BF16': 2}
+_RAW_CODES = {'F8_E4M3': np.uint8, 'F8_E8M0': np.uint8}
+_ITEMSIZE = {**{k: np.dtype(v).itemsize for k, v in {**_TO_NUMPY, **_RAW_CODES}.items()}, 'BF16': 2}
 MAX_HEADER_BYTES = 100 * 1024 * 1024
 
 
@@ -133,7 +135,7 @@ class SafetensorsReader:
             raise CumlxError('E_INPUT_INVALID', f'{self.path}: tensor {name!r} is missing')
         tag, shape, begin, end = self._entries[name]
         if end == begin:
-            dt = np.float32 if tag == 'BF16' else _TO_NUMPY[tag]
+            dt = np.float32 if tag == 'BF16' else {**_TO_NUMPY, **_RAW_CODES}[tag]
             return np.zeros(shape, dt)
         with self.path.open('rb') as f:
             f.seek(self._base + begin)
@@ -143,9 +145,11 @@ class SafetensorsReader:
         if tag == 'BF16':
             bits = np.frombuffer(raw, dtype='<u2').astype(np.uint32) << 16
             return bits.view(np.float32).reshape(shape).copy()
+        if tag in _RAW_CODES:
+            return np.frombuffer(raw, dtype=_RAW_CODES[tag]).reshape(shape).copy()
         return np.frombuffer(raw, dtype=np.dtype(_TO_NUMPY[tag]).newbyteorder('<')).reshape(shape).copy()
 
 
 def load_file(path: str | Path) -> dict[str, np.ndarray]:
     reader = SafetensorsReader(path)
-    return {k: reader.get(k) for k in reader.keys()}
+    return {k: reader.get(k) for k in reader}

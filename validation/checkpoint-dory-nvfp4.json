@@ -1,0 +1,97 @@
+{
+ "schema": "cumlx.checkpoint-report.v1",
+ "verdict": "ok",
+ "original": "nvidia/NVIDIA-Nemotron-Labs-Dory1.0-4B-NVFP4",
+ "original_revision": "64b4039a3468bef85c6744c1e24d5a80801fe965",
+ "repack": "smdesai/NVIDIA-Nemotron-Labs-Dory1.0-4B-MLX-NVFP4",
+ "repack_revision": "c6f363f8bfbdd5139262944c121891d8a58e3a9a",
+ "date": "2026-11-02",
+ "mlx": "0.32.4",
+ "summary": {
+  "pass": 288,
+  "fail": 0,
+  "unverified": 0,
+  "quantized": 288,
+  "plain_identical": 219,
+  "plain_differ": 0,
+  "plain_missing": 0,
+  "bit_identical": 11,
+  "worst_rel_l2": 9.661601746058648e-08,
+  "global_scale_to_multiplier_ratios": [
+   2688.0
+  ]
+ },
+ "plain": {
+  "identical": 219,
+  "differ": [],
+  "missing": []
+ },
+ "first_parameters": [
+  {
+   "name": "backbone.layers.0.mixer.g_proj",
+   "status": "pass",
+   "multiplier": 0.00031680153915658593,
+   "repack_global_scale": 0.8515625596046448,
+   "payload_identical": true,
+   "scales_identical": true,
+   "bit_identical": false,
+   "rel_l2": 3.6634917625199684e-08,
+   "scale": 0.9999999964481615
+  },
+  {
+   "name": "backbone.layers.0.mixer.k_proj",
+   "status": "pass",
+   "multiplier": 0.00010899134940700606,
+   "repack_global_scale": 0.29296875,
+   "payload_identical": true,
+   "scales_identical": true,
+   "bit_identical": false,
+   "rel_l2": 2.005485430880245e-08,
+   "scale": 1.0000000056482212
+  },
+  {
+   "name": "backbone.layers.0.mixer.o_proj",
+   "status": "pass",
+   "multiplier": 0.000244140625,
+   "repack_global_scale": 0.65625,
+   "payload_identical": true,
+   "scales_identical": true,
+   "bit_identical": true,
+   "rel_l2": 0.0,
+   "scale": 1.0
+  },
+  {
+   "name": "backbone.layers.0.mixer.q_proj",
+   "status": "pass",
+   "multiplier": 0.00010899134940700606,
+   "repack_global_scale": 0.29296875,
+   "payload_identical": true,
+   "scales_identical": true,
+   "bit_identical": false,
+   "rel_l2": 2.0062025134762193e-08,
+   "scale": 1.0000000056522411
+  },
+  {
+   "name": "backbone.layers.0.mixer.v_proj",
+   "status": "pass",
+   "multiplier": 0.00010899134940700606,
+   "repack_global_scale": 0.29296875,
+   "payload_identical": true,
+   "scales_identical": true,
+   "bit_identical": false,
+   "rel_l2": 2.023665992604418e-08,
+   "scale": 1.000000005751093
+  },
+  {
+   "name": "backbone.layers.1.mixer.down_proj",
+   "status": "pass",
+   "multiplier": 0.0001947312121046707,
+   "repack_global_scale": 0.5234375,
+   "payload_identical": true,
+   "scales_identical": true,
+   "bit_identical": false,
+   "rel_l2": 2.996798809066105e-08,
+   "scale": 0.999999988736365
+  }
+ ]
+}

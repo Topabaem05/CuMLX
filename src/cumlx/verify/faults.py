@@ -6,8 +6,8 @@ locate these is not trustworthy, so they are part of ``cumlx selftest``.
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 from ..errors import CumlxError
 from . import mlx_port
@@ -72,6 +72,19 @@ def _swap_nibbles(model, name):
     m['weight'] = mx.left_shift(mx.bitwise_and(w, mask), 4) | mx.bitwise_and(mx.right_shift(w, 4), mask)
 
 
+def _shuffle_experts(model, name):
+    mx, _ = mlx_port.mlx()
+    m = _mod(model, name)
+    switch = getattr(m, 'switch_mlp', None)
+    if switch is None:
+        raise CumlxError('E_USAGE', f'F9 needs an MoE block with switch_mlp; {name} has none')
+    for proj in (switch.gate_proj, switch.up_proj, switch.down_proj):
+        for key in ('weight', 'scales', 'biases', 'global_scale'):
+            v = proj.get(key)
+            if v is not None:
+                proj[key] = mx.concatenate([v[1:], v[:1]], axis=0)
+
+
 def _swap_activation(model, name):
     _, nn = mlx_port.mlx()
     m = _mod(model, name)
@@ -89,6 +102,16 @@ def _rope_base(model, name):
     if rope is None or not hasattr(rope, 'base'):
         raise CumlxError('E_USAGE', f'F7 needs an attention module with a standard nn.RoPE; {name} has none')
     m.rope = nn.RoPE(rope.dims, traditional=rope.traditional, base=rope.base * 10, scale=rope.scale)
+
+
+def _rope_ignores_cache_offset(model, name):
+    m = _mod(model, name)
+    rope = getattr(m, 'rope', None)
+    if rope is None:
+        raise CumlxError('E_USAGE', f'F11 needs an attention module with a RoPE; {name} has none')
+    cls = type(rope)
+    base_call = cls.__call__
+    rope.__class__ = type(cls.__name__, (cls,), {'__call__': lambda self, x, offset=0: base_call(self, x, 0)})
 
 
 def _drop_mask(model, name):
@@ -110,7 +133,10 @@ FAULTS: dict[str, Fault] = {f.id: f for f in [
     Fault('F6', 'MLP activation SiLU -> GELU', 'gated MLP', 'self', _swap_activation),
     Fault('F7', 'RoPE base x10', 'attention with nn.RoPE', 'self', _rope_base),
     Fault('F8', 'causal attention mask dropped', 'attention(x, mask, cache)', 'self', _drop_mask),
+    Fault('F9', 'MoE experts rotated by one index', 'MoE block with switch_mlp', 'experts', _shuffle_experts),
     Fault('F10', 'FP4 nibble order reversed (low/high)', 'FP4 QuantizedLinear', 'self', _swap_nibbles),
+    # Visible only in the decode phase: prefill starts at position 0, so its outputs stay correct.
+    Fault('F11', 'RoPE ignores the KV cache offset', 'attention with RoPE', 'self', _rope_ignores_cache_offset),
 ]}
 
 
@@ -133,4 +159,7 @@ TINY_LLAMA_TARGETS = {
     'F7': 'model.layers.1.self_attn',
     'F8': 'model.layers.0.self_attn',
     'F10': 'model.layers.0.self_attn.v_proj',
+    'F11': 'model.layers.1.self_attn',
 }
+# On the `cumlx fixture tiny-moe` model: (module to inject into, PyTorch module the verifier must name).
+TINY_MOE_TARGETS = {'F9': ('model.layers.1.mlp', 'model.layers.1.mlp.experts')}

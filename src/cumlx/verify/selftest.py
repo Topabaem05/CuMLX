@@ -13,11 +13,11 @@ never ``pass``.
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 from importlib import util
 from pathlib import Path
 import time
 import traceback
-from typing import Callable
 
 import numpy as np
 
@@ -52,7 +52,7 @@ def run(work: Path, *, core_only: bool = False, device: str = 'auto', log=lambda
         return steps
     missing = [m for m in ('torch', 'transformers', 'mlx', 'mlx_lm') if util.find_spec(m) is None]
     e2e = ['E1 fixture', 'E2 capture', 'E3 clean port passes', 'E4 faults located', 'E5 quantized faults located',
-           'E7 static weight diff']
+           'E7 static weight diff', 'E8 MoE']
     if missing:
         for title in e2e:
             _skip(steps, title.split()[0], title, missing)
@@ -133,7 +133,7 @@ def _end_to_end(steps: list, work: Path, device: str, log) -> None:
         writer = TraceWriter(out, source={'framework': 'torch', 'model': str(tiny)},
                              golden={'kind': 'reference' if weights is None else 'quantization-aware',
                                      'dtype': 'float32'}, max_bytes=1 << 30)
-        stats = capture_model(model, [np.asarray(TOKENS)], writer)
+        stats = capture_model(model, [np.asarray(TOKENS)], writer, decode_steps=1)
         writer.finish()
         return stats
 
@@ -165,7 +165,7 @@ def _end_to_end(steps: list, work: Path, device: str, log) -> None:
 
     def fault_suite():
         results, missed = {}, []
-        for fid in ('F1', 'F2', 'F3', 'F6', 'F7', 'F8'):
+        for fid in ('F1', 'F2', 'F3', 'F6', 'F7', 'F8', 'F11'):
             model = mlx_port.load_port(str(tiny))
             target = faults.TINY_LLAMA_TARGETS[fid]
             faults.inject(model, fid, target)
@@ -178,12 +178,12 @@ def _end_to_end(steps: list, work: Path, device: str, log) -> None:
         assert not missed, f'faults not located: {missed}: {results}'
         return {'faults': results}
 
-    _step(steps, 'E4', 'injected faults F1-F3, F6-F8 are located (isolated mode)', fault_suite, log)
+    _step(steps, 'E4', 'injected faults F1-F3, F6-F8, F11 are located (isolated mode)', fault_suite, log)
 
     def quantized_suite():
         results = {}
         for fid, mode, gs in (('F4', 'mxfp4', 32), ('F5', 'nvfp4', 16), ('F10', 'nvfp4', 16)):
-            def port():
+            def port(gs=gs, mode=mode):
                 m = mlx_port.load_port(str(tiny))
                 nn.quantize(m, group_size=gs, bits=4, mode=mode,
                             class_predicate=lambda p, mod: isinstance(mod, nn.Linear) and 'lm_head' not in p)
@@ -215,3 +215,28 @@ def _end_to_end(steps: list, work: Path, device: str, log) -> None:
         return {'parameters': rep['summary']['parameters'], 'located': first['name'], 'diagnosis': first['diagnosis']}
 
     _step(steps, 'E7', 'static weight diff passes a clean port and names a transposed weight', static_weights, log)
+
+    def moe():
+        from .fixtures import make_tiny_moe
+        from .weights import run_weights
+        path = work / 'tiny-moe'
+        make_tiny_moe(path)
+        model = load_hf_model(str(path))
+        out = prepare_output_dir(work / 'golden-moe', overwrite=True)
+        writer = TraceWriter(out, source={'framework': 'torch', 'model': str(path)},
+                             golden={'kind': 'reference', 'dtype': 'float32'}, max_bytes=1 << 30)
+        capture_model(model, [np.asarray(TOKENS)], writer, decode_steps=1)
+        writer.finish()
+        rep = diff.run_diff(str(out), str(path), device=device)
+        assert rep['verdict'] == 'ok', f"clean MoE port gave {rep['verdict']}: {rep['first_divergence']}"
+        assert run_weights(str(path), str(path))['verdict'] == 'ok', 'clean MoE weights failed'
+        inject_at, expected = faults.TINY_MOE_TARGETS['F9']
+        faulty = mlx_port.load_port(str(path))
+        faults.inject(faulty, 'F9', inject_at)
+        rep = diff.run_diff(str(out), str(path), model=faulty, device=device)
+        result = {'F9': {'title': faults.FAULTS['F9'].title, **located(rep, expected)}}
+        first = run_weights(str(path), 'faulty', model=faulty)['first_failure']
+        assert first and 'expert_order' in first.get('diagnosis', ''), f'weights did not name the expert order: {first}'
+        return {'faults': result, 'weights_diagnosis': first['diagnosis']}
+
+    _step(steps, 'E8', 'MoE: clean port passes, and rotated experts (F9) are located', moe, log)

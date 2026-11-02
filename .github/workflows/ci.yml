@@ -26,9 +26,14 @@ jobs:
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: '3.12'
-      - run: python -m pip install ruff==0.11.13
-      - name: Lint correctness
+      - run: python -m pip install ruff==0.11.13 mypy==2.4.1 numpy
+      - name: Lint
         run: python -m ruff check .
+      - name: Type check the modules that are held to it
+        run: >-
+          python -m mypy src/cumlx/verify/checkpoint.py src/cumlx/verify/checkop.py src/cumlx/verify/report_html.py
+          src/cumlx/verify/trace_compare.py src/cumlx/verify/metrics.py src/cumlx/verify/mapping.py
+          src/cumlx/verify/weights.py src/cumlx/mcp_server.py
       - name: Python syntax
         run: python -m compileall -q src tests scripts benchmarks
       - name: Check generated sources match the generator
@@ -93,7 +98,7 @@ jobs:
       - name: Environment must be ready (missing dependency = failure)
         run: |
           mkdir -p ci-results
-          cumlx doctor --probe --require capture,diff,conform --format json > ci-results/doctor.json
+          cumlx doctor --probe --require capture,diff,conform,weights --format json > ci-results/doctor.json
       - name: End-to-end tests (skips are failures here)
         run: python -m pytest -q -m e2e --require-e2e --junitxml=ci-results/e2e.xml
       - name: Selftest (clean port passes, injected faults located)

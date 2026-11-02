@@ -1,0 +1,525 @@
+{
+ "schema": "cumlx.public-ports.v1",
+ "ports": [
+  {
+   "original": "Qwen/Qwen2.5-0.5B",
+   "port": "mlx-community/Qwen2.5-0.5B-bf16",
+   "golden": "reference",
+   "weights": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "ok: 290 pass, 0 fail, 0 unverified of 290 parameters",
+    "errors": [],
+    "warnings": [],
+    "first_failure": null
+   },
+   "capture": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "recorded 3180 module calls from 5 sample(s) (3175 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-n6k5mjid/mlx-community-Qwen2.5-0.5B-bf16",
+    "errors": [],
+    "warnings": []
+   },
+   "revision": "060db6499f32faf8b98477b0a26969ef7d8b9987",
+   "diff": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "ok: 2930 pass, 0 fail, 0 unverified, 250 skipped, 480 chain drift",
+    "errors": [],
+    "warnings": [],
+    "verdict": "ok",
+    "first_divergence": null,
+    "coverage": 1.0,
+    "worst_isolated_rel_l2": 1.3297702956897325e-05,
+    "worst_chain_rel_l2": 0.36022315340924893,
+    "chain_drift": 480,
+    "decode_records": 1590,
+    "native_output": {
+     "positions": 55,
+     "top1_matches": 53
+    },
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.015,
+     "composite_rel_l2_max": 0.2,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "bfloat16",
+     "median_leaf_error": 1.199164889986512e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "profile": "bfloat16",
+    "quantization_modes": [],
+    "unverified": []
+   }
+  },
+  {
+   "original": "Qwen/Qwen2.5-0.5B",
+   "port": "mlx-community/Qwen2.5-0.5B-8bit",
+   "golden": "port-weights",
+   "weights": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "ok: 290 pass, 0 fail, 0 unverified of 290 parameters",
+    "errors": [],
+    "warnings": [],
+    "first_failure": null
+   },
+   "capture": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "recorded 3180 module calls from 5 sample(s) (3175 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-n6k5mjid/mlx-community-Qwen2.5-0.5B-8bit",
+    "errors": [],
+    "warnings": []
+   },
+   "revision": "060db6499f32faf8b98477b0a26969ef7d8b9987",
+   "diff": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "ok: 2930 pass, 0 fail, 0 unverified, 250 skipped, 10 chain drift",
+    "errors": [],
+    "warnings": [],
+    "verdict": "ok",
+    "first_divergence": null,
+    "coverage": 1.0,
+    "worst_isolated_rel_l2": 1.629570835497973e-05,
+    "worst_chain_rel_l2": 0.049338664697094976,
+    "chain_drift": 10,
+    "decode_records": 1590,
+    "native_output": {
+     "positions": 55,
+     "top1_matches": 55
+    },
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.0001,
+     "composite_rel_l2_max": 0.0001,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "quantized",
+     "median_leaf_error": 2.4505211203381655e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "profile": "quantized",
+    "quantization_modes": [
+     "affine"
+    ],
+    "unverified": []
+   }
+  },
+  {
+   "original": "Qwen/Qwen2.5-0.5B",
+   "port": "mlx-community/Qwen2.5-0.5B-4bit",
+   "golden": "port-weights",
+   "weights": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "ok: 290 pass, 0 fail, 0 unverified of 290 parameters",
+    "errors": [],
+    "warnings": [],
+    "first_failure": null
+   },
+   "capture": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "recorded 3180 module calls from 5 sample(s) (3175 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-n6k5mjid/mlx-community-Qwen2.5-0.5B-4bit",
+    "errors": [],
+    "warnings": []
+   },
+   "revision": "060db6499f32faf8b98477b0a26969ef7d8b9987",
+   "diff": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "ok: 2930 pass, 0 fail, 0 unverified, 250 skipped",
+    "errors": [],
+    "warnings": [],
+    "verdict": "ok",
+    "first_divergence": null,
+    "coverage": 1.0,
+    "worst_isolated_rel_l2": 1.5236324298664531e-05,
+    "worst_chain_rel_l2": 0.026933401323342987,
+    "chain_drift": 0,
+    "decode_records": 1590,
+    "native_output": {
+     "positions": 55,
+     "top1_matches": 54
+    },
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.0001,
+     "composite_rel_l2_max": 0.0001,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "quantized",
+     "median_leaf_error": 2.522613805044048e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "profile": "quantized",
+    "quantization_modes": [
+     "affine"
+    ],
+    "unverified": []
+   }
+  },
+  {
+   "original": "Qwen/Qwen2.5-0.5B-Instruct",
+   "port": "mlx-community/Qwen2.5-0.5B-Instruct-4bit",
+   "golden": "port-weights",
+   "weights": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "ok: 290 pass, 0 fail, 0 unverified of 290 parameters",
+    "errors": [],
+    "warnings": [],
+    "first_failure": null
+   },
+   "capture": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "recorded 3180 module calls from 5 sample(s) (3175 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-n6k5mjid/mlx-community-Qwen2.5-0.5B-Instruct-4bit",
+    "errors": [],
+    "warnings": []
+   },
+   "revision": "7ae557604adf67be50417f59c2c2f167def9a775",
+   "diff": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "ok: 2930 pass, 0 fail, 0 unverified, 250 skipped, 2 chain drift",
+    "errors": [],
+    "warnings": [],
+    "verdict": "ok",
+    "first_divergence": null,
+    "coverage": 1.0,
+    "worst_isolated_rel_l2": 1.6529772356417087e-05,
+    "worst_chain_rel_l2": 0.03217740329818568,
+    "chain_drift": 2,
+    "decode_records": 1590,
+    "native_output": {
+     "positions": 55,
+     "top1_matches": 55
+    },
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.0001,
+     "composite_rel_l2_max": 0.0001,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "quantized",
+     "median_leaf_error": 2.5160635580188675e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "profile": "quantized",
+    "quantization_modes": [
+     "affine"
+    ],
+    "unverified": []
+   }
+  },
+  {
+   "original": "Qwen/Qwen2.5-Coder-0.5B-Instruct",
+   "port": "mlx-community/Qwen2.5-Coder-0.5B-Instruct-4bit",
+   "golden": "port-weights",
+   "weights": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "ok: 290 pass, 0 fail, 0 unverified of 290 parameters",
+    "errors": [],
+    "warnings": [],
+    "first_failure": null
+   },
+   "capture": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "recorded 3180 module calls from 5 sample(s) (3175 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-n6k5mjid/mlx-community-Qwen2.5-Coder-0.5B-Instruct-4bit",
+    "errors": [],
+    "warnings": []
+   },
+   "revision": "ea3f2471cf1b1f0db85067f1ef93848e38e88c25",
+   "diff": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "ok: 2930 pass, 0 fail, 0 unverified, 250 skipped",
+    "errors": [],
+    "warnings": [],
+    "verdict": "ok",
+    "first_divergence": null,
+    "coverage": 1.0,
+    "worst_isolated_rel_l2": 4.2961661043318626e-05,
+    "worst_chain_rel_l2": 0.015433341680429823,
+    "chain_drift": 0,
+    "decode_records": 1590,
+    "native_output": {
+     "positions": 55,
+     "top1_matches": 55
+    },
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.0001,
+     "composite_rel_l2_max": 0.0001,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "quantized",
+     "median_leaf_error": 2.626279298086941e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "profile": "quantized",
+    "quantization_modes": [
+     "affine"
+    ],
+    "unverified": []
+   }
+  },
+  {
+   "original": "HuggingFaceTB/SmolLM2-135M-Instruct",
+   "port": "mlx-community/SmolLM2-135M-Instruct",
+   "golden": "reference",
+   "weights": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "ok: 272 pass, 0 fail, 0 unverified of 272 parameters",
+    "errors": [],
+    "warnings": [],
+    "first_failure": null
+   },
+   "capture": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "recorded 3960 module calls from 5 sample(s) (3955 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-n6k5mjid/mlx-community-SmolLM2-135M-Instruct",
+    "errors": [],
+    "warnings": []
+   },
+   "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+   "diff": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "ok: 3650 pass, 0 fail, 0 unverified, 310 skipped, 188 chain drift",
+    "errors": [],
+    "warnings": [],
+    "verdict": "ok",
+    "first_divergence": null,
+    "coverage": 1.0,
+    "worst_isolated_rel_l2": 6.316047174798861e-06,
+    "worst_chain_rel_l2": 0.14030423585274207,
+    "chain_drift": 188,
+    "decode_records": 1980,
+    "native_output": {
+     "positions": 77,
+     "top1_matches": 74
+    },
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.015,
+     "composite_rel_l2_max": 0.2,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "bfloat16",
+     "median_leaf_error": 1.1530158158942373e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "profile": "bfloat16",
+    "quantization_modes": [],
+    "unverified": []
+   }
+  },
+  {
+   "original": "HuggingFaceTB/SmolLM2-135M-Instruct",
+   "port": "mlx-community/SmolLM2-135M-Instruct-8bit",
+   "golden": "port-weights",
+   "weights": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "ok: 272 pass, 0 fail, 0 unverified of 272 parameters",
+    "errors": [],
+    "warnings": [],
+    "first_failure": null
+   },
+   "capture": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "recorded 3960 module calls from 5 sample(s) (3955 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-n6k5mjid/mlx-community-SmolLM2-135M-Instruct-8bit",
+    "errors": [],
+    "warnings": []
+   },
+   "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+   "diff": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "ok: 3650 pass, 0 fail, 0 unverified, 310 skipped",
+    "errors": [],
+    "warnings": [],
+    "verdict": "ok",
+    "first_divergence": null,
+    "coverage": 1.0,
+    "worst_isolated_rel_l2": 6.162996583455665e-06,
+    "worst_chain_rel_l2": 0.006521920956215825,
+    "chain_drift": 0,
+    "decode_records": 1980,
+    "native_output": {
+     "positions": 77,
+     "top1_matches": 77
+    },
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.0001,
+     "composite_rel_l2_max": 0.0001,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "quantized",
+     "median_leaf_error": 2.2901066793008765e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "profile": "quantized",
+    "quantization_modes": [
+     "affine"
+    ],
+    "unverified": []
+   }
+  },
+  {
+   "original": "Qwen/Qwen3-0.6B",
+   "port": "mlx-community/Qwen3-0.6B-bf16",
+   "golden": "reference",
+   "weights": {
+    "exit_code": 5,
+    "status": "incomplete",
+    "summary": "incomplete: 310 pass, 0 fail, 1 unverified of 311 parameters",
+    "errors": [],
+    "warnings": [],
+    "first_failure": null
+   },
+   "capture": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "recorded 4260 module calls from 5 sample(s) (4255 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-n6k5mjid/mlx-community-Qwen3-0.6B-bf16",
+    "errors": [],
+    "warnings": []
+   },
+   "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+   "diff": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "ok: 3970 pass, 0 fail, 0 unverified, 290 skipped, 62 chain drift",
+    "errors": [],
+    "warnings": [],
+    "verdict": "ok",
+    "first_divergence": null,
+    "coverage": 1.0,
+    "worst_isolated_rel_l2": 3.6332651568889113e-06,
+    "worst_chain_rel_l2": 0.11771659552195232,
+    "chain_drift": 62,
+    "decode_records": 2130,
+    "native_output": {
+     "positions": 55,
+     "top1_matches": 53
+    },
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.015,
+     "composite_rel_l2_max": 0.2,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "bfloat16",
+     "median_leaf_error": 1.0629389774849992e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "profile": "bfloat16",
+    "quantization_modes": [],
+    "unverified": []
+   }
+  },
+  {
+   "original": "Qwen/Qwen3-0.6B",
+   "port": "mlx-community/Qwen3-0.6B-4bit",
+   "golden": "port-weights",
+   "weights": {
+    "exit_code": 5,
+    "status": "incomplete",
+    "summary": "incomplete: 310 pass, 0 fail, 1 unverified of 311 parameters",
+    "errors": [],
+    "warnings": [],
+    "first_failure": null
+   },
+   "capture": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "recorded 4260 module calls from 5 sample(s) (4255 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-n6k5mjid/mlx-community-Qwen3-0.6B-4bit",
+    "errors": [],
+    "warnings": []
+   },
+   "revision": "c1899de289a04d12100db370d81485cdf75e47ca",
+   "diff": {
+    "exit_code": 0,
+    "status": "ok",
+    "summary": "ok: 3970 pass, 0 fail, 0 unverified, 290 skipped, 110 chain drift",
+    "errors": [],
+    "warnings": [],
+    "verdict": "ok",
+    "first_divergence": null,
+    "coverage": 1.0,
+    "worst_isolated_rel_l2": 4.5823252803880296e-06,
+    "worst_chain_rel_l2": 0.17827015261146376,
+    "chain_drift": 110,
+    "decode_records": 2130,
+    "native_output": {
+     "positions": 55,
+     "top1_matches": 53
+    },
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.0001,
+     "composite_rel_l2_max": 0.0001,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "quantized",
+     "median_leaf_error": 2.3270991697052372e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "profile": "quantized",
+    "quantization_modes": [
+     "affine"
+    ],
+    "unverified": []
+   }
+  },
+  {
+   "original": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+   "port": "mlx-community/TinyLlama-1.1B-Chat-v1.0-4bit",
+   "golden": "port-weights",
+   "weights": {
+    "exit_code": 4,
+    "status": "error",
+    "summary": "mlx-lm could not load 'mlx-community/TinyLlama-1.1B-Chat-v1.0-4bit': FileNotFoundError: No safetensors found in /private/var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-n6k5mjid/hf/hub/models--mlx-community--TinyLlama-1.1B-Chat-v1.0-4bit/snapshots/01a708812690b4685ab18e3b0a27848f92c50746",
+    "errors": [
+     {
+      "code": "E_MODEL_LOAD",
+      "message": "mlx-lm could not load 'mlx-community/TinyLlama-1.1B-Chat-v1.0-4bit': FileNotFoundError: No safetensors found in /private/var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-n6k5mjid/hf/hub/models--mlx-community--TinyLlama-1.1B-Chat-v1.0-4bit/snapshots/01a708812690b4685ab18e3b0a27848f92c50746"
+     }
+    ],
+    "warnings": [],
+    "first_failure": null
+   },
+   "capture": {
+    "exit_code": 4,
+    "status": "error",
+    "summary": "mlx-lm could not load 'mlx-community/TinyLlama-1.1B-Chat-v1.0-4bit': FileNotFoundError: No safetensors found in /private/var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-n6k5mjid/hf/hub/models--mlx-community--TinyLlama-1.1B-Chat-v1.0-4bit/snapshots/01a708812690b4685ab18e3b0a27848f92c50746",
+    "errors": [
+     {
+      "code": "E_MODEL_LOAD",
+      "message": "mlx-lm could not load 'mlx-community/TinyLlama-1.1B-Chat-v1.0-4bit': FileNotFoundError: No safetensors found in /private/var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-n6k5mjid/hf/hub/models--mlx-community--TinyLlama-1.1B-Chat-v1.0-4bit/snapshots/01a708812690b4685ab18e3b0a27848f92c50746"
+     }
+    ],
+    "warnings": []
+   },
+   "revision": null
+  }
+ ]
+}

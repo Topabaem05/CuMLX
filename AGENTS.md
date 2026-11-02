@@ -46,6 +46,8 @@ On `exit_code == 1`, read `data.first_divergence` first:
 - `basis: isolated`, `confidence: high` → the module itself is wrong. Attention and decoder layers are replayed too, so this covers RoPE, masking and residuals.
 - `basis: chain+isolated`, `confidence: medium` → the module could not be replayed; its submodules are right and the defect is in its own code between them.
 - `basis: chain` → in `--mode chain`, rerun with `--mode isolated`. In isolated mode, the output is non-finite or wrongly shaped in the native dtype only.
+- `phase: decode` → prefill is right and the module's KV cache handling is wrong (position offset, mask, cache update).
+- A module that ends in `.mlp.experts` → the experts are wrong on the golden routing. `.mlp.gate` → the router is wrong. `cumlx weights` names the expert.
 
 Read these before you trust a result:
 
@@ -53,13 +55,16 @@ Read these before you trust a result:
 - `data.summary.chain_drift`: outputs that exceeded the chain threshold while the module passed on its golden input. This is accumulated native-dtype rounding, not a defect; torch's own bf16 shows the same size.
 - `data.summary.native_output`: top-1 agreement of the native-dtype logits with the golden.
 - `W_WEIGHT_ROUNDING_NOISE`: thresholds rose with the rounding noise of this port; smaller defects can pass.
+- `W_PARTIAL_TRACE`: the golden holds only some modules (`--layers`); the verdict covers only those.
+
+Other commands: `cumlx conform --checkpoint <modelopt> --against <mlx-repack>` compares an NVFP4 repack with its original, byte by byte. `cumlx tracediff A B` measures how far a golden moves between devices. `cumlx.check_op(torch_fn, mlx_fn, inputs)` compares one op. `cumlx-mcp` serves every command as an MCP tool. `skills/cumlx-verifier/SKILL.md` is a skill for porting agents. `docs/TRACE-FORMAT.md` is the trace specification.
 
 On `exit_code == 5`, some parametrized modules were not compared. Map them with
 `--mapping rules.json` (`{"rules": [{"match": REGEX, "replace": STR}], "ignore": [REGEX]}`)
 or ignore them explicitly. Never report `incomplete` as success.
 
 `cumlx selftest` proves within seconds that the verifier works in the
-current environment: a clean port passes and 9 injected faults are located.
+current environment: a clean port passes and 11 injected faults are located.
 
 ## Developing this repository
 
@@ -72,11 +77,11 @@ python -m ruff check . && python scripts/generate_kernels.py && git diff --exit-
 python scripts/dogfood_real_model.py -o evidence.json   # real checkpoints; needs network and disk (L2)
 ```
 
-On Apple Silicon, `.[dev,metal]` pins MLX 0.32.2 for the kernel lab. Use a separate venv from `.[capture,diff]`,
-which installs the newest MLX; `MLXBackend` refuses any other version.
+`MLXBackend` accepts MLX 0.32.2 and later 0.32.x. The GPU tests ran on 0.32.2 and 0.32.4; another 0.32.x gives a warning.
 
 - `src/cumlx/cli/`: argument parsing, envelope, command handlers. Keep the stdout contract.
-- `src/cumlx/verify/`: trace format, capture (torch), MLX probe, diff, static weights, conform, faults, selftest.
+- `src/cumlx/verify/`: trace format, capture (torch), MLX probe, diff, static weights, conform, NVFP4 checkpoints, check_op, reports, faults, selftest.
+- `src/cumlx/mcp_server.py`: MCP stdio server. Its tool schemas come from the CLI parser.
 - `src/cumlx/kernels/`, `mlx_backend.py`: FP4 kernel lab (GPU-unvalidated). Regenerate kernels only with `scripts/generate_kernels.py`.
 - A new error code goes in `ERROR_CODES` (`src/cumlx/errors.py`); `describe` and tests pick it up.
 - A new fault goes in `verify/faults.py` with an expected target, and it must be located in `tests/test_verify_e2e.py`.

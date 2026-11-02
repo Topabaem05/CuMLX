@@ -3,7 +3,7 @@
 Layout::
 
     <trace>/manifest.json
-    <trace>/samples/s0000.safetensors   token_ids, r00000.in0, r00000.out, ...
+    <trace>/samples/s0000.safetensors   token_ids, decode_token_ids, r00000.in0, r00000.out, ...
 
 Records are kept in hook completion order: a child module completes before
 its parent. ``key`` = ``<module name>#<call index>`` distinguishes repeated
@@ -50,11 +50,14 @@ class ModuleRecord:
     inputs: list[TensorRef] = field(default_factory=list)
     output: TensorRef | None = None
     # 'single' = the only input is one tensor. 'hidden' = a hidden state plus causal context
-    # (mask, position embeddings) that the port recomputes. None = not replayable.
+    # (mask, position embeddings) that the port recomputes. 'hidden_cached' and 'tokens_cached' =
+    # the same in the decode phase: earlier golden inputs fill the port's own KV cache first.
+    # 'experts' = MoE experts with golden routing. None = not replayable.
     replay_kind: str | None = None
+    phase: str = 'prefill'  # 'prefill' or 'decode' (one new token on top of the KV cache)
 
     @staticmethod
-    def from_dict(d: dict) -> 'ModuleRecord':
+    def from_dict(d: dict) -> ModuleRecord:
         d = dict(d)
         d['inputs'] = [TensorRef(**t) for t in d.get('inputs', [])]
         d['output'] = TensorRef(**d['output']) if d.get('output') else None
@@ -70,9 +73,10 @@ class Sample:
     sha256: str
     num_tokens: int
     records: list[ModuleRecord]
+    decode_steps: int = 0
 
     @staticmethod
-    def from_dict(d: dict) -> 'Sample':
+    def from_dict(d: dict) -> Sample:
         d = dict(d)
         d['records'] = [ModuleRecord.from_dict(r) for r in d['records']]
         return Sample(**d)
@@ -91,7 +95,7 @@ class Manifest:
         return asdict(self)
 
     @staticmethod
-    def from_dict(d: dict) -> 'Manifest':
+    def from_dict(d: dict) -> Manifest:
         if not isinstance(d, dict) or d.get('schema') != TRACE_SCHEMA:
             raise CumlxError('E_INPUT_INVALID', f'trace manifest schema is not {TRACE_SCHEMA}',
                              details={'found': d.get('schema') if isinstance(d, dict) else None},
@@ -151,7 +155,8 @@ class TraceWriter:
         self.max_bytes = max_bytes
         self.total_bytes = 0
 
-    def add_sample(self, tensors: dict[str, np.ndarray], records: list[ModuleRecord], num_tokens: int) -> Sample:
+    def add_sample(self, tensors: dict[str, np.ndarray], records: list[ModuleRecord], num_tokens: int,
+                   decode_steps: int = 0) -> Sample:
         nbytes = sum(int(a.nbytes) for a in tensors.values())
         if self.total_bytes + nbytes > self.max_bytes:
             raise CumlxError('E_SIZE_LIMIT', f'trace would exceed --max-bytes={self.max_bytes}',
@@ -163,7 +168,8 @@ class TraceWriter:
         rel = f'samples/{sid}.safetensors'
         path = self.out_dir / rel
         save_file(tensors, path, metadata={'schema': TRACE_SCHEMA, 'sample': sid})
-        sample = Sample(id=sid, file=rel, sha256=_file_sha256(path), num_tokens=num_tokens, records=records)
+        sample = Sample(id=sid, file=rel, sha256=_file_sha256(path), num_tokens=num_tokens, records=records,
+                        decode_steps=decode_steps)
         self.manifest.samples.append(sample)
         return sample
 

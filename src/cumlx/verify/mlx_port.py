@@ -8,12 +8,14 @@ unchanged, and the original classes are restored on exit.
 from __future__ import annotations
 
 from collections import Counter, defaultdict
+from collections.abc import Iterator
 import contextlib
 import importlib
 import inspect
 import os
 from pathlib import Path
-from typing import Any, Iterator
+import re
+from typing import Any
 
 import numpy as np
 
@@ -65,7 +67,7 @@ def load_port(path: str, loader: str = 'mlx_lm'):
 
 
 def named_modules(model) -> dict[str, Any]:
-    return {name: m for name, m in model.named_modules()}
+    return dict(model.named_modules())
 
 
 def first_array(obj):
@@ -78,7 +80,7 @@ def first_array(obj):
 
 
 _PROBED: dict[type, type] = {}
-_ACTIVE: dict[int, tuple['Recorder', str]] = {}
+_ACTIVE: dict[int, tuple[Recorder, str]] = {}
 
 
 class Recorder:
@@ -213,6 +215,12 @@ def promoted_to_float32(model) -> Iterator[bool]:
         model.update(tree_unflatten(saved))
 
 
+def replay_experts(module, x, indices, scores):
+    """Run MoE experts with the golden routing and combine them as the original does."""
+    y = module(x[None], indices[None])
+    return (y * scores[None, ..., None]).sum(axis=-2)
+
+
 def replay(module, x, kind: str | None):
     """Call a port module on a golden input. ``hidden`` modules also get a causal mask."""
     mx, _ = mlx()
@@ -232,6 +240,40 @@ def replay(module, x, kind: str | None):
         return first_array(module(x, mask='causal'))
     except (TypeError, ValueError, AttributeError):  # this port wants an array mask
         return first_array(module(x, mask=mx.tril(mx.ones((n, n), dtype=mx.bool_))))
+
+
+def _causal_mask(x):
+    return 'causal' if x.shape[1] > 1 else None
+
+
+def make_caches(model) -> list:
+    """The port's own KV caches, one per layer. Raises if this port has no mlx-lm cache support."""
+    from mlx_lm.models.cache import make_prompt_cache
+    return make_prompt_cache(model)
+
+
+def _layer_cache(caches: list, name: str):
+    match = re.search(r'(?:^|\.)layers\.(\d+)(?:\.|$)', name)
+    if match is None or int(match.group(1)) >= len(caches):
+        raise ValueError(f'no KV cache for module {name!r}')
+    return caches[int(match.group(1))]
+
+
+def replay_cached(model, module, name: str, earlier: list, x, kind: str):
+    """Fill the port's own KV cache with the golden inputs of the earlier steps, then run the new input.
+
+    Every input is golden, so a failure means this module's own cache handling is wrong
+    (position offset, mask, cache update), not an upstream value.
+    """
+    caches = make_caches(model)
+    if kind == 'tokens_cached':
+        for step in earlier:
+            module(step, cache=caches)
+        return first_array(module(x, cache=caches))
+    cache = _layer_cache(caches, name)
+    for step in earlier:
+        module(step, mask=_causal_mask(step), cache=cache)
+    return first_array(module(x, mask=_causal_mask(x), cache=cache))
 
 
 def to_numpy(arr) -> np.ndarray:
@@ -269,14 +311,20 @@ def dequantized_weights(model) -> dict[str, np.ndarray]:
             # subnormals to zero. The golden must hold the exact values.
             def exact(a):  # FP4 scales are uint8 codes and stay as they are
                 return a.astype(mx.float32) if a is not None and mx.issubdtype(a.dtype, mx.floating) else a
-            w = mx.dequantize(m['weight'], exact(m['scales']), exact(m.get('biases')), group_size=m.group_size,
-                              bits=m.bits, mode=getattr(m, 'mode', 'affine'), dtype=mx.float32, stream=mx.cpu)
+            kwargs = dict(group_size=m.group_size, bits=m.bits, mode=getattr(m, 'mode', 'affine'), dtype=mx.float32,
+                          stream=mx.cpu)
+            expert_scale = getattr(m, 'global_scale', None)  # NVFP4 MoE: one tensor scale per expert
+            if expert_scale is not None:
+                w = mx.stack([mx.dequantize(m['weight'][e], m['scales'][e], global_scale=expert_scale[e], **kwargs)
+                              for e in range(m['weight'].shape[0])])
+            else:
+                w = mx.dequantize(m['weight'], exact(m['scales']), exact(m.get('biases')), **kwargs)
             out[(prefix + '.' if prefix else '') + 'weight'] = np.array(w)
     for name, v in tree_flatten(model.parameters()):
         leaf = name.rsplit('.', 1)[-1]
         owner = name.rsplit('.', 1)[0] if '.' in name else ''
         m = named_modules(model).get(owner)
-        if m is not None and hasattr(m, 'scales') and hasattr(m, 'bits') and leaf in ('weight', 'scales', 'biases'):
+        if m is not None and hasattr(m, 'scales') and hasattr(m, 'bits') and leaf in ('weight', 'scales', 'biases', 'global_scale'):
             continue
         if mx.issubdtype(v.dtype, mx.floating):
             out[name] = to_numpy(v.astype(mx.float32))

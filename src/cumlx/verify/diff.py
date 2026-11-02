@@ -18,16 +18,17 @@ activation module) | ignored (excluded by the user or the mapping file).
 """
 from __future__ import annotations
 
+from collections.abc import Callable
 import contextlib
 import re
-from typing import Any, Callable
+from typing import Any
 
 import numpy as np
 
 from ..errors import CumlxError
+from . import mlx_port
 from .mapping import NameMapper
 from .metrics import compare, noise_thresholds, resolve_threshold
-from . import mlx_port
 from .trace import ModuleRecord, Trace
 
 REPORT_SCHEMA = 'cumlx.diff-report.v1'
@@ -52,7 +53,8 @@ def _localize(entries: list[dict], mode: str) -> dict | None:
     e = next((x for x in entries if x['status'] == 'fail'), None)
     if e is None:
         return None
-    base = {'sample': e['sample'], 'first_failing_output': e['name'], 'module': e['name'], 'key': e['key']}
+    base = {'sample': e['sample'], 'first_failing_output': e['name'], 'module': e['name'], 'key': e['key'],
+            'phase': e.get('phase', 'prefill')}
     label = e['name'] or '(root)'
     iso = (e.get('isolated') or {}).get('verdict')
     if iso == 'fail':
@@ -108,6 +110,7 @@ def _run(trace: Trace, port: str, mapper: NameMapper, execution: dict, *, mode, 
         log(f'loading MLX port {port}')
         model = mlx_port.load_port(port, loader)
     mods = mlx_port.named_modules(model)
+    mapper = mapper.with_port_conventions(mods)
     pinfo = mlx_port.port_profile(model)
     chosen = pinfo['profile'] if profile == 'auto' else profile
     golden_kind = trace.manifest.golden.get('kind')
@@ -121,6 +124,12 @@ def _run(trace: Trace, port: str, mapper: NameMapper, execution: dict, *, mode, 
                          'message': 'the port is quantized but the golden is not quantization-aware; '
                                     'quantization loss will appear as divergence',
                          'hint': f'cumlx capture <original> --weights-from-mlx {port} -o golden-q/'})
+    partial = trace.manifest.source.get('partial')
+    if partial:
+        warnings.append({'code': 'W_PARTIAL_TRACE',
+                         'message': f'this trace records only part of the model ({partial}); coverage and the verdict '
+                                    'describe the recorded modules, not the whole model',
+                         'hint': 'capture without --layers, --include and --exclude to compare every module'})
     if execution['reduced_precision_matmul']:
         floor = TF32_NOISE_FACTOR * execution['gemm_noise_rel_l2']
         if rel_l2 is None:
@@ -167,19 +176,31 @@ def _run(trace: Trace, port: str, mapper: NameMapper, execution: dict, *, mode, 
         with mlx_port.probe(model, mapped_names & set(mods)) as rec:
             try:
                 model(mx.array(ids.astype(np.int32)))
+                if rec.outputs:  # MLX is lazy: an op that this device cannot run fails here
+                    mx.eval(*rec.outputs.values())
             except Exception as e:  # noqa: BLE001
-                raise CumlxError('E_MODEL_RUN', f'MLX port failed on {sample.id}: {type(e).__name__}: {e}',
-                                 hint='check that the port matches the trace (same vocab and architecture)') from None
-            if rec.outputs:
-                mx.eval(*rec.outputs.values())
-        root = next((r for r in sample.records if r.name == ''), None)
+                raise CumlxError('E_MODEL_RUN', f"MLX port failed on {sample.id} on the {execution['device']}: "
+                                                f'{type(e).__name__}: {e}',
+                                 hint='check that the port matches the trace (same vocab and architecture); '
+                                      'an op may be missing on this device, so also try the other --device') from None
+        cached, cached_error = None, None
+        if sample.decode_steps:
+            cached, cached_error = _run_with_cache(model, ids, trace.tensor(sample, 'decode_token_ids'),
+                                                   mapped_names & set(mods), mx)
+            if cached_error:
+                warnings.append({'code': 'W_DECODE_NOT_RUN',
+                                 'message': f'the port could not run the decode phase: {cached_error}. '
+                                            'Its decode records are unverified',
+                                 'hint': 'capture with --decode-steps 0 if this port has no KV cache'})
+        root = next((r for r in sample.records if r.name == '' and r.phase == 'prefill'), None)
         if root is not None and root.output and '#0' in rec.outputs:
             n = _native_output(trace.tensor(sample, root.output.tensor), mlx_port.to_numpy(rec.outputs['#0']))
             if n:
                 top1 = {k: top1[k] + n[k] for k in top1}
         with mlx_port.promoted_to_float32(model) if mode == 'isolated' else contextlib.nullcontext():
             for r in sample.records:
-                entries.append(_compare_record(trace, sample, r, mapper, mods, rec, mode, threshold, wanted, mx, ties))
+                entries.append(_compare_record(trace, sample, r, mapper, mods, cached if r.phase == 'decode' else rec,
+                                               mode, threshold, wanted, mx, ties, model))
     _judge_by_noise(entries, threshold, mode)
     if threshold.get('composite_rel_l2', 0) > threshold['noise_floor'] and not threshold.get('fixed_by_user') \
             and golden_kind != 'quantization-aware' and not pinfo['quantized_modules']:
@@ -214,6 +235,7 @@ def _run(trace: Trace, port: str, mapper: NameMapper, execution: dict, *, mode, 
         'summary': {**counts, 'records': len(entries),
                     'isolated_compared': sum(1 for e in entries if e.get('isolated')),
                     'chain_drift': sum(1 for e in entries if e.get('chain_drift')),
+                    'decode_records': sum(1 for e in entries if e.get('phase') == 'decode'),
                     'worst_isolated_rel_l2': max(isolated_values, default=None),
                     'worst_chain_rel_l2': max(chain_values, default=None),
                     'native_output': top1 if top1['positions'] else None,
@@ -272,12 +294,44 @@ def _tied_linear(name: str, ties: dict, mapper: NameMapper, mods: dict):
     return getattr(mods.get(mapper.map(owner)), 'as_linear', None) if owner is not None else None
 
 
+def _run_with_cache(model, ids: np.ndarray, decode_ids: np.ndarray, names: set[str], mx):
+    """Run prefill and then each decode token on the port's own KV cache. Returns (recorder, error)."""
+    try:
+        caches = mlx_port.make_caches(model)
+        with mlx_port.probe(model, names) as rec:
+            model(mx.array(ids.astype(np.int32)), cache=caches)
+            for i in range(decode_ids.shape[1]):
+                model(mx.array(decode_ids[:, i:i + 1].astype(np.int32)), cache=caches)
+            if rec.outputs:
+                mx.eval(*rec.outputs.values())
+        return rec, None
+    except Exception as exc:  # noqa: BLE001 - a port without a KV cache is reported, not fatal
+        return None, f'{type(exc).__name__}: {exc}'
+
+
+def _golden_array(arr: np.ndarray, mx):
+    return mx.array(arr.astype(np.int32) if np.issubdtype(arr.dtype, np.integer) else arr.astype(np.float32))
+
+
+def _replay_record(trace, sample, r: ModuleRecord, module, x, model, mx):
+    if r.replay_kind == 'experts':
+        indices, scores = (_golden_array(trace.tensor(sample, t.tensor), mx) for t in r.inputs[1:3])
+        return mlx_port.replay_experts(module, x, indices, scores)
+    if r.replay_kind in ('hidden_cached', 'tokens_cached'):
+        earlier = [p for p in sample.records if p.name == r.name and p.order < r.order]
+        if not all(p.inputs for p in earlier):
+            raise ValueError('an earlier step has no recorded input')
+        steps = [_golden_array(trace.tensor(sample, p.inputs[0].tensor), mx) for p in earlier]
+        return mlx_port.replay_cached(model, module, r.name, steps, x, r.replay_kind)
+    return mlx_port.replay(module, x, r.replay_kind)
+
+
 def _compare_record(trace: Trace, sample, r: ModuleRecord, mapper: NameMapper, mods: dict, rec,
-                    mode: str, threshold: dict, wanted, mx, ties: dict) -> dict:
+                    mode: str, threshold: dict, wanted, mx, ties: dict, model) -> dict:
     target = mapper.map(r.name)
     e: dict[str, Any] = {'sample': sample.id, 'key': r.key, 'name': r.name, 'type': r.type, 'order': r.order,
-                         'has_params': r.has_params, 'replayable': r.replayable, 'mlx_name': target,
-                         'chain': None, 'isolated': None}
+                         'phase': r.phase, 'has_params': r.has_params, 'replayable': r.replayable,
+                         'mlx_name': target, 'chain': None, 'isolated': None}
     if not wanted(r.name):
         e.update(status='ignored', note='excluded by --include/--exclude or mapping ignore')
         return e
@@ -289,19 +343,21 @@ def _compare_record(trace: Trace, sample, r: ModuleRecord, mapper: NameMapper, m
             e.update(status='skipped', note='parameter-free helper without an MLX counterpart')
         return e
     golden = trace.tensor(sample, r.output.tensor) if r.output else None
-    out = rec.outputs.get(f'{target}#{r.call}')
+    out = rec.outputs.get(f'{target}#{r.call}') if rec is not None else None
+    if r.replay_kind == 'experts':
+        out = None  # the port returns each expert separately, so only the golden-routing replay is comparable
     if tied is not None:
         e['tied_to'] = ties[r.name]
         parent = next((x for x in sample.records if x.name == _parent(r.name) and x.call == r.call and x.output), None)
-        if parent is not None and golden is not None and np.array_equal(trace.tensor(sample, parent.output.tensor), golden):
+        if rec is not None and parent is not None and golden is not None \
+                and np.array_equal(trace.tensor(sample, parent.output.tensor), golden):
             out = rec.outputs.get(f'{mapper.map(parent.name)}#{parent.call}')  # the parent returns this output as is
     if out is not None and golden is not None:
         e['chain'] = compare(mlx_port.to_numpy(out), golden, threshold)
     if mode == 'isolated' and r.replayable and golden is not None:
-        inp = trace.tensor(sample, r.inputs[0].tensor)
-        x = mx.array(inp.astype(np.int32) if np.issubdtype(inp.dtype, np.integer) else inp.astype(np.float32))
+        x = _golden_array(trace.tensor(sample, r.inputs[0].tensor), mx)
         try:
-            y = mlx_port.first_array(tied(x)) if tied is not None else mlx_port.replay(mods[target], x, r.replay_kind)
+            y = mlx_port.first_array(tied(x)) if tied is not None else _replay_record(trace, sample, r, mods[target], x, model, mx)
             if y is None:
                 raise TypeError('module returned no array')
             mx.eval(y)
@@ -309,5 +365,7 @@ def _compare_record(trace: Trace, sample, r: ModuleRecord, mapper: NameMapper, m
         except Exception as ex:  # noqa: BLE001
             e['isolated'] = {'verdict': 'error', 'reason': f'replay raised {type(ex).__name__}: {ex}'}
     if not e['chain'] and not e['isolated']:
-        e.update(status='unverified', note='module was not called by the port or could not be replayed')
+        note = 'MoE experts are compared only with --mode isolated' if r.replay_kind == 'experts' \
+            else 'module was not called by the port or could not be replayed'
+        e.update(status='unverified', note=note)
     return e

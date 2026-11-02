@@ -1,183 +1,132 @@
-# CUMLX v0.4 (dev)
+# CUMLX
 
-**CUDA→MLX 포팅 동등성 검증기 (베타 준비) + Packed FP4 커널 lab**
+**MLX 포팅본이 원본 모델과 같은 계산을 하는지 모듈 단위로 증명하고, 다르면 처음 달라진 모듈을 찾습니다.**
 
-CUMLX는 모델을 변환하지 않습니다. mlx-lm 등 어떤 도구로 변환했든, MLX 포팅본이 원본 PyTorch(CUDA) 모델과 **같은 계산을 하는지 모듈 단위로 비교**하고, 다르면 **처음 어긋난 모듈**을 찾습니다. 방향과 일정은 [1개월 로드맵](docs/ROADMAP-1MONTH.md)에 있습니다.
-
-```bash
-python -m pip install -e '.[capture,diff]'        # torch, transformers, mlx, mlx-lm
-cumlx doctor --require capture,diff
-cumlx weights <원본 HF id 또는 경로> <MLX 포팅본>   # 수 초: 전치·scale 오류를 이름으로 지목
-cumlx capture <원본 HF id 또는 경로> --prompt "Hello" -o golden/
-cumlx diff golden/ <MLX 포팅본> -o report/       # exit 0 ok · 1 diverged · 5 incomplete
-cumlx selftest                                   # 깨끗한 포팅 통과 + 오류 주입 9종 위치 검출
-```
-
-CLI는 AI 에이전트가 쓰기 좋게 설계했습니다. stdout에는 JSON 문서 1개만 나가고, exit code가 고정되어 있으며, 모든 오류에 해결 hint가 붙고, `next_steps`로 다음 명령을 제안하고, `--max-items`로 출력 길이를 제한합니다. 사용법은 [CLI 문서](docs/CLI.md)와 [AGENTS.md](AGENTS.md)를 보십시오.
-
-**검증 범위:** Apple M5 Pro(Metal, CPU)와 Linux MLX CPU. 실제 모델은 Qwen2.5-0.5B와 SmolLM2-135M, 공개 포팅본은 `mlx-community/Qwen2.5-0.5B-bf16`입니다. 이 범위에서 깨끗한 포팅 34회 실행의 false alarm은 0이고, 결함 주입 41회를 전부 정확한 모듈로 지목했습니다([검증 보고서](validation/REPORT.md)). MoE, KV cache를 쓰는 decode 단계, 다른 Apple GPU 세대는 **미검증**입니다.
-
----
-
-## FP4 커널 lab (v0.3에서 유지)
-
-**Packed FP4 커널 구현 패키지 — CPU 검증 완료 범위와 GPU 미검증 범위를 분리합니다.**
-
-NVFP4/MXFP4 payload를 전체 FP16/FP32 가중치로 펼치지 않고 읽는 Metal·CUDA 커널을 작성했습니다. 현재 상태는 **실험용 소스 구현**입니다. Metal 커널은 Apple M5 Pro 한 기기에서 컴파일되고 GPU 테스트 35개를 통과했습니다(MLX 0.32.2, 2026-11-02). CUDA 커널 실행과 속도는 검증하지 않았습니다. `allow_unvalidated=True`를 명시해야 GPU 실행을 시도합니다.
-
-이 패키지는 v0.2의 G1/G2 커널 단계를 구현합니다. **`torch.cuda` 호환 backend, CUDA-on-Metal runtime, PTX compiler, NCCL, 임의 CUDA Python wheel 지원은 구현하지 않았습니다.** CUDA 소스는 실제 NVIDIA GPU용이며, Metal 소스는 Apple GPU용입니다. 같은 연산을 양쪽에 작성한 것이지 CUDA 바이너리를 Metal로 번역한 것이 아닙니다.
-
-Mac에서 커널을 실험할 때는 `.[capture,diff]`와 **별도 venv**를 쓰십시오. `.[dev,metal]`은 MLX를 0.32.2로 고정하고, `MLXBackend`는 다른 버전을 거부합니다.
-
-## 제공 코드
-
-| 커널 | 용도 | 128-thread workgroup 기준 |
-|---|---|---|
-| `fp4_decode` | 정확성 비교용 전체 FP32 복원 | elementwise; fast path가 호출하지 않음 |
-| `fp4_gemv` | M=1 decode | 출력 열 하나, 2개/nibble pair, shared 512 B |
-| `fp4_small_m` | 1≤M≤8 | 복원값을 최대 4행 재사용, shared 2048 B |
-| `fp4_tiled` | 일반 M의 quantized linear | BM8×BN32×BK32, shared 5120 B |
-| `fp4_w4a4` | 양쪽 입력 FP4 | activation·weight 모두 타일 복원 |
-| `fp4_quantize` | GPU rowwise quantizer | lane 하나가 block 하나·scale 하나 담당 |
-| `rms_norm` | RMSNorm + optional residual | 행별 reduction, shared 512 B |
-| `silu_mul` | SiLU(gate) × up | fused elementwise |
-
-각 커널은 `.metal`과 `.cu`로 제공됩니다. 이는 `mx.fast.metal_kernel` / `cuda_kernel`에 전달하는 **함수 본문**입니다. dtype과 상수·buffer signature는 MLX가 생성합니다. 독립 `nvcc file.cu` 프로그램은 아닙니다. [S1, S2]
-
-주요 경로:
+CUMLX는 모델을 변환하지 않습니다. mlx-lm이든 직접 작성한 코드든, 어떻게 만든 포팅본이든 그 뒤에 붙여 쓰는 검증 도구입니다. 포팅이 성공했다는 메시지나 그럴듯한 생성 결과는 증거가 아닙니다. 가중치 전치, RoPE 오프셋, 잘못된 양자화 scale은 오류 없이 조용히 틀린 값을 냅니다.
 
 ```text
-src/cumlx/quant.py             CPU codec, canonical tensor, serialization
-src/cumlx/reference.py         독립 고정밀 수치 기준
-src/cumlx/planning.py          shape dispatch와 launch geometry
-src/cumlx/simulation.py        CPU 인덱스·reduction schedule 검사
-src/cumlx/mlx_backend.py       MLX JIT launcher, prepared buffers, 검사
-src/cumlx/kernels/             16개 커널 본문 + 2개 공통 수학 header
-scripts/generate_kernels.py    위 8개 알고리즘의 소스 유지보수 도구
-benchmarks/bench_fp4.py        정확성 gate 후 실제 장치 wall-time 측정
+$ cumlx diff golden/ ./my-port
+diverged: 50 pass, 8 fail, 0 unverified, 4 skipped; first divergence at `model.layers.1.self_attn` (isolated, high)
 ```
 
-## 설치
+## 시작하기
 
-Python 3.10 이상. CPU codec만 사용할 때 MLX는 필요하지 않습니다.
+Apple Silicon Mac 또는 Linux, Python 3.10 이상이 필요합니다.
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-python -m pip install -e '.[dev]'
-python scripts/cpu_example.py
-pytest -q
+python -m pip install -e '.[capture,diff]'
+cumlx doctor --require capture,diff,weights     # 빠진 것과 설치 명령을 알려 줍니다
+cumlx selftest                                  # 이 환경에서 검증기가 동작하는지 증명합니다 (수 초)
 ```
-
-Apple Silicon에서 GPU 실험을 준비할 때:
 
 ```bash
-python -m pip install -e '.[dev,metal]'
-python scripts/env_report.py
-pytest -q -m gpu --backend metal --require-gpu
+cumlx weights Qwen/Qwen2.5-0.5B ./my-port                        # 가중치 확인 (수 초)
+cumlx capture Qwen/Qwen2.5-0.5B --prompt "Hello" -o golden/      # 원본의 모듈별 입출력 기록
+cumlx diff golden/ ./my-port -o report/                          # 포팅본 코드 확인
 ```
 
-NVIDIA/Linux에서 별도 GPU 실험을 준비할 때:
+종료 코드는 `0` 통과, `1` 불일치, `5` 미완료(통과가 아님)입니다. `report/`에 `report.html`, `report.md`, `report.json`이 생깁니다.
+
+## 언제 무엇을 쓰는가
+
+### 모델을 MLX로 옮겼다
+
+위 세 명령을 실행합니다. `diff`는 각 모듈에 **원본의 입력을 그대로 넣어** 비교하므로, 오차가 누적되지 않고 잘못된 모듈 하나만 실패합니다. attention과 decoder layer도 따로 재생합니다.
+
+### 양자화했거나 bf16/f16으로 내렸다
+
+양자화 포팅본을 원본과 그대로 비교하면 양자화 손실 때문에 항상 다릅니다. 포팅본의 가중치를 원본 코드에 넣은 golden과 비교하면, 남는 차이는 구현 버그입니다.
 
 ```bash
-python -m pip install -e '.[dev,cuda]'
-python scripts/env_report.py
-pytest -q -m gpu --backend cuda --require-gpu
+cumlx capture <원본> --prompt "Hello" --weights-from-mlx ./my-port-4bit -o golden-p/
+cumlx diff golden-p/ ./my-port-4bit
 ```
 
-MLX API 목표 버전은 **0.32.2**로 고정했습니다. Metal 실행 기록은 M5 Pro 한 기기뿐이고, CUDA 실행 기록은 없습니다. 설치에는 플랫폼에 맞는 MLX wheel, GPU 및 드라이버/OS 요구사항이 별도로 필요합니다. Mac에서 CUDA extra를 설치하거나 Linux CPU만으로 Metal을 실행하지 않습니다. [S1–S4]
+가중치 자체는 `cumlx weights`로 따로 확인합니다.
 
-## CPU에서 실제 실행할 수 있는 예제
+### 생성할 때만 답이 이상하다
+
+capture는 기본으로 KV cache 위의 생성 한 단계도 기록합니다. prefill은 맞는데 캐시 처리(위치 오프셋, mask)만 틀리면 `first_divergence.phase`가 `decode`로 나옵니다.
+
+### MoE 모델을 옮겼다
+
+라우터와 expert를 따로 판정합니다. expert는 원본의 라우팅 결과로 재생하므로, 라우터 결함과 expert 결함을 구분합니다. `cumlx weights`는 expert 순서가 바뀌면 어느 위치로 갔는지 알려 줍니다. 현재 mlx-lm의 `switch_mlp` 구조를 지원합니다.
+
+### 공개된 NVFP4 repack을 믿어도 되는지 확인한다
+
+모델을 실행하지 않고, ModelOpt 원본의 bytes와 MLX repack을 비교합니다. `global_scale` 규약 오류(2688배)도 지목합니다.
+
+```bash
+cumlx conform --checkpoint nvidia/모델-NVFP4 --against 누군가/모델-MLX-NVFP4
+```
+
+### Metal 커널을 직접 작성했다
 
 ```python
-import numpy as np
-from cumlx import quantize, dequantize, reference, save_fp4, load_fp4
+import numpy as np, torch
+from cumlx import check_op
 
-rng = np.random.default_rng(28)
-x = rng.normal(size=(3, 67)).astype(np.float32)
-w = rng.normal(size=(35, 67)).astype(np.float32)
-qw = quantize(w, 'nvfp4')
-y_reference = reference.linear(x, qw)
-
-save_fp4('weight.cumlx.npz', qw)
-restored_container = load_fp4('weight.cumlx.npz')
-assert restored_container.checksum == qw.checksum
-print(y_reference.shape)  # (3, 35)
+x = np.random.default_rng(0).normal(size=(4, 8)).astype(np.float32)
+report = check_op(torch.nn.functional.silu, my_metal_silu, inputs=[x])
+assert report['verdict'] == 'ok', report
 ```
 
-`reference.linear`은 진단용 CPU full-dequant + float64 dot입니다. GPU 결과를 검증하는 기준이지 GPU kernel의 bitwise simulator나 빠른 경로는 아닙니다.
+### 포팅 저장소의 CI에 넣는다
 
-## GPU 호출 코드 — 구현되어 있으나 하드웨어 실행 미검증
-
-```python
-import numpy as np
-from cumlx import MLXBackend, quantize
-
-backend = MLXBackend('metal', allow_unvalidated=True)  # 실제 NVIDIA는 'cuda'
-mx = backend.mx
-rng = np.random.default_rng(28)
-
-# CPU에서 명시적으로 packing → 한 번 준비. 외부 framework zero-copy가 아닙니다.
-qw = backend.prepare(quantize(
-    rng.normal(size=(512, 1024)).astype(np.float32), 'nvfp4'
-))
-x = mx.array(rng.normal(size=(3, 1024)).astype(np.float32)).astype(mx.float16)
-
-# Float activation + FP4 weight. dtype=float32이면 W4A32 계산입니다.
-y = backend.linear(x, qw, algorithm='auto')
-mx.eval(y)
-print(y.shape, y.dtype)  # (3, 512), float32
-
-# activation까지 FP4로 quantize한, 별도의 W4A4 경로입니다.
-qa = backend.quantize(x, 'nvfp4')
-y4 = backend.linear_fp4(qa, qw)
-mx.eval(y4)
+```yaml
+- uses: Topabaem05/CuMLX@v0.4.0
+  with:
+    original: Qwen/Qwen2.5-0.5B
+    port: ./my-port
+    prompt: Hello
 ```
 
-GPU kernels는 **FP32 복원·FP32 누산·FP32 출력**입니다. Native FP4 MMA/Tensor Core/simdgroup matrix 명령을 사용하는 고성능 최종판은 아닙니다. 자동 선택은 shape heuristic이며 benchmark로 선정한 최속 kernel이 아닙니다.
+`ok`만 통과합니다. 불일치와 `incomplete`는 job을 실패시키고, job summary에 처음 달라진 모듈이 표시됩니다. 저장소가 비공개이면 먼저 Actions 접근을 허용해야 합니다. [예제](examples/port-ci/)가 있습니다.
 
-## 형식 계약
+### AI 에이전트에게 맡긴다
 
-`W[N,K]`; 낮은 nibble에 짝수 K, 높은 nibble에 홀수 K. 홀수 마지막 K의 쓰지 않는 high nibble은 0. NVFP4의 block은 K축 16개, scale E4M3, tensor multiplier FP32. MXFP4는 K축 32개, scale E8M0, tensor multiplier 1. [S3, S5]
+CLI는 stdout에 JSON 문서 하나만 내보내고, 오류마다 해결 명령을 붙이고, 다음 명령을 제안합니다. `cumlx-mcp`는 같은 명령을 MCP 도구로 제공합니다. [에이전트 스킬](skills/cumlx-verifier/SKILL.md)과 [AGENTS.md](AGENTS.md)를 보십시오.
 
-**자체 rowwise maxabs/RNE 추론 recipe**입니다. TransformerEngine의 2D weight scaling·swizzled/padded scale·RHT·gradient stochastic rounding을 모두 구현한 것이 아닙니다. [S5] 외부 checkpoint는 producer metadata를 해석하는 adapter로 정규화해야 합니다. 현재 로더는 오직 자체 `.npz` container를 읽습니다.
+## 결과를 읽는 법
 
-`NxFP4`, `NF4`, 임의 INT4, producer-specific layout은 오류를 반환합니다. NxFP4를 NVFP4로 대체하지 않습니다. 기존 설계의 NxFP 연구 codec 트랙은 아직 미구현입니다.
+`data.first_divergence`를 먼저 봅니다.
 
-## 검증과 벤치마크
+| `basis`, `confidence` | 뜻 |
+|---|---|
+| `isolated`, high | 그 모듈이 자기 golden 입력에서 틀렸습니다. RoPE, mask, residual 결함도 포함합니다 |
+| `chain+isolated`, medium | 재생할 수 없는 모듈의 하위 모듈은 맞고, 그 모듈 자체 코드가 틀렸습니다 |
+| `chain`, medium | chain 모드 결과이거나, 네이티브 dtype 실행의 NaN·shape 오류입니다 |
 
-```bash
-pytest -q                         # CPU test + GPU 없으면 GPU만 skip
-pytest -q -m gpu --require-gpu     # GPU 없으면 반드시 실패
-python benchmarks/bench_fp4.py --backend metal --m 1 --n 512 --k 1024 --output benchmark.json
-```
+| 경고·필드 | 뜻 |
+|---|---|
+| `chain_drift` | 네이티브 dtype의 누적 반올림입니다. 결함이 아닙니다 |
+| `W_WEIGHT_ROUNDING_NOISE` | 가중치 반올림 때문에 임계값이 올라갔습니다. 더 작은 결함은 통과할 수 있으니 `--weights-from-mlx`를 쓰십시오 |
+| `W_TF32_ACTIVE` | `--tf32 on`으로 실행했습니다. 임계값이 크게 올라갑니다 |
+| `W_PARTIAL_TRACE` | `--layers` 등으로 일부만 기록했습니다. 판정은 기록된 모듈에 대한 것입니다 |
+| `data.execution` | 실행 장치와 측정한 float32 행렬곱 오차입니다 |
 
-벤치마크는 매회 새 graph 생성 → `mx.eval` → synchronize를 포함한 **Python-to-result wall latency**입니다. GPU profiler의 kernel-only 시간으로 표시하지 않습니다. packed auto/tiled, 가능한 native MLX QMM 및 compiled QMM, 명시적 full-FP32 weight를 사용하는 compiled dense comparator를 구분합니다. 수치 gate를 통과하지 못하면 속도를 채택하지 않습니다.
+### M5의 float32 주의점
 
-최신 검증 증거는 [검증 보고서](validation/REPORT.md)와 원시 로그에 있습니다. GPU skip은 pass가 아니며, C++ host header 검증은 CUDA device compile이 아닙니다. 하드웨어별 성능 수치는 제공하지 않습니다.
+**MLX는 M5와 CUDA에서 float32 행렬곱을 기본으로 TF32로 실행합니다.** dtype은 float32로 보이지만 오차가 약 1e-3입니다. CUMLX는 기본으로 이 모드를 끄고 비교하며, 실제 오차를 측정해 보고합니다. 사용자의 기본 실행 환경 그대로 재려면 `--tf32 on`을 쓰십시오.
 
-MLX는 M5와 CUDA에서 float32 matmul을 기본으로 TF32로 실행합니다. CUMLX 커널은 자체 Metal 코드라 이 설정의 영향을 받지 않지만, native MLX QMM·dense 비교 대상은 영향을 받습니다. 벤치마크를 비교할 때 `MLX_ENABLE_TF32` 값을 함께 기록하십시오.
+## 검증 범위
 
-## 제약과 다음 gate
+자세한 수치와 원본 결과는 [검증 보고서](validation/REPORT.md)에 있습니다.
 
-단일 장치·MLX stream·추론만 지원하는 실험 소스입니다. backward/vmap/TorchTensor/외부 pointer/자동 CPU fallback/동적 vendor checkpoint 변환은 없습니다. FP4 buffer를 변경하지 않아야 하며, 비연속 activation은 MLX의 row-contiguous 준비 과정에서 복사될 수 있습니다. 극단적 subnormal·overflow 영역의 CPU/GPU bitwise 동등성은 인증하지 않았습니다.
+**실행한 범위:** Apple M5 Pro(Metal, CPU), Linux MLX CPU(CI, tiny fixture). 원본은 Qwen2.5-0.5B 계열, SmolLM2-135M, Qwen3-0.6B이고, MoE는 공개 tiny random 모델입니다. 깨끗한 실행 38회의 false alarm은 0이고, 결함 주입 50회를 전부 정확한 모듈로 지목했습니다.
 
-다음 gate는 CUDA와 다른 Apple GPU 세대에서 전체 GPU 테스트를 실행하고, benchmark profile별 수치·메모리·성능을 기록하는 것입니다. 그 뒤에만 SIMD reduction, vectorized loads, matrix instructions, MoE gather 및 CUDA-facing frontend를 확장합니다.
+**미검증:** 학습된 실제 MoE 모델, CUDA golden([측정 절차](docs/CUDA-GOLDEN.md)), M5 외의 Apple GPU 세대, 패딩 입력, 음성·이미지 모델. 임계값은 위 범위의 측정값입니다.
 
-[커널 상세 설계](docs/KERNEL-DESIGN.md) · [구현 계획](docs/IMPLEMENTATION-PLAN.md) · [1개월 로드맵 (포팅 검증기)](docs/ROADMAP-1MONTH.md) · [원본 자료](SOURCES.md)
+## 문서
 
-`provenance/SOURCE-ARCHIVES.json`은 전달받은 원본 ZIP의 SHA-256을 기록합니다. 바이너리 ZIP과 이전 wheel은 Git에 중복 저장하지 않으며, distributions는 CI artifact로 생성합니다. 과거 설계와 CPU 검증이 실제 GPU 검증을 대신하지 않습니다. CUMLX는 Apple 또는 NVIDIA 공식 프로젝트가 아닙니다.
+| 문서 | 내용 |
+|---|---|
+| [CLI](docs/CLI.md) | 명령, 판정, 임계값, 측정 기록 |
+| [AGENTS.md](AGENTS.md) | 에이전트 사용법과 개발 안내 |
+| [Trace 형식](docs/TRACE-FORMAT.md) | golden trace 공개 명세 |
+| [CUDA golden 측정](docs/CUDA-GOLDEN.md) | NVIDIA 장비에서 실행할 절차 |
+| [로드맵](docs/ROADMAP-1MONTH.md) | 마일스톤 진행 상태 |
+| [FP4 커널 lab](docs/FP4-KERNEL-LAB.md) | 실험용 NVFP4/MXFP4 Metal·CUDA 커널 |
+| [CI](docs/CI.md) | 자동 검사와 GPU 검증 경계 |
 
-
-## GitHub Actions CI
-
-`main` push와 pull request에서 correctness lint, Python 3.10–3.13 CPU tests,
-생성 커널 byte 일치, sdist/wheel 빌드 및 checkout 밖의 wheel smoke test를 실행합니다.
-CPU job은 GPU 테스트를 **deselect**하며 GPU 성공으로 보고하지 않습니다.
-
-[CI](.github/workflows/ci.yml) · [실제 GPU 검증](.github/workflows/gpu.yml) · [CI 실행 범위](docs/CI.md)
-
-GPU workflow는 신뢰하는 `main`에서 수동 실행만 허용합니다.
-실제 장치를 가진 self-hosted runner에 `metal` 또는 `cuda` label이 필요합니다.
-GPU가 없으면 `--require-gpu`로 실패하며 CPU fallback으로 통과시키지 않습니다.
-PyPI 게시, 유료 GPU provisioning, secret 추가, branch protection 변경은 하지 않습니다.
+CUMLX는 Apple 또는 NVIDIA의 공식 프로젝트가 아닙니다. MIT 라이선스입니다.

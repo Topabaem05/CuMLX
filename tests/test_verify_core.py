@@ -176,3 +176,13 @@ def test_noise_thresholds_follow_the_median_and_stay_in_bounds():
     assert noise_thresholds(user, 1e-2) == (5e-3, 5e-3)  # an explicit threshold is not adjusted
     strict = resolve_threshold('quantized', port_weights_golden=True)
     assert noise_thresholds(strict, 1e-2) == (1e-4, 1e-4)
+
+
+def test_safetensors_reads_fp8_block_scales_as_raw_codes(tmp_path):
+    header = json.dumps({'s': {'dtype': 'F8_E4M3', 'shape': [2, 2], 'data_offsets': [0, 4]}}).encode()
+    path = tmp_path / 'scales.safetensors'
+    path.write_bytes(struct.pack('<Q', len(header)) + header + bytes([1, 2, 200, 255]))
+    reader = SafetensorsReader(path)
+    assert reader.dtype_tag('s') == 'F8_E4M3'
+    a = reader.get('s')
+    assert a.dtype == np.uint8 and a.tolist() == [[1, 2], [200, 255]]

@@ -13,7 +13,8 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+import re
+from typing import Any, cast
 
 import numpy as np
 
@@ -30,7 +31,7 @@ QUANTIZED_MIN_COSINE = 0.9
 QUANTIZED_MAX_SCALE_ERROR = 0.05
 
 
-def _checkpoint_files(original: str, revision: str | None) -> list[Path]:
+def checkpoint_files(original: str, revision: str | None = None) -> list[Path]:
     root = Path(original)
     if not root.exists():
         try:
@@ -71,13 +72,65 @@ def _diagnose(port: np.ndarray, orig: np.ndarray) -> str | None:
     return None
 
 
+TIED_EMBEDDING = 'model.embed_tokens.weight'
+EXPERT_PROJ = {'w1': 'gate_proj', 'w2': 'down_proj', 'w3': 'up_proj',
+               'gate_proj': 'gate_proj', 'up_proj': 'up_proj', 'down_proj': 'down_proj'}
+
+
+def _expert_parts(name: str, orig: np.ndarray, weights: dict[str, np.ndarray]) -> list[tuple[str, str, int, np.ndarray]] | None:
+    """Original MoE expert tensors as (row name, stacked port name, expert index, original array).
+
+    Handles one tensor per expert (``experts.3.up_proj.weight``, ``experts.3.w3.weight``) and the
+    fused transformers 5 layout (``experts.gate_up_proj`` = gate and up, concatenated on axis 1).
+    """
+    def stacked(block: str, proj: str) -> str | None:
+        for candidate in (block, block.replace('.mlp', '.block_sparse_moe')):
+            key = f'{candidate}.switch_mlp.{proj}.weight'
+            if key in weights:
+                return key
+        return None
+    single = re.match(r'(.+)\.(?:experts)\.(\d+)\.(\w+)\.weight$', name)
+    if single and single.group(3) in EXPERT_PROJ:
+        key = stacked(single.group(1).replace('.block_sparse_moe', '.mlp'), EXPERT_PROJ[single.group(3)])
+        return [(name, key, int(single.group(2)), orig)] if key else None
+    fused = re.match(r'(.+)\.experts\.(gate_up_proj|down_proj)$', name)
+    if fused is None:
+        return None
+    block, tail = fused.groups()
+    rows = []
+    for e in range(orig.shape[0]):
+        if tail == 'down_proj':
+            parts = [('down_proj', orig[e])]
+        else:
+            gate, up = np.split(orig[e], 2, axis=0)
+            parts = [('gate_proj', gate), ('up_proj', up)]
+        for proj, arr in parts:
+            key = stacked(block, proj)
+            if key is None:
+                return None
+            rows.append((f'{block}.experts.{e}.{proj}.weight', key, e, arr))
+    return rows
+
+
+def _other_expert(port: np.ndarray, orig: np.ndarray, expert: int) -> int | None:
+    """The expert index whose port weights hold this original expert, when it is not its own."""
+    for e in range(port.shape[0]):
+        if e != expert and _diagnose_same(port[e], orig):
+            return e
+    return None
+
+
+def _diagnose_same(a: np.ndarray, b: np.ndarray) -> bool:
+    return a.shape == b.shape and float(np.linalg.norm(a.astype(np.float64) - b)) <= 0.5 * float(np.linalg.norm(b))
+
+
 def _compare(port: np.ndarray, orig: np.ndarray, kind: str) -> dict[str, Any]:
     if port.shape != orig.shape:
-        out = {'verdict': 'fail', 'reason': 'shape_mismatch', 'port_shape': list(port.shape),
-               'original_shape': list(orig.shape)}
+        mismatch: dict[str, Any] = {'verdict': 'fail', 'reason': 'shape_mismatch', 'port_shape': list(port.shape),
+                                    'original_shape': list(orig.shape)}
         if port.ndim == 2 and port.T.shape == orig.shape:
-            out['diagnosis'] = 'transposed' if _diagnose(port, orig) == 'transposed' else 'shape_is_transposed'
-        return out
+            mismatch['diagnosis'] = 'transposed' if _diagnose(port, orig) == 'transposed' else 'shape_is_transposed'
+        return mismatch
     o, p = orig.astype(np.float64).ravel(), port.astype(np.float64).ravel()
     if not np.isfinite(p).all():
         return {'verdict': 'fail', 'reason': 'nonfinite_port_weight'}
@@ -105,9 +158,9 @@ def run_weights(original: str, port: str, *, loader: str = 'mlx_lm', mapping: st
     from mlx.utils import tree_flatten
     mapper = NameMapper.from_file(mapping)
     readers = {}
-    for f in _checkpoint_files(original, revision):
+    for f in checkpoint_files(original, revision):
         reader = SafetensorsReader(f)
-        for name in reader.keys():
+        for name in reader:
             readers[name] = reader
     if not readers:
         raise CumlxError('E_INPUT_INVALID', f'no tensors in the checkpoint {original!r}')
@@ -116,9 +169,10 @@ def run_weights(original: str, port: str, *, loader: str = 'mlx_lm', mapping: st
     weights = mlx_port.dequantized_weights(model)
     modules = mlx_port.named_modules(model)
     kinds: dict[str, str] = {}
-    for name, v in tree_flatten(model.parameters()):
-        if mx.issubdtype(v.dtype, mx.floating):
-            kinds[name] = str(v.dtype).replace('mlx.core.', '')
+    flat = cast('list[tuple[str, Any]]', tree_flatten(model.parameters()))
+    for param, value in flat:
+        if mx.issubdtype(value.dtype, mx.floating):
+            kinds[param] = str(value.dtype).replace('mlx.core.', '')
     for prefix, m in modules.items():
         if hasattr(m, 'scales') and hasattr(m, 'bits'):
             kinds[(prefix + '.' if prefix else '') + 'weight'] = 'quantized'
@@ -129,6 +183,21 @@ def run_weights(original: str, port: str, *, loader: str = 'mlx_lm', mapping: st
         if mapper.is_ignored(name):
             rows.append({'name': name, 'status': 'ignored'})
             continue
+        orig_dtype_is_float = readers[name].dtype_tag(name) in ('F64', 'F32', 'F16', 'BF16')
+        parts = _expert_parts(target, readers[name].get(name), weights) if orig_dtype_is_float and target not in weights else None
+        if parts:
+            for row_name, key, expert, arr in parts:
+                seen.add(key)
+                c = _compare(weights[key][expert], arr, kinds.get(key, 'float32'))
+                if c['verdict'] == 'fail':
+                    other = _other_expert(weights[key], arr, expert)
+                    if other is not None:
+                        c['diagnosis'] = f'expert_order: this expert is at index {other} in the port'
+                rows.append({'name': row_name, 'port_name': f'{key}[{expert}]', 'kind': kinds.get(key, 'float32'),
+                             'status': c.pop('verdict'), **c})
+            continue
+        if target not in weights and target == 'lm_head.weight' and TIED_EMBEDDING in weights:
+            target = TIED_EMBEDDING  # the port shares the embedding, so the original head must equal it
         if target not in weights:
             rows.append({'name': name, 'port_name': target, 'status': 'unverified',
                          'reason': 'no such parameter in the port'})

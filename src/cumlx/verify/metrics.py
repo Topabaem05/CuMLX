@@ -25,7 +25,7 @@ from typing import Any
 import numpy as np
 
 # Chosen by the dtype of the PORT's parameters. Measured worst clean values (float32-origin weights):
-# float32 2.8e-5; float16 leaf 5.9e-4, composite 2.5e-3; bfloat16 leaf 4.7e-3, composite 7.5e-2.
+# float32 2.8e-5; float16 leaf 5.9e-4, composite 3.5e-3; bfloat16 leaf 4.7e-3, composite 7.5e-2.
 THRESHOLD_PROFILES: dict[str, dict[str, float]] = {
     'float32': {'rel_l2': 1e-4, 'isolated_rel_l2': 1e-4, 'composite_rel_l2_max': 1e-4, 'zero_atol': 1e-6},
     'float16': {'rel_l2': 5e-3, 'isolated_rel_l2': 2e-3, 'composite_rel_l2_max': 1e-2, 'zero_atol': 1e-3},

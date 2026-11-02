@@ -1,0 +1,90 @@
+name: CUMLX port verification
+description: Verify that an MLX port computes the same as its original PyTorch model, and fail on a divergence.
+inputs:
+  original:
+    description: HF id or path of the ORIGINAL PyTorch model
+    required: true
+  port:
+    description: HF id or path of the MLX port
+    required: true
+  prompt:
+    description: Prompt text for the golden trace (needs a tokenizer). Use this or token-ids
+    required: false
+    default: ''
+  token-ids:
+    description: Comma-separated token ids for the golden trace. Use this or prompt
+    required: false
+    default: ''
+  loader:
+    description: "'mlx_lm' or 'python:pkg.module:function' returning an MLX nn.Module"
+    required: false
+    default: mlx_lm
+  port-weights-golden:
+    description: "'true' puts the port's own weights in the golden (use for quantized ports)"
+    required: false
+    default: 'false'
+  check-weights:
+    description: "'true' also runs the static weight comparison"
+    required: false
+    default: 'true'
+  python-version:
+    description: Python version
+    required: false
+    default: '3.12'
+  cumlx-package:
+    description: pip requirement that installs cumlx, without extras
+    required: false
+    default: ''
+  working-directory:
+    description: Directory for the model paths
+    required: false
+    default: .
+outputs:
+  verdict:
+    description: ok, diverged or incomplete
+    value: ${{ steps.diff.outputs.verdict }}
+  first-divergence:
+    description: The module that diverged first, if any
+    value: ${{ steps.diff.outputs.first-divergence }}
+  report-dir:
+    description: Directory with report.json, report.md and report.html
+    value: ${{ steps.diff.outputs.report-dir }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+      with:
+        python-version: ${{ inputs.python-version }}
+    - name: Install cumlx
+      shell: bash
+      env:
+        CUMLX_PACKAGE: ${{ inputs.cumlx-package }}
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        if [ "$RUNNER_OS" = "Linux" ]; then
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+        fi
+        python -m pip install "${CUMLX_PACKAGE:-$ACTION_PATH}[capture,diff]"
+        cumlx doctor --require capture,diff,weights --format json > /dev/null
+    - name: Compare weights and code
+      id: diff
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        ORIGINAL: ${{ inputs.original }}
+        PORT: ${{ inputs.port }}
+        PROMPT: ${{ inputs.prompt }}
+        TOKEN_IDS: ${{ inputs.token-ids }}
+        LOADER: ${{ inputs.loader }}
+        PORT_WEIGHTS: ${{ inputs.port-weights-golden }}
+        CHECK_WEIGHTS: ${{ inputs.check-weights }}
+        PYTHONPATH: ${{ github.workspace }}
+      run: python "${{ github.action_path }}/scripts/action_verify.py"
+    - name: Keep the report
+      if: always()
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      with:
+        name: cumlx-report
+        path: ${{ inputs.working-directory }}/cumlx-output/
+        if-no-files-found: warn
+        retention-days: 14

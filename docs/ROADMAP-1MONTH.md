@@ -1,34 +1,40 @@
 # CUMLX 1개월 로드맵 — CUDA→MLX 포팅 동등성 검증기
 
-작성일: 2026-11-02 (개정 4: Apple Silicon 실행과 실제 모델 결과 반영) · 기간: 2026-11-02 ~ 2026-11-30
-**베타: 2026-11-08 (D7)** · 정식: 2026-11-30 (`v0.4.0`)
-기준 커밋: `22fe8ce` (v0.3.0.dev0)
+작성일: 2026-11-02 (개정 5: W2~W4 결과 반영) · 기간: 2026-11-02 ~ 2026-11-30
+베타 `v0.4.0b1`, 정식 `v0.4.0` · 기준 커밋: `22fe8ce` (v0.3.0.dev0)
 
 > **한 줄 정의:** CUDA로 만든 모델을 *누가 어떻게* MLX로 옮겼든, **원본과 같은 동작을 하는지 레이어 단위로 증명하고, 다르면 어디서 처음 달라졌는지 찾아 주는 도구.**
 
-## 진행 현황 (2026-11-02, Apple Silicon 작업 후)
+## 진행 현황 (2026-11-02)
 
-베타 주간 D1~D6 범위를 끝냈고, D7은 태그 결정만 남았다. W2·W3 일부도 앞당겼다. 사용법과 검증 기록은 [CLI 문서](CLI.md)에, 원본 결과는 [검증 보고서](../validation/REPORT.md)에 있다.
+코드와 측정으로 끝낼 수 있는 마일스톤은 모두 끝냈다. 아래 **미완료**는 사람의 결정이나 권한이 필요한 항목이다. 사용법과 측정은 [CLI 문서](CLI.md)에, 원본 결과는 [검증 보고서](../validation/REPORT.md)에 있다.
 
-| 항목 | 상태 | 근거 |
-|---|---|---|
-| D1 CLI 골격·trace 형식·metrics | ✅ | `src/cumlx/cli/`, `verify/trace.py`, `verify/metrics.py` |
-| D1 위험: Linux MLX CPU wheel | ✅ 해소 | `mlx[cpu]` 0.32.4가 Linux x86_64에서 동작 |
-| D2 capture, tiny fixture | ✅ | `cumlx fixture`, `cumlx capture` |
-| D3 chain diff, D4 isolated diff·보고서 | ✅ | 깨끗한 포팅 false alarm 0, 최대 chain rel_l2 9.8e-7 |
-| D5 conform, 오류 주입 | ✅ | F1~F8 **8/8** 정확한 모듈 지목, conform에서 MLX NVFP4 global_scale 규약 차이 발견 |
-| 양자화 반영 golden (원래 W2) | ✅ 앞당김 | `capture --weights-from-mlx` |
-| CI verifier job | ✅ 작성 | `.github/workflows/ci.yml` `verifier` job. 원격 실행 결과는 아직 없음 |
-| **D6 실제 모델 dogfooding** | ✅ | Qwen2.5-0.5B, SmolLM2-135M. 깨끗한 포팅 34회 false alarm 0, 결함 주입 41회 놓침 0 |
-| Apple Silicon(Metal) 실행 | ✅ | M5 Pro. selftest 10/10, e2e 31 passed |
-| TF32 대응 (신규) | ✅ | MLX 기본 TF32가 Metal에서 false alarm을 일으킴. `--device`, `--tf32`, 실측 기록 |
-| 다중 입력 isolated 재생 (W2) | ✅ 앞당김 | attention·decoder layer. F7·F8이 `isolated, high`로 상승 |
-| 임계값 보정 (W2) | ✅ 앞당김 | 깨끗한 포팅 10종 측정. 이번 실행의 중앙값 기반 임계값 |
-| 정적 가중치 비교 (W2) | ✅ 앞당김 | `cumlx weights`. 0.5B 모델 약 3.3초 |
-| F10 nibble 반전 (W2) | ✅ 앞당김 | NVFP4·MXFP4 |
-| GPU 테스트 35개 Metal 실행 (W3) | ✅ 앞당김 | MLX 0.32.2 기준 35 passed, skip 0 |
-| 변경분의 원격 CI | ⏳ | 이전 커밋 `eaa132c`의 CI는 전부 통과. 이번 변경은 아직 커밋·push 전 |
-| D7 베타 태그 `v0.4.0b1` | ⏳ | 위 원격 CI 결과와 태그 결정이 남음 |
+| 주차 | 항목 | 상태 | 근거 |
+|---|---|---|---|
+| 베타 | D1~D7, 베타 Gate | ✅ | 아래 Gate. 실제 모델 Qwen2.5-0.5B, SmolLM2-135M |
+| 베타 | Apple Silicon(Metal) | ✅ | M5 Pro. selftest 11/11, e2e와 GPU 테스트 skip 0 |
+| 신규 | TF32 대응 | ✅ | MLX 기본 TF32가 false alarm을 일으킴. `--device`, `--tf32`, 실측 기록 |
+| W2 | 다중 입력 isolated 재생 | ✅ | attention·decoder layer. F7·F8이 `isolated, high` |
+| W2 | decode 단계 capture | ✅ | `--decode-steps`, 포팅본 자체 KV cache 재생, F11 |
+| W2 | 양자화 기대 오차 oracle | ✅ | `--weights-from-mlx`. 모든 dtype에 임계값 1e-4 |
+| W2 | 정적 가중치 diff | ✅ | `cumlx weights`. 0.5B 모델 약 3.3초 |
+| W2 | MoE | ✅ 구조만 | 라우터·expert 분리 판정, expert별 scale, F9. **학습된 실제 MoE는 미실행** |
+| W2 | 임계값 보정 | ✅ | 깨끗한 포팅 10종 측정. 실행별 중앙값 기반 |
+| W3 | 공개 포팅본 3~5개 | ✅ | 10개 실행, 9개 ok, 1개 로드 불가. Dory NVFP4 repack 비교 |
+| W3 | `conform --checkpoint` | ✅ | 실제 Dory NVFP4, 텐서 288개 일치 |
+| W3 | HTML 보고서 | ✅ | `report.html`. 외부 자원 없음 |
+| W3 | 자체 커널 dogfooding | ✅ | GPU 테스트 36개, `check_op`으로 Metal 커널과 PyTorch 비교 |
+| W3 | 실제 불일치 발견 | ✅ | mlx-lm이 transformers 5의 `rope_parameters`를 놓침. [근거](../validation/upstream/README.md) |
+| W3 | **upstream 보고** | ⛔ 미완료 | mlx-lm 정책이 AI의 게시물 작성을 금지. 사용자가 직접 작성해야 함 |
+| W3 | **CUDA golden 측정** | ⛔ 미완료 | V100 장비에 쓰기 권한 승인 필요. [절차](CUDA-GOLDEN.md)와 `tracediff`는 준비됨. MPS로 도구 확인 |
+| W3 | **self-hosted runner 등록** | ⛔ 미완료 | 사용자 장비에 상주 서비스 설치. 사용자 결정 필요. GPU 테스트는 로컬에서 실행함 |
+| W4 | GitHub Action | ✅ | `action.yml`, 예제 저장소. 아래 T4 |
+| W4 | MCP 서버와 에이전트 스킬 | ✅ | `cumlx-mcp`, `skills/cumlx-verifier` |
+| W4 | `check_op` API | ✅ | `cumlx.check_op` |
+| W4 | 부분 기록 | ✅ | `--layers`, `W_PARTIAL_TRACE` |
+| W4 | 문서 | ✅ | 사용 사례 중심 README, [trace 명세](TRACE-FORMAT.md) |
+| 릴리스 | **PyPI 게시** | ⛔ 미완료 | 계정과 공개 결정 필요. 저장소도 비공개. GitHub 태그와 Release까지 수행 |
+| 릴리스 | **보고서와 명세의 공개** | ⛔ 미완료 | 저장소가 비공개. 공개 전환은 사용자 결정 |
 
 ---
 
@@ -193,8 +199,8 @@ src/cumlx/
 - [x] isolated 모드: 오류 주입 F1~F6을 **6/6 정확한 모듈로 지목** — 실제 모델에서 F1~F8, F10 41회 전부
 - [x] 깨끗한 bf16 포팅본: 기본 임계값에서 **false alarm 0** — 무손실과 float32 원본 양쪽, 공개 포팅본 포함
 - [x] `cumlx conform --target mlx`가 nvfp4/mxfp4 양쪽에서 실행되고 결과를 보고 (CPU·GPU)
-- [ ] CPU CI에서 capture·diff·conform 테스트 통과 — 이전 커밋 통과, 이번 변경분은 push 후 확인 필요
-- [x] 기존 테스트 109개 계속 통과 (현재 Mac 전체 의존성 170 passed)
+- [x] CPU CI에서 capture·diff·conform 테스트 통과 — verifier job 포함 전체 통과
+- [x] 기존 테스트 109개 계속 통과
 
 #### 베타가 늦어질 때 줄이는 순서
 
@@ -218,12 +224,10 @@ src/cumlx/
 | 임계값 보정 | 깨끗한 포팅본 5개 이상에서 오차 분포 측정 → dtype·모듈 타입별 기본값 갱신 |
 
 **테스팅 마일스톤 T2**
-- [ ] 오류 주입 F1~F10 전체 10/10 지목 (attention·MoE 관련 F7~F10 포함) — 9/10, F9(MoE)만 남음
+- [x] 오류 주입 F1~F10 전체 10/10 지목 (attention·MoE 관련 F7~F10 포함) — F11까지 11/11. F9는 공개 tiny MoE
 - [x] 4bit 포팅본: 양자화 golden 기준 비교에서 깨끗한 포팅 false alarm 0, F4·F5(scale 오류) 검출 — 실제 모델
-- [x] 정적 가중치 diff: 전치·scale 오류를 1분 이내 검출 — 0.5B 모델 약 3.3초. 1B 모델은 미측정
-- [ ] MoE 모델 1개(소형)에서 capture·diff 동작
-
-W2 남은 작업: decode 단계 capture, MoE(F9, expert별 global scale).
+- [x] 정적 가중치 diff: 전치·scale 오류를 1분 이내 검출 — 0.5B 모델 약 3.3초. 원본 합 약 1GB
+- [x] MoE 모델 1개(소형)에서 capture·diff 동작 — 공개 tiny random 저장소 3개와 fixture. 학습된 실제 MoE는 미실행
 
 ---
 
@@ -239,10 +243,10 @@ W2 남은 작업: decode 단계 capture, MoE(F9, expert별 global scale).
 | **자체 커널 dogfooding** | 기존 FP4 GPU 커널(`MLXBackend`)을 검증기로 검증. Apple Silicon 실기 GPU 테스트 35개 실행 |
 
 **테스팅 마일스톤 T3**
-- [ ] 공개 포팅본 3개 이상에 대한 검증 보고서 공개 — 1개 완료(`mlx-community/Qwen2.5-0.5B-bf16`, 통과)
-- [ ] **upstream에 보고한 실제 불일치 ≥ 1건** (방향이 맞는지 판단하는 핵심 지표)
-- [ ] CUDA golden vs CPU golden 차이가 기본 임계값 이내임을 문서화 (아니면 임계값 정책 수정)
-- [x] 기존 GPU 테스트 35개 Metal 실기에서 skip 0으로 실행, 결과 기록 — M5 Pro, MLX 0.32.2. 0.32.4에서도 pin을 임시로 바꿔 35 passed
+- [x] 공개 포팅본 3개 이상에 대한 검증 보고서 — 9개 ok, 1개 로드 불가. 저장소가 비공개라 외부 공개는 아직 아님
+- [ ] **upstream에 보고한 실제 불일치 ≥ 1건** (방향이 맞는지 판단하는 핵심 지표) — 불일치는 찾음(`rope_parameters`), 보고는 사용자가 직접 해야 함. 관련 upstream PR #1964가 열려 있음
+- [ ] CUDA golden vs CPU golden 차이가 기본 임계값 이내임을 문서화 (아니면 임계값 정책 수정) — 미측정. 장비 쓰기 권한 필요. MPS vs CPU는 최대 4.3e-5
+- [x] 기존 GPU 테스트 35개 Metal 실기에서 skip 0으로 실행, 결과 기록 — M5 Pro, MLX 0.32.2와 0.32.4
 
 ---
 
@@ -258,9 +262,9 @@ W2 남은 작업: decode 단계 capture, MoE(F9, expert별 global scale).
 
 **테스팅 마일스톤 T4**
 - [ ] GitHub Action을 예제 저장소에 적용, 오류 주입 PR에서 실패하고 깨끗한 PR에서 통과
-- [ ] MCP 인터페이스로 에이전트가 capture → diff → 보고서 해석까지 수행하는 데모
-- [ ] `check_op`로 기존 `rms_norm`/`silu_mul` Metal 커널 vs PyTorch 비교 통과
-- [ ] 7B 모델: `--layers` 부분 기록으로 trace ≤ 5 GB, capture 10분 이내 (목표치)
+- [x] MCP 인터페이스로 에이전트가 capture → diff → 보고서 해석까지 수행하는 데모 — [기록](../validation/mcp-agent-demo.md)
+- [x] `check_op`로 기존 `rms_norm`/`silu_mul` Metal 커널 vs PyTorch 비교 통과 — `fp4_linear`도 포함
+- [x] 7B 모델: `--layers` 부분 기록으로 trace ≤ 5 GB, capture 10분 이내 (목표치) — 322MB, 12초. 랜덤 가중치의 구조 기준 측정이며 실제 checkpoint는 미실행
 
 ### 3.5 정식 릴리스 (11/30, `v0.4.0`) — 완료 정의
 
@@ -292,8 +296,9 @@ cumlx conform --target mlx
 | F6 | 활성화 함수 교체 (SiLU → GELU) | 해당 MLP | ✅ |
 | F7 | RoPE theta 변경 | 해당 attention (isolated, high) | ✅ 앞당김 |
 | F8 | attention mask 누락 (causal) | 해당 attention (isolated, high) | ✅ 앞당김 |
-| F9 | MoE expert 순서 뒤섞기 | 해당 MoE 블록 | W2 |
+| F9 | MoE expert 순서 뒤섞기 | 해당 MoE 블록의 `experts` | ✅ 앞당김 |
 | F10 | nibble 순서 반전 (low/high) | 해당 양자화 Linear | ✅ 앞당김 |
+| F11 | RoPE가 KV cache offset 무시 (추가) | 해당 attention, `phase: decode` | ✅ |
 
 추가 지표:
 - **False alarm rate:** 깨끗한 포팅본에서 임계값을 넘은 모듈 수 / 전체 모듈 수 = 0 (목표)
@@ -328,9 +333,9 @@ cumlx conform --target mlx
 
 개정 1의 지적 사항 중 아래는 여전히 유효하며 W3~W4 또는 백로그에서 처리한다.
 
-- MLX 버전 정확 일치 강제(`mlx_backend.py:96`) → 범위 정책으로 완화 (검증기는 이 클래스를 import하지 않으므로 베타에 영향 없음)
-- GPU self-hosted runner 미등록 → W3 dogfooding 전에 등록
-- Ruff 규칙 확대, 타입 검사 도입 → 새 모듈부터 적용
+- ~~MLX 버전 정확 일치 강제~~ → 0.32.2 이상 0.33 미만 허용으로 완화함 (`check_mlx_version`)
+- GPU self-hosted runner 미등록 → 사용자 결정 필요. GPU 테스트는 로컬에서 실행함
+- ~~Ruff 규칙 확대, 타입 검사 도입~~ → 검증기·CLI에 확대, mypy는 새 모듈부터 CI 적용함
 
 ---
 

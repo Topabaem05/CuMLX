@@ -2,29 +2,27 @@
 
 This file separates what ran from what did not. The newest evidence is first.
 
-## Apple Silicon and real models (2026-11-02, local, uncommitted working tree on `eaa132c`)
+## Apple Silicon and real models (2026-11-02, local)
 
 Environment: Apple M5 Pro (`applegpu_g17s`), macOS 27.0.1, Python 3.13.15, torch 2.15.0, transformers 5.22.1,
-mlx 0.32.4 (0.32.2 for the kernel lab), mlx-lm 0.32.2. This is a local run, not a GitHub Actions result.
+mlx 0.32.4 (kernel tests also on 0.32.2), mlx-lm 0.32.2. These are local runs; CI results are named as such.
 
 | Check | Observed result | Boundary |
 |---|---|---|
-| `pytest -m 'not gpu'` | 170 passed, 35 deselected | One Mac, Metal default device |
-| `pytest -m e2e --require-e2e` | 31 passed | Tiny fixtures; two tests also start TF32 subprocesses |
-| `cumlx selftest` (auto, cpu, gpu) | 10 passed, 0 failed, 0 skipped on each | Tiny model |
-| `pytest -m gpu --backend metal --require-gpu` | 35 passed, skip 0 | MLX 0.32.2, compile and numerics; not speed |
-| The same GPU tests on MLX 0.32.4 | 35 passed, with TF32 on and off | The version pin was overridden for this probe only; the pin is unchanged |
-| Real clean ports (`dogfood`) | 34 runs, 0 false alarms, 100% parametrized coverage | Qwen2.5-0.5B, SmolLM2-135M; prefill only |
-| Real fault injection (`dogfood`) | 41 runs, 0 missed; 3 not applicable | F1-F8 and F10; no F9 (MoE) |
-| Public port | `mlx-community/Qwen2.5-0.5B-bf16`: ok, same numbers as a local conversion | One port |
-| `cumlx weights` | All clean ports pass; about 3.3 s for the 0.5B model | Does not check code; 1B model not measured |
-| `cumlx conform --target mlx` | Exit 1 on the known NVFP4 `global_scale` convention; decode is bit-exact on CPU; GPU flushes 64 subnormal results | Finding about MLX, not a CUMLX failure |
-| Ruff, compileall, kernel regeneration | Passed, no drift | Not a Metal or CUDA compile |
-| sdist, wheel, `twine check`, isolated wheel smoke | Passed | Core wheel only; no extras installed |
-| CUDA, other Apple GPU generations, MoE, KV-cache decode | **Not run** | |
-| GitHub Actions on these changes | **Not run** (not pushed). The prior commit `eaa132c` passed every CI job, including the verifier job | |
+| `pytest -m 'not gpu'` | See the release record below | One Mac, Metal default device |
+| `pytest -m gpu --backend metal --require-gpu` | 36 passed, skip 0 on 0.32.4; the 35 kernel tests also passed on 0.32.2 | Compile and numerics; not speed |
+| `cumlx selftest` (auto, cpu, gpu) | 11 passed, 0 failed, 0 skipped | Tiny models |
+| Real clean ports (`dogfood`) | 38 runs, 0 false alarms, 100% parametrized coverage; 2 runs could not start (`gather_mm` on CPU needs float32) | Qwen2.5-0.5B, SmolLM2-135M, public tiny MoE; 5 prompts |
+| Real fault injection (`dogfood`) | 50 runs, 0 missed; 3 not applicable | F1-F11 |
+| Public ports (`public-ports.json`) | 9 of 10 `mlx-community` ports ok; 1 could not load (2024 file name) | One revision of each |
+| NVFP4 repack against ModelOpt (`checkpoint-dory-nvfp4.json`) | 288 quantized tensors with identical payload and scales, worst 9.7e-8; 219 other tensors identical | One checkpoint |
+| Real mismatch found (`upstream/`) | mlx-lm 0.32.2 silently ignores `rope_parameters` for llama, qwen2, mistral, phi3, starcoder2 | Tiny models; **not reported upstream** |
+| Golden between devices (`cumlx tracediff`) | Repeat runs identical on CPU and on MPS; MPS against CPU worst 4.3e-5 | **CUDA not run** |
+| Large capture (`large-capture-qwen2.5-7b.json`) | 7.6B parameters, 3 of 28 layers: 322 MB, 12.1 s | Random weights, bf16; architecture only |
+| Agent over MCP (`mcp-agent-demo.md`) | Real agent located an injected fault in 4 turns | One run on a tiny fixture |
+| CUDA, other Apple GPU generations, trained MoE, padded inputs | **Not run** | |
 
-Evidence: [real-model results](dogfood-macos-m5-pro.json), reproduced by `scripts/dogfood_real_model.py`.
+Evidence: [real models](dogfood-macos-m5-pro.json), [public ports](public-ports.json), [NVFP4 repack](checkpoint-dory-nvfp4.json), [large capture](large-capture-qwen2.5-7b.json), [agent demo](mcp-agent-demo.md), [upstream finding](upstream/README.md). `scripts/dogfood_real_model.py`, `scripts/public_port_campaign.py` and `scripts/measure_large_capture.py` reproduce them.
 The numbers and the reasoning for thresholds are in [the CLI document](../docs/CLI.md#검증-기록-2026-11-02).
 
 ### Defects that real hardware and real models exposed
@@ -38,6 +36,9 @@ The numbers and the reasoning for thresholds are in [the CLI document](../docs/C
 | Qwen2.5 4bit+bf16 | Golden weights about 0.5% off: `mx.dequantize` rounds in the dtype of its scales | Scales go to float32 before dequantize | `test_quantized_port_with_bf16_scales...` |
 | Detection limits | A 1% weight error raised its own threshold through a max-based noise estimate, and passed | Median-based noise estimate | `test_one_defective_leaf...`, `test_noise_thresholds...` |
 | transformers 5 | Trace `revision` was null | Read from the HF cache | Observed in the Qwen2.5 trace; no unit test |
+| SmolLM2 and tiny MoE on CPU | A bf16 MoE port on CPU ended as an internal error | `E_MODEL_RUN` with a hint | `test_op_missing_on_this_device...` |
+| Dory1.0 NVFP4 | The safetensors reader refused FP8 scale tensors | Read as raw codes | `test_safetensors_reads_fp8...` |
+| Qwen3-0.6B | A stored `lm_head.weight` stayed unverified against a tied port | Compared with the embedding | `test_static_weights_compare_a_stored_head...` |
 
 ---
 

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cumlx-lab"
-version = "0.4.0.dev0"
+version = "0.4.0b1"
 description = "CUDA-to-MLX porting parity verifier and experimental packed FP4 kernels"
 requires-python = ">=3.10"
 readme = "README.md"
@@ -13,6 +13,7 @@ dependencies = ["numpy>=1.24"]
 
 [project.scripts]
 cumlx = "cumlx.cli:entrypoint"
+cumlx-mcp = "cumlx.mcp_server:main"
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
@@ -24,7 +25,7 @@ diff = [
     "mlx[cpu]>=0.30; sys_platform == 'linux'",
     "mlx-lm>=0.30",
 ]
-metal = ["mlx==0.32.2; sys_platform == 'darwin' and platform_machine == 'arm64'"]
+metal = ["mlx>=0.32.2,<0.33; sys_platform == 'darwin' and platform_machine == 'arm64'"]
 cuda = ["mlx[cuda12]==0.32.2; sys_platform == 'linux'"]
 
 [tool.setuptools.packages.find]
@@ -46,5 +47,34 @@ markers = [
 target-version = "py310"
 
 [tool.ruff.lint]
-# Initial correctness gate. Formatting/style expansion is a separate change.
-select = ["E9", "F63", "F7", "F82"]
+# The verifier, the CLI and new code use the full set. Legacy files are listed below.
+select = ["E9", "F", "B", "I", "UP", "C4", "SIM"]
+# dict(...) calls and if/else blocks are a style choice here. UP038 is deprecated by Ruff.
+ignore = ["C408", "SIM108", "UP038", "B905"]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+
+[tool.ruff.lint.per-file-ignores]
+# The forward hook is removed at the end of the loop iteration that defines it.
+"src/cumlx/verify/capture_torch.py" = ["B023"]
+# The kernel lab keeps the correctness-only gate (E9, F63, F7, F82): its style is outside this change.
+"src/cumlx/__init__.py" = ["B", "I", "UP", "C4", "SIM", "F401", "F403", "F405", "F541", "F811", "F841"]
+"src/cumlx/quant.py" = ["B", "I", "UP", "C4", "SIM", "F401", "F403", "F405", "F541", "F811", "F841"]
+"src/cumlx/reference.py" = ["B", "I", "UP", "C4", "SIM", "F401", "F403", "F405", "F541", "F811", "F841"]
+"src/cumlx/planning.py" = ["B", "I", "UP", "C4", "SIM", "F401", "F403", "F405", "F541", "F811", "F841"]
+"src/cumlx/simulation.py" = ["B", "I", "UP", "C4", "SIM", "F401", "F403", "F405", "F541", "F811", "F841"]
+"src/cumlx/mlx_backend.py" = ["B", "I", "UP", "C4", "SIM", "F401", "F403", "F405", "F541", "F811", "F841"]
+"scripts/generate_kernels.py" = ["B", "I", "UP", "C4", "SIM", "F401", "F403", "F405", "F541", "F811", "F841"]
+"scripts/cpu_example.py" = ["B", "I", "UP", "C4", "SIM", "F401", "F403", "F405", "F541", "F811", "F841"]
+"scripts/env_report.py" = ["B", "I", "UP", "C4", "SIM", "F401", "F403", "F405", "F541", "F811", "F841"]
+"scripts/wheel_smoke.py" = ["B", "I", "UP", "C4", "SIM", "F401", "F403", "F405", "F541", "F811", "F841"]
+"benchmarks/bench_fp4.py" = ["B", "I", "UP", "C4", "SIM", "F401", "F403", "F405", "F541", "F811", "F841"]
+"validation/upstream/*.py" = ["B", "I", "UP", "C4", "SIM", "F401", "F403", "F405", "F541", "F811", "F841"]
+"tests/*.py" = ["B", "I", "UP", "C4", "SIM", "F401", "F403", "F405", "F541", "F811", "F841"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+follow_imports = "silent"
+check_untyped_defs = true

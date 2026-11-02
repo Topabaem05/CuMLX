@@ -6,8 +6,9 @@ credentials, and 10-minute job timeouts. No deployment or PyPI publication occur
 
 ## Automatic checks
 
-- Python lint correctness: Ruff 0.11.13, E9/F63/F7/F82. This is an initial
-  correctness gate, not a claim of full style, formatting, type, or security coverage.
+- Python lint: Ruff 0.11.13. The verifier, the CLI and new code use F, B, I, UP, C4 and SIM.
+  The kernel lab keeps the E9/F63/F7/F82 correctness gate. See `pyproject.toml`.
+- Type check: mypy on the modules listed in the workflow. The other modules are not held to it yet.
 - Python compileall for src/tests/scripts/benchmarks.
 - Regenerate all 16 kernel bodies and two headers; any tracked or untracked drift fails.
 - CPU reference tests on Python 3.10, 3.11, 3.12, and 3.13 on Ubuntu 24.04.
@@ -39,7 +40,7 @@ No GPU runner is provisioned or started by this repository setup.
 ## Local reproduction
 
 ```bash
-python -m pip install -e '.[dev]' ruff==0.11.13 build twine
+python -m pip install -e '.[dev]' ruff==0.11.13 mypy==2.4.1 build twine
 python -m ruff check .
 python -m compileall -q src tests scripts benchmarks
 python scripts/generate_kernels.py

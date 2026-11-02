@@ -53,7 +53,7 @@ def to_markdown(rep: dict[str, Any], *, max_rows: int = 200) -> str:
     if fd:
         lines += ['## First divergence', '',
                   f"- module: `{fd['module'] or '(root)'}` (sample {fd['sample']})",
-                  f"- basis: {fd['basis']}, confidence: {fd['confidence']}",
+                  f"- phase: {fd.get('phase', 'prefill')}, basis: {fd['basis']}, confidence: {fd['confidence']}",
                   f"- first failing output: `{fd.get('first_failing_output', fd['module'])}`",
                   f"- {fd['explanation']}", '']
     for w in rep.get('warnings', []):
@@ -61,13 +61,13 @@ def to_markdown(rep: dict[str, Any], *, max_rows: int = 200) -> str:
     if rep.get('warnings'):
         lines.append('')
     lines += ['## Records (completion order)', '',
-              '| sample | module | type | status | cause | chain rel_l2 | isolated rel_l2 |',
-              '|---|---|---|---|---|---|---|']
+              '| sample | phase | module | type | status | cause | chain rel_l2 | isolated rel_l2 |',
+              '|---|---|---|---|---|---|---|---|']
     for e in rep['records'][:max_rows]:
         c = (e.get('chain') or {}).get('rel_l2')
         i = (e.get('isolated') or {}).get('rel_l2')
         mark = {'fail': '❌', 'pass': '✅', 'unverified': '⚠️'}.get(e['status'], '·')
-        lines.append(f"| {e['sample']} | `{e['name'] or '(root)'}` | {e['type']} | {mark} {e['status']} | "
+        lines.append(f"| {e['sample']} | {e.get('phase', 'prefill')} | `{e['name'] or '(root)'}` | {e['type']} | {mark} {e['status']} | "
                      f"{e.get('fail_cause', '')} | {_f(c)} | {_f(i)} |")
     if len(rep['records']) > max_rows:
         lines.append(f"\n({len(rep['records']) - max_rows} more rows in report.json)")

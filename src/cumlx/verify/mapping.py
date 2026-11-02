@@ -26,7 +26,7 @@ class NameMapper:
         self.source = source
 
     @staticmethod
-    def from_file(path: str | None) -> 'NameMapper':
+    def from_file(path: str | None) -> NameMapper:
         if not path:
             return NameMapper()
         p = Path(path)
@@ -40,6 +40,12 @@ class NameMapper:
             raise CumlxError('E_INPUT_INVALID', f'invalid mapping file {p}: {exc}',
                              hint='expected {"rules": [{"match": REGEX, "replace": STR}], "ignore": [REGEX]}') from None
         return NameMapper(rules, ignore, source=str(p))
+
+    def with_port_conventions(self, port_modules) -> NameMapper:
+        """Add the rule for mlx-lm MoE ports: PyTorch ``experts`` is ``switch_mlp``. A mapping file overrides it."""
+        if self.rules or not any(n.rsplit('.', 1)[-1] == 'switch_mlp' for n in port_modules):
+            return self
+        return NameMapper([(re.compile(r'\.experts(?=\.|$)'), '.switch_mlp')], self.ignore, source='mlx-lm MoE convention')
 
     def is_ignored(self, torch_name: str) -> bool:
         return any(p.search(torch_name) for p in self.ignore)

@@ -1,0 +1,26 @@
+name: Verify the MLX port
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: Topabaem05/CuMLX@main
+        id: cumlx
+        with:
+          original: original
+          port: original
+          loader: python:port.loader:load
+          token-ids: 1,5,9,23,7,99,3,64,12,8
+      - run: echo "verdict ${{ steps.cumlx.outputs.verdict }}"

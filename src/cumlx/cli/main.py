@@ -17,12 +17,13 @@ Agent contract (also returned by ``cumlx describe``):
 from __future__ import annotations
 
 import argparse
+from collections.abc import Callable, Sequence
 import contextlib
 import os
 import sys
 import time
 import traceback
-from typing import Any, Callable, Sequence
+from typing import Any
 
 from .. import __version__
 from ..errors import ERROR_CODES, EXIT_CODE_DOCS, CumlxError, ExitCode
@@ -58,7 +59,7 @@ COMMANDS: dict[str, dict[str, Any]] = {
     'fixture': dict(
         summary='Create a tiny random HF model (safetensors) for offline end-to-end tests.',
         requires=['capture'], stage='beta',
-        examples=['cumlx fixture tiny-llama -o /tmp/tiny']),
+        examples=['cumlx fixture tiny-llama -o /tmp/tiny', 'cumlx fixture tiny-moe -o /tmp/tiny-moe']),
     'capture': dict(
         summary='Run the original PyTorch model and record per-module inputs/outputs as a golden trace.',
         requires=['capture'], stage='beta',
@@ -74,11 +75,16 @@ COMMANDS: dict[str, dict[str, Any]] = {
     'conform': dict(
         summary='Check FP4 (NVFP4/MXFP4) decode conformance of a target against the CUMLX bit-exact codec.',
         requires=['diff'], stage='beta',
-        examples=['cumlx conform --target mlx', 'cumlx conform --target mlx --formats mxfp4']),
+        examples=['cumlx conform --target mlx', 'cumlx conform --target mlx --formats mxfp4',
+                  'cumlx conform --checkpoint nvidia/model-NVFP4 --against someone/model-MLX-NVFP4']),
     'weights': dict(
         summary='Compare port weights with the original safetensors without running a model (fast; names transposes and scale errors).',
         requires=['diff'], stage='beta',
         examples=['cumlx weights Qwen/Qwen2.5-0.5B ./qwen-mlx', 'cumlx weights /tmp/tiny /tmp/tiny -o weights.json']),
+    'tracediff': dict(
+        summary='Compare two golden traces of one model, such as a CUDA capture and a CPU capture.',
+        requires=[], stage='beta',
+        examples=['cumlx tracediff golden-cuda/ golden-cpu/']),
     'report': dict(
         summary='Summarize an existing diff report.json (re-read with a different --max-items).',
         requires=[], stage='beta',
@@ -137,7 +143,7 @@ def build_parser() -> AgentArgumentParser:
                    help='exit 3 unless these commands are ready, e.g. capture,diff')
 
     p = add('fixture')
-    p.add_argument('kind', choices=['tiny-llama'], help='fixture to create')
+    p.add_argument('kind', choices=['tiny-llama', 'tiny-moe'], help='fixture to create')
     p.add_argument('-o', '--output', required=True, help='directory to create')
     p.add_argument('--seed', type=int, default=0)
     p.add_argument('--overwrite', action='store_true')
@@ -151,6 +157,10 @@ def build_parser() -> AgentArgumentParser:
     src.add_argument('--token-ids', action='append', default=[], metavar='ID,ID,...',
                      help='comma-separated token ids (repeatable; no tokenizer needed)')
     p.add_argument('--max-tokens', type=int, default=64, help='truncate each sample to this many tokens')
+    p.add_argument('--decode-steps', type=int, default=1,
+                   help='also record this many greedy steps on the KV cache (0 = prefill only)')
+    p.add_argument('--layers', metavar='N[,N-M]',
+                   help='record only these decoder layers and the modules outside the stack, for example 0,11,20-23')
     p.add_argument('--include', help='regex: only record modules whose name matches (root is always recorded)')
     p.add_argument('--exclude', help='regex: do not record modules whose name matches')
     p.add_argument('--store-dtype', choices=['float32', 'float16'], default='float32')
@@ -185,6 +195,10 @@ def build_parser() -> AgentArgumentParser:
 
     p = add('conform')
     p.add_argument('--target', choices=['mlx'], default='mlx', help='implementation to check')
+    p.add_argument('--checkpoint', metavar='ORIGINAL',
+                   help='ModelOpt NVFP4 checkpoint (HF id or path): compare its bytes with the MLX repack given by --against')
+    p.add_argument('--against', metavar='REPACK', help='MLX NVFP4 repack of --checkpoint (HF id or path)')
+    p.add_argument('--revision', help='HF revision of --checkpoint')
     p.add_argument('--formats', default='nvfp4,mxfp4', help='comma-separated FP4 formats')
     p.add_argument('-o', '--output', help='write full findings JSON to this file')
     p.add_argument('--overwrite', action='store_true')
@@ -197,6 +211,11 @@ def build_parser() -> AgentArgumentParser:
     p.add_argument('--mapping', help='JSON rules mapping original parameter names to MLX names')
     p.add_argument('--revision', help='HF revision of the original (branch, tag or commit)')
     p.add_argument('--overwrite', action='store_true')
+
+    p = add('tracediff')
+    p.add_argument('a', help='first trace directory')
+    p.add_argument('b', help='second trace directory')
+    p.add_argument('--rel-l2', type=float, default=1e-4, help='report outputs that differ by more than this')
 
     p = add('report')
     p.add_argument('path', help='report.json written by `cumlx diff -o`')
