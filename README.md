@@ -121,6 +121,7 @@ CLI는 stdout에 JSON 문서 하나만 내보내고, 오류마다 해결 명령�
 
 | 문서 | 내용 |
 |---|---|
+| [변경 기록](CHANGELOG.md) | 릴리스별 변경 |
 | [CLI](docs/CLI.md) | 명령, 판정, 임계값, 측정 기록 |
 | [AGENTS.md](AGENTS.md) | 에이전트 사용법과 개발 안내 |
 | [Trace 형식](docs/TRACE-FORMAT.md) | golden trace 공개 명세 |

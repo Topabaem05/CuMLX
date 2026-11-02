@@ -1,7 +1,7 @@
 # CUMLX 1개월 로드맵 — CUDA→MLX 포팅 동등성 검증기
 
 작성일: 2026-11-02 (개정 5: W2~W4 결과 반영) · 기간: 2026-11-02 ~ 2026-11-30
-베타 `v0.4.0b1`, 정식 `v0.4.0` · 기준 커밋: `22fe8ce` (v0.3.0.dev0)
+베타 `v0.4.0b1`, 정식 `v0.4.0` (2026-11-02에 함께 완료) · 기준 커밋: `22fe8ce` (v0.3.0.dev0)
 
 > **한 줄 정의:** CUDA로 만든 모델을 *누가 어떻게* MLX로 옮겼든, **원본과 같은 동작을 하는지 레이어 단위로 증명하고, 다르면 어디서 처음 달라졌는지 찾아 주는 도구.**
 
@@ -11,7 +11,7 @@
 
 | 주차 | 항목 | 상태 | 근거 |
 |---|---|---|---|
-| 베타 | D1~D7, 베타 Gate | ✅ | 아래 Gate. 실제 모델 Qwen2.5-0.5B, SmolLM2-135M |
+| 베타 | D1~D7, 베타 Gate | ✅ `v0.4.0b1` | 아래 Gate. 실제 모델 Qwen2.5-0.5B, SmolLM2-135M |
 | 베타 | Apple Silicon(Metal) | ✅ | M5 Pro. selftest 11/11, e2e와 GPU 테스트 skip 0 |
 | 신규 | TF32 대응 | ✅ | MLX 기본 TF32가 false alarm을 일으킴. `--device`, `--tf32`, 실측 기록 |
 | W2 | 다중 입력 isolated 재생 | ✅ | attention·decoder layer. F7·F8이 `isolated, high` |
@@ -267,19 +267,21 @@ src/cumlx/
 - [x] `check_op`로 기존 `rms_norm`/`silu_mul` Metal 커널 vs PyTorch 비교 통과 — `fp4_linear`도 포함
 - [x] 7B 모델: `--layers` 부분 기록으로 trace ≤ 5 GB, capture 10분 이내 (목표치) — 322MB, 12초. 랜덤 가중치의 구조 기준 측정이며 실제 checkpoint는 미실행
 
-### 3.5 정식 릴리스 (11/30, `v0.4.0`) — 완료 정의
+### 3.5 정식 릴리스 (`v0.4.0`) — 완료 정의
 
 ```bash
-pip install 'cumlx-lab[capture,diff]'
-cumlx capture Qwen/Qwen2.5-0.5B --prompts prompts.txt -o golden/
+python -m pip install -e '.[capture,diff]'     # PyPI 게시 전까지는 저장소에서 설치
+cumlx capture Qwen/Qwen2.5-0.5B --prompts-file prompts.txt -o golden/
 cumlx diff golden/ ./qwen-mlx-4bit -o report/ --mode isolated
 cumlx conform --target mlx
 ```
 
-- 위 명령이 Apple Silicon Mac에서 문서대로 동작한다.
-- 오류 주입 10종 모두 검출, 깨끗한 포팅본 false alarm 0.
-- 공개 포팅본 검증 보고서 3개 이상, upstream 보고 1건 이상.
-- 검증하지 않은 영역은 보고서와 문서에 "미검증"으로 표시된다.
+- [x] 위 명령이 Apple Silicon Mac에서 문서대로 동작한다. 새 clone과 새 venv에서 README 순서대로 실행해 확인함 (M5 Pro).
+- [x] 오류 주입 10종 모두 검출, 깨끗한 포팅본 false alarm 0. F1~F11, 실제 모델 50회.
+- [x] 공개 포팅본 검증 보고서 3개 이상. 9개 ok. 저장소가 비공개라 외부 공개는 아직 아님.
+- [ ] upstream 보고 1건 이상. 실제 불일치는 찾았고, 보고는 사용자가 직접 작성해야 함 (mlx-lm 정책).
+- [x] 검증하지 않은 영역은 보고서와 문서에 "미검증"으로 표시된다.
+- [ ] PyPI 게시. 계정과 공개 결정이 필요. `pip install 'cumlx-lab[capture,diff]'`는 아직 동작하지 않음.
 
 ---
 

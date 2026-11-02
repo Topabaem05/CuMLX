@@ -9,7 +9,9 @@ mlx 0.32.4 (kernel tests also on 0.32.2), mlx-lm 0.32.2. These are local runs; C
 
 | Check | Observed result | Boundary |
 |---|---|---|
-| `pytest -m 'not gpu'` | See the release record below | One Mac, Metal default device |
+| `pytest` (all markers) | 237 passed, 0 skipped | One Mac, Metal default device |
+| `pytest -m e2e --require-e2e` with no GPU emulated (`gpu_available` false, CPU default) | 56 passed | Emulation on the Mac; the real Linux result is the CI job |
+| README followed in a new clone and venv | doctor, selftest, weights, capture, diff, quantized path, conform, check_op and MCP all ran as documented | SmolLM2-135M; Python 3.12 |
 | `pytest -m gpu --backend metal --require-gpu` | 36 passed, skip 0 on 0.32.4; the 35 kernel tests also passed on 0.32.2 | Compile and numerics; not speed |
 | `cumlx selftest` (auto, cpu, gpu) | 11 passed, 0 failed, 0 skipped | Tiny models |
 | Real clean ports (`dogfood`) | 38 runs, 0 false alarms, 100% parametrized coverage; 2 runs could not start (`gather_mm` on CPU needs float32) | Qwen2.5-0.5B, SmolLM2-135M, public tiny MoE; 5 prompts |
@@ -20,6 +22,7 @@ mlx 0.32.4 (kernel tests also on 0.32.2), mlx-lm 0.32.2. These are local runs; C
 | Golden between devices (`cumlx tracediff`) | Repeat runs identical on CPU and on MPS; MPS against CPU worst 4.3e-5 | **CUDA not run** |
 | Large capture (`large-capture-qwen2.5-7b.json`) | 7.6B parameters, 3 of 28 layers: 322 MB, 12.1 s | Random weights, bf16; architecture only |
 | Agent over MCP (`mcp-agent-demo.md`) | Real agent located an injected fault in 4 turns | One run on a tiny fixture |
+| GitHub Actions on `3584292` | CI: all 7 jobs passed, including the Linux verifier. Action test: clean port ok; faulty port failed at `model.layers.1.self_attn` | Tiny fixture |
 | CUDA, other Apple GPU generations, trained MoE, padded inputs | **Not run** | |
 
 Evidence: [real models](dogfood-macos-m5-pro.json), [public ports](public-ports.json), [NVFP4 repack](checkpoint-dory-nvfp4.json), [large capture](large-capture-qwen2.5-7b.json), [agent demo](mcp-agent-demo.md), [upstream finding](upstream/README.md). `scripts/dogfood_real_model.py`, `scripts/public_port_campaign.py` and `scripts/measure_large_capture.py` reproduce them.

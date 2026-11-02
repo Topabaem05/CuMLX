@@ -9,7 +9,7 @@ The roadmap asks how far a CUDA golden moves from a CPU golden. This procedure a
 ```bash
 python3 -m venv cumlx-venv && . cumlx-venv/bin/activate
 python -m pip install torch --index-url https://download.pytorch.org/whl/cu126
-python -m pip install 'cumlx-lab[capture] @ git+https://github.com/Topabaem05/CuMLX@main'
+python -m pip install 'cumlx-lab[capture] @ git+https://github.com/Topabaem05/CuMLX@v0.4.0'   # the repository is private: needs your GitHub access
 ```
 
 Tesla V100 needs a PyTorch build that still supports `sm_70`. Check it first:

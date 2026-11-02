@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cumlx-lab"
-version = "0.4.0b1"
+version = "0.4.0"
 description = "CUDA-to-MLX porting parity verifier and experimental packed FP4 kernels"
 requires-python = ">=3.10"
 readme = "README.md"
