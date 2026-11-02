@@ -24,6 +24,7 @@ REQUIREMENTS = {
     'weights': ['mlx', 'mlx_lm'],
     'scan': [],
     'recipe': [],
+    'run': ['torch'],
     'port': ['torch', 'transformers', 'mlx', 'mlx_lm'],
 }
 

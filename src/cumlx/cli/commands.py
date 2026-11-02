@@ -13,7 +13,7 @@ from typing import Any
 
 import numpy as np
 
-from ..errors import CumlxError, ExitCode, missing_dependency
+from ..errors import ERROR_CODES, CumlxError, ExitCode, missing_dependency
 from .output import Result, cap
 
 VERDICT_EXIT = {'ok': ExitCode.OK, 'diverged': ExitCode.DIVERGED, 'incomplete': ExitCode.INCOMPLETE}
@@ -381,6 +381,65 @@ def run_recipe(args) -> Result:
     if args.output:
         Path(args.output).write_text(json.dumps(rep, indent=1) + '\n')
         r.artifact('recipe_report', args.output)
+    return r
+
+
+# --------------------------------------------------------------------------- run
+def run_run(args) -> Result:
+    from ..compat import runner
+    if bool(args.script) == bool(args.module):
+        raise CumlxError('E_USAGE', 'give a script or --module, not both and not neither', hint='cumlx run train.py -- --lr 1e-3')
+    if args.module and args.script_args:
+        raise CumlxError('E_USAGE', 'with --module, put the script arguments after --, and do not name a script')
+    if args.script and not Path(args.script).is_file():
+        raise CumlxError('E_INPUT_NOT_FOUND', f'{args.script} does not exist')
+    report_path = Path(args.report)
+    if report_path.exists() and not args.overwrite:
+        raise CumlxError('E_OUTPUT_EXISTS', f'{args.report} exists', hint='pass --overwrite or choose a new path with --report')
+    substitutes = {}
+    for item in args.substitute:
+        name, sep, module = item.partition('=')
+        if not sep or not name or not module:
+            raise CumlxError('E_USAGE', f'--substitute needs NAME=MODULE, got {item!r}')
+        substitutes[name] = module
+    try:
+        import torch
+    except ImportError:
+        raise missing_dependency('torch', 'capture', purpose='cumlx run') from None
+    if args.target == 'mps' and not torch.backends.mps.is_available():
+        raise CumlxError('E_BACKEND_UNAVAILABLE', 'MPS is not available on this machine', hint='use --target cpu')
+
+    # The script's stdout must not enter the one JSON document on stdout.
+    stdout = sys.stderr if args.format == 'json' else None
+    rep = runner.run_script(args.script, args.module, list(args.script_args), target=args.target, substitutes=substitutes,
+                            allow_cpu_fallback=args.allow_cpu_fallback, timeout=args.timeout, stdout=stdout)
+    report_path.write_text(json.dumps(rep, indent=1) + '\n')
+    calls = rep['calls']
+    by_kind: dict[str, int] = {}
+    for call in calls:
+        by_kind[call['kind']] = by_kind.get(call['kind'], 0) + 1
+    failure = runner.classify_failure(rep)
+    r = Result('run')
+    r.data = {'target': args.target, 'script_exit_code': rep['script_exit_code'], 'seconds': rep['seconds'], 'processes': rep['processes'],
+              'kinds': by_kind, 'policy': rep['policy'], 'environment_changes': rep['environment_changes'], 'verified': False,
+              'calls': cap(calls, args.max_items, r)}
+    r.artifact('run_report', str(report_path))
+    if failure:
+        r.exit_code = ERROR_CODES[failure['code']][0]
+        r.errors.append(failure)
+        r.summary = f"The script failed on {args.target}: {failure['message'][:160]}"
+        return r
+    r.summary = f"The script ran to its end on {args.target}, with {len(calls)} kind(s) of redirected call. Running is not proof that its results are right."
+    r.warn('W_RUN_NOT_VERIFIED', 'The script ran. Its results were not compared with anything.')
+    for kind, code, text in (('approximate', 'W_RUN_APPROXIMATE', 'returned a value that only resembles the CUDA value'),
+                             ('refused', 'W_RUN_REFUSED', 'were refused, and the script caught the error')):
+        names = [c['name'] for c in calls if c['kind'] == kind]
+        if names:
+            r.warn(code, f"{', '.join(names)} {text}.", calls=names)
+    if args.allow_cpu_fallback:
+        r.warn('W_RUN_CPU_FALLBACK_ALLOWED', 'Operations that MPS lacks may have run on the CPU. PyTorch does not list them in this report.')
+    if any(c['kind'] == 'substituted' for c in calls):
+        r.warn('W_RUN_SUBSTITUTED', 'A package was replaced by the --substitute option. Its results can differ from the original.')
     return r
 
 

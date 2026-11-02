@@ -24,6 +24,7 @@ Linux에서는 `diff` extra가 `mlx[cpu]`를 설치합니다. 같은 환경에 �
 | `conform` | MLX의 NVFP4/MXFP4 decode를 CUMLX bit-정확 코덱과 CPU·GPU에서 전수 비교. `--checkpoint`와 `--against`를 주면 ModelOpt 원본과 MLX repack의 bytes를 비교 | diff |
 | `tracediff` | golden trace 두 개를 비교. CUDA와 CPU capture의 차이처럼 기준 자체의 흔들림을 측정 | - |
 | `scan` | CUDA 저장소나 HF 모델의 소스를 텍스트로 읽어, Apple Silicon으로 옮기는 작업량을 분류. 대상 코드는 실행하지 않음 | - |
+| `run` | CUDA를 전제한 PyTorch 스크립트를 수정 없이 MPS에서 실행하고, 바꾼 호출을 모두 기록. 실행은 증명이 아닙니다 | `torch` |
 | `recipe` | CUDA 의존성에 대해 Apple Silicon에서 쓸 대체품을 안내. 선택지마다 직접 실행했는지 문서만 읽었는지 표시 | - |
 | `port` | mlx-lm으로 변환한 뒤 가중치 비교, golden 기록, diff까지 한 번에 실행 | capture, diff |
 | `weights` | 모델을 실행하지 않고 원본 safetensors와 포팅본 가중치를 비교. 전치·부호·scale 오류를 이름으로 지목 | diff |
@@ -53,6 +54,42 @@ cumlx selftest
 | `--dry-run`, `--overwrite` 없이는 덮어쓰지 않음, CUMLX가 만든 디렉터리만 삭제 | 되돌리기 어려운 실수 방지 |
 | `describe`가 argparse에서 직접 명세를 생성 | 문서와 실제 인자가 어긋나지 않음 |
 | `selftest`로 환경에서 검증기 동작을 증명 | 결과를 믿어도 되는지 먼저 확인 |
+
+## cumlx run
+
+CUDA를 전제한 PyTorch 스크립트를 수정하지 않고 MPS에서 실행합니다.
+
+```bash
+cumlx run train.py --report run-report.json -- --lr 1e-3    # 스크립트 인자는 -- 뒤에
+cumlx run --module my.pkg.train -- --epochs 1
+cumlx run train.py --target cpu                             # MPS가 없는 Linux 등
+cumlx run train.py --substitute flash_attn=mps_flash_attn   # 패키지 대체를 직접 지정
+```
+
+**스크립트가 받는 값.** `torch.cuda.is_available()`은 True입니다. `get_device_name()`은 `MPS (cumlx run)`을 돌려주며, NVIDIA 이름을 쓰지 않습니다. `cumlx run` 없이는 torch에 아무 변화가 없습니다.
+
+| 호출 | 처리 | 보고서의 `kind` |
+|---|---|---|
+| `.cuda()`, `device='cuda'`, `.to('cuda')`, `torch.device('cuda')`, `autocast('cuda')`, `GradScaler`, `torch.load`, `torch.cuda.FloatTensor` 등 | MPS로 연결 | `mapped` |
+| `torch.cuda.is_available`, `is_initialized` | True를 돌려줌 | `policy` |
+| `max_memory_allocated`, `memory_stats`, `get_device_properties` 등 | MPS에 같은 값이 없어 비슷한 값을 돌려줌. `W_RUN_APPROXIMATE` | `approximate` |
+| `pin_memory`, `ipc_collect`, `reset_peak_memory_stats` 등 | 이 장치에서는 할 일이 없음 | `noop` |
+| `utilization`, `temperature`, `memory_snapshot`, `stream`, `cuda:1` 등 | **오류.** 조용히 넘어가지 않습니다. `E_RUN_UNSUPPORTED` | `refused` |
+
+**오류로 끝나는 경우.** MPS에 없는 연산은 `E_RUN_MPS_OP_MISSING`이고, `--allow-cpu-fallback`을 줄 때만 CPU로 넘어갑니다. 환경에 `PYTORCH_ENABLE_MPS_FALLBACK`이 있어도 이 옵션 없이는 지웁니다. float64는 `E_RUN_MPS_DTYPE`이고, 정밀도를 대신 낮추지 않습니다. 없는 패키지는 `E_RUN_MISSING_PACKAGE`이며 `cumlx recipe`를 안내합니다. 그 밖의 스크립트 실패는 `E_RUN_SCRIPT_FAILED`입니다.
+
+**출력.** 스크립트의 stdout은 stderr로 보내므로, stdout의 JSON 하나는 깨지지 않습니다. `run-report.json`에는 호출마다 처음 호출한 파일과 줄, 횟수가 있습니다.
+
+**적용 범위.** DataLoader 워커와 스레드, 스크립트가 띄운 Python 하위 프로세스에도 적용됩니다. 호환 계층의 비용은 호출당 약 0.6~1.5µs입니다(M5 Pro, 호출 종류 3개, 2회 측정).
+
+**한계.**
+
+- 실행은 결과가 맞다는 증명이 아닙니다. 항상 `W_RUN_NOT_VERIFIED`를 표시하고, 등급은 C를 넘지 않습니다. CUDA golden과 비교해야 더 높은 등급이 됩니다.
+- `torch.backends.cudnn.benchmark` 같은 설정은 그대로 두며, MPS에서는 효과가 없습니다. 보고서에도 남지 않습니다.
+- `torch.version.cuda`는 None 그대로입니다. 이 값으로 분기하는 코드는 CUDA가 없다고 판단합니다.
+- 컴파일된 CUDA 확장과 `python -I` 하위 프로세스에는 적용되지 않습니다.
+- `torch.cuda.memory` 같은 하위 모듈을 직접 부르면 바꾸지 않습니다.
+- MCP에서는 `--allow-code-execution`을 줄 때만 보입니다. 파일을 실행하는 명령이기 때문입니다.
 
 ## 권장 순서
 

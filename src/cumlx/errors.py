@@ -40,6 +40,11 @@ ERROR_CODES: dict[str, tuple[ExitCode, str]] = {
     'E_INPUT_INVALID': (ExitCode.INPUT, 'An input file is corrupt or does not match its schema.'),
     'E_MODEL_LOAD': (ExitCode.INPUT, 'The model could not be loaded.'),
     'E_MODEL_RUN': (ExitCode.INPUT, 'The model failed while running on the recorded inputs.'),
+    'E_RUN_SCRIPT_FAILED': (ExitCode.INPUT, 'The script given to `cumlx run` failed or ran past its timeout.'),
+    'E_RUN_UNSUPPORTED': (ExitCode.ENVIRONMENT, 'The script called a CUDA API with no equivalent on the target.'),
+    'E_RUN_MPS_OP_MISSING': (ExitCode.ENVIRONMENT, 'The script used an operation that MPS does not implement.'),
+    'E_RUN_MPS_DTYPE': (ExitCode.ENVIRONMENT, 'The script used a data type that MPS does not have.'),
+    'E_RUN_MISSING_PACKAGE': (ExitCode.ENVIRONMENT, 'The script imports a package that is not installed.'),
     'E_SIZE_LIMIT': (ExitCode.USAGE, 'The operation would exceed a configured size limit.'),
     'E_INTERNAL': (ExitCode.INTERNAL, 'Unexpected internal error.'),
 }

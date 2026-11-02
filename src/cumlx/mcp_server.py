@@ -58,15 +58,21 @@ def _schema(arguments: list[dict], *, allow_code: bool) -> tuple[dict, dict]:
 def build_tools(*, allow_code: bool = False) -> dict[str, dict]:
     tools = {}
     for name, spec in _describe_parser(build_parser()).items():
+        if name == 'run' and not allow_code:
+            continue  # `cumlx run` executes a file. Like remote model code, it needs --allow-code.
         schema, by_name = _schema(spec['arguments'], allow_code=allow_code)
         tools[f'cumlx_{name}'] = {'command': name, 'arguments': by_name, 'schema': schema,
                                   'description': COMMANDS[name]['summary']}
     return tools
 
 
-def _argv(tool: dict, params: dict[str, Any]) -> list[str]:
-    """Build the command line. Values go in as separate arguments, never through a shell."""
+def _argv(tool: dict, params: dict[str, Any], options: Sequence[str] = ()) -> list[str]:
+    """Build the command line. Values go in as separate arguments, never through a shell.
+
+    A positional list goes after --, so that its items stay arguments of the script. ``options`` go before it.
+    """
     argv = [tool['command']]
+    trailing: list[str] = []
     unknown = sorted(set(params) - set(tool['arguments']))
     if unknown:
         raise ValueError(f'unknown or disabled argument(s): {unknown}')
@@ -74,7 +80,9 @@ def _argv(tool: dict, params: dict[str, Any]) -> list[str]:
         if name not in params:
             continue
         value = params[name]
-        if spec['positional']:
+        if spec['positional'] and isinstance(value, list):
+            trailing += [str(item) for item in value]
+        elif spec['positional']:
             argv.append(str(value))
         elif spec['kind'] == 'flag':
             if value:
@@ -84,11 +92,12 @@ def _argv(tool: dict, params: dict[str, Any]) -> list[str]:
                 argv += [spec['flags'][-1], str(item)]
         else:
             argv += [spec['flags'][-1], str(value)]
-    return argv
+    argv += options
+    return [*argv, '--', *trailing] if trailing else argv
 
 
 def call_tool(tool: dict, params: dict[str, Any]) -> dict:
-    argv = [sys.executable, '-m', 'cumlx', *_argv(tool, params), '--format', 'json']
+    argv = [sys.executable, '-m', 'cumlx', *_argv(tool, params, ('--format', 'json'))]
     p = subprocess.run(argv, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=TOOL_TIMEOUT_SECONDS)
     try:
         doc = json.loads(p.stdout)

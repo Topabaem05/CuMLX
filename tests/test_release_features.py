@@ -55,7 +55,8 @@ def test_mcp_tools_come_from_the_parser_and_hide_code_execution():
     from cumlx.cli.main import COMMANDS
     from cumlx.mcp_server import _argv, build_tools
     tools = build_tools()
-    assert set(tools) == {f'cumlx_{c}' for c in COMMANDS}
+    assert set(tools) == {f'cumlx_{c}' for c in COMMANDS if c != 'run'}  # run executes a file
+    assert 'cumlx_run' in build_tools(allow_code=True)
     diff = tools['cumlx_diff']
     assert diff['schema']['required'] == ['trace', 'port'] and 'loader' not in diff['schema']['properties']
     assert 'trust_remote_code' not in tools['cumlx_capture']['schema']['properties']

@@ -32,7 +32,7 @@ cuda = ["mlx[cuda12]==0.32.2; sys_platform == 'linux'"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-cumlx = ["kernels/*.metal", "kernels/*.cu", "kernels/*.h", "py.typed", "verify/recipes.json"]
+cumlx = ["kernels/*.metal", "kernels/*.cu", "kernels/*.h", "py.typed", "verify/recipes.json", "compat/site/*.py"]
 
 [tool.pytest.ini_options]
 addopts = "-ra"

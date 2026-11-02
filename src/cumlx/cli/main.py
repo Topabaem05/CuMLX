@@ -89,6 +89,11 @@ COMMANDS: dict[str, dict[str, Any]] = {
         summary='Name what to use on Apple Silicon for a CUDA dependency, and show whether each option was run or only read about.',
         requires=[], stage='beta',
         examples=['cumlx recipe', 'cumlx recipe bitsandbytes', 'cumlx recipe ./some-cuda-repo --verified-only', 'cumlx recipe scan.json']),
+    'run': dict(
+        summary='Run an unmodified PyTorch script that assumes CUDA on MPS, and record each redirected call. Running is not proof.',
+        requires=['run'], stage='experimental',
+        examples=['cumlx run train.py --target mps --report run-report.json', 'cumlx run train.py -- --epochs 1 --lr 1e-3',
+                  'cumlx run --module my.pkg.train', 'cumlx run train.py --substitute flash_attn=mps_flash_attn']),
     'port': dict(
         summary='Convert a model with mlx-lm and prove the result: convert, compare weights, capture a golden, diff.',
         requires=['capture', 'diff'], stage='beta',
@@ -237,6 +242,17 @@ def build_parser() -> AgentArgumentParser:
     p.add_argument('--revision', help='HF revision')
     p.add_argument('-o', '--output', help='write every recipe to this JSON file')
     p.add_argument('--overwrite', action='store_true')
+
+    p = add('run')
+    p.add_argument('script', nargs='?', help='the Python file to run. It is executed with your permissions')
+    p.add_argument('script_args', nargs='*', help='arguments for the script. Put them after --')
+    p.add_argument('--module', help='run this module like python -m, instead of a file')
+    p.add_argument('--target', choices=['mps', 'cpu'], default='mps', help='the device that stands in for CUDA')
+    p.add_argument('--report', default='run-report.json', help='where to write the report of redirected calls')
+    p.add_argument('--overwrite', action='store_true')
+    p.add_argument('--allow-cpu-fallback', action='store_true', help='let operations that MPS lacks run on the CPU. Off by default, so a missing operation is an error')
+    p.add_argument('--substitute', action='append', default=[], metavar='NAME=MODULE', help='serve MODULE when the script imports NAME. Repeatable')
+    p.add_argument('--timeout', type=float, help='stop the script after this many seconds')
 
     p = add('port')
     p.add_argument('model', help='HF id or local directory of the ORIGINAL model')

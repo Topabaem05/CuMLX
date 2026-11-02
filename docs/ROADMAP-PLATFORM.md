@@ -169,7 +169,7 @@ cumlx run train.py --target mps --report run-report.json
 
 - 첫 작업: M0에서 실행하지 않은 `mps-*`, metalsplat, mlx3D를 실행해 레시피에 넣을지 결정
 - `.cuda()`, `device="cuda"`, `torch.cuda.*`, `autocast("cuda")`를 MPS로 연결
-- `flash_attn`, `bitsandbytes`, `pytorch3d`, `gsplat` 등을 import 시점에 레시피의 대체품으로 연결
+- `flash_attn`, `bitsandbytes`, `pytorch3d`, `gsplat` 등을 import 시점에 레시피의 대체품으로 연결. 지금은 `--substitute`로 직접 지정할 때만 연결합니다. 자동 연결은 `mps-*` 평가 후 결정합니다
 - 바꾼 호출을 모두 `run-report.json`에 기록
 - MPS에 없는 연산은 조용히 CPU로 넘기지 않고 오류 또는 명시적 허용
 
@@ -181,10 +181,10 @@ cumlx run train.py --target mps --report run-report.json
 
 완료 조건:
 
-- [ ] 수정하지 않은 오픈소스 스크립트 5개 실행, `run-report.json` 생성
+- [ ] 수정하지 않은 오픈소스 스크립트 5개 실행, `run-report.json` 생성. 재현 스크립트는 `spikes/m2_scripts.sh`이며, 아직 실행하지 않았습니다
 - [ ] 그중 3개 이상을 V100 CUDA golden과 비교해 등급 A 또는 B
-- [ ] 지원하지 않는 호출이 오류로 끝나는 테스트 (조용한 CPU 폴백 없음)
-- [ ] 호환 계층을 끄면 원래 동작과 같음을 테스트로 확인
+- [x] 지원하지 않는 호출이 오류로 끝나는 테스트 (조용한 CPU 폴백 없음)
+- [x] 호환 계층을 끄면 원래 동작과 같음을 테스트로 확인. `cumlx`를 import해도 torch가 바뀌지 않고, `uninstall()`이 모든 속성을 되돌립니다
 
 ### M3. CUDA 커널 번역 (12/01 ~ 12/19) → `v0.7.0`
 

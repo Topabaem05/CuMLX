@@ -43,6 +43,7 @@ CUDA 전용 프로젝트는 먼저 작업량을 봅니다. 소스를 텍스트�
 ```bash
 cumlx scan ./some-cuda-repo
 cumlx recipe ./some-cuda-repo    # 발견한 항목마다 무엇으로 대체할지 안내
+cumlx run train.py                # CUDA 전제 PyTorch 스크립트를 수정 없이 MPS에서 실행하고, 바꾼 호출을 기록 (실험 단계)
 ```
 
 `model`, `device`, `library`, `kernel`, `platform` 중 하나로 분류합니다. `platform`은 RTX, Omniverse처럼 옮길 수 없는 경우입니다.
