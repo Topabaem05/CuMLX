@@ -30,7 +30,7 @@ MODELS = ['Octen/Octen-WebGR-0.6B', 'inclusionAI/Ling-3.0-flash-UBTree', 'udgaml
 MIN_FREE_BYTES = 4 * 1024**3
 
 
-CLEAN = re.compile(r'/(?:private/)?var/folders/[^\\s"\\']+|/Users/[^/\\s"\\']+')  # local paths stay out of committed evidence
+CLEAN = re.compile(r"""/(?:private/)?var/folders/[^\s"']+|/Users/[^/\s"']+""")  # local paths stay out of committed evidence
 
 
 def clean(text: str) -> str:

@@ -34,7 +34,7 @@ PORTS = [
 ]
 
 
-CLEAN = re.compile(r'/(?:private/)?var/folders/[^\\s"\\']+|/Users/[^/\\s"\\']+')  # local paths stay out of committed evidence
+CLEAN = re.compile(r"""/(?:private/)?var/folders/[^\s"']+|/Users/[^/\s"']+""")  # local paths stay out of committed evidence
 
 
 def clean(text: str) -> str:
