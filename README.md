@@ -139,7 +139,7 @@ python benchmarks/bench_fp4.py --backend metal --m 1 --n 512 --k 1024 --output b
 
 다음 gate는 실제 Metal/CUDA에서 전체 GPU 테스트를 실행하고, benchmark profile별 수치·메모리·성능을 기록하는 것입니다. 그 뒤에만 SIMD reduction, vectorized loads, matrix instructions, MoE gather 및 CUDA-facing frontend를 확장합니다.
 
-[커널 상세 설계](docs/KERNEL-DESIGN.md) · [구현 계획](docs/IMPLEMENTATION-PLAN.md) · [원본 자료](SOURCES.md)
+[커널 상세 설계](docs/KERNEL-DESIGN.md) · [구현 계획](docs/IMPLEMENTATION-PLAN.md) · [1개월 로드맵](docs/ROADMAP-1MONTH.md) · [원본 자료](SOURCES.md)
 
 `provenance/SOURCE-ARCHIVES.json`은 전달받은 원본 ZIP의 SHA-256을 기록합니다. 바이너리 ZIP과 이전 wheel은 Git에 중복 저장하지 않으며, distributions는 CI artifact로 생성합니다. 과거 설계와 CPU 검증이 실제 GPU 검증을 대신하지 않습니다. CUMLX는 Apple 또는 NVIDIA 공식 프로젝트가 아닙니다.
 
