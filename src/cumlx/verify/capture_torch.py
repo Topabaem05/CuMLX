@@ -32,15 +32,23 @@ def load_hf_model(model_id: str, *, device: str = 'cpu', revision: str | None = 
         from transformers import AutoModelForCausalLM
     except ImportError:
         raise missing_dependency('transformers', 'capture', purpose='capture') from None
-    kwargs: dict[str, Any] = dict(revision=revision, trust_remote_code=trust_remote_code)
+    kwargs: dict[str, Any] = dict(revision=revision, trust_remote_code=trust_remote_code, output_loading_info=True)
     try:
         try:
-            model = AutoModelForCausalLM.from_pretrained(model_id, dtype=torch.float32, **kwargs)
+            model, info = AutoModelForCausalLM.from_pretrained(model_id, dtype=torch.float32, **kwargs)
         except TypeError:  # transformers < 4.56 uses torch_dtype
-            model = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.float32, **kwargs)
+            model, info = AutoModelForCausalLM.from_pretrained(model_id, torch_dtype=torch.float32, **kwargs)
     except (OSError, ValueError) as exc:
         raise CumlxError('E_MODEL_LOAD', f'could not load PyTorch model {model_id!r}: {exc}',
                          hint='check the HF id/path; private or gated repos need `huggingface-cli login`') from None
+    # transformers only logs a missing weight and fills it with random values. A golden from that is meaningless.
+    tied = {f'{name}.weight' for name in tied_modules(model)}
+    missing = sorted(set(info.get('missing_keys') or []) - tied)
+    if missing:
+        raise CumlxError('E_MODEL_LOAD', f'{model_id!r} does not hold these weights for {type(model).__name__}, so they '
+                                         f'would be random: {missing[:5]}',
+                         hint='the checkpoint and its config describe different models; this repository may need its own code',
+                         details={'missing': missing[:20], 'count': len(missing)})
     try:
         model = model.to(device)
     except (RuntimeError, AssertionError) as exc:
@@ -64,7 +72,7 @@ def tokenize(model_id: str, prompts: Sequence[str], *, revision: str | None, tru
     for p in prompts:
         ids = np.asarray(tok(p)['input_ids'], dtype=np.int64)[:max_tokens]
         if ids.size == 0:
-            raise CumlxError('E_INPUT_INVALID', f'prompt {p!r} produced no tokens')
+            raise CumlxError('E_INPUT_INVALID', f'prompt {p!r} produced no tokens', hint='this tokenizer is empty; pass --token-ids instead')
         out.append(ids)
     return out
 
@@ -212,7 +220,8 @@ def capture_model(model, samples: Sequence[np.ndarray], writer: TraceWriter, *,
                 if replay_kind == 'hidden':
                     replay_kind = 'hidden_cached'
                 elif replay_kind == 'single' and kwargs.get('past_key_values') is not None:
-                    replay_kind = 'tokens_cached'
+                    # A float input is a hidden state, as in the LFM2 convolution: only token ids reach all layers.
+                    replay_kind = 'hidden_cached' if inputs[0][1].is_floating_point() else 'tokens_cached'
             if replay_kind == 'hidden' and not has_params[mod]:  # e.g. a rotary embedding: nothing to verify
                 inputs, replay_kind = [], None
             in_refs = []
@@ -266,6 +275,9 @@ def _moe_names_to_torch(port_weights: dict[str, np.ndarray], state: dict) -> dic
     out = {}
     stacked: dict[str, dict[str, np.ndarray]] = {}
     for name, arr in port_weights.items():
+        mixtral = re.match(r'(.+)\.block_sparse_moe\.(.+)$', name)
+        if mixtral and f'{mixtral.group(1)}.mlp.gate.weight' in state:
+            name = f'{mixtral.group(1)}.mlp.{mixtral.group(2)}'  # transformers 5 calls this block `mlp`
         match = re.match(r'(.+)\.switch_mlp\.(gate_proj|up_proj|down_proj)\.weight$', name)
         if match:
             stacked.setdefault(match.group(1), {})[match.group(2)] = arr
@@ -283,6 +295,20 @@ def _moe_names_to_torch(port_weights: dict[str, np.ndarray], state: dict) -> dic
     return out
 
 
+def _conv_to_torch_layout(model, name: str, arr: np.ndarray, target) -> np.ndarray:
+    """MLX convolutions keep channels last: [out, kernel, in] against PyTorch [out, in, kernel]."""
+    torch = _torch()
+    if tuple(target.shape) == arr.shape or arr.ndim not in (3, 4) or '.' not in name:
+        return arr
+    try:
+        owner = model.get_submodule(name.rsplit('.', 1)[0])
+    except AttributeError:
+        return arr
+    if not isinstance(owner, torch.nn.modules.conv._ConvNd):
+        return arr
+    return np.transpose(arr, (0, 2, 1) if arr.ndim == 3 else (0, 3, 1, 2))
+
+
 def load_mlx_weights_into(model, port_weights: dict[str, np.ndarray]) -> dict:
     """Copy (dequantized) MLX port weights into a PyTorch model by parameter name."""
     torch = _torch()
@@ -292,6 +318,7 @@ def load_mlx_weights_into(model, port_weights: dict[str, np.ndarray]) -> dict:
     for name, arr in port_weights.items():
         if name not in state:
             continue
+        arr = _conv_to_torch_layout(model, name, arr, state[name])
         if tuple(state[name].shape) != arr.shape:
             shape_mismatch.append({'name': name, 'torch': list(state[name].shape), 'port': list(arr.shape)})
             continue
@@ -303,5 +330,11 @@ def load_mlx_weights_into(model, port_weights: dict[str, np.ndarray]) -> dict:
     if shape_mismatch:
         raise CumlxError('E_INPUT_INVALID', 'MLX port weights do not match the PyTorch model shapes',
                          details={'mismatches': shape_mismatch[:20]})
-    return {'loaded': len(loaded), 'missing_in_port': missing,
-            'unused_port_weights': sorted(set(port_weights) - set(loaded))}
+    unused = sorted(set(port_weights) - set(loaded))
+    if missing or unused:
+        # A golden that holds only some of the port's weights compares different models. Never write one.
+        raise CumlxError('E_INPUT_INVALID', 'the MLX port weights do not cover the PyTorch model, so a golden with the '
+                                            "port's weights would be wrong",
+                         hint='check the architecture; a parameter name differs between the two',
+                         details={'missing_in_port': missing[:20], 'unused_port_weights': unused[:20]})
+    return {'loaded': len(loaded), 'missing_in_port': missing, 'unused_port_weights': unused}

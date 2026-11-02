@@ -1,0 +1,704 @@
+{
+ "schema": "cumlx.latest-models.v1",
+ "date": "2026-11-02",
+ "models": [
+  {
+   "model": "Octen/Octen-WebGR-0.6B",
+   "revision": "fafd37856a14996b2627a450063e63a007afe6b5",
+   "architecture": "Qwen3ForCausalLM",
+   "records": 4260,
+   "weights": {
+    "verdict": "ok",
+    "summary": "ok: 310 pass, 0 fail, 0 unverified of 310 parameters",
+    "errors": [],
+    "first_failure": null,
+    "unverified": []
+   },
+   "implementation": {
+    "status": "ok",
+    "exit_code": 0,
+    "summary": "ok: 3970 pass, 0 fail, 0 unverified, 290 skipped, 90 chain drift",
+    "errors": [],
+    "verdict": "ok",
+    "warnings": [],
+    "first_divergence": null,
+    "coverage": 1.0,
+    "pass": 3970,
+    "fail": 0,
+    "unverified": 0,
+    "worst_isolated_rel_l2": 7.439613313799823e-06,
+    "worst_chain_rel_l2": 0.051912735464657314,
+    "chain_drift": 90,
+    "decode_records": 2130,
+    "native_output": {
+     "positions": 55,
+     "top1_matches": 54
+    },
+    "profile": "bfloat16",
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.015,
+     "composite_rel_l2_max": 0.2,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "bfloat16",
+     "median_leaf_error": 1.0856454895921007e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "unverified_items": [],
+    "failures": []
+   },
+   "result": "ok",
+   "quantized": {
+    "status": "ok",
+    "exit_code": 0,
+    "summary": "ok: 3970 pass, 0 fail, 0 unverified, 290 skipped, 110 chain drift",
+    "errors": [],
+    "verdict": "ok",
+    "warnings": [],
+    "first_divergence": null,
+    "coverage": 1.0,
+    "pass": 3970,
+    "fail": 0,
+    "unverified": 0,
+    "worst_isolated_rel_l2": 7.908202552187269e-06,
+    "worst_chain_rel_l2": 0.06604501260817684,
+    "chain_drift": 110,
+    "decode_records": 2130,
+    "native_output": {
+     "positions": 55,
+     "top1_matches": 54
+    },
+    "profile": "quantized",
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.0001,
+     "composite_rel_l2_max": 0.0001,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "quantized",
+     "median_leaf_error": 2.1952717035473873e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "unverified_items": [],
+    "failures": []
+   }
+  },
+  {
+   "model": "inclusionAI/Ling-3.0-flash-UBTree",
+   "result": "not_run",
+   "capture": {
+    "summary": "'inclusionAI/Ling-3.0-flash-UBTree' does not hold these weights for Qwen3ForCausalLM, so they would be random: ['lm_head.weight', 'model.embed_tokens.weight']",
+    "errors": [
+     {
+      "code": "E_MODEL_LOAD",
+      "message": "'inclusionAI/Ling-3.0-flash-UBTree' does not hold these weights for Qwen3ForCausalLM, so they would be random: ['lm_head.weight', 'model.embed_tokens.weight']"
+     }
+    ]
+   }
+  },
+  {
+   "model": "udgamlabs/Laghu",
+   "revision": "54d9bcd81be5c16ef4887114fa8b437f07d6b17b",
+   "architecture": "Gemma4ForCausalLM",
+   "records": 5110,
+   "weights": {
+    "verdict": "ok",
+    "summary": "ok: 394 pass, 0 fail, 0 unverified of 394 parameters",
+    "errors": [],
+    "first_failure": null,
+    "unverified": []
+   },
+   "implementation": {
+    "status": "ok",
+    "exit_code": 0,
+    "summary": "ok: 4810 pass, 0 fail, 0 unverified, 300 skipped, 22 chain drift",
+    "errors": [],
+    "verdict": "ok",
+    "warnings": [
+     "W_MODULE_BOUNDARY_DIFFERS"
+    ],
+    "first_divergence": null,
+    "coverage": 1.0,
+    "pass": 4810,
+    "fail": 0,
+    "unverified": 0,
+    "worst_isolated_rel_l2": 0.9604715300776167,
+    "worst_chain_rel_l2": 0.9604715300776167,
+    "chain_drift": 22,
+    "decode_records": 2555,
+    "native_output": {
+     "positions": 74,
+     "top1_matches": 73
+    },
+    "profile": "bfloat16",
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.015,
+     "composite_rel_l2_max": 0.2,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "bfloat16",
+     "median_leaf_error": 8.62557580339023e-08,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "unverified_items": [],
+    "failures": []
+   },
+   "result": "ok",
+   "quantized": {
+    "status": "ok",
+    "exit_code": 0,
+    "summary": "ok: 4810 pass, 0 fail, 0 unverified, 300 skipped, 17 chain drift",
+    "errors": [],
+    "verdict": "ok",
+    "warnings": [
+     "W_MODULE_BOUNDARY_DIFFERS"
+    ],
+    "first_divergence": null,
+    "coverage": 1.0,
+    "pass": 4810,
+    "fail": 0,
+    "unverified": 0,
+    "worst_isolated_rel_l2": 0.9604715299878026,
+    "worst_chain_rel_l2": 0.9604758432081109,
+    "chain_drift": 17,
+    "decode_records": 2555,
+    "native_output": {
+     "positions": 74,
+     "top1_matches": 74
+    },
+    "profile": "quantized",
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.0001,
+     "composite_rel_l2_max": 0.0001,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "quantized",
+     "median_leaf_error": 1.7264930502413485e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "unverified_items": [],
+    "failures": []
+   }
+  },
+  {
+   "model": "udgamlabs/Vemana-Base",
+   "revision": "93cefe2594c5157e4aa8eb9908639c253652fed9",
+   "architecture": "Gemma4ForCausalLM",
+   "records": 3300,
+   "weights": {
+    "verdict": "ok",
+    "summary": "ok: 254 pass, 0 fail, 0 unverified of 254 parameters",
+    "errors": [],
+    "first_failure": null,
+    "unverified": []
+   },
+   "implementation": {
+    "status": "ok",
+    "exit_code": 0,
+    "summary": "ok: 3110 pass, 0 fail, 0 unverified, 190 skipped",
+    "errors": [],
+    "verdict": "ok",
+    "warnings": [
+     "W_MODULE_BOUNDARY_DIFFERS"
+    ],
+    "first_divergence": null,
+    "coverage": 1.0,
+    "pass": 3110,
+    "fail": 0,
+    "unverified": 0,
+    "worst_isolated_rel_l2": 0.9687500000000003,
+    "worst_chain_rel_l2": 0.9687500000000003,
+    "chain_drift": 0,
+    "decode_records": 1650,
+    "native_output": {
+     "positions": 106,
+     "top1_matches": 106
+    },
+    "profile": "float32",
+    "threshold": {
+     "rel_l2": 0.0001,
+     "isolated_rel_l2": 0.0001,
+     "composite_rel_l2_max": 0.0001,
+     "zero_atol": 1e-06,
+     "noise_floor": 0.0001,
+     "profile": "float32",
+     "median_leaf_error": 9.203622852103524e-08,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "unverified_items": [],
+    "failures": []
+   },
+   "result": "ok",
+   "quantized": {
+    "status": "ok",
+    "exit_code": 0,
+    "summary": "ok: 3110 pass, 0 fail, 0 unverified, 190 skipped",
+    "errors": [],
+    "verdict": "ok",
+    "warnings": [
+     "W_MODULE_BOUNDARY_DIFFERS"
+    ],
+    "first_divergence": null,
+    "coverage": 1.0,
+    "pass": 3110,
+    "fail": 0,
+    "unverified": 0,
+    "worst_isolated_rel_l2": 0.9687500000945638,
+    "worst_chain_rel_l2": 0.9687500000945638,
+    "chain_drift": 0,
+    "decode_records": 1650,
+    "native_output": {
+     "positions": 106,
+     "top1_matches": 106
+    },
+    "profile": "quantized",
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.0001,
+     "composite_rel_l2_max": 0.0001,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "quantized",
+     "median_leaf_error": 1.874281646015641e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "unverified_items": [],
+    "failures": []
+   }
+  },
+  {
+   "model": "nkthebass/tinybrainbot-61m-a10m-v4.1-moe-base",
+   "revision": "d7e92fce7ff50f2b9db3b67937395d14516c843b",
+   "architecture": "MixtralForCausalLM",
+   "records": 1740,
+   "weights": {
+    "verdict": "ok",
+    "summary": "ok: 772 pass, 0 fail, 0 unverified of 772 parameters",
+    "errors": [],
+    "first_failure": null,
+    "unverified": []
+   },
+   "implementation": {
+    "status": "ok",
+    "exit_code": 0,
+    "summary": "ok: 1590 pass, 0 fail, 0 unverified, 150 skipped",
+    "errors": [],
+    "verdict": "ok",
+    "warnings": [],
+    "first_divergence": null,
+    "coverage": 1.0,
+    "pass": 1590,
+    "fail": 0,
+    "unverified": 0,
+    "worst_isolated_rel_l2": 2.7196627419755383e-06,
+    "worst_chain_rel_l2": 2.9720321535968585e-06,
+    "chain_drift": 0,
+    "decode_records": 870,
+    "native_output": {
+     "positions": 85,
+     "top1_matches": 85
+    },
+    "profile": "float32",
+    "threshold": {
+     "rel_l2": 0.0001,
+     "isolated_rel_l2": 0.0001,
+     "composite_rel_l2_max": 0.0001,
+     "zero_atol": 1e-06,
+     "noise_floor": 0.0001,
+     "profile": "float32",
+     "median_leaf_error": 1.1049519220309925e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "unverified_items": [],
+    "failures": []
+   },
+   "result": "ok",
+   "quantized": {
+    "status": "ok",
+    "exit_code": 0,
+    "summary": "ok: 1590 pass, 0 fail, 0 unverified, 150 skipped",
+    "errors": [],
+    "verdict": "ok",
+    "warnings": [],
+    "first_divergence": null,
+    "coverage": 1.0,
+    "pass": 1590,
+    "fail": 0,
+    "unverified": 0,
+    "worst_isolated_rel_l2": 3.4288962118803004e-06,
+    "worst_chain_rel_l2": 2.18068536876882e-06,
+    "chain_drift": 0,
+    "decode_records": 870,
+    "native_output": {
+     "positions": 85,
+     "top1_matches": 85
+    },
+    "profile": "quantized",
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.0001,
+     "composite_rel_l2_max": 0.0001,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "quantized",
+     "median_leaf_error": 2.141068967636081e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "unverified_items": [],
+    "failures": []
+   }
+  },
+  {
+   "model": "nkthebass/tinybrainbot-360m-a75m-v5.1-instruct",
+   "revision": "e3bd9e8cd81d5b6e22b01eebea80f5c07354f4ba",
+   "architecture": "MixtralForCausalLM",
+   "records": 1500,
+   "weights": {
+    "verdict": "ok",
+    "summary": "ok: 950 pass, 0 fail, 0 unverified of 950 parameters",
+    "errors": [],
+    "first_failure": null,
+    "unverified": []
+   },
+   "implementation": {
+    "status": "ok",
+    "exit_code": 0,
+    "summary": "ok: 1370 pass, 0 fail, 0 unverified, 130 skipped",
+    "errors": [],
+    "verdict": "ok",
+    "warnings": [],
+    "first_divergence": null,
+    "coverage": 1.0,
+    "pass": 1370,
+    "fail": 0,
+    "unverified": 0,
+    "worst_isolated_rel_l2": 2.352915291894118e-06,
+    "worst_chain_rel_l2": 6.823307026874098e-06,
+    "chain_drift": 0,
+    "decode_records": 750,
+    "native_output": {
+     "positions": 68,
+     "top1_matches": 68
+    },
+    "profile": "float32",
+    "threshold": {
+     "rel_l2": 0.0001,
+     "isolated_rel_l2": 0.0001,
+     "composite_rel_l2_max": 0.0001,
+     "zero_atol": 1e-06,
+     "noise_floor": 0.0001,
+     "profile": "float32",
+     "median_leaf_error": 1.2941440053860254e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "unverified_items": [],
+    "failures": []
+   },
+   "result": "ok",
+   "quantized": {
+    "status": "ok",
+    "exit_code": 0,
+    "summary": "ok: 1370 pass, 0 fail, 0 unverified, 130 skipped",
+    "errors": [],
+    "verdict": "ok",
+    "warnings": [],
+    "first_divergence": null,
+    "coverage": 1.0,
+    "pass": 1370,
+    "fail": 0,
+    "unverified": 0,
+    "worst_isolated_rel_l2": 3.3896763299463856e-06,
+    "worst_chain_rel_l2": 3.7308594733357986e-06,
+    "chain_drift": 0,
+    "decode_records": 750,
+    "native_output": {
+     "positions": 68,
+     "top1_matches": 68
+    },
+    "profile": "quantized",
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.0001,
+     "composite_rel_l2_max": 0.0001,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "quantized",
+     "median_leaf_error": 2.3361183548838218e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "unverified_items": [],
+    "failures": []
+   }
+  },
+  {
+   "model": "nkthebass/tinybrainbot-100m-v5.1-base",
+   "revision": "18b1fe07e20e39da1091be448b44a227b397fe57",
+   "architecture": "LlamaForCausalLM",
+   "records": 1620,
+   "weights": {
+    "verdict": "ok",
+    "summary": "ok: 110 pass, 0 fail, 0 unverified of 110 parameters",
+    "errors": [],
+    "first_failure": null,
+    "unverified": []
+   },
+   "implementation": {
+    "status": "ok",
+    "exit_code": 0,
+    "summary": "ok: 1490 pass, 0 fail, 0 unverified, 130 skipped, 16 chain drift",
+    "errors": [],
+    "verdict": "ok",
+    "warnings": [],
+    "first_divergence": null,
+    "coverage": 1.0,
+    "pass": 1490,
+    "fail": 0,
+    "unverified": 0,
+    "worst_isolated_rel_l2": 1.5252468218660065e-05,
+    "worst_chain_rel_l2": 0.01653181150086826,
+    "chain_drift": 16,
+    "decode_records": 810,
+    "native_output": {
+     "positions": 38,
+     "top1_matches": 37
+    },
+    "profile": "float16",
+    "threshold": {
+     "rel_l2": 0.005,
+     "isolated_rel_l2": 0.002,
+     "composite_rel_l2_max": 0.01,
+     "zero_atol": 0.001,
+     "noise_floor": 0.0001,
+     "profile": "float16",
+     "median_leaf_error": 1.2028264320361308e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "unverified_items": [],
+    "failures": []
+   },
+   "result": "ok",
+   "quantized": {
+    "status": "ok",
+    "exit_code": 0,
+    "summary": "ok: 1490 pass, 0 fail, 0 unverified, 130 skipped",
+    "errors": [],
+    "verdict": "ok",
+    "warnings": [],
+    "first_divergence": null,
+    "coverage": 1.0,
+    "pass": 1490,
+    "fail": 0,
+    "unverified": 0,
+    "worst_isolated_rel_l2": 2.0256582172792573e-06,
+    "worst_chain_rel_l2": 0.005090022234773436,
+    "chain_drift": 0,
+    "decode_records": 810,
+    "native_output": {
+     "positions": 38,
+     "top1_matches": 38
+    },
+    "profile": "quantized",
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.0001,
+     "composite_rel_l2_max": 0.0001,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "quantized",
+     "median_leaf_error": 2.2409095965647735e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "unverified_items": [],
+    "failures": []
+   }
+  },
+  {
+   "model": "openbmb/MiniCPM-V-4.7-1B-DSpark",
+   "result": "not_run",
+   "capture": {
+    "summary": "'openbmb/MiniCPM-V-4.7-1B-DSpark' does not hold these weights for Qwen3ForCausalLM, so they would be random: ['lm_head.weight', 'model.embed_tokens.weight']",
+    "errors": [
+     {
+      "code": "E_MODEL_LOAD",
+      "message": "'openbmb/MiniCPM-V-4.7-1B-DSpark' does not hold these weights for Qwen3ForCausalLM, so they would be random: ['lm_head.weight', 'model.embed_tokens.weight']"
+     }
+    ]
+   }
+  },
+  {
+   "model": "CohereLabs/North-Mini-Code-1.0-eagle",
+   "result": "not_run",
+   "capture": {
+    "summary": "'CohereLabs/North-Mini-Code-1.0-eagle' does not hold these weights for Cohere2ForCausalLM, so they would be random: ['model.embed_tokens.weight']",
+    "errors": [
+     {
+      "code": "E_MODEL_LOAD",
+      "message": "'CohereLabs/North-Mini-Code-1.0-eagle' does not hold these weights for Cohere2ForCausalLM, so they would be random: ['model.embed_tokens.weight']"
+     }
+    ]
+   }
+  },
+  {
+   "model": "LiquidAI/LFM2.5-230M",
+   "revision": "40cb2ad3b3044d5a41eee083a6103c8b523afa45",
+   "architecture": "Lfm2ForCausalLM",
+   "records": 1700,
+   "weights": {
+    "verdict": "ok",
+    "summary": "ok: 132 pass, 0 fail, 0 unverified of 132 parameters",
+    "errors": [],
+    "first_failure": null,
+    "unverified": []
+   },
+   "implementation": {
+    "status": "ok",
+    "exit_code": 0,
+    "summary": "ok: 1690 pass, 0 fail, 0 unverified, 10 skipped, 86 chain drift",
+    "errors": [],
+    "verdict": "ok",
+    "warnings": [],
+    "first_divergence": null,
+    "coverage": 1.0,
+    "pass": 1690,
+    "fail": 0,
+    "unverified": 0,
+    "worst_isolated_rel_l2": 6.301526271632991e-06,
+    "worst_chain_rel_l2": 0.04802923880936534,
+    "chain_drift": 86,
+    "decode_records": 850,
+    "native_output": {
+     "positions": 60,
+     "top1_matches": 58
+    },
+    "profile": "bfloat16",
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.015,
+     "composite_rel_l2_max": 0.2,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "bfloat16",
+     "median_leaf_error": 9.957213781895717e-08,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "unverified_items": [],
+    "failures": []
+   },
+   "result": "ok",
+   "quantized": {
+    "status": "ok",
+    "exit_code": 0,
+    "summary": "ok: 1690 pass, 0 fail, 0 unverified, 10 skipped, 12 chain drift",
+    "errors": [],
+    "verdict": "ok",
+    "warnings": [],
+    "first_divergence": null,
+    "coverage": 1.0,
+    "pass": 1690,
+    "fail": 0,
+    "unverified": 0,
+    "worst_isolated_rel_l2": 4.414344224610824e-06,
+    "worst_chain_rel_l2": 0.03331389728666933,
+    "chain_drift": 12,
+    "decode_records": 850,
+    "native_output": {
+     "positions": 60,
+     "top1_matches": 60
+    },
+    "profile": "quantized",
+    "threshold": {
+     "rel_l2": 0.03,
+     "isolated_rel_l2": 0.0001,
+     "composite_rel_l2_max": 0.0001,
+     "zero_atol": 0.01,
+     "noise_floor": 0.0001,
+     "profile": "quantized",
+     "median_leaf_error": 2.3185584399659553e-07,
+     "leaf_rel_l2": 0.0001,
+     "composite_rel_l2": 0.0001
+    },
+    "unverified_items": [],
+    "failures": []
+   }
+  },
+  {
+   "model": "incoai/Qwen3.8-Flash-Next-DFlash2",
+   "result": "not_run",
+   "capture": {
+    "summary": "'incoai/Qwen3.8-Flash-Next-DFlash2' does not hold these weights for Qwen3ForCausalLM, so they would be random: ['lm_head.weight', 'model.embed_tokens.weight']",
+    "errors": [
+     {
+      "code": "E_MODEL_LOAD",
+      "message": "'incoai/Qwen3.8-Flash-Next-DFlash2' does not hold these weights for Qwen3ForCausalLM, so they would be random: ['lm_head.weight', 'model.embed_tokens.weight']"
+     }
+    ]
+   }
+  },
+  {
+   "model": "Prience91/Climate-1000-Granite-0.35b",
+   "revision": "a78efe757e42a79f0329321665d0f3752a0be692",
+   "architecture": "GraniteMoeHybridForCausalLM",
+   "records": 3610,
+   "weights": {
+    "verdict": null,
+    "summary": "mlx-lm could not load 'Prience91/Climate-1000-Granite-0.35b': ValueError: Unknown layer type: linear_attention",
+    "errors": [
+     {
+      "code": "E_MODEL_LOAD",
+      "message": "mlx-lm could not load 'Prience91/Climate-1000-Granite-0.35b': ValueError: Unknown layer type: linear_attention"
+     }
+    ],
+    "first_failure": null,
+    "unverified": []
+   },
+   "implementation": {
+    "status": "error",
+    "exit_code": 4,
+    "summary": "mlx-lm could not load 'Prience91/Climate-1000-Granite-0.35b': ValueError: Unknown layer type: linear_attention",
+    "errors": [
+     {
+      "code": "E_MODEL_LOAD",
+      "message": "mlx-lm could not load 'Prience91/Climate-1000-Granite-0.35b': ValueError: Unknown layer type: linear_attention"
+     }
+    ],
+    "verdict": null,
+    "warnings": [],
+    "first_divergence": null,
+    "coverage": null,
+    "pass": null,
+    "fail": null,
+    "unverified": null,
+    "worst_isolated_rel_l2": null,
+    "worst_chain_rel_l2": null,
+    "chain_drift": null,
+    "decode_records": null,
+    "native_output": null,
+    "profile": null,
+    "threshold": null,
+    "unverified_items": [],
+    "failures": []
+   },
+   "result": "port_error",
+   "quantized": {
+    "status": "convert_failed",
+    "message": "anitemoehybrid.py\", line 436, in __init__\n    GraniteMoeHybridLayer(args, layer_type) for layer_type in args.layer_types\n    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^\n  File \"<local>/code/CuMLX/.venv/lib/python3.13/site-packages/mlx_lm/models/granitemoehybrid.py\", line 383, in __init__\n    raise ValueError(f\"Unknown layer type: {layer_type}\")\nValueError: Unknown layer type: linear_attention\n"
+   }
+  }
+ ]
+}

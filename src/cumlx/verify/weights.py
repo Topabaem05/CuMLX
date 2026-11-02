@@ -207,9 +207,15 @@ def run_weights(original: str, port: str, *, loader: str = 'mlx_lm', mapping: st
         if not np.issubdtype(orig.dtype, np.floating):
             rows.append({'name': name, 'port_name': target, 'status': 'ignored', 'reason': f'non-float {orig.dtype}'})
             continue
-        c = _compare(weights[target], orig, kinds.get(target, 'float32'))
+        port_array = weights[target]
+        layout = None
+        owner = modules.get(target.rsplit('.', 1)[0])
+        if port_array.shape != orig.shape and port_array.ndim in (3, 4) and 'conv' in type(owner).__name__.lower():
+            port_array = np.transpose(port_array, (0, 2, 1) if port_array.ndim == 3 else (0, 3, 1, 2))
+            layout = 'mlx channels-last convolution'  # the same values in another axis order
+        c = _compare(port_array, orig, kinds.get(target, 'float32'))
         rows.append({'name': name, 'port_name': target, 'kind': kinds.get(target, 'float32'),
-                     'status': c.pop('verdict'), **c})
+                     'status': c.pop('verdict'), **c, **({'layout': layout} if layout else {})})
     extra = sorted(set(weights) - seen)
     counts = {k: sum(r['status'] == k for r in rows) for k in ('pass', 'fail', 'unverified', 'ignored')}
     verdict = 'diverged' if counts['fail'] else ('incomplete' if counts['unverified'] else 'ok')

@@ -16,7 +16,7 @@
    "capture": {
     "exit_code": 0,
     "status": "ok",
-    "summary": "recorded 3180 module calls from 5 sample(s) (3175 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-h3d9bpw5/mlx-community-Qwen2.5-0.5B-bf16",
+    "summary": "recorded 3180 module calls from 5 sample(s) (3175 replayable) into <local>",
     "errors": [],
     "warnings": []
    },
@@ -69,7 +69,7 @@
    "capture": {
     "exit_code": 0,
     "status": "ok",
-    "summary": "recorded 3180 module calls from 5 sample(s) (3175 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-h3d9bpw5/mlx-community-Qwen2.5-0.5B-8bit",
+    "summary": "recorded 3180 module calls from 5 sample(s) (3175 replayable) into <local>",
     "errors": [],
     "warnings": []
    },
@@ -124,7 +124,7 @@
    "capture": {
     "exit_code": 0,
     "status": "ok",
-    "summary": "recorded 3180 module calls from 5 sample(s) (3175 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-h3d9bpw5/mlx-community-Qwen2.5-0.5B-4bit",
+    "summary": "recorded 3180 module calls from 5 sample(s) (3175 replayable) into <local>",
     "errors": [],
     "warnings": []
    },
@@ -179,7 +179,7 @@
    "capture": {
     "exit_code": 0,
     "status": "ok",
-    "summary": "recorded 3180 module calls from 5 sample(s) (3175 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-h3d9bpw5/mlx-community-Qwen2.5-0.5B-Instruct-4bit",
+    "summary": "recorded 3180 module calls from 5 sample(s) (3175 replayable) into <local>",
     "errors": [],
     "warnings": []
    },
@@ -234,7 +234,7 @@
    "capture": {
     "exit_code": 0,
     "status": "ok",
-    "summary": "recorded 3180 module calls from 5 sample(s) (3175 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-h3d9bpw5/mlx-community-Qwen2.5-Coder-0.5B-Instruct-4bit",
+    "summary": "recorded 3180 module calls from 5 sample(s) (3175 replayable) into <local>",
     "errors": [],
     "warnings": []
    },
@@ -289,7 +289,7 @@
    "capture": {
     "exit_code": 0,
     "status": "ok",
-    "summary": "recorded 3960 module calls from 5 sample(s) (3955 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-h3d9bpw5/mlx-community-SmolLM2-135M-Instruct",
+    "summary": "recorded 3960 module calls from 5 sample(s) (3955 replayable) into <local>",
     "errors": [],
     "warnings": []
    },
@@ -342,7 +342,7 @@
    "capture": {
     "exit_code": 0,
     "status": "ok",
-    "summary": "recorded 3960 module calls from 5 sample(s) (3955 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-h3d9bpw5/mlx-community-SmolLM2-135M-Instruct-8bit",
+    "summary": "recorded 3960 module calls from 5 sample(s) (3955 replayable) into <local>",
     "errors": [],
     "warnings": []
    },
@@ -397,7 +397,7 @@
    "capture": {
     "exit_code": 0,
     "status": "ok",
-    "summary": "recorded 4260 module calls from 5 sample(s) (4255 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-h3d9bpw5/mlx-community-Qwen3-0.6B-bf16",
+    "summary": "recorded 4260 module calls from 5 sample(s) (4255 replayable) into <local>",
     "errors": [],
     "warnings": []
    },
@@ -450,7 +450,7 @@
    "capture": {
     "exit_code": 0,
     "status": "ok",
-    "summary": "recorded 4260 module calls from 5 sample(s) (4255 replayable) into /var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-h3d9bpw5/mlx-community-Qwen3-0.6B-4bit",
+    "summary": "recorded 4260 module calls from 5 sample(s) (4255 replayable) into <local>",
     "errors": [],
     "warnings": []
    },
@@ -497,11 +497,11 @@
    "weights": {
     "exit_code": 4,
     "status": "error",
-    "summary": "mlx-lm could not load 'mlx-community/TinyLlama-1.1B-Chat-v1.0-4bit': FileNotFoundError: No safetensors found in /private/var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-h3d9bpw5/hf/hub/models--mlx-community--TinyLlama-1.1B-Chat-v1.0-4bit/snapshots/01a708812690b4685ab18e3b0a27848f92c50746",
+    "summary": "mlx-lm could not load 'mlx-community/TinyLlama-1.1B-Chat-v1.0-4bit': FileNotFoundError: No safetensors found in <local>",
     "errors": [
      {
       "code": "E_MODEL_LOAD",
-      "message": "mlx-lm could not load 'mlx-community/TinyLlama-1.1B-Chat-v1.0-4bit': FileNotFoundError: No safetensors found in /private/var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-h3d9bpw5/hf/hub/models--mlx-community--TinyLlama-1.1B-Chat-v1.0-4bit/snapshots/01a708812690b4685ab18e3b0a27848f92c50746"
+      "message": "mlx-lm could not load 'mlx-community/TinyLlama-1.1B-Chat-v1.0-4bit': FileNotFoundError: No safetensors found in <local>"
      }
     ],
     "warnings": [],
@@ -510,11 +510,11 @@
    "capture": {
     "exit_code": 4,
     "status": "error",
-    "summary": "mlx-lm could not load 'mlx-community/TinyLlama-1.1B-Chat-v1.0-4bit': FileNotFoundError: No safetensors found in /private/var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-h3d9bpw5/hf/hub/models--mlx-community--TinyLlama-1.1B-Chat-v1.0-4bit/snapshots/01a708812690b4685ab18e3b0a27848f92c50746",
+    "summary": "mlx-lm could not load 'mlx-community/TinyLlama-1.1B-Chat-v1.0-4bit': FileNotFoundError: No safetensors found in <local>",
     "errors": [
      {
       "code": "E_MODEL_LOAD",
-      "message": "mlx-lm could not load 'mlx-community/TinyLlama-1.1B-Chat-v1.0-4bit': FileNotFoundError: No safetensors found in /private/var/folders/5g/bhl5x7q93yvcfj2zngh_jg680000gn/T/cumlx-campaign-h3d9bpw5/hf/hub/models--mlx-community--TinyLlama-1.1B-Chat-v1.0-4bit/snapshots/01a708812690b4685ab18e3b0a27848f92c50746"
+      "message": "mlx-lm could not load 'mlx-community/TinyLlama-1.1B-Chat-v1.0-4bit': FileNotFoundError: No safetensors found in <local>"
      }
     ],
     "warnings": []

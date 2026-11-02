@@ -12,6 +12,7 @@ import argparse
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -31,6 +32,13 @@ PORTS = [
     ('Qwen/Qwen3-0.6B', 'mlx-community/Qwen3-0.6B-4bit', True),
     ('TinyLlama/TinyLlama-1.1B-Chat-v1.0', 'mlx-community/TinyLlama-1.1B-Chat-v1.0-4bit', True),
 ]
+
+
+CLEAN = re.compile(r'/(?:private/)?var/folders/[^\\s"\\']+|/Users/[^/\\s"\\']+')  # local paths stay out of committed evidence
+
+
+def clean(text: str) -> str:
+    return CLEAN.sub('<local>', text)
 
 
 def cumlx(*argv: str) -> dict:
@@ -92,7 +100,7 @@ def main() -> int:
                 current = original
             os.environ['HF_HOME'] = str(work / 'hf')
             rows.append(verify(original, port, quantized, prompts, work))
-            Path(args.output).write_text(json.dumps({'schema': 'cumlx.public-ports.v1', 'ports': rows}, indent=1, ensure_ascii=False) + '\n',
+            Path(args.output).write_text(clean(json.dumps({'schema': 'cumlx.public-ports.v1', 'ports': rows}, indent=1, ensure_ascii=False)) + '\n',
                                          encoding='utf-8')
             for golden in work.iterdir():
                 if golden.is_dir() and golden.name != 'hf':

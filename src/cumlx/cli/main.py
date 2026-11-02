@@ -81,6 +81,14 @@ COMMANDS: dict[str, dict[str, Any]] = {
         summary='Compare port weights with the original safetensors without running a model (fast; names transposes and scale errors).',
         requires=['diff'], stage='beta',
         examples=['cumlx weights Qwen/Qwen2.5-0.5B ./qwen-mlx', 'cumlx weights /tmp/tiny /tmp/tiny -o weights.json']),
+    'scan': dict(
+        summary='Triage a CUDA repository or an HF model: read its source as text and rank the work to run it on Apple Silicon.',
+        requires=[], stage='beta',
+        examples=['cumlx scan ./some-cuda-repo', 'cumlx scan Qwen/Qwen3-0.6B']),
+    'port': dict(
+        summary='Convert a model with mlx-lm and prove the result: convert, compare weights, capture a golden, diff.',
+        requires=['capture', 'diff'], stage='beta',
+        examples=['cumlx port Qwen/Qwen2.5-0.5B -o port/', 'cumlx port Qwen/Qwen2.5-0.5B --q-bits 4 -o port-4bit/ --prompt Hello']),
     'tracediff': dict(
         summary='Compare two golden traces of one model, such as a CUDA capture and a CPU capture.',
         requires=[], stage='beta',
@@ -211,6 +219,25 @@ def build_parser() -> AgentArgumentParser:
     p.add_argument('--mapping', help='JSON rules mapping original parameter names to MLX names')
     p.add_argument('--revision', help='HF revision of the original (branch, tag or commit)')
     p.add_argument('--overwrite', action='store_true')
+
+    p = add('scan')
+    p.add_argument('target', help='local directory, or HF id (only text files are downloaded)')
+    p.add_argument('--revision', help='HF revision')
+    p.add_argument('--include-tests', action='store_true', help='also read test directories')
+    p.add_argument('-o', '--output', help='write every finding to this JSON file')
+    p.add_argument('--overwrite', action='store_true')
+
+    p = add('port')
+    p.add_argument('model', help='HF id or local directory of the ORIGINAL model')
+    p.add_argument('-o', '--output', required=True, help='directory to create: mlx/, golden/, report/, port.json')
+    p.add_argument('--dtype', choices=['float32', 'float16', 'bfloat16'], help='dtype of the port; default: as in the checkpoint')
+    p.add_argument('--q-bits', type=int, choices=[4, 8], help='quantize the port; the golden then holds its weights')
+    p.add_argument('--prompt', action='append', default=[], help='prompt for the golden (repeatable; needs a tokenizer)')
+    p.add_argument('--token-ids', action='append', default=[], metavar='ID,ID,...', help='token ids for the golden (repeatable)')
+    p.add_argument('--device', choices=['auto', 'cpu', 'gpu'], default='auto', help='MLX device for the comparison')
+    p.add_argument('--revision', help='HF revision of the original')
+    p.add_argument('--overwrite', action='store_true')
+    p.add_argument('--dry-run', action='store_true', help='check the architecture and show the plan; download no weights')
 
     p = add('tracediff')
     p.add_argument('a', help='first trace directory')

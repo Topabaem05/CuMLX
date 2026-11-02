@@ -7,6 +7,10 @@ description: Verify that an MLX port computes the same as its original PyTorch m
 
 Prove a port before you report it as correct. A successful conversion or a plausible generated text is not proof.
 
+## Shortcut
+
+For a model that mlx-lm implements, `cumlx port <model> -o out/` runs the steps below in one command. Add `--q-bits 4` to quantize. `cumlx scan <path or HF id>` ranks the work for anything else, and never runs the scanned code.
+
 ## Procedure
 
 1. Check the environment. Follow `errors[].hint` if the command fails.

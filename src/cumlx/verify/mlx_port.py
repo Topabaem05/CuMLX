@@ -87,10 +87,14 @@ class Recorder:
     def __init__(self):
         self.calls: dict[str, int] = defaultdict(int)
         self.outputs: dict[str, Any] = {}
+        self.masks: dict[str, Any] = {}
 
-    def record(self, name: str, out) -> None:
+    def record(self, name: str, out, args: tuple = (), kwargs: dict | None = None) -> None:
         key = f'{name}#{self.calls[name]}'
         self.calls[name] += 1
+        kwargs = kwargs or {}
+        # The call is (x, mask, cache); a module called with x alone had no mask.
+        self.masks[key] = kwargs['mask'] if 'mask' in kwargs else (args[1] if len(args) > 1 else None)
         arr = first_array(out)
         if arr is not None:
             self.outputs[key] = arr
@@ -104,7 +108,7 @@ def _probed_class(cls: type) -> type:
             out = base_call(self, *args, **kwargs)
             active = _ACTIVE.get(id(self))
             if active is not None:
-                active[0].record(active[1], out)
+                active[0].record(active[1], out, args, kwargs)
             return out
 
         _PROBED[cls] = type(cls.__name__, (cls,), {'__call__': __call__, '__module__': cls.__module__,
@@ -221,11 +225,23 @@ def replay_experts(module, x, indices, scores):
     return (y * scores[None, ..., None]).sum(axis=-2)
 
 
-def replay(module, x, kind: str | None):
-    """Call a port module on a golden input. ``hidden`` modules also get a causal mask."""
+NO_RECORDED_MASK = object()
+
+
+def replay(module, x, kind: str | None, mask: Any = NO_RECORDED_MASK):
+    """Call a port module on a golden input.
+
+    A ``hidden`` module gets the mask that the port itself passed to it in its own forward pass. A convolution in a
+    hybrid model may take a padding mask or none, so a causal mask cannot be assumed. A causal mask is the fallback for
+    a module that the port's forward pass did not reach. A wrong mask from the parent still shows: the output differs.
+    """
     mx, _ = mlx()
     if kind != 'hidden':
         return first_array(module(x))
+    if mask is not NO_RECORDED_MASK:
+        params = list(inspect.signature(type(module).__call__).parameters.values())[2:]
+        if any(q.name == 'mask' for q in params):
+            return first_array(module(x, mask=mask))
     params = list(inspect.signature(type(module).__call__).parameters.values())[2:]
     if not any(q.name == 'mask' for q in params):
         required = [q.name for q in params if q.default is inspect.Parameter.empty
@@ -259,7 +275,7 @@ def _layer_cache(caches: list, name: str):
     return caches[int(match.group(1))]
 
 
-def replay_cached(model, module, name: str, earlier: list, x, kind: str):
+def replay_cached(model, module, name: str, earlier: list, x, kind: str, masks: list | None = None):
     """Fill the port's own KV cache with the golden inputs of the earlier steps, then run the new input.
 
     Every input is golden, so a failure means this module's own cache handling is wrong
@@ -271,9 +287,11 @@ def replay_cached(model, module, name: str, earlier: list, x, kind: str):
             module(step, cache=caches)
         return first_array(module(x, cache=caches))
     cache = _layer_cache(caches, name)
-    for step in earlier:
-        module(step, mask=_causal_mask(step), cache=cache)
-    return first_array(module(x, mask=_causal_mask(x), cache=cache))
+    steps = [*earlier, x]
+    use = masks if masks is not None and len(masks) == len(steps) else [_causal_mask(s) for s in steps]
+    for step, mask in zip(earlier, use):
+        module(step, mask=mask, cache=cache)
+    return first_array(module(x, mask=use[-1], cache=cache))
 
 
 def to_numpy(arr) -> np.ndarray:

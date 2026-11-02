@@ -6,13 +6,14 @@ import json
 from pathlib import Path
 import re
 import shlex
+import subprocess
 import sys
 import tempfile
 from typing import Any
 
 import numpy as np
 
-from ..errors import CumlxError, ExitCode
+from ..errors import CumlxError, ExitCode, missing_dependency
 from .output import Result, cap
 
 VERDICT_EXIT = {'ok': ExitCode.OK, 'diverged': ExitCode.DIVERGED, 'incomplete': ExitCode.INCOMPLETE}
@@ -334,6 +335,123 @@ def run_weights(args) -> Result:
     if rep['verdict'] == 'ok':
         r.suggest(f'cumlx capture {_q(args.original)} --prompt Hello -o golden/ && cumlx diff golden/ {_q(args.port)}',
                   'the weights are right; now check the code of the port')
+    return r
+
+
+# --------------------------------------------------------------------------- scan
+def run_scan(args) -> Result:
+    from ..verify.portability import scan
+    if args.output and Path(args.output).exists() and not args.overwrite:
+        raise CumlxError('E_OUTPUT_EXISTS', f'{args.output} exists', hint='pass --overwrite or choose a new path')
+    rep = scan(args.target, revision=args.revision, include_tests=args.include_tests)
+    r = Result('scan', summary=f"tier {rep['tier']}: {rep['recommendation']}")
+    r.data = {'tier': rep['tier'], 'recommendation': rep['recommendation'], 'model': rep['model'], 'tiers': rep['tiers'],
+              'files_scanned': rep['files_scanned'], 'cuda_source_files': rep['cuda_source_files'], 'limits': rep['limits'],
+              'findings': cap(rep['findings'], args.max_items, r)}
+    if args.output:
+        Path(args.output).write_text(json.dumps(rep, indent=1) + '\n')
+        r.artifact('scan_report', args.output)
+    if rep['tier'] == 'model':
+        r.suggest(f"cumlx port {_q(args.target)} -o port/", 'convert this model with mlx-lm and verify the result')
+    return r
+
+
+# --------------------------------------------------------------------------- port
+def _self(*argv: str) -> dict:
+    p = subprocess.run([sys.executable, '-m', 'cumlx', *argv, '--format', 'json', '--max-items', '5'], stdout=subprocess.PIPE,
+                       stderr=subprocess.DEVNULL, text=True, check=False)
+    try:
+        return json.loads(p.stdout)
+    except json.JSONDecodeError:
+        raise CumlxError('E_INTERNAL', f'`cumlx {argv[0]}` gave no JSON result (exit {p.returncode})') from None
+
+
+def _step(doc: dict) -> dict:
+    return {'exit_code': doc.get('exit_code'), 'status': doc.get('status'), 'summary': doc.get('summary'),
+            'errors': doc.get('errors', []), 'warnings': [w.get('code') for w in doc.get('warnings', [])]}
+
+
+def run_port(args) -> Result:
+    from ..verify.portability import scan
+    from ..verify.trace import check_output_dir, prepare_output_dir
+    log = _logger(args)
+    check_output_dir(args.output, overwrite=args.overwrite, marker='port.json')
+    triage = scan(args.model, revision=args.revision)
+    model = triage['model']
+    if not model:
+        raise CumlxError('E_MODEL_LOAD', f'{args.model} has no model config.json',
+                         hint=f'for a source repository, run `cumlx scan {_q(args.model)}`')
+    if model.get('mlx_lm_supports') is None:
+        raise missing_dependency('mlx_lm', 'diff', purpose='cumlx port')
+    if not model['mlx_lm_supports'] or model['needs_remote_code']:
+        why = 'needs remote code' if model['needs_remote_code'] else f"has model type {model['model_type']!r}, which mlx-lm does not implement"
+        raise CumlxError('E_MODEL_LOAD', f'{args.model} {why}, so there is no converter to run',
+                         hint=f'cumlx scan {_q(args.model)} ranks the work; write the port by hand, then verify it with `cumlx diff`',
+                         details={'tier': triage['tier'], 'model': model})
+    inputs = [x for p in args.prompt for x in ('--prompt', p)] + [x for t in args.token_ids for x in ('--token-ids', t)]
+    if not inputs:
+        inputs = ['--prompt', 'The capital of France is']
+    plan = {'model': args.model, 'model_type': model['model_type'], 'dtype': args.dtype, 'q_bits': args.q_bits, 'output': args.output,
+            'golden': 'port-weights' if args.q_bits else 'reference'}
+    if args.dry_run:
+        r = Result('port', summary=f"dry run: mlx-lm implements {model['model_type']}; would convert, compare weights, capture and diff",
+                   data={'dry_run': True, 'plan': plan})
+        r.suggest(f"cumlx port {_q(args.model)} -o {_q(args.output)}", 'run it')
+        return r
+    out = prepare_output_dir(args.output, overwrite=args.overwrite, marker='port.json')
+    mlx_dir = out / 'mlx'
+    convert = [sys.executable, '-m', 'mlx_lm', 'convert', '--hf-path', args.model, '--mlx-path', str(mlx_dir)]
+    if args.dtype:
+        convert += ['--dtype', args.dtype]
+    if args.q_bits:
+        convert += ['-q', '--q-bits', str(args.q_bits)]
+    if args.revision:
+        convert += ['--revision', args.revision]
+    log('converting with mlx-lm')
+    done = subprocess.run(convert, capture_output=True, text=True, check=False)
+    if done.returncode != 0:
+        raise CumlxError('E_MODEL_LOAD', f'mlx_lm convert failed: {done.stderr.strip()[-500:]}',
+                         hint='this is the converter, before any verification; check the message and the mlx-lm version')
+    steps = {'convert': {'exit_code': 0, 'status': 'ok', 'summary': f'mlx-lm wrote {mlx_dir}'}}
+    log('comparing weights')
+    weights = _self('weights', args.model, str(mlx_dir), '-o', str(out / 'weights.json'))
+    steps['weights'] = _step(weights)
+    golden = ['capture', args.model, *inputs, '-o', str(out / 'golden')]
+    if args.q_bits:
+        golden += ['--weights-from-mlx', str(mlx_dir)]
+    if args.revision:
+        golden += ['--revision', args.revision]
+    log('recording the golden')
+    captured = _self(*golden)
+    steps['capture'] = _step(captured)
+    r = Result('port')
+    if captured.get('exit_code') != 0:
+        r.exit_code = ExitCode(captured.get('exit_code') or ExitCode.INPUT)
+        r.errors.extend(captured.get('errors', []))
+        r.summary = f"the port was written, but the golden failed: {captured.get('summary')}"
+        r.data = {'verdict': 'error', 'steps': steps, 'plan': plan, 'port': str(mlx_dir)}
+        return r
+    log('comparing the port')
+    compared = _self('diff', str(out / 'golden'), str(mlx_dir), '-o', str(out / 'report'), '--device', args.device)
+    steps['diff'] = _step(compared)
+    data = compared.get('data') or {}
+    verdict = data.get('verdict') or 'error'
+    weights_verdict = (weights.get('data') or {}).get('verdict')
+    final = verdict
+    if verdict == 'ok' and weights_verdict != 'ok':
+        final = weights_verdict or 'incomplete'  # a clean diff does not excuse a failed weight comparison
+    r.exit_code = VERDICT_EXIT.get(final, ExitCode.INPUT)
+    r.errors.extend(compared.get('errors', []))
+    r.warnings.extend(w for w in compared.get('warnings', []))
+    fd = data.get('first_divergence')
+    r.summary = f"{final}: weights {weights_verdict}; {compared.get('summary')}"
+    r.data = {'verdict': final, 'port': str(mlx_dir), 'plan': plan, 'steps': steps, 'first_divergence': fd,
+              'execution': data.get('execution'), 'native_output': (data.get('summary') or {}).get('native_output')}
+    (out / 'port.json').write_text(json.dumps(_finite(r.data), indent=1, ensure_ascii=False) + '\n')
+    r.artifact('port', str(mlx_dir))
+    r.artifact('report_html', str(out / 'report' / 'report.html'))
+    if final == 'ok':
+        r.suggest(f"python -m mlx_lm generate --model {_q(mlx_dir)} --prompt Hello", 'use the verified port')
     return r
 
 

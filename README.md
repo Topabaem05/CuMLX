@@ -29,6 +29,23 @@ cumlx diff golden/ ./my-port -o report/                          # 포팅본 코
 
 ## 언제 무엇을 쓰는가
 
+### 모델을 쉽게 옮기고 싶다
+
+mlx-lm이 구현한 모델은 변환과 증명을 명령 하나로 끝냅니다. 변환은 mlx-lm이 하고, CUMLX는 결과를 검증합니다.
+
+```bash
+cumlx port Qwen/Qwen3-0.6B -o port/              # 변환 + 가중치 비교 + golden + diff
+cumlx port Qwen/Qwen3-0.6B --q-bits 4 -o port4/  # 양자화
+```
+
+CUDA 전용 프로젝트는 먼저 작업량을 봅니다. 소스를 텍스트로만 읽고 실행하지 않습니다.
+
+```bash
+cumlx scan ./some-cuda-repo
+```
+
+`model`, `device`, `library`, `kernel`, `platform` 중 하나로 분류합니다. `platform`은 RTX, Omniverse처럼 옮길 수 없는 경우입니다. Isaac Sim이 여기에 해당합니다. [검토 문서](docs/PORTING-CUDA-MODELS.md)를 보십시오.
+
 ### 모델을 MLX로 옮겼다
 
 위 세 명령을 실행합니다. `diff`는 각 모듈에 **원본의 입력을 그대로 넣어** 비교하므로, 오차가 누적되지 않고 잘못된 모듈 하나만 실패합니다. attention과 decoder layer도 따로 재생합니다.
@@ -113,9 +130,9 @@ CLI는 stdout에 JSON 문서 하나만 내보내고, 오류마다 해결 명령�
 
 자세한 수치와 원본 결과는 [검증 보고서](validation/REPORT.md)에 있습니다.
 
-**실행한 범위:** Apple M5 Pro(Metal, CPU), Linux MLX CPU(CI, tiny fixture). 원본은 Qwen2.5-0.5B 계열, SmolLM2-135M, Qwen3-0.6B이고, MoE는 공개 tiny random 모델입니다. 깨끗한 실행 38회의 false alarm은 0이고, 결함 주입 50회를 전부 정확한 모듈로 지목했습니다.
+**실행한 범위:** Apple M5 Pro(Metal, CPU), Linux MLX CPU(CI, tiny fixture), Tesla V100(CUDA golden). 원본은 Qwen2.5-0.5B 계열, SmolLM2-135M, Qwen3-0.6B와 2026년 공개 모델 7개(Gemma4, LFM2, Mixtral MoE, Qwen3, Llama)입니다. 깨끗한 실행 38회의 false alarm은 0이고, 결함 주입 50회를 전부 정확한 모듈로 지목했습니다.
 
-**미검증:** 학습된 실제 MoE 모델, CUDA golden([측정 절차](docs/CUDA-GOLDEN.md)), M5 외의 Apple GPU 세대, 패딩 입력, 음성·이미지 모델. 임계값은 위 범위의 측정값입니다.
+**미검증:** V100 외의 NVIDIA 장비, M5 외의 Apple GPU 세대, 패딩 입력, 음성·이미지 모델. 임계값은 위 범위의 측정값입니다.
 
 ## 문서
 
@@ -125,7 +142,8 @@ CLI는 stdout에 JSON 문서 하나만 내보내고, 오류마다 해결 명령�
 | [CLI](docs/CLI.md) | 명령, 판정, 임계값, 측정 기록 |
 | [AGENTS.md](AGENTS.md) | 에이전트 사용법과 개발 안내 |
 | [Trace 형식](docs/TRACE-FORMAT.md) | golden trace 공개 명세 |
-| [CUDA golden 측정](docs/CUDA-GOLDEN.md) | NVIDIA 장비에서 실행할 절차 |
+| [CUDA golden 측정](docs/CUDA-GOLDEN.md) | V100 측정 결과와 다른 NVIDIA 장비에서 실행할 절차 |
+| [CUDA 프로젝트 포팅 검토](docs/PORTING-CUDA-MODELS.md) | 변환 가능 범위, Isaac Sim 검토, `scan`과 `port` |
 | [로드맵](docs/ROADMAP-1MONTH.md) | 마일스톤 진행 상태 |
 | [FP4 커널 lab](docs/FP4-KERNEL-LAB.md) | 실험용 NVFP4/MXFP4 Metal·CUDA 커널 |
 | [CI](docs/CI.md) | 자동 검사와 GPU 검증 경계 |

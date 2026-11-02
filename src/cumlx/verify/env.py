@@ -22,6 +22,8 @@ REQUIREMENTS = {
     'diff': ['mlx', 'mlx_lm'],
     'conform': ['mlx'],
     'weights': ['mlx', 'mlx_lm'],
+    'scan': [],
+    'port': ['torch', 'transformers', 'mlx', 'mlx_lm'],
 }
 
 

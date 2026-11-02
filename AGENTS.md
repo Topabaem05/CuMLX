@@ -57,6 +57,10 @@ Read these before you trust a result:
 - `W_WEIGHT_ROUNDING_NOISE`: thresholds rose with the rounding noise of this port; smaller defects can pass.
 - `W_PARTIAL_TRACE`: the golden holds only some modules (`--layers`); the verdict covers only those.
 
+- `W_MODULE_BOUNDARY_DIFFERS`: an output is a constant multiple of the golden and its parent matches. The factor sits in another module in that framework. This is not a defect.
+
+To start from a CUDA project: `cumlx scan <path or HF id>` ranks the work (model, device, library, kernel, platform) without running the code. `cumlx port <model> -o out/` converts with mlx-lm and proves the result in one command. It refuses a model that mlx-lm does not implement. See `docs/PORTING-CUDA-MODELS.md`.
+
 Other commands: `cumlx conform --checkpoint <modelopt> --against <mlx-repack>` compares an NVFP4 repack with its original, byte by byte. `cumlx tracediff A B` measures how far a golden moves between devices. `cumlx.check_op(torch_fn, mlx_fn, inputs)` compares one op. `cumlx-mcp` serves every command as an MCP tool. `skills/cumlx-verifier/SKILL.md` is a skill for porting agents. `docs/TRACE-FORMAT.md` is the trace specification.
 
 On `exit_code == 5`, some parametrized modules were not compared. Map them with

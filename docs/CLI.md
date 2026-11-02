@@ -23,6 +23,8 @@ Linux에서는 `diff` extra가 `mlx[cpu]`를 설치합니다. 같은 환경에 �
 | `diff` | MLX 포팅본을 같은 입력으로 실행해 비교하고 처음 어긋난 모듈을 찾음 | diff |
 | `conform` | MLX의 NVFP4/MXFP4 decode를 CUMLX bit-정확 코덱과 CPU·GPU에서 전수 비교. `--checkpoint`와 `--against`를 주면 ModelOpt 원본과 MLX repack의 bytes를 비교 | diff |
 | `tracediff` | golden trace 두 개를 비교. CUDA와 CPU capture의 차이처럼 기준 자체의 흔들림을 측정 | - |
+| `scan` | CUDA 저장소나 HF 모델의 소스를 텍스트로 읽어, Apple Silicon으로 옮기는 작업량을 분류. 대상 코드는 실행하지 않음 | - |
+| `port` | mlx-lm으로 변환한 뒤 가중치 비교, golden 기록, diff까지 한 번에 실행 | capture, diff |
 | `weights` | 모델을 실행하지 않고 원본 safetensors와 포팅본 가중치를 비교. 전치·부호·scale 오류를 이름으로 지목 | diff |
 | `report` | 기존 `report.json` 요약 (`--max-items`로 다시 읽기) | - |
 | `selftest` | 검증기 자체 검증: 깨끗한 포팅 통과 + 오류 주입 11종 위치 검출 + 정적 가중치 비교 | 전체 기능은 capture+diff |
@@ -70,6 +72,8 @@ cumlx selftest
 - 상태: `pass`, `fail`, `unverified`(파라미터가 있는데 비교 못 함 → exit 5), `skipped`(파라미터 없는 보조 모듈), `ignored`(사용자가 제외).
 - **decode 단계:** capture는 기본으로 KV cache 위의 생성 한 단계를 함께 기록합니다(`--decode-steps`). 다음 토큰은 golden logits에서 고르므로 양쪽 입력이 같습니다. diff는 모듈마다 새 KV cache를 만들어 prefill의 golden 입력으로 채운 뒤 다음 입력을 넣습니다. 모든 입력이 golden이라 실패하면 그 모듈의 캐시 처리(위치 오프셋, mask, 캐시 갱신)가 틀린 것입니다. `first_divergence.phase`가 `decode`로 나옵니다. KV cache가 없는 포팅본은 decode 기록이 `unverified`가 되고 `W_DECODE_NOT_RUN`이 나옵니다.
 - **MoE:** HF의 `mlp.experts`를 mlx-lm의 `mlp.switch_mlp`로 자동 매핑합니다. expert는 원본의 라우팅(top-k 인덱스, 가중치)으로 재생하므로 라우터 결함과 expert 결함을 구분합니다. chain 출력은 형태가 달라 비교할 수 없어서 `--mode chain`에서는 experts가 `unverified`입니다.
+- **모듈 경계 차이:** 출력이 golden의 상수배이고 부모 모듈이 일치하면, 그 상수를 부모에서 적용하는 구현 차이입니다. 예를 들어 transformers는 Gemma 임베딩을 임베딩 안에서 스케일하고 mlx-lm은 모델 본체에서 스케일합니다. `boundary_scale`을 기록하고 `W_MODULE_BOUNDARY_DIFFERS`를 내며, 실패로 세지 않습니다. 진짜 scale 결함은 부모 출력도 바꾸므로 실패로 남습니다.
+- **mask:** 재생에는 포팅본이 자체 실행에서 그 모듈에 넘긴 mask를 그대로 씁니다. 하이브리드 모델의 합성곱 층은 causal mask를 받지 않기 때문입니다.
 - **일부만 기록:** `capture --layers 0,13,27`은 그 decoder layer와 스택 밖의 모듈만 기록해 큰 모델의 trace를 줄입니다. diff는 `W_PARTIAL_TRACE`를 내고, 판정은 기록된 모듈에 대한 것입니다. 기록하지 않은 layer의 결함은 그 layer를 포함하는 모듈의 실패로 나타납니다.
 - weight tying: `lm_head`가 `embed_tokens`와 가중치를 공유하면 capture가 이를 기록하고, diff는 `embed_tokens.as_linear`를 재생해 실제로 비교합니다.
 
@@ -162,7 +166,38 @@ mlx-lm 0.32.2는 transformers 5가 쓴 config의 `rope_parameters`를 많은 모
 
 ### 장치 간 golden 차이
 
-Qwen2.5-0.5B, 입력 2개, `cumlx tracediff`로 잰 값입니다. 반복 실행은 CPU와 MPS 모두 완전히 같습니다. MPS와 CPU의 차이는 최대 4.3e-5, 중앙값 1.2e-5로 float32 임계값 1e-4 안입니다. CUDA는 측정하지 않았습니다.
+Qwen2.5-0.5B, 입력 2개, `cumlx tracediff`로 잰 값입니다. 전부 float32 임계값 1e-4 안입니다. V100 측정의 [원본 결과](../validation/cuda-golden-v100.json)가 있습니다.
+
+| 비교 | 최악 rel_l2 |
+|---|---|
+| CPU 반복, MPS 반복, V100 CUDA 반복 | 0.0 |
+| V100 CUDA vs V100 CPU | 1.9e-5 |
+| MPS vs CPU (M5 Pro) | 4.3e-5 |
+| V100 CUDA vs M5 Pro CPU | 4.5e-5 |
+| V100 CPU vs M5 Pro CPU | 5.1e-5 |
+
+M5 Pro의 MLX bf16 포팅본은 V100 CUDA golden으로도 `ok`입니다(top-1 13/13). CUDA 장비에서 받은 golden을 Mac에서 그대로 쓸 수 있습니다. 모델 하나, V100 한 대의 결과입니다.
+
+### 최신 Hugging Face 모델
+
+[validation/latest-models.json](../validation/latest-models.json)은 2026-11-02 기준 최근 모델 12개의 결과입니다. 같은 체크포인트를 transformers와 mlx-lm으로 각각 로드해 비교하므로, mlx-lm 구현 자체를 검증합니다. 측정한 모델은 바로 삭제했습니다.
+
+| 모델 | 구조 | 구현 판정 | 4bit 판정 | isolated 최악 | native top-1 |
+|---|---|---|---|---|---|
+| Octen/Octen-WebGR-0.6B | Qwen3 | ok | ok | 7.4e-6 | 54/55 |
+| LiquidAI/LFM2.5-230M | LFM2 하이브리드 | ok | ok | 6.3e-6 | 58/60 |
+| udgamlabs/Laghu | Gemma4 | ok | ok | 임베딩 외 임계값 이내 (leaf 1e-04, composite 1e-04) | 73/74 |
+| udgamlabs/Vemana-Base | Gemma4 | ok | ok | 임베딩 외 임계값 이내 (leaf 1e-04, composite 1e-04) | 106/106 |
+| nkthebass/tinybrainbot-61m-a10m-v4.1-moe-base | Mixtral MoE | ok | ok | 2.7e-6 | 85/85 |
+| nkthebass/tinybrainbot-360m-a75m-v5.1-instruct | Mixtral MoE | ok | ok | 2.4e-6 | 68/68 |
+| nkthebass/tinybrainbot-100m-v5.1-base | Llama | ok | ok | 1.5e-5 | 37/38 |
+
+Gemma4의 임베딩은 상수배 차이(transformers가 임베딩 안에서 스케일)라서 `boundary_scale`로 기록됩니다.
+
+나머지 5개는 비교하지 못했습니다. 통과가 아닙니다.
+
+- Ling-3.0-flash-UBTree, MiniCPM-V-4.7-1B-DSpark, Qwen3.8-Flash-Next-DFlash2, North-Mini-Code-1.0-eagle: `embed_tokens`나 `lm_head`가 없는 draft 또는 부분 체크포인트입니다. 표준 모델로 로드하면 그 가중치가 랜덤이 되므로 capture가 거부합니다.
+- Climate-1000-Granite-0.35b: mlx-lm 0.32.2가 `linear_attention` 층을 구현하지 않아 로드 오류를 냅니다.
 
 ### 큰 모델의 capture
 
@@ -193,7 +228,7 @@ Qwen2.5-0.5B의 float32·float16·bf16·4bit·8bit 포팅 모두 290개 파라�
 
 ### 관찰: 네이티브 저정밀 양자화의 CPU와 GPU 차이
 
-4bit+bf16 포팅본의 네이티브 top-1은 GPU에서 63/64, CPU에서 54/64입니다(SmolLM2 92/94, 76/94). CPU 실행은 329초로 GPU(4초)보다 훨씬 느립니다. isolated float32 재생은 양쪽 모두 1.3e-5이므로 가중치와 로직 문제는 아닙니다. 원인은 조사하지 않았습니다.
+4bit+bf16 포팅본의 네이티브 top-1은 GPU에서 63/64, CPU에서 54/64입니다(SmolLM2 92/94, 76/94). CPU 실행은 349초로 GPU(4초)보다 훨씬 느립니다. isolated float32 재생은 양쪽 모두 1.3e-5이므로 가중치와 로직 문제는 아닙니다. 원인은 조사하지 않았습니다.
 
 ### Linux
 
@@ -208,5 +243,6 @@ Qwen2.5-0.5B의 float32·float16·bf16·4bit·8bit 포팅 모두 290개 파라�
 - 이름 매핑은 동일 경로와 JSON 규칙만 지원합니다. mlx-lm 외의 포팅은 `--loader python:pkg.mod:fn`이 필요합니다.
 - `weights`는 safetensors 체크포인트만 읽습니다. 양자화 가중치는 방향과 scale만 판정하므로 작은 값 오류는 놓칠 수 있습니다.
 - `conform --checkpoint`는 row-major low-nibble-first 레이아웃의 ModelOpt NVFP4만 읽습니다.
-- CUDA golden은 측정하지 않았습니다. [측정 절차](CUDA-GOLDEN.md)를 따르십시오.
+- CUDA golden은 Qwen2.5-0.5B와 V100 한 대로만 측정했습니다. 다른 장비는 [측정 절차](CUDA-GOLDEN.md)를 따르십시오.
+- PyTorch `Conv1d`, `Conv2d` 모듈을 직접 재생하지 않습니다(입력 레이아웃이 다름). 그 모듈을 포함한 상위 모듈로 판정합니다. 비전 모델은 범위 밖입니다.
 - 임계값은 두 모델과 M5 Pro 한 기기의 측정값입니다. 다른 아키텍처와 GPU 세대에서는 재확인이 필요합니다.

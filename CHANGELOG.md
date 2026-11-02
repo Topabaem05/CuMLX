@@ -1,5 +1,29 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `cumlx scan`: rank the work to run a CUDA project or model on Apple Silicon, from a text scan. It never runs the scanned code.
+- `cumlx port`: convert with mlx-lm and prove the result in one command. It refuses a model that mlx-lm does not implement.
+- `docs/PORTING-CUDA-MODELS.md`: what can be converted, and why Isaac Sim cannot.
+- Mixtral (`block_sparse_moe`) and channels-last convolution support in `weights`, `diff` and `--weights-from-mlx`.
+
+### Fixed
+
+Each came from running recent models, and each has a test.
+
+- Replay now uses the mask that the port itself passed. A causal mask broke the LFM2 convolution.
+- A decode-phase module with a float input is a hidden state, not tokens.
+- A constant factor that the parent module applies, as in Gemma embeddings, is no longer a false alarm. A real scale error still fails, because the parent then differs.
+- `capture` refuses a checkpoint with missing weights. transformers only logs them and fills them with random values, so a golden from it was meaningless.
+- `--weights-from-mlx` refuses to write a golden that leaves out part of the port's weights.
+
+### Measured
+
+- CUDA golden on a Tesla V100: repeat runs are identical, CUDA against CPU is at most 1.9e-5, and an MLX port on a Mac passes against it.
+- 12 recent Hugging Face models: 7 ok, 4 not comparable (partial checkpoints), 1 not loadable by mlx-lm.
+
 ## 0.4.0 (2026-11-02)
 
 The first release of the porting parity verifier. CUMLX does not convert models. It proves that an MLX port computes the same as the original PyTorch model and locates the first module that differs.
@@ -25,6 +49,6 @@ The first release of the porting parity verifier. CUMLX does not convert models.
 
 ### Known limits
 
-- Not run: CUDA goldens, Apple GPU generations other than M5, trained MoE models, padded inputs, models that are not LLMs.
+- Not run: Apple GPU generations other than M5, padded inputs, models that are not LLMs.
 - The thresholds come from two model families on one machine.
 - Not published to PyPI.

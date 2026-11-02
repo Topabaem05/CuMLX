@@ -213,6 +213,12 @@ def _run(trace: Trace, port: str, mapper: NameMapper, execution: dict, *, mode, 
     for e in entries:
         if e.get('chain') or e.get('isolated'):
             _settle(e)
+    moved = _accept_scale_moved_to_parent(entries)
+    if moved:
+        warnings.append({'code': 'W_MODULE_BOUNDARY_DIFFERS',
+                         'message': f'{moved} output(s) differ only by a constant factor that the parent module applies '
+                                    'in the other framework. The parents match, so these are not counted as failures',
+                         'hint': 'see records with boundary_scale'})
     counts = {k: sum(1 for e in entries if e['status'] == k) for k in
               ('pass', 'fail', 'unverified', 'skipped', 'ignored')}
     first = None
@@ -235,6 +241,7 @@ def _run(trace: Trace, port: str, mapper: NameMapper, execution: dict, *, mode, 
         'summary': {**counts, 'records': len(entries),
                     'isolated_compared': sum(1 for e in entries if e.get('isolated')),
                     'chain_drift': sum(1 for e in entries if e.get('chain_drift')),
+                    'boundary_differences': sum(1 for e in entries if e.get('boundary_scale') is not None),
                     'decode_records': sum(1 for e in entries if e.get('phase') == 'decode'),
                     'worst_isolated_rel_l2': max(isolated_values, default=None),
                     'worst_chain_rel_l2': max(chain_values, default=None),
@@ -271,6 +278,29 @@ def _judge_by_noise(entries: list[dict], threshold: dict, mode: str) -> None:
                 iso.pop('reason', None)
             else:
                 iso['reason'] = 'rel_l2_above_threshold'
+
+
+def _accept_scale_moved_to_parent(entries: list[dict]) -> int:
+    """An output that is a constant multiple of the golden, under a parent that matches, is a different module boundary.
+
+    Example: transformers scales Gemma embeddings inside the embedding, and mlx-lm scales them in the model body.
+    A real scale defect also changes the parent, so it stays a failure.
+    """
+    by_key = {(e['sample'], e['phase'], e['name']): e for e in entries}
+    moved = 0
+    for e in entries:
+        iso = e.get('isolated') or {}
+        if e.get('status') != 'fail' or iso.get('reason') != 'rel_l2_above_threshold' or (iso.get('cosine') or 0) < 1 - 1e-6:
+            continue
+        anc = _parent(e['name'])
+        while anc is not None and (e['sample'], e['phase'], anc) not in by_key:
+            anc = _parent(anc)
+        parent = by_key.get((e['sample'], e['phase'], anc)) if anc is not None else None
+        if parent is not None and (parent.get('isolated') or {}).get('verdict') == 'pass':
+            e.update(status='pass', boundary_scale=iso.get('scale'))
+            e.pop('fail_cause', None)
+            moved += 1
+    return moved
 
 
 def _settle(e: dict) -> None:
@@ -313,7 +343,7 @@ def _golden_array(arr: np.ndarray, mx):
     return mx.array(arr.astype(np.int32) if np.issubdtype(arr.dtype, np.integer) else arr.astype(np.float32))
 
 
-def _replay_record(trace, sample, r: ModuleRecord, module, x, model, mx):
+def _replay_record(trace, sample, r: ModuleRecord, module, x, model, mx, rec, target: str):
     if r.replay_kind == 'experts':
         indices, scores = (_golden_array(trace.tensor(sample, t.tensor), mx) for t in r.inputs[1:3])
         return mlx_port.replay_experts(module, x, indices, scores)
@@ -322,7 +352,12 @@ def _replay_record(trace, sample, r: ModuleRecord, module, x, model, mx):
         if not all(p.inputs for p in earlier):
             raise ValueError('an earlier step has no recorded input')
         steps = [_golden_array(trace.tensor(sample, p.inputs[0].tensor), mx) for p in earlier]
-        return mlx_port.replay_cached(model, module, r.name, steps, x, r.replay_kind)
+        keys = [f'{target}#{p.call}' for p in earlier] + [f'{target}#{r.call}']
+        masks = [rec.masks[k] for k in keys] if rec is not None and all(k in rec.masks for k in keys) else None
+        return mlx_port.replay_cached(model, module, r.name, steps, x, r.replay_kind, masks)
+    key = f'{target}#{r.call}'
+    if r.replay_kind == 'hidden' and rec is not None and key in rec.masks:
+        return mlx_port.replay(module, x, r.replay_kind, rec.masks[key])
     return mlx_port.replay(module, x, r.replay_kind)
 
 
@@ -357,7 +392,7 @@ def _compare_record(trace: Trace, sample, r: ModuleRecord, mapper: NameMapper, m
     if mode == 'isolated' and r.replayable and golden is not None:
         x = _golden_array(trace.tensor(sample, r.inputs[0].tensor), mx)
         try:
-            y = mlx_port.first_array(tied(x)) if tied is not None else _replay_record(trace, sample, r, mods[target], x, model, mx)
+            y = mlx_port.first_array(tied(x)) if tied is not None else _replay_record(trace, sample, r, mods[target], x, model, mx, rec, target)
             if y is None:
                 raise TypeError('module returned no array')
             mx.eval(y)

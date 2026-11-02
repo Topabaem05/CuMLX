@@ -1,0 +1,55 @@
+{
+ "schema": "cumlx.cuda-golden.v1",
+ "date": "2026-11-02",
+ "model": "Qwen/Qwen2.5-0.5B",
+ "revision": "060db6499f32faf8b98477b0a26969ef7d8b9987",
+ "inputs": [
+  "1,5,9,23,7,99,3,64,12,8",
+  "151643,872,1234"
+ ],
+ "decode_steps": 1,
+ "gpu": {
+  "name": "Tesla V100-SXM2-16GB",
+  "driver": "580.178.04",
+  "torch": "2.14.1+cu126",
+  "cuda": "12.6",
+  "transformers": "5.22.1",
+  "allow_tf32": false,
+  "idle_during_capture": true
+ },
+ "threshold_rel_l2": 0.0001,
+ "cuda_repeat": {
+  "worst_rel_l2": 0.0,
+  "median_rel_l2": 0.0,
+  "above_threshold": 0,
+  "compared": 1272
+ },
+ "cuda_vs_cpu_same_machine": {
+  "worst_rel_l2": 1.867773890887735e-05,
+  "median_rel_l2": 3.8821317380384115e-06,
+  "above_threshold": 0,
+  "compared": 1272
+ },
+ "cuda_vs_mac_cpu": {
+  "worst_rel_l2": 4.4531777204965456e-05,
+  "median_rel_l2": 1.2152550874032847e-05,
+  "above_threshold": 0,
+  "compared": 1272
+ },
+ "cpu_vs_mac_cpu": {
+  "worst_rel_l2": 5.056108522442323e-05,
+  "median_rel_l2": 1.3196797446889323e-05,
+  "above_threshold": 0,
+  "compared": 1272
+ },
+ "mlx_bf16_on_mac_vs_cuda_golden": {
+  "port": "mlx-community/Qwen2.5-0.5B-bf16",
+  "verdict": "ok",
+  "worst_isolated_rel_l2": 9.776149179088617e-06,
+  "worst_chain_rel_l2": 0.34161482658205516,
+  "top1": "13/13",
+  "device": "gpu",
+  "mlx": "0.32.4"
+ },
+ "limits": "One model, one V100. Other NVIDIA generations and torch.backends.cuda.matmul.allow_tf32=True were not measured."
+}

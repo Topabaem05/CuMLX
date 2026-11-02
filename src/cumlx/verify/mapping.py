@@ -42,10 +42,17 @@ class NameMapper:
         return NameMapper(rules, ignore, source=str(p))
 
     def with_port_conventions(self, port_modules) -> NameMapper:
-        """Add the rule for mlx-lm MoE ports: PyTorch ``experts`` is ``switch_mlp``. A mapping file overrides it."""
-        if self.rules or not any(n.rsplit('.', 1)[-1] == 'switch_mlp' for n in port_modules):
+        """Add the rules for mlx-lm MoE ports. A mapping file overrides them.
+
+        PyTorch ``experts`` is ``switch_mlp``. PyTorch ``mlp`` is ``block_sparse_moe`` in Mixtral.
+        """
+        leaves = {n.rsplit('.', 1)[-1] for n in port_modules}
+        if self.rules or 'switch_mlp' not in leaves:
             return self
-        return NameMapper([(re.compile(r'\.experts(?=\.|$)'), '.switch_mlp')], self.ignore, source='mlx-lm MoE convention')
+        rules = [(re.compile(r'\.experts(?=\.|$)'), '.switch_mlp')]
+        if 'block_sparse_moe' in leaves:
+            rules.append((re.compile(r'\.mlp(?=\.|$)'), '.block_sparse_moe'))
+        return NameMapper(rules, self.ignore, source='mlx-lm MoE convention')
 
     def is_ignored(self, torch_name: str) -> bool:
         return any(p.search(torch_name) for p in self.ignore)

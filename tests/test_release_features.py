@@ -320,3 +320,286 @@ def test_tracediff_passes_equal_traces_and_reports_a_moved_golden(tmp_path, e2e)
     assert moved['verdict'] == 'diverged' and moved['worst'][0]['key'].startswith(('lm_head', '#'))
     with pytest.raises(CumlxError):
         compare_traces(a, capture('d', tokens=TOKENS[:4]))
+
+
+# --------------------------------------------------------------- scan and port
+def _write(root, files):
+    for name, text in files.items():
+        path = root / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text)
+
+
+@pytest.mark.parametrize('files,tier,finding', [
+    ({'a.py': 'model = model.cuda()\n'}, 'device', 'torch-cuda-device'),
+    ({'a.py': 'import torch\nx = torch.ones(1)\n'}, 'device', None),
+    ({'a.py': 'from flash_attn import flash_attn_func\n', 'b.py': 'x.cuda()\n'}, 'library', 'flash-attn-import'),
+    ({'requirements.txt': 'bitsandbytes>=0.4\n'}, 'library', 'bitsandbytes'),
+    ({'k.cu': '__global__ void f() {}\n', 'a.py': 'x.cuda()\n'}, 'kernel', 'cuda-kernel-source'),
+    ({'setup.py': 'from torch.utils.cpp_extension import CUDAExtension\n'}, 'kernel', 'cuda-build'),
+    ({'sim.py': 'import warp as wp\n'}, 'kernel', 'warp-cuda'),
+    ({'app.py': 'import omni.kit.app\n', 'k.cu': '__global__ void f() {}\n'}, 'platform', 'omniverse-kit'),
+    ({'r.cpp': '#include <optix.h>\noptixInit();\n'}, 'platform', 'optix-rtx'),
+])
+def test_scan_ranks_the_hardest_dependency(tmp_path, files, tier, finding):
+    from cumlx.verify.portability import scan
+    _write(tmp_path, files)
+    rep = scan(str(tmp_path))
+    assert rep['tier'] == tier, rep['findings']
+    if finding:
+        assert finding in {f['id'] for f in rep['findings']}
+    else:
+        assert rep['findings'] == [] and 'No CUDA dependency' in rep['recommendation']
+
+
+def test_scan_reads_text_and_never_executes_the_target(tmp_path):
+    from cumlx.verify.portability import scan
+    marker = tmp_path / 'ran'
+    _write(tmp_path, {'evil.py': f'open({str(marker)!r}, "w").close()\nimport omni.kit\n', 'setup.py': f'open({str(marker)!r}, "w").close()\n'})
+    assert scan(str(tmp_path))['tier'] == 'platform'
+    assert not marker.exists()
+
+
+def test_scan_skips_docs_tools_and_tests_by_default(tmp_path):
+    from cumlx.verify.portability import scan
+    _write(tmp_path, {'docs/a.py': 'import omni.kit\n', 'tools/r.py': 'import omni.kit\n', 'tests/t.py': 'import omni.kit\n', 'a.py': 'x = 1\n'})
+    assert scan(str(tmp_path))['tier'] == 'device'
+    assert scan(str(tmp_path), include_tests=True)['tier'] == 'platform'
+
+
+@pytest.mark.e2e
+def test_scan_recognizes_a_model_and_remote_code(tmp_path, e2e):
+    from cumlx.verify.portability import scan
+    (tmp_path / 'config.json').write_text(json.dumps({'model_type': 'llama', 'architectures': ['LlamaForCausalLM']}))
+    rep = scan(str(tmp_path))
+    assert rep['tier'] == 'model' and rep['model']['mlx_lm_supports'] is True
+    (tmp_path / 'config.json').write_text(json.dumps({'model_type': 'llama', 'auto_map': {'AutoModel': 'x.Y'}}))
+    assert scan(str(tmp_path))['tier'] == 'device'
+    (tmp_path / 'config.json').write_text(json.dumps({'model_type': 'no_such_arch'}))
+    rep = scan(str(tmp_path))
+    assert rep['model']['mlx_lm_supports'] is False and rep['tier'] != 'model'
+
+
+def _cli(*argv):
+    env = {**os.environ, 'PYTHONPATH': str(ROOT / 'src'), 'CUMLX_FORMAT': 'json'}
+    p = subprocess.run([sys.executable, '-m', 'cumlx', *argv], capture_output=True, text=True, env=env)
+    doc = json.loads(p.stdout)
+    assert doc['exit_code'] == p.returncode
+    return doc
+
+
+@pytest.mark.e2e
+def test_port_converts_and_proves_a_model(tmp_path, e2e):
+    from tokenizers import Tokenizer
+    from tokenizers.models import WordLevel
+    from transformers import PreTrainedTokenizerFast
+
+    from cumlx.verify.fixtures import make_tiny_llama
+    make_tiny_llama(tmp_path / 'tiny')
+    # mlx_lm convert copies a tokenizer, and the fixture has none.
+    vocab = {f't{i}': i for i in range(128)}
+    PreTrainedTokenizerFast(tokenizer_object=Tokenizer(WordLevel(vocab, unk_token='t0')), unk_token='t0').save_pretrained(tmp_path / 'tiny')
+    plan = _cli('port', str(tmp_path / 'tiny'), '-o', str(tmp_path / 'p'), '--dry-run')
+    assert plan['ok'] and plan['data']['plan']['model_type'] == 'llama' and not (tmp_path / 'p').exists()
+    doc = _cli('port', str(tmp_path / 'tiny'), '-o', str(tmp_path / 'p'), '--token-ids', '1,5,9,23,7', '--dtype', 'bfloat16')
+    assert doc['ok'] and doc['data']['verdict'] == 'ok', doc
+    assert set(doc['data']['steps']) == {'convert', 'weights', 'capture', 'diff'}
+    assert (tmp_path / 'p' / 'mlx' / 'config.json').is_file() and (tmp_path / 'p' / 'report' / 'report.html').is_file()
+    assert _cli('port', str(tmp_path / 'tiny'), '-o', str(tmp_path / 'p'))['errors'][0]['code'] == 'E_OUTPUT_EXISTS'
+    q = _cli('port', str(tmp_path / 'tiny'), '-o', str(tmp_path / 'q'), '--token-ids', '1,5,9,23,7', '--q-bits', '4')
+    assert q['ok'] and q['data']['plan']['golden'] == 'port-weights', q
+
+
+@pytest.mark.e2e
+def test_port_refuses_when_no_converter_exists(tmp_path, e2e):
+    (tmp_path / 'm').mkdir()
+    (tmp_path / 'm' / 'config.json').write_text(json.dumps({'model_type': 'no_such_arch'}))
+    doc = _cli('port', str(tmp_path / 'm'), '-o', str(tmp_path / 'p'))
+    assert doc['exit_code'] == 4 and doc['errors'][0]['code'] == 'E_MODEL_LOAD' and 'no_such_arch' in doc['errors'][0]['message']
+    assert not (tmp_path / 'p').exists()
+    (tmp_path / 'src').mkdir()
+    (tmp_path / 'src' / 'a.py').write_text('x = 1\n')
+    doc = _cli('port', str(tmp_path / 'src'), '-o', str(tmp_path / 'p'))
+    assert doc['errors'][0]['code'] == 'E_MODEL_LOAD' and 'cumlx scan' in doc['errors'][0]['hint']
+
+
+# --------------------------------------------------------------- findings from recent real models
+@pytest.mark.e2e
+def test_replay_uses_the_mask_the_port_really_passed(e2e):
+    """LFM2 convolutions take a padding mask or none. A forced causal mask broke them."""
+    import mlx.core as mx
+    import mlx.nn as nn
+
+    from cumlx.verify import mlx_port
+
+    class Block(nn.Module):
+        def __call__(self, x, mask=None, cache=None):
+            if isinstance(mask, str):
+                raise TypeError('this block has no causal mask')
+            return x + 1 if mask is None else x * mask[..., None]
+
+    class Net(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.block = Block()
+
+        def __call__(self, x):
+            return self.block(x, None)
+
+    net = Net()
+    x = mx.ones((1, 3, 2))
+    with mlx_port.probe(net, {'block'}) as rec:
+        net(x)
+    assert rec.masks == {'block#0': None}
+    assert np.array_equal(np.array(mlx_port.replay(net.block, x, 'hidden', rec.masks['block#0'])), np.full((1, 3, 2), 2.0))
+
+
+@pytest.mark.e2e
+def test_constant_factor_moved_to_the_parent_is_not_a_defect_but_a_real_scale_error_is(tmp_path, e2e):
+    from cumlx.verify.diff import _accept_scale_moved_to_parent
+    fail = {'sample': 's', 'phase': 'prefill', 'name': 'model.embed', 'status': 'fail', 'fail_cause': 'self',
+            'isolated': {'reason': 'rel_l2_above_threshold', 'cosine': 1.0, 'scale': 32.0, 'verdict': 'fail'}}
+    good_parent = {'sample': 's', 'phase': 'prefill', 'name': 'model', 'status': 'pass', 'isolated': {'verdict': 'pass'}}
+    bad_parent = {**good_parent, 'status': 'fail', 'isolated': {'verdict': 'fail'}}
+    rows = [dict(fail), good_parent]
+    assert _accept_scale_moved_to_parent(rows) == 1 and rows[0]['status'] == 'pass' and rows[0]['boundary_scale'] == 32.0
+    rows = [dict(fail), bad_parent]  # the parent also differs: a real scale error
+    assert _accept_scale_moved_to_parent(rows) == 0 and rows[0]['status'] == 'fail'
+    rows = [{**fail, 'isolated': {**fail['isolated'], 'cosine': 0.9}}, good_parent]  # not a constant factor
+    assert _accept_scale_moved_to_parent(rows) == 0
+    rows = [dict(fail)]  # no parent was compared: nothing shows the factor comes back
+    assert _accept_scale_moved_to_parent(rows) == 0
+
+
+@pytest.mark.e2e
+def test_partial_port_weights_never_make_a_golden(tmp_path, e2e):
+    """Regression: Mixtral expert weights were silently left out, so the golden held the original experts."""
+    from cumlx.errors import CumlxError
+    from cumlx.verify import mlx_port
+    from cumlx.verify.capture_torch import load_hf_model, load_mlx_weights_into
+    from cumlx.verify.fixtures import make_tiny_llama
+    tiny = tmp_path / 'tiny'
+    make_tiny_llama(tiny)
+    weights = mlx_port.dequantized_weights(mlx_port.load_port(str(tiny)))
+    assert load_mlx_weights_into(load_hf_model(str(tiny)), dict(weights))['loaded'] > 0
+    renamed = dict(weights)
+    renamed['model.layers.0.mlp.renamed.weight'] = renamed.pop('model.layers.0.mlp.up_proj.weight')
+    with pytest.raises(CumlxError) as err:
+        load_mlx_weights_into(load_hf_model(str(tiny)), renamed)
+    assert err.value.code == 'E_INPUT_INVALID' and err.value.details['unused_port_weights'] and err.value.details['missing_in_port']
+
+
+@pytest.mark.e2e
+def test_conv_weights_are_compared_in_torch_layout(tmp_path, e2e):
+    import mlx.core as mx
+    import mlx.nn as nn
+    import torch
+
+    from cumlx.verify.capture_torch import _conv_to_torch_layout
+    from cumlx.verify.safetensors_io import save_file
+    from cumlx.verify.weights import run_weights
+
+    class Net(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.conv = nn.Conv1d(4, 8, 3)
+
+    net = Net()
+    original = np.transpose(np.array(net.conv.weight), (0, 2, 1))
+    save_file({'conv.weight': original, 'conv.bias': np.array(net.conv.bias)}, tmp_path / 'm.safetensors')
+    rep = run_weights(str(tmp_path / 'm.safetensors'), 'x', model=net)
+    assert rep['verdict'] == 'ok', rep['first_failure']
+    assert next(r for r in rep['parameters'] if r['name'] == 'conv.weight')['layout']
+    net.conv.weight = mx.transpose(mx.array(original[::-1].copy()), (0, 2, 1))  # the same shape with other values must fail
+    assert run_weights(str(tmp_path / 'm.safetensors'), 'x', model=net)['first_failure']['name'] == 'conv.weight'
+    torch_model = torch.nn.Sequential(torch.nn.Conv1d(4, 8, 3))
+    arr = np.ones((8, 3, 4), np.float32)
+    assert _conv_to_torch_layout(torch_model, '0.weight', arr, torch_model[0].weight).shape == (8, 4, 3)
+
+
+@pytest.mark.e2e
+def test_mixtral_moe_port_is_fully_compared(tmp_path, e2e):
+    """A trained Mixtral MoE stayed `incomplete`: PyTorch `mlp` is `block_sparse_moe` in mlx-lm."""
+    import torch
+    from transformers import MixtralConfig, MixtralForCausalLM
+
+    from cumlx.verify import faults, mlx_port
+    from cumlx.verify.capture_torch import capture_model, load_hf_model
+    from cumlx.verify.diff import run_diff
+    from cumlx.verify.trace import TraceWriter, prepare_output_dir
+    from cumlx.verify.weights import run_weights
+    torch.manual_seed(0)
+    config = MixtralConfig(vocab_size=128, hidden_size=64, intermediate_size=64, num_hidden_layers=2, num_attention_heads=4,
+                           num_key_value_heads=2, num_local_experts=4, num_experts_per_tok=2, tie_word_embeddings=False,
+                           initializer_range=0.25)
+    path = tmp_path / 'mixtral'
+    MixtralForCausalLM(config).float().eval().save_pretrained(path)
+    golden = prepare_output_dir(tmp_path / 'g', overwrite=True)
+    w = TraceWriter(golden, source={'framework': 'torch'}, max_bytes=1 << 30, golden={'kind': 'reference', 'dtype': 'float32'})
+    capture_model(load_hf_model(str(path)), [np.asarray(TOKENS)], w, decode_steps=1)
+    w.finish()
+    rep = run_diff(str(golden), str(path))
+    assert rep['verdict'] == 'ok' and rep['summary']['parametrized_coverage'] == 1.0, rep['first_divergence']
+    assert run_weights(str(path), str(path))['verdict'] == 'ok'
+    model = mlx_port.load_port(str(path))
+    faults.inject(model, 'F9', 'model.layers.1.block_sparse_moe')
+    fd = run_diff(str(golden), 'x', model=model)['first_divergence']
+    assert fd['module'] == 'model.layers.1.mlp.experts' and fd['basis'] == 'isolated'
+
+
+@pytest.mark.e2e
+def test_a_checkpoint_with_missing_weights_never_makes_a_golden(tmp_path, e2e):
+    """transformers logs a missing weight and fills it with random values."""
+    from cumlx.errors import CumlxError
+    from cumlx.verify.capture_torch import load_hf_model
+    from cumlx.verify.fixtures import make_tiny_llama
+    from cumlx.verify.safetensors_io import load_file, save_file
+    tiny = tmp_path / 'tiny'
+    make_tiny_llama(tiny)
+    assert load_hf_model(str(tiny)) is not None
+    tensors = load_file(tiny / 'model.safetensors')
+    del tensors['model.layers.0.self_attn.q_proj.weight']
+    save_file(tensors, tiny / 'model.safetensors')
+    with pytest.raises(CumlxError) as err:
+        load_hf_model(str(tiny))
+    assert err.value.code == 'E_MODEL_LOAD' and 'model.layers.0.self_attn.q_proj.weight' in err.value.details['missing']
+
+
+@pytest.mark.e2e
+def test_a_float_input_on_the_cache_is_a_hidden_state_not_tokens(e2e):
+    import torch
+
+    from cumlx.verify.capture_torch import _replay_inputs
+    inputs, kind, _ = _replay_inputs((), {'hidden_states': torch.ones(1, 2, 4), 'past_key_values': object()})
+    assert kind == 'single' and inputs[0][1].is_floating_point()  # capture_model then labels it hidden_cached in decode
+
+
+@pytest.mark.e2e
+def test_quantized_mixtral_golden_holds_the_quantized_experts(tmp_path, e2e):
+    """Regression: block_sparse_moe names did not reach the PyTorch experts."""
+    import mlx.nn as nn
+    import torch
+    from transformers import MixtralConfig, MixtralForCausalLM
+
+    from cumlx.verify import mlx_port
+    from cumlx.verify.capture_torch import capture_model, load_hf_model, load_mlx_weights_into
+    from cumlx.verify.diff import run_diff
+    from cumlx.verify.trace import TraceWriter, prepare_output_dir
+    torch.manual_seed(0)
+    config = MixtralConfig(vocab_size=128, hidden_size=64, intermediate_size=64, num_hidden_layers=1, num_attention_heads=4,
+                           num_key_value_heads=2, num_local_experts=4, num_experts_per_tok=2, tie_word_embeddings=False,
+                           initializer_range=0.25)
+    path = tmp_path / 'mixtral'
+    MixtralForCausalLM(config).float().eval().save_pretrained(path)
+    port = mlx_port.load_port(str(path))
+    nn.quantize(port, group_size=32, bits=4, class_predicate=lambda p, m: hasattr(m, 'to_quantized') and 'lm_head' not in p and 'embed' not in p)
+    original = load_hf_model(str(path))
+    before = original.model.layers[0].mlp.experts.down_proj.detach().clone()
+    info = load_mlx_weights_into(original, mlx_port.dequantized_weights(port))
+    assert not info['unused_port_weights'] and not torch.equal(before, original.model.layers[0].mlp.experts.down_proj)
+    golden = prepare_output_dir(tmp_path / 'g', overwrite=True)
+    w = TraceWriter(golden, source={'framework': 'torch'}, max_bytes=1 << 30, golden={'kind': 'quantization-aware', 'dtype': 'float32'})
+    capture_model(original, [np.asarray(TOKENS)], w)
+    w.finish()
+    rep = run_diff(str(golden), 'q', model=port)
+    assert rep['verdict'] == 'ok', rep['first_divergence']

@@ -1,6 +1,6 @@
 # CUMLX 1개월 로드맵 — CUDA→MLX 포팅 동등성 검증기
 
-작성일: 2026-11-02 (개정 5: W2~W4 결과 반영) · 기간: 2026-11-02 ~ 2026-11-30
+작성일: 2026-11-02 (개정 6: CUDA 측정, 최신 모델, 포팅 검토 반영) · 기간: 2026-11-02 ~ 2026-11-30
 베타 `v0.4.0b1`, 정식 `v0.4.0` (2026-11-02에 함께 완료) · 기준 커밋: `22fe8ce` (v0.3.0.dev0)
 
 > **한 줄 정의:** CUDA로 만든 모델을 *누가 어떻게* MLX로 옮겼든, **원본과 같은 동작을 하는지 레이어 단위로 증명하고, 다르면 어디서 처음 달라졌는지 찾아 주는 도구.**
@@ -18,7 +18,7 @@
 | W2 | decode 단계 capture | ✅ | `--decode-steps`, 포팅본 자체 KV cache 재생, F11 |
 | W2 | 양자화 기대 오차 oracle | ✅ | `--weights-from-mlx`. 모든 dtype에 임계값 1e-4 |
 | W2 | 정적 가중치 diff | ✅ | `cumlx weights`. 0.5B 모델 약 3.3초 |
-| W2 | MoE | ✅ 구조만 | 라우터·expert 분리 판정, expert별 scale, F9. **학습된 실제 MoE는 미실행** |
+| W2 | MoE | ✅ | 라우터·expert 분리 판정, expert별 scale, F9. 작은 Mixtral 공개 모델 2개와 tiny random 모델. 대형 MoE는 미실행 |
 | W2 | 임계값 보정 | ✅ | 깨끗한 포팅 10종 측정. 실행별 중앙값 기반 |
 | W3 | 공개 포팅본 3~5개 | ✅ | 10개 실행, 9개 ok, 1개 로드 불가. Dory NVFP4 repack 비교 |
 | W3 | `conform --checkpoint` | ✅ | 실제 Dory NVFP4, 텐서 288개 일치 |
@@ -26,13 +26,15 @@
 | W3 | 자체 커널 dogfooding | ✅ | GPU 테스트 36개, `check_op`으로 Metal 커널과 PyTorch 비교 |
 | W3 | 실제 불일치 발견 | ✅ | mlx-lm이 transformers 5의 `rope_parameters`를 놓침. [근거](../validation/upstream/README.md) |
 | W3 | **upstream 보고** | ⛔ 미완료 | mlx-lm 정책이 AI의 게시물 작성을 금지. 사용자가 직접 작성해야 함 |
-| W3 | **CUDA golden 측정** | ⛔ 미완료 | V100 장비에 쓰기 권한 승인 필요. [절차](CUDA-GOLDEN.md)와 `tracediff`는 준비됨. MPS로 도구 확인 |
+| W3 | CUDA golden 측정 | ✅ | V100, Qwen2.5-0.5B. 반복 실행 동일, CPU와 최대 1.9e-5. [결과](CUDA-GOLDEN.md) |
 | W4 | GitHub Action | ✅ 저장소 내부 | `action.yml`, `examples/port-ci`, CI의 `Action test`. 깨끗한 포팅 통과, 결함 포팅 실패 |
 | W4 | **별도 예제 저장소 적용** | ⛔ 미완료 | 접근 설정 변경과 저장소 생성이 권한에서 차단됨. 사용자 승인 필요 |
 | W4 | MCP 서버와 에이전트 스킬 | ✅ | `cumlx-mcp`, `skills/cumlx-verifier` |
 | W4 | `check_op` API | ✅ | `cumlx.check_op` |
 | W4 | 부분 기록 | ✅ | `--layers`, `W_PARTIAL_TRACE` |
 | W4 | 문서 | ✅ | 사용 사례 중심 README, [trace 명세](TRACE-FORMAT.md) |
+| 추가 | 최신 Hugging Face 모델 측정 | ✅ | 12개: 7개 ok, 4개 비교 불가(부분 체크포인트), 1개 mlx-lm 로드 불가. [결과](../validation/latest-models.json). 측정 후 삭제 |
+| 추가 | CUDA 전용 모델 변환 검토 | ✅ | `cumlx scan`, `cumlx port`, [검토 문서](PORTING-CUDA-MODELS.md). Isaac Sim은 변환 불가로 판단 |
 | 릴리스 | **PyPI 게시** | ⛔ 미완료 | 계정과 공개 결정 필요. 저장소도 비공개. GitHub 태그와 Release까지 수행 |
 | 릴리스 | **보고서와 명세의 외부 공개** | ⛔ 미완료 | 저장소가 비공개. 공유용 보고서 페이지는 만들었고(비공개 링크), 공유와 공개 전환은 사용자 결정 |
 
@@ -227,7 +229,7 @@ src/cumlx/
 - [x] 오류 주입 F1~F10 전체 10/10 지목 (attention·MoE 관련 F7~F10 포함) — F11까지 11/11. F9는 공개 tiny MoE
 - [x] 4bit 포팅본: 양자화 golden 기준 비교에서 깨끗한 포팅 false alarm 0, F4·F5(scale 오류) 검출 — 실제 모델
 - [x] 정적 가중치 diff: 전치·scale 오류를 1분 이내 검출 — 0.5B 모델 약 3.3초. 원본 합 약 1GB
-- [x] MoE 모델 1개(소형)에서 capture·diff 동작 — 공개 tiny random 저장소 3개와 fixture. 학습된 실제 MoE는 미실행
+- [x] MoE 모델 1개(소형)에서 capture·diff 동작 — 작은 Mixtral 공개 모델 2개, tiny random 저장소 3개, fixture
 
 ---
 
@@ -245,7 +247,7 @@ src/cumlx/
 **테스팅 마일스톤 T3**
 - [x] 공개 포팅본 3개 이상에 대한 검증 보고서 — 9개 ok, 1개 로드 불가. 저장소가 비공개라 외부 공개는 아직 아님
 - [ ] **upstream에 보고한 실제 불일치 ≥ 1건** (방향이 맞는지 판단하는 핵심 지표) — 불일치는 찾음(`rope_parameters`), 보고는 사용자가 직접 해야 함. 관련 upstream PR #1964가 열려 있음
-- [ ] CUDA golden vs CPU golden 차이가 기본 임계값 이내임을 문서화 (아니면 임계값 정책 수정) — 미측정. 장비 쓰기 권한 필요. MPS vs CPU는 최대 4.3e-5
+- [x] CUDA golden vs CPU golden 차이가 기본 임계값 이내임을 문서화 — V100에서 최대 1.9e-5, Mac CPU와 최대 4.5e-5. [기록](CUDA-GOLDEN.md)
 - [x] 기존 GPU 테스트 35개 Metal 실기에서 skip 0으로 실행, 결과 기록 — M5 Pro, MLX 0.32.2와 0.32.4
 
 ---

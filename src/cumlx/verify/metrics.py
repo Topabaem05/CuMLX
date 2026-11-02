@@ -102,7 +102,8 @@ def compare(actual: np.ndarray, expected: np.ndarray, threshold: dict[str, Any])
     else:
         rel = 0.0 if dn == 0 else math.inf
     cos = float(np.dot(a64.ravel(), e64.ravel()) / (an * en)) if an > 0 and en > 0 else (1.0 if an == en else 0.0)
-    out.update(rel_l2=_finite_or_none(rel), max_abs=max_abs, cosine=_finite_or_none(cos))
+    out.update(rel_l2=_finite_or_none(rel), max_abs=max_abs, cosine=_finite_or_none(cos),
+               scale=_finite_or_none(float(np.dot(a64.ravel(), e64.ravel()) / (en * en))) if en > 0 else None)
     if en == 0:
         ok = max_abs <= threshold['zero_atol']
         out.update(verdict='pass' if ok else 'fail', basis='zero_atol')

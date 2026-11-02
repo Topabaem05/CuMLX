@@ -9,8 +9,8 @@ mlx 0.32.4 (kernel tests also on 0.32.2), mlx-lm 0.32.2. These are local runs; C
 
 | Check | Observed result | Boundary |
 |---|---|---|
-| `pytest` (all markers) | 237 passed, 0 skipped | One Mac, Metal default device |
-| `pytest -m e2e --require-e2e` with no GPU emulated (`gpu_available` false, CPU default) | 56 passed | Emulation on the Mac; the real Linux result is the CI job |
+| `pytest` (all markers) | 259 passed, 0 skipped | One Mac, Metal default device |
+| `pytest -m e2e --require-e2e` with no GPU emulated (`gpu_available` false, CPU default) | 67 passed | Emulation on the Mac; the real Linux result is the CI job |
 | README followed in a new clone and venv | doctor, selftest, weights, capture, diff, quantized path, conform, check_op and MCP all ran as documented | SmolLM2-135M; Python 3.12 |
 | `pytest -m gpu --backend metal --require-gpu` | 36 passed, skip 0 on 0.32.4; the 35 kernel tests also passed on 0.32.2 | Compile and numerics; not speed |
 | `cumlx selftest` (auto, cpu, gpu) | 11 passed, 0 failed, 0 skipped | Tiny models |
@@ -23,7 +23,11 @@ mlx 0.32.4 (kernel tests also on 0.32.2), mlx-lm 0.32.2. These are local runs; C
 | Large capture (`large-capture-qwen2.5-7b.json`) | 7.6B parameters, 3 of 28 layers: 322 MB, 12.1 s | Random weights, bf16; architecture only |
 | Agent over MCP (`mcp-agent-demo.md`) | Real agent located an injected fault in 4 turns | One run on a tiny fixture |
 | GitHub Actions on `3584292` | CI: all 7 jobs passed, including the Linux verifier. Action test: clean port ok; faulty port failed at `model.layers.1.self_attn` | Tiny fixture |
-| CUDA, other Apple GPU generations, trained MoE, padded inputs | **Not run** | |
+| CUDA golden on Tesla V100 (`cuda-golden-v100.json`) | Repeat runs identical; CUDA against CPU worst 1.9e-5; against M5 Pro CPU 4.5e-5; an MLX bf16 port on the Mac passes against it | One model, one GPU |
+| Recent HF models (`latest-models.json`) | 12 models: 7 ok on both the implementation and a 4-bit conversion; 4 refused as partial checkpoints; 1 not loadable by mlx-lm | Short prompts; one revision of each |
+| `cumlx scan` on 5 repositories (`scan-cuda-repos.json`) | IsaacSim `platform`; warp, flash-attention, nvdiffrast, sam2 `kernel` | Text scan; nothing was built or run |
+| `cumlx port` on SmolLM2-135M, 4 bits | ok: 730 pass, 0 fail, and the port generated text | One run |
+| Other NVIDIA and Apple GPU generations, padded inputs, large MoE | **Not run** | |
 
 Evidence: [real models](dogfood-macos-m5-pro.json), [public ports](public-ports.json), [NVFP4 repack](checkpoint-dory-nvfp4.json), [large capture](large-capture-qwen2.5-7b.json), [agent demo](mcp-agent-demo.md), [upstream finding](upstream/README.md). `scripts/dogfood_real_model.py`, `scripts/public_port_campaign.py` and `scripts/measure_large_capture.py` reproduce them.
 The numbers and the reasoning for thresholds are in [the CLI document](../docs/CLI.md#검증-기록-2026-11-02).
@@ -42,6 +46,10 @@ The numbers and the reasoning for thresholds are in [the CLI document](../docs/C
 | SmolLM2 and tiny MoE on CPU | A bf16 MoE port on CPU ended as an internal error | `E_MODEL_RUN` with a hint | `test_op_missing_on_this_device...` |
 | Dory1.0 NVFP4 | The safetensors reader refused FP8 scale tensors | Read as raw codes | `test_safetensors_reads_fp8...` |
 | Qwen3-0.6B | A stored `lm_head.weight` stayed unverified against a tied port | Compared with the embedding | `test_static_weights_compare_a_stored_head...` |
+| LFM2.5-230M | A forced causal mask broke hybrid convolutions; their decode input was labeled as tokens; conv weights were compared in the wrong layout | Replay the mask the port really passed; label by dtype; compare in torch layout | `test_replay_uses_the_mask...`, `test_a_float_input...`, `test_conv_weights...` |
+| Gemma4 | A factor that the parent applies was reported as divergence | Accepted only when the parent matches | `test_constant_factor_moved...` |
+| Mixtral | `mlp` stayed unverified, and quantized goldens silently kept the original experts | Name rule; a partial golden is now an error | `test_mixtral_moe...`, `test_partial_port_weights...`, `test_quantized_mixtral...` |
+| Draft checkpoints | transformers filled missing weights with random values, so a golden could be random | `capture` refuses | `test_a_checkpoint_with_missing_weights...` |
 
 ---
 

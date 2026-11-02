@@ -1,0 +1,262 @@
+{
+ "schema": "cumlx.scan-survey.v1",
+ "date": "2026-11-02",
+ "note": "Text scan only; nothing was built or run. Tests, docs, tools, scripts and examples are skipped.",
+ "repos": [
+  {
+   "repo": "isaac-sim/IsaacSim",
+   "commit": "5ef464e8d7",
+   "tier": "platform",
+   "files_scanned": 4584,
+   "cuda_source_files": 14,
+   "files_per_tier": {
+    "device": 28,
+    "library": 8,
+    "kernel": 221,
+    "platform": 1196
+   },
+   "findings": [
+    {
+     "id": "omniverse-kit",
+     "tier": "platform",
+     "files": 1141
+    },
+    {
+     "id": "optix-rtx",
+     "tier": "platform",
+     "files": 51
+    },
+    {
+     "id": "physx-gpu",
+     "tier": "platform",
+     "files": 4
+    },
+    {
+     "id": "warp-cuda",
+     "tier": "kernel",
+     "files": 166
+    },
+    {
+     "id": "cuda-kernel-source",
+     "tier": "kernel",
+     "files": 40
+    },
+    {
+     "id": "cuda-source-files",
+     "tier": "kernel",
+     "files": 14
+    },
+    {
+     "id": "cuda-build",
+     "tier": "kernel",
+     "files": 1
+    },
+    {
+     "id": "cuda-pip-wheels",
+     "tier": "library",
+     "files": 8
+    },
+    {
+     "id": "torch-cuda-device",
+     "tier": "device",
+     "files": 27
+    },
+    {
+     "id": "cuda-amp-backends",
+     "tier": "device",
+     "files": 1
+    }
+   ]
+  },
+  {
+   "repo": "NVlabs/nvdiffrast",
+   "commit": "253ac4fcea",
+   "tier": "kernel",
+   "files_scanned": 41,
+   "cuda_source_files": 5,
+   "files_per_tier": {
+    "device": 6,
+    "library": 0,
+    "kernel": 18,
+    "platform": 0
+   },
+   "findings": [
+    {
+     "id": "cuda-kernel-source",
+     "tier": "kernel",
+     "files": 12
+    },
+    {
+     "id": "cuda-source-files",
+     "tier": "kernel",
+     "files": 5
+    },
+    {
+     "id": "cuda-build",
+     "tier": "kernel",
+     "files": 1
+    },
+    {
+     "id": "torch-cuda-device",
+     "tier": "device",
+     "files": 6
+    }
+   ]
+  },
+  {
+   "repo": "Dao-AILab/flash-attention",
+   "commit": "54b044c8cf",
+   "tier": "kernel",
+   "files_scanned": 960,
+   "cuda_source_files": 613,
+   "files_per_tier": {
+    "device": 38,
+    "library": 76,
+    "kernel": 651,
+    "platform": 0
+   },
+   "findings": [
+    {
+     "id": "cuda-source-files",
+     "tier": "kernel",
+     "files": 613
+    },
+    {
+     "id": "cuda-kernel-source",
+     "tier": "kernel",
+     "files": 22
+    },
+    {
+     "id": "nvrtc-ptx",
+     "tier": "kernel",
+     "files": 11
+    },
+    {
+     "id": "cuda-build",
+     "tier": "kernel",
+     "files": 4
+    },
+    {
+     "id": "warp-cuda",
+     "tier": "kernel",
+     "files": 1
+    },
+    {
+     "id": "flash-attn-import",
+     "tier": "library",
+     "files": 68
+    },
+    {
+     "id": "apex",
+     "tier": "library",
+     "files": 4
+    },
+    {
+     "id": "xformers",
+     "tier": "library",
+     "files": 2
+    },
+    {
+     "id": "cuda-pip-wheels",
+     "tier": "library",
+     "files": 1
+    },
+    {
+     "id": "deepspeed",
+     "tier": "library",
+     "files": 1
+    },
+    {
+     "id": "torch-cuda-device",
+     "tier": "device",
+     "files": 36
+    },
+    {
+     "id": "cuda-amp-backends",
+     "tier": "device",
+     "files": 2
+    }
+   ]
+  },
+  {
+   "repo": "facebookresearch/sam2",
+   "commit": "2b90b9f5ce",
+   "tier": "kernel",
+   "files_scanned": 69,
+   "cuda_source_files": 1,
+   "files_per_tier": {
+    "device": 10,
+    "library": 0,
+    "kernel": 3,
+    "platform": 0
+   },
+   "findings": [
+    {
+     "id": "cuda-build",
+     "tier": "kernel",
+     "files": 1
+    },
+    {
+     "id": "cuda-kernel-source",
+     "tier": "kernel",
+     "files": 1
+    },
+    {
+     "id": "cuda-source-files",
+     "tier": "kernel",
+     "files": 1
+    },
+    {
+     "id": "torch-cuda-device",
+     "tier": "device",
+     "files": 8
+    },
+    {
+     "id": "cuda-amp-backends",
+     "tier": "device",
+     "files": 2
+    }
+   ]
+  },
+  {
+   "repo": "NVIDIA/warp",
+   "commit": "b5ea7bd058",
+   "tier": "kernel",
+   "files_scanned": 433,
+   "cuda_source_files": 15,
+   "files_per_tier": {
+    "device": 25,
+    "library": 0,
+    "kernel": 301,
+    "platform": 0
+   },
+   "findings": [
+    {
+     "id": "warp-cuda",
+     "tier": "kernel",
+     "files": 205
+    },
+    {
+     "id": "cuda-kernel-source",
+     "tier": "kernel",
+     "files": 66
+    },
+    {
+     "id": "nvrtc-ptx",
+     "tier": "kernel",
+     "files": 15
+    },
+    {
+     "id": "cuda-source-files",
+     "tier": "kernel",
+     "files": 15
+    },
+    {
+     "id": "torch-cuda-device",
+     "tier": "device",
+     "files": 25
+    }
+   ]
+  }
+ ]
+}

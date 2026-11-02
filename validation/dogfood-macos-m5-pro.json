@@ -28,7 +28,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 3948
+   "elapsed_ms": 4458
   },
   {
    "model": "Qwen/Qwen2.5-0.5B",
@@ -57,7 +57,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 7164
+   "elapsed_ms": 7592
   },
   {
    "model": "Qwen/Qwen2.5-0.5B",
@@ -86,7 +86,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 4579
+   "elapsed_ms": 5458
   },
   {
    "model": "Qwen/Qwen2.5-0.5B",
@@ -115,7 +115,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 8583
+   "elapsed_ms": 7899
   },
   {
    "model": "Qwen/Qwen2.5-0.5B",
@@ -144,7 +144,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 3948
+   "elapsed_ms": 3961
   },
   {
    "model": "Qwen/Qwen2.5-0.5B",
@@ -173,7 +173,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 8143
+   "elapsed_ms": 7391
   },
   {
    "model": "Qwen/Qwen2.5-0.5B",
@@ -202,7 +202,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 3511
+   "elapsed_ms": 3338
   },
   {
    "model": "Qwen/Qwen2.5-0.5B",
@@ -260,7 +260,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 4121
+   "elapsed_ms": 3740
   },
   {
    "model": "Qwen/Qwen2.5-0.5B",
@@ -289,7 +289,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 329376
+   "elapsed_ms": 349029
   },
   {
    "model": "Qwen/Qwen2.5-0.5B",
@@ -318,7 +318,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 3705
+   "elapsed_ms": 3891
   },
   {
    "model": "Qwen/Qwen2.5-0.5B",
@@ -347,7 +347,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 42985
+   "elapsed_ms": 44132
   },
   {
    "model": "Qwen/Qwen2.5-0.5B",
@@ -376,7 +376,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 4987
+   "elapsed_ms": 4579
   },
   {
    "model": "Qwen/Qwen2.5-0.5B",
@@ -405,7 +405,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 8566
+   "elapsed_ms": 8742
   },
   {
    "model": "HuggingFaceTB/SmolLM2-135M-Instruct",
@@ -434,7 +434,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 3652
+   "elapsed_ms": 3295
   },
   {
    "model": "HuggingFaceTB/SmolLM2-135M-Instruct",
@@ -463,7 +463,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 4477
+   "elapsed_ms": 3948
   },
   {
    "model": "HuggingFaceTB/SmolLM2-135M-Instruct",
@@ -492,7 +492,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 4181
+   "elapsed_ms": 3833
   },
   {
    "model": "HuggingFaceTB/SmolLM2-135M-Instruct",
@@ -521,7 +521,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 4643
+   "elapsed_ms": 4420
   },
   {
    "model": "HuggingFaceTB/SmolLM2-135M-Instruct",
@@ -550,7 +550,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 3638
+   "elapsed_ms": 3398
   },
   {
    "model": "HuggingFaceTB/SmolLM2-135M-Instruct",
@@ -579,7 +579,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 4460
+   "elapsed_ms": 4500
   },
   {
    "model": "HuggingFaceTB/SmolLM2-135M-Instruct",
@@ -608,7 +608,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 4085
+   "elapsed_ms": 4090
   },
   {
    "model": "HuggingFaceTB/SmolLM2-135M-Instruct",
@@ -637,7 +637,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 19199
+   "elapsed_ms": 18734
   },
   {
    "model": "HuggingFaceTB/SmolLM2-135M-Instruct",
@@ -666,7 +666,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 5452
+   "elapsed_ms": 3870
   },
   {
    "model": "HuggingFaceTB/SmolLM2-135M-Instruct",
@@ -695,7 +695,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 135210
+   "elapsed_ms": 135799
   },
   {
    "model": "HuggingFaceTB/SmolLM2-135M-Instruct",
@@ -724,7 +724,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 4254
+   "elapsed_ms": 3258
   },
   {
    "model": "HuggingFaceTB/SmolLM2-135M-Instruct",
@@ -753,7 +753,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 20899
+   "elapsed_ms": 19830
   }
  ],
  "rounding": [
@@ -1480,7 +1480,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 1906
+   "elapsed_ms": 1522
   },
   {
    "model": "yujiepan/qwen3-moe-tiny-random",
@@ -1531,7 +1531,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 2513
+   "elapsed_ms": 1543
   },
   {
    "model": "trl-internal-testing/tiny-Qwen3MoeForCausalLM",
@@ -1582,7 +1582,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 1793
+   "elapsed_ms": 1580
   },
   {
    "model": "katuni4ka/tiny-random-qwen3moe",
@@ -1611,7 +1611,7 @@
    "warnings": [],
    "first_divergence": null,
    "measured_gemm_noise": 1.4538029040169753e-07,
-   "elapsed_ms": 1797
+   "elapsed_ms": 1485
   },
   {
    "model": "katuni4ka/tiny-random-qwen3moe",
