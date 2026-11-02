@@ -21,6 +21,8 @@ credentials, and 10-minute job timeouts. No deployment or PyPI publication occur
   (skips fail), `cumlx selftest`, and `cumlx conform --target mlx`. Conform findings
   about MLX (exit 1) are stored as evidence and do not fail CI; other non-zero exits do.
   This proves the verifier on tiny random models only, not on real checkpoints or Metal.
+  Real checkpoints and Metal run through `scripts/dogfood_real_model.py` on a developer Mac (roadmap L2);
+  no workflow runs them yet. See [the validation report](../validation/REPORT.md).
 
 ## Physical GPU tests (separate, manual)
 
@@ -49,6 +51,9 @@ cumlx selftest
 python -m build
 python -m twine check dist/*
 ```
+
+On Apple Silicon, MLX defaults to TF32 for float32 matmul on M5 and later, so a test that expects
+float32 precision must set `MLX_ENABLE_TF32=0` before its first matmul; `tests/conftest.py` does this.
 
 A green CPU CI is not a GPU validation. Check exact commit SHA, workflow jobs,
 backend, and test counts before changing a validation status.

@@ -5,7 +5,8 @@ capture it with PyTorch, load it with mlx-lm and require that:
 
 * the clean port passes in both modes (no false alarm), and
 * every injected fault is located at the expected module (isolated mode),
-  including quantized-weight faults against a quantization-aware golden.
+  including quantized-weight faults against a quantization-aware golden, and
+* the static weight diff passes the clean port and names a transposed weight.
 
 A check that cannot run because a dependency is missing is ``skipped``,
 never ``pass``.
@@ -44,18 +45,19 @@ def _skip(steps: list, sid: str, title: str, missing: list[str]) -> None:
                   'hint': "python -m pip install 'cumlx-lab[capture,diff]'"})
 
 
-def run(work: Path, *, core_only: bool = False, log=lambda _m: None) -> list[dict]:
+def run(work: Path, *, core_only: bool = False, device: str = 'auto', log=lambda _m: None) -> list[dict]:
     steps: list[dict] = []
     _core(steps, work, log)
     if core_only:
         return steps
     missing = [m for m in ('torch', 'transformers', 'mlx', 'mlx_lm') if util.find_spec(m) is None]
-    e2e = ['E1 fixture', 'E2 capture', 'E3 clean port passes', 'E4 faults located', 'E5 quantized faults located']
+    e2e = ['E1 fixture', 'E2 capture', 'E3 clean port passes', 'E4 faults located', 'E5 quantized faults located',
+           'E7 static weight diff']
     if missing:
         for title in e2e:
             _skip(steps, title.split()[0], title, missing)
     else:
-        _end_to_end(steps, work, log)
+        _end_to_end(steps, work, device, log)
     if util.find_spec('mlx') is None:
         _skip(steps, 'E6', 'conform runs against MLX', ['mlx'])
     else:
@@ -112,7 +114,7 @@ def _core(steps: list, work: Path, log) -> None:
     _step(steps, 'C3', 'FP4 codec round trip', codec_sanity, log)
 
 
-def _end_to_end(steps: list, work: Path, log) -> None:
+def _end_to_end(steps: list, work: Path, device: str, log) -> None:
     import mlx.nn as nn
 
     from . import diff, faults, mlx_port
@@ -150,11 +152,12 @@ def _end_to_end(steps: list, work: Path, log) -> None:
     def clean():
         out = {}
         for mode in ('isolated', 'chain'):
-            rep = diff.run_diff(str(work / 'golden'), str(tiny), mode=mode)
+            rep = diff.run_diff(str(work / 'golden'), str(tiny), mode=mode, device=device)
             assert rep['verdict'] == 'ok', f"clean port gave {rep['verdict']} in {mode} mode: {rep['first_divergence']}"
             out[mode] = rep['summary']
         worst = max(e['chain']['rel_l2'] for e in rep['records'] if e.get('chain'))
         out['worst_chain_rel_l2'] = worst
+        out['execution'] = rep['execution']
         state['clean'] = True
         return out
 
@@ -166,7 +169,7 @@ def _end_to_end(steps: list, work: Path, log) -> None:
             model = mlx_port.load_port(str(tiny))
             target = faults.TINY_LLAMA_TARGETS[fid]
             faults.inject(model, fid, target)
-            rep = diff.run_diff(str(work / 'golden'), str(tiny), model=model, mode='isolated')
+            rep = diff.run_diff(str(work / 'golden'), str(tiny), model=model, mode='isolated', device=device)
             try:
                 results[fid] = {'title': faults.FAULTS[fid].title, **located(rep, target)}
             except AssertionError as exc:
@@ -179,7 +182,7 @@ def _end_to_end(steps: list, work: Path, log) -> None:
 
     def quantized_suite():
         results = {}
-        for fid, mode, gs in (('F4', 'mxfp4', 32), ('F5', 'nvfp4', 16)):
+        for fid, mode, gs in (('F4', 'mxfp4', 32), ('F5', 'nvfp4', 16), ('F10', 'nvfp4', 16)):
             def port():
                 m = mlx_port.load_port(str(tiny))
                 nn.quantize(m, group_size=gs, bits=4, mode=mode,
@@ -188,13 +191,27 @@ def _end_to_end(steps: list, work: Path, log) -> None:
             clean_port = port()
             gdir = work / f'golden-{mode}'
             capture(gdir, mlx_port.dequantized_weights(clean_port))
-            rep = diff.run_diff(str(gdir), f'tiny-{mode}', model=clean_port)
+            rep = diff.run_diff(str(gdir), f'tiny-{mode}', model=clean_port, device=device)
             assert rep['verdict'] == 'ok', f'clean {mode} port vs quantization-aware golden: {rep["verdict"]}'
             faulty = port()
             target = faults.TINY_LLAMA_TARGETS[fid]
             faults.inject(faulty, fid, target)
-            rep = diff.run_diff(str(gdir), f'tiny-{mode}', model=faulty)
+            rep = diff.run_diff(str(gdir), f'tiny-{mode}', model=faulty, device=device)
             results[fid] = {'title': faults.FAULTS[fid].title, **located(rep, target)}
         return {'faults': results}
 
-    _step(steps, 'E5', 'quantized-weight faults F4 (MXFP4) and F5 (NVFP4) are located', quantized_suite, log)
+    _step(steps, 'E5', 'quantized-weight faults F4 (MXFP4), F5 and F10 (NVFP4) are located', quantized_suite, log)
+
+    def static_weights():
+        from .weights import run_weights
+        rep = run_weights(str(tiny), str(tiny))
+        assert rep['verdict'] == 'ok', f"clean weights gave {rep['verdict']}: {rep['first_failure']}"
+        model = mlx_port.load_port(str(tiny))
+        target = faults.TINY_LLAMA_TARGETS['F1']
+        faults.inject(model, 'F1', target)
+        rep = run_weights(str(tiny), 'faulty', model=model)
+        first = rep['first_failure']
+        assert first and first['name'] == target + '.weight' and first.get('diagnosis') == 'transposed', str(first)
+        return {'parameters': rep['summary']['parameters'], 'located': first['name'], 'diagnosis': first['diagnosis']}
+
+    _step(steps, 'E7', 'static weight diff passes a clean port and names a transposed weight', static_weights, log)

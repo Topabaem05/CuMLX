@@ -1,6 +1,9 @@
 import os
 import pytest
 
+# MLX 0.32 reads this once per process, at the first matmul. A test that wants TF32 uses a subprocess.
+os.environ.setdefault('MLX_ENABLE_TF32','0')
+
 
 def pytest_addoption(parser):
     parser.addoption('--require-gpu',action='store_true',default=False,help='Fail, do not skip, if the selected physical GPU is unavailable')

@@ -49,12 +49,17 @@ class ModuleRecord:
     replay_note: str | None = None
     inputs: list[TensorRef] = field(default_factory=list)
     output: TensorRef | None = None
+    # 'single' = the only input is one tensor. 'hidden' = a hidden state plus causal context
+    # (mask, position embeddings) that the port recomputes. None = not replayable.
+    replay_kind: str | None = None
 
     @staticmethod
     def from_dict(d: dict) -> 'ModuleRecord':
         d = dict(d)
         d['inputs'] = [TensorRef(**t) for t in d.get('inputs', [])]
         d['output'] = TensorRef(**d['output']) if d.get('output') else None
+        if d.get('replay_kind') is None and d.get('replayable'):  # traces written before replay_kind existed
+            d['replay_kind'] = 'single'
         return ModuleRecord(**d)
 
 

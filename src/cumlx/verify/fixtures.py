@@ -16,7 +16,7 @@ TINY_LLAMA = dict(
 )
 
 
-def make_tiny_llama(out_dir: str | Path, *, seed: int = 0) -> dict:
+def make_tiny_llama(out_dir: str | Path, *, seed: int = 0, tie_word_embeddings: bool = False) -> dict:
     """Write a 2-layer random Llama (float32 safetensors + config.json) loadable by HF and mlx-lm.
 
     Norm weights and biases are randomized so that faults such as a dropped
@@ -31,7 +31,8 @@ def make_tiny_llama(out_dir: str | Path, *, seed: int = 0) -> dict:
     except ImportError:
         raise missing_dependency('transformers', 'capture', purpose='fixture') from None
     torch.manual_seed(seed)
-    config = LlamaConfig(**TINY_LLAMA)
+    settings = {**TINY_LLAMA, 'tie_word_embeddings': tie_word_embeddings}
+    config = LlamaConfig(**settings)
     model = LlamaForCausalLM(config).to(torch.float32).eval()
     gen = torch.Generator().manual_seed(seed + 1)
     with torch.no_grad():
@@ -44,4 +45,4 @@ def make_tiny_llama(out_dir: str | Path, *, seed: int = 0) -> dict:
     model.save_pretrained(out, safe_serialization=True)
     n_params = sum(p.numel() for p in model.parameters())
     return {'path': str(out), 'architecture': 'LlamaForCausalLM', 'parameters': int(n_params),
-            'config': dict(TINY_LLAMA), 'seed': seed, 'dtype': 'float32'}
+            'config': settings, 'seed': seed, 'dtype': 'float32'}

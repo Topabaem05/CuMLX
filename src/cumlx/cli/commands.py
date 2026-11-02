@@ -120,7 +120,7 @@ def run_capture(args) -> Result:
         argv = getattr(args, 'argv', None) or []
         r.suggest('cumlx ' + ' '.join(shlex.quote(a) for a in argv if a != '--dry-run'), 'run the capture for real')
         return r
-    from ..verify.capture_torch import capture_model, load_hf_model, load_mlx_weights_into, tokenize
+    from ..verify.capture_torch import capture_model, load_hf_model, load_mlx_weights_into, resolve_revision, tokenize
     log(f'loading PyTorch model {args.model} on {args.device}')
     model = load_hf_model(args.model, device=args.device, revision=args.revision,
                           trust_remote_code=args.trust_remote_code)
@@ -142,7 +142,7 @@ def run_capture(args) -> Result:
     except ImportError:  # pragma: no cover - load_hf_model already required it
         tf_version = None
     source = {'framework': 'torch', 'framework_version': torch.__version__, 'transformers_version': tf_version,
-              'model': args.model, 'revision': args.revision or getattr(model.config, '_commit_hash', None),
+              'model': args.model, 'revision': resolve_revision(args.model, args.revision, model),
               'architecture': type(model).__name__, 'device': args.device,
               'inputs': [{'kind': 'prompt', 'text': p} for p in prompts] +
                         [{'kind': 'token_ids', 'count': int(t.size)} for t in token_samples]}
@@ -177,7 +177,7 @@ def run_diff(args) -> Result:
         check_output_dir(args.output, overwrite=args.overwrite, marker='report.json')
     rep = diff(args.trace, args.port, mode=args.mode, loader=args.loader, mapping=args.mapping,
                profile=args.profile, rel_l2=args.rel_l2, include=include, exclude=exclude,
-               dry_run=args.dry_run, log=_logger(args))
+               dry_run=args.dry_run, device=args.device, tf32=args.tf32, log=_logger(args))
     r = Result('diff')
     for w in rep.get('warnings', []):
         r.warnings.append(w)
@@ -188,7 +188,7 @@ def run_diff(args) -> Result:
         missing = rep['mapping']['unmapped_with_params']
         r.summary = (f"dry run: {sum(x['found'] for x in rows)}/{len(rows)} recorded modules found in the port; "
                      f"{len(missing)} parametrized module(s) unmapped")
-        r.data = {'dry_run': True, 'port': rep['port'], 'threshold': rep['threshold'],
+        r.data = {'dry_run': True, 'port': rep['port'], 'threshold': rep['threshold'], 'execution': rep['execution'],
                   'unmapped_with_params': cap(missing, args.max_items, r)}
         if missing:
             r.suggest('cumlx diff ... --mapping rules.json', 'add rename rules for the unmapped modules')
@@ -198,9 +198,10 @@ def run_diff(args) -> Result:
     fd = rep['first_divergence']
     r.summary = (f"{rep['verdict']}: {s['pass']} pass, {s['fail']} fail, {s['unverified']} unverified, "
                  f"{s['skipped']} skipped" +
+                 (f", {s['chain_drift']} chain drift" if s.get('chain_drift') else '') +
                  (f"; first divergence at `{fd['module'] or '(root)'}` ({fd['basis']}, {fd['confidence']})" if fd else ''))
     r.data = {'verdict': rep['verdict'], 'first_divergence': fd, 'summary': s, 'mode': rep['mode'],
-              'threshold': rep['threshold'], 'port': rep['port'],
+              'threshold': rep['threshold'], 'port': rep['port'], 'execution': rep['execution'],
               'golden_kind': rep['trace']['golden'].get('kind'),
               'failures': cap(compact_records(rep, ('fail',)), args.max_items, r),
               'unverified': cap(compact_records(rep, ('unverified',)), args.max_items, r)}
@@ -256,6 +257,32 @@ def run_conform(args) -> Result:
     return r
 
 
+# --------------------------------------------------------------------------- weights
+def run_weights(args) -> Result:
+    from ..verify.weights import run_weights as compare_weights
+    if args.output and Path(args.output).exists() and not args.overwrite:
+        raise CumlxError('E_OUTPUT_EXISTS', f'{args.output} exists', hint='pass --overwrite or choose a new path')
+    rep = compare_weights(args.original, args.port, loader=args.loader, mapping=args.mapping, revision=args.revision)
+    r = Result('weights', exit_code=VERDICT_EXIT[rep['verdict']])
+    s = rep['summary']
+    first = rep['first_failure']
+    r.summary = (f"{rep['verdict']}: {s['pass']} pass, {s['fail']} fail, {s['unverified']} unverified of "
+                 f"{s['parameters']} parameters" +
+                 (f"; first failure `{first['name']}`" + (f" ({first['diagnosis']})" if first.get('diagnosis') else '')
+                  if first else ''))
+    r.data = {'verdict': rep['verdict'], 'summary': s, 'first_failure': first,
+              'failures': cap([x for x in rep['parameters'] if x['status'] == 'fail'], args.max_items, r),
+              'unverified': cap([x for x in rep['parameters'] if x['status'] == 'unverified'], args.max_items, r),
+              'extra_in_port': cap(rep['extra_in_port'], args.max_items, r)}
+    if args.output:
+        Path(args.output).write_text(json.dumps(_finite(rep), indent=1) + '\n')
+        r.artifact('weights_report', args.output)
+    if rep['verdict'] == 'ok':
+        r.suggest(f'cumlx capture {_q(args.original)} --prompt Hello -o golden/ && cumlx diff golden/ {_q(args.port)}',
+                  'the weights are right; now check the code of the port')
+    return r
+
+
 # --------------------------------------------------------------------------- report
 def run_report(args) -> Result:
     from ..verify.report import compact_records
@@ -287,10 +314,10 @@ def run_selftest(args) -> Result:
     log = _logger(args)
     if args.keep:
         Path(args.keep).mkdir(parents=True)
-        steps = selftest.run(Path(args.keep), core_only=args.core_only, log=log)
+        steps = selftest.run(Path(args.keep), core_only=args.core_only, device=args.device, log=log)
     else:
         with tempfile.TemporaryDirectory(prefix='cumlx-selftest-') as tmp:
-            steps = selftest.run(Path(tmp), core_only=args.core_only, log=log)
+            steps = selftest.run(Path(tmp), core_only=args.core_only, device=args.device, log=log)
     failed = [s for s in steps if s['status'] == 'fail']
     skipped = [s for s in steps if s['status'] == 'skipped']
     r = Result('selftest')

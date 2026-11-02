@@ -62,6 +62,16 @@ def _scale_bump(model, name, *, mode: str, delta: int):
     m['scales'] = mx.concatenate([bumped, flat[1:]]).reshape(s.shape)
 
 
+def _swap_nibbles(model, name):
+    mx, _ = mlx_port.mlx()
+    m = _mod(model, name)
+    if getattr(m, 'mode', None) not in ('nvfp4', 'mxfp4'):
+        raise CumlxError('E_USAGE', f'F10 needs an FP4 QuantizedLinear; {name} is {getattr(m, "mode", None)}')
+    w = m['weight']
+    mask = mx.array(0x0F0F0F0F, dtype=mx.uint32)
+    m['weight'] = mx.left_shift(mx.bitwise_and(w, mask), 4) | mx.bitwise_and(mx.right_shift(w, 4), mask)
+
+
 def _swap_activation(model, name):
     _, nn = mlx_port.mlx()
     m = _mod(model, name)
@@ -100,6 +110,7 @@ FAULTS: dict[str, Fault] = {f.id: f for f in [
     Fault('F6', 'MLP activation SiLU -> GELU', 'gated MLP', 'self', _swap_activation),
     Fault('F7', 'RoPE base x10', 'attention with nn.RoPE', 'self', _rope_base),
     Fault('F8', 'causal attention mask dropped', 'attention(x, mask, cache)', 'self', _drop_mask),
+    Fault('F10', 'FP4 nibble order reversed (low/high)', 'FP4 QuantizedLinear', 'self', _swap_nibbles),
 ]}
 
 
@@ -121,4 +132,5 @@ TINY_LLAMA_TARGETS = {
     'F6': 'model.layers.0.mlp',
     'F7': 'model.layers.1.self_attn',
     'F8': 'model.layers.0.self_attn',
+    'F10': 'model.layers.0.self_attn.v_proj',
 }

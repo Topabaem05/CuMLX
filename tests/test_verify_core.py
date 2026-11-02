@@ -148,3 +148,31 @@ def test_mapping_rules(tmp_path):
     p.write_text('{"rules": [{"match": "("}]}')
     with pytest.raises(CumlxError):
         NameMapper.from_file(str(p))
+
+
+def test_conform_flush_classification_accepts_only_flushed_tiny_values():
+    from cumlx.verify.conform import FLUSH_LIMIT, classify_mismatches
+    expected = np.array([1.0, 2.9e-39, -2.9e-39, 3.5e-38, -3.5e-38], np.float32)
+    flushed = np.array([1.0, 0.0, -0.0, 0.0, -0.0], np.float32)
+    assert classify_mismatches(flushed, expected) == (4, 4)
+    assert classify_mismatches(expected.copy(), expected) == (0, 0)
+    # A wrong sign on the zero, a value above the limit, or a nonzero result is a real mismatch.
+    assert classify_mismatches(np.array([0.0], np.float32), np.array([-2.9e-39], np.float32)) == (1, 0)
+    above = np.float32(FLUSH_LIMIT * 1.01)
+    assert classify_mismatches(np.array([0.0], np.float32), np.array([above], np.float32)) == (1, 0)
+    assert classify_mismatches(np.array([1e-39], np.float32), np.array([2.9e-39], np.float32)) == (1, 0)
+
+
+def test_noise_thresholds_follow_the_median_and_stay_in_bounds():
+    from cumlx.verify.metrics import noise_thresholds
+    bf16 = resolve_threshold('bfloat16')
+    assert noise_thresholds(bf16, 0.0) == (1e-4, 1e-4)  # a lossless port keeps the strict floor
+    leaf, composite = noise_thresholds(bf16, 1.5e-3)
+    assert leaf == pytest.approx(9e-3) and composite == pytest.approx(0.15)
+    assert noise_thresholds(bf16, 1.0) == (bf16['isolated_rel_l2'], bf16['composite_rel_l2_max'])
+    f32 = resolve_threshold('float32')
+    assert noise_thresholds(f32, 1e-2) == (1e-4, 1e-4)  # float32 has no rounding noise to allow for
+    user = resolve_threshold('bfloat16', rel_l2=5e-3)
+    assert noise_thresholds(user, 1e-2) == (5e-3, 5e-3)  # an explicit threshold is not adjusted
+    strict = resolve_threshold('quantized', port_weights_golden=True)
+    assert noise_thresholds(strict, 1e-2) == (1e-4, 1e-4)

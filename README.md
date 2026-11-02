@@ -7,12 +7,15 @@ CUMLX는 모델을 변환하지 않습니다. mlx-lm 등 어떤 도구로 변환
 ```bash
 python -m pip install -e '.[capture,diff]'        # torch, transformers, mlx, mlx-lm
 cumlx doctor --require capture,diff
+cumlx weights <원본 HF id 또는 경로> <MLX 포팅본>   # 수 초: 전치·scale 오류를 이름으로 지목
 cumlx capture <원본 HF id 또는 경로> --prompt "Hello" -o golden/
 cumlx diff golden/ <MLX 포팅본> -o report/       # exit 0 ok · 1 diverged · 5 incomplete
-cumlx selftest                                   # 깨끗한 포팅 통과 + 오류 주입 8종 위치 검출
+cumlx selftest                                   # 깨끗한 포팅 통과 + 오류 주입 9종 위치 검출
 ```
 
-CLI는 AI 에이전트가 쓰기 좋게 설계했습니다. stdout에는 JSON 문서 1개만 나가고, exit code가 고정되어 있으며, 모든 오류에 해결 hint가 붙고, `next_steps`로 다음 명령을 제안하고, `--max-items`로 출력 길이를 제한합니다. 사용법은 [CLI 문서](docs/CLI.md)와 [AGENTS.md](AGENTS.md)를 보십시오. 검증 범위는 Linux MLX CPU 백엔드와 tiny 모델까지이며, Apple Silicon 실행과 실제 공개 모델 검증은 아직 하지 않았습니다.
+CLI는 AI 에이전트가 쓰기 좋게 설계했습니다. stdout에는 JSON 문서 1개만 나가고, exit code가 고정되어 있으며, 모든 오류에 해결 hint가 붙고, `next_steps`로 다음 명령을 제안하고, `--max-items`로 출력 길이를 제한합니다. 사용법은 [CLI 문서](docs/CLI.md)와 [AGENTS.md](AGENTS.md)를 보십시오.
+
+**검증 범위:** Apple M5 Pro(Metal, CPU)와 Linux MLX CPU. 실제 모델은 Qwen2.5-0.5B와 SmolLM2-135M, 공개 포팅본은 `mlx-community/Qwen2.5-0.5B-bf16`입니다. 이 범위에서 깨끗한 포팅 34회 실행의 false alarm은 0이고, 결함 주입 41회를 전부 정확한 모듈로 지목했습니다([검증 보고서](validation/REPORT.md)). MoE, KV cache를 쓰는 decode 단계, 다른 Apple GPU 세대는 **미검증**입니다.
 
 ---
 
@@ -20,9 +23,11 @@ CLI는 AI 에이전트가 쓰기 좋게 설계했습니다. stdout에는 JSON �
 
 **Packed FP4 커널 구현 패키지 — CPU 검증 완료 범위와 GPU 미검증 범위를 분리합니다.**
 
-NVFP4/MXFP4 payload를 전체 FP16/FP32 가중치로 펼치지 않고 읽는 Metal·CUDA 커널을 작성했습니다. 현재 상태는 **실험용 소스 구현**이며, GPU 컴파일·실행·속도 검증은 수행하지 않았습니다. `allow_unvalidated=True`를 명시해야 GPU 실행을 시도합니다.
+NVFP4/MXFP4 payload를 전체 FP16/FP32 가중치로 펼치지 않고 읽는 Metal·CUDA 커널을 작성했습니다. 현재 상태는 **실험용 소스 구현**입니다. Metal 커널은 Apple M5 Pro 한 기기에서 컴파일되고 GPU 테스트 35개를 통과했습니다(MLX 0.32.2, 2026-11-02). CUDA 커널 실행과 속도는 검증하지 않았습니다. `allow_unvalidated=True`를 명시해야 GPU 실행을 시도합니다.
 
 이 패키지는 v0.2의 G1/G2 커널 단계를 구현합니다. **`torch.cuda` 호환 backend, CUDA-on-Metal runtime, PTX compiler, NCCL, 임의 CUDA Python wheel 지원은 구현하지 않았습니다.** CUDA 소스는 실제 NVIDIA GPU용이며, Metal 소스는 Apple GPU용입니다. 같은 연산을 양쪽에 작성한 것이지 CUDA 바이너리를 Metal로 번역한 것이 아닙니다.
+
+Mac에서 커널을 실험할 때는 `.[capture,diff]`와 **별도 venv**를 쓰십시오. `.[dev,metal]`은 MLX를 0.32.2로 고정하고, `MLXBackend`는 다른 버전을 거부합니다.
 
 ## 제공 코드
 
@@ -80,7 +85,7 @@ python scripts/env_report.py
 pytest -q -m gpu --backend cuda --require-gpu
 ```
 
-MLX API 목표 버전은 **0.32.2**로 고정했습니다. 이 버전은 실제 GPU에서 검증한 버전이라는 뜻이 아닙니다. 설치에는 플랫폼에 맞는 MLX wheel, GPU 및 드라이버/OS 요구사항이 별도로 필요합니다. Mac에서 CUDA extra를 설치하거나 Linux CPU만으로 Metal을 실행하지 않습니다. [S1–S4]
+MLX API 목표 버전은 **0.32.2**로 고정했습니다. Metal 실행 기록은 M5 Pro 한 기기뿐이고, CUDA 실행 기록은 없습니다. 설치에는 플랫폼에 맞는 MLX wheel, GPU 및 드라이버/OS 요구사항이 별도로 필요합니다. Mac에서 CUDA extra를 설치하거나 Linux CPU만으로 Metal을 실행하지 않습니다. [S1–S4]
 
 ## CPU에서 실제 실행할 수 있는 예제
 
@@ -151,11 +156,13 @@ python benchmarks/bench_fp4.py --backend metal --m 1 --n 512 --k 1024 --output b
 
 최신 검증 증거는 [검증 보고서](validation/REPORT.md)와 원시 로그에 있습니다. GPU skip은 pass가 아니며, C++ host header 검증은 CUDA device compile이 아닙니다. 하드웨어별 성능 수치는 제공하지 않습니다.
 
+MLX는 M5와 CUDA에서 float32 matmul을 기본으로 TF32로 실행합니다. CUMLX 커널은 자체 Metal 코드라 이 설정의 영향을 받지 않지만, native MLX QMM·dense 비교 대상은 영향을 받습니다. 벤치마크를 비교할 때 `MLX_ENABLE_TF32` 값을 함께 기록하십시오.
+
 ## 제약과 다음 gate
 
 단일 장치·MLX stream·추론만 지원하는 실험 소스입니다. backward/vmap/TorchTensor/외부 pointer/자동 CPU fallback/동적 vendor checkpoint 변환은 없습니다. FP4 buffer를 변경하지 않아야 하며, 비연속 activation은 MLX의 row-contiguous 준비 과정에서 복사될 수 있습니다. 극단적 subnormal·overflow 영역의 CPU/GPU bitwise 동등성은 인증하지 않았습니다.
 
-다음 gate는 실제 Metal/CUDA에서 전체 GPU 테스트를 실행하고, benchmark profile별 수치·메모리·성능을 기록하는 것입니다. 그 뒤에만 SIMD reduction, vectorized loads, matrix instructions, MoE gather 및 CUDA-facing frontend를 확장합니다.
+다음 gate는 CUDA와 다른 Apple GPU 세대에서 전체 GPU 테스트를 실행하고, benchmark profile별 수치·메모리·성능을 기록하는 것입니다. 그 뒤에만 SIMD reduction, vectorized loads, matrix instructions, MoE gather 및 CUDA-facing frontend를 확장합니다.
 
 [커널 상세 설계](docs/KERNEL-DESIGN.md) · [구현 계획](docs/IMPLEMENTATION-PLAN.md) · [1개월 로드맵 (포팅 검증기)](docs/ROADMAP-1MONTH.md) · [원본 자료](SOURCES.md)
 

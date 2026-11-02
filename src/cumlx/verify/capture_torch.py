@@ -6,6 +6,7 @@ Only the PyTorch side is touched here. The model must already be loaded; use
 from __future__ import annotations
 
 from collections import defaultdict
+from pathlib import Path
 import re
 from typing import Any, Callable, Sequence
 
@@ -92,8 +93,13 @@ def _first_tensor(obj) -> tuple[Any, str] | tuple[None, None]:
     return None, None
 
 
-def _replay_inputs(args: tuple, kwargs: dict) -> tuple[list[tuple[str, Any]], str | None]:
-    """Return ([(source, tensor)], note). Replayable only with exactly one tensor and no other inputs."""
+def _replay_inputs(args: tuple, kwargs: dict) -> tuple[list[tuple[str, Any]], str | None, str | None]:
+    """Return ([(source, tensor)], replay_kind, note).
+
+    ``single``: exactly one tensor and nothing else. ``hidden``: a float [batch, time, dim] hidden
+    state plus context such as a causal mask or position embeddings, which the port recomputes.
+    Capture never pads its inputs, so that context is always plain causal.
+    """
     torch = _torch()
     tensors, others = [], []
     for i, a in enumerate(args):
@@ -107,9 +113,39 @@ def _replay_inputs(args: tuple, kwargs: dict) -> tuple[list[tuple[str, Any]], st
         elif v is not None and v is not False:
             others.append(f'kw:{k}:{type(v).__name__}')
     if len(tensors) == 1 and not others:
-        return tensors, None
-    names = [s for s, _ in tensors] + others
-    return [], 'not replayable in isolation (beta): inputs = ' + ', '.join(names or ['none'])
+        return tensors, 'single', None
+    context = ', '.join([name for name, _ in tensors] + others or ['none'])
+    primary = next((x for x in tensors if x[0] in ('arg0', 'kw:hidden_states')), None)
+    if primary is not None and primary[1].is_floating_point() and primary[1].ndim == 3:
+        return [primary], 'hidden', f'replayed with the hidden state and a causal mask; recorded inputs = {context}'
+    return [], None, f'not replayable in isolation: inputs = {context}'
+
+
+def tied_modules(model) -> dict[str, str]:
+    """Modules whose parameter is the same object as an earlier module's, e.g. lm_head -> embed_tokens."""
+    first_owner: dict[int, str] = {}
+    ties: dict[str, str] = {}
+    for mod_name, mod in model.named_modules():
+        for _, param in mod.named_parameters(recurse=False):
+            owner = first_owner.setdefault(id(param), mod_name)
+            if owner != mod_name:
+                ties[mod_name] = owner
+    return ties
+
+
+def resolve_revision(model_id: str, revision: str | None, model=None) -> str | None:
+    """The commit that was actually loaded. A local directory has none."""
+    found = getattr(getattr(model, 'config', None), '_commit_hash', None)
+    if found:
+        return found
+    if Path(model_id).exists():
+        return revision
+    try:
+        from huggingface_hub import try_to_load_from_cache
+        cached = try_to_load_from_cache(model_id, 'config.json', revision=revision)
+    except Exception:  # noqa: BLE001 - provenance is best effort; the caller records what it has
+        return revision
+    return Path(cached).parent.name if isinstance(cached, str) else revision  # .../snapshots/<commit>/config.json
 
 
 def capture_model(model, samples: Sequence[np.ndarray], writer: TraceWriter, *,
@@ -126,6 +162,7 @@ def capture_model(model, samples: Sequence[np.ndarray], writer: TraceWriter, *,
                 if n == '' or ((inc is None or inc.search(n)) and not (exc and exc.search(n)))}
     call = call or (lambda m, ids: m(input_ids=ids, use_cache=False))
     stats = defaultdict(int)
+    writer.manifest.source.setdefault('tied_modules', tied_modules(model))
     for idx, ids in enumerate(samples):
         tensors: dict[str, np.ndarray] = {'token_ids': np.asarray(ids, dtype=np.int64)[None, :]}
         records: list[ModuleRecord] = []
@@ -143,7 +180,9 @@ def capture_model(model, samples: Sequence[np.ndarray], writer: TraceWriter, *,
             prefix = f'r{order:05d}'
             out_np = _to_numpy(out_t, store_dtype)
             tensors[prefix + '.out'] = out_np
-            inputs, note = _replay_inputs(args, kwargs)
+            inputs, replay_kind, note = _replay_inputs(args, kwargs)
+            if replay_kind == 'hidden' and not has_params[mod]:  # e.g. a rotary embedding: nothing to verify
+                inputs, replay_kind = [], None
             in_refs = []
             for j, (src, t) in enumerate(inputs):
                 arr = _to_numpy(t, store_dtype)
@@ -152,7 +191,8 @@ def capture_model(model, samples: Sequence[np.ndarray], writer: TraceWriter, *,
             records.append(ModuleRecord(
                 key=f'{name}#{n_call}', name=name, call=n_call, order=order, type=type(mod).__name__,
                 has_params=has_params[mod], replayable=bool(in_refs), replay_note=note, inputs=in_refs,
-                output=TensorRef(prefix + '.out', list(out_np.shape), str(out_np.dtype), out_src)))
+                output=TensorRef(prefix + '.out', list(out_np.shape), str(out_np.dtype), out_src),
+                replay_kind=replay_kind))
 
         handles = [m.register_forward_hook(hook, with_kwargs=True) for m in selected]
         try:
@@ -186,7 +226,8 @@ def load_mlx_weights_into(model, port_weights: dict[str, np.ndarray]) -> dict:
         with torch.no_grad():
             state[name].copy_(torch.from_numpy(np.ascontiguousarray(arr)).to(state[name].dtype))
         loaded.append(name)
-    missing = sorted(set(k for k in state if not k.endswith('inv_freq')) - set(loaded))
+    tied = {f'{name}.weight' for name in tied_modules(model)}
+    missing = sorted(set(k for k in state if not k.endswith('inv_freq')) - set(loaded) - tied)
     if shape_mismatch:
         raise CumlxError('E_INPUT_INVALID', 'MLX port weights do not match the PyTorch model shapes',
                          details={'mismatches': shape_mismatch[:20]})

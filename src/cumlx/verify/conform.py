@@ -8,7 +8,12 @@ Checks (``kind``):
                    W = e2m1 * e4m3_block_scale * global_scale (global is a multiplier,
                    e.g. ModelOpt ``weight_scale_2``). Failure = the target uses a different
                    convention; ``finding`` explains how to convert.
+* ``device_behavior`` - decode differs from the codec only because the GPU flushes subnormal
+                   scales and results to zero. Reported, never a failure: every value is at most 3.6e-38.
 * ``info``       - informative only (encoder recipe agreement); never fails.
+
+The format checks run on the CPU stream, where MLX keeps subnormals. Decode also runs on the
+GPU stream when a GPU exists, because that is where a port executes.
 """
 from __future__ import annotations
 
@@ -20,6 +25,7 @@ from ..quant import FP4Matrix, dequantize, quantize, unpack_nibbles
 from . import mlx_port
 
 NV_FACTOR = 6.0 * 448.0  # 2688
+FLUSH_LIMIT = 6.0 * 2.0 ** -127  # largest FP4 element times the largest subnormal power-of-two scale
 
 
 def _vectors(fmt: str) -> tuple[list[FP4Matrix], list[int], list[int]]:
@@ -43,6 +49,35 @@ def _stack(rows: list[FP4Matrix]) -> FP4Matrix:
     fmt, k = rows[0].format, rows[0].shape[1]
     return FP4Matrix(fmt, (len(rows), k), np.concatenate([r.payload for r in rows]),
                      np.concatenate([r.scales for r in rows]), 1.0)
+
+
+def classify_mismatches(actual: np.ndarray, expected: np.ndarray) -> tuple[int, int]:
+    """Return (bit mismatches, how many are explained by flushing subnormals to zero).
+
+    A flushed value is a zero of the expected sign. Its expected magnitude can be a normal number, up
+    to 6 * 2**-127, because the E8M0 scale 2**-127 is itself subnormal and flushes before the product.
+    """
+    bad = actual.view(np.uint32) != expected.view(np.uint32)
+    flushed = (bad & (expected != 0) & (np.abs(expected) <= FLUSH_LIMIT) & (actual == 0)
+               & (np.signbit(actual) == np.signbit(expected)))
+    return int(bad.sum()), int(flushed.sum())
+
+
+def _gpu_decode_check(mx, fmt: str, q: FP4Matrix, expected: np.ndarray, used: list[int], max_examples: int) -> dict:
+    with mx.stream(mx.gpu):
+        actual = _mlx_dequant(mx, q)
+    n_bad, n_flushed = classify_mismatches(actual, expected)
+    _, ex = _bitwise(actual, expected, q, used, max_examples)
+    common = {'id': f'decode_bitwise.{fmt}.gpu', 'compared': int(expected.size), 'mismatches': n_bad, 'examples': ex}
+    if n_bad == 0:
+        return {**common, 'kind': 'bitwise', 'verdict': 'pass'}
+    if n_bad == n_flushed:
+        return {**common, 'kind': 'device_behavior', 'verdict': 'info', 'subnormal_flushed': n_flushed,
+                'finding': f'The GPU flushed {n_flushed} results (magnitude <= {FLUSH_LIMIT:.2e}, from a subnormal scale or '
+                           'product) to a zero of the same sign; the CPU stream keeps them. Every other value '
+                           'is bit-identical.'}
+    return {**common, 'kind': 'bitwise', 'verdict': 'fail', 'subnormal_flushed': n_flushed,
+            'finding': f'{n_bad - n_flushed} GPU decode mismatches are not explained by subnormal flushing.'}
 
 
 def _mlx_dequant(mx, q: FP4Matrix, global_scale: float | None = None) -> np.ndarray:
@@ -73,6 +108,23 @@ def run_conform(target: str = 'mlx', formats: tuple[str, ...] = ('nvfp4', 'mxfp4
     if target != 'mlx':
         raise ValueError('only target=mlx is implemented')
     mx, _ = mlx_port.mlx()
+    has_gpu = mlx_port.gpu_available(mx)
+    with mx.stream(mx.cpu):
+        checks = _format_checks(mx, formats, max_examples, has_gpu)
+    failed = [c for c in checks if c['verdict'] == 'fail']
+    try:
+        from importlib.metadata import version
+        mlx_version = version('mlx')
+    except Exception:  # noqa: BLE001
+        mlx_version = None
+    return {'schema': 'cumlx.conform-report.v1', 'target': target, 'target_version': mlx_version,
+            'devices': ['cpu', 'gpu'] if has_gpu else ['cpu'],
+            'verdict': 'diverged' if failed else 'ok', 'checks': checks,
+            'summary': {'checks': len(checks), 'failed': len(failed),
+                        'failed_ids': [c['id'] for c in failed]}}
+
+
+def _format_checks(mx, formats: tuple[str, ...], max_examples: int, has_gpu: bool) -> list[dict[str, Any]]:
     checks: list[dict[str, Any]] = []
     for fmt in formats:
         rows, used, excluded = _vectors(fmt)
@@ -88,17 +140,10 @@ def run_conform(target: str = 'mlx', formats: tuple[str, ...] = ('nvfp4', 'mxfp4
                                'and are rejected by the CUMLX descriptor'})
         if fmt == 'nvfp4':
             checks.extend(_nv_global_checks(mx, q, expected, used, max_examples))
+        if has_gpu:
+            checks.append(_gpu_decode_check(mx, fmt, q, expected, used, max_examples))
         checks.append(_encoder_agreement(mx, fmt))
-    failed = [c for c in checks if c['verdict'] == 'fail']
-    try:
-        from importlib.metadata import version
-        mlx_version = version('mlx')
-    except Exception:  # noqa: BLE001
-        mlx_version = None
-    return {'schema': 'cumlx.conform-report.v1', 'target': target, 'target_version': mlx_version,
-            'verdict': 'diverged' if failed else 'ok', 'checks': checks,
-            'summary': {'checks': len(checks), 'failed': len(failed),
-                        'failed_ids': [c['id'] for c in failed]}}
+    return checks
 
 
 def _nv_global_checks(mx, q: FP4Matrix, base: np.ndarray, used: list[int], max_examples: int) -> list[dict]:

@@ -10,6 +10,8 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 import contextlib
 import importlib
+import inspect
+import os
 from pathlib import Path
 from typing import Any, Iterator
 
@@ -126,6 +128,112 @@ def probe(model, names: set[str] | None = None) -> Iterator[Recorder]:
             m.__class__ = cls
 
 
+# float32 GEMM error above this means the backend does not compute in full float32.
+REDUCED_PRECISION_NOISE = 1e-5
+
+
+def gpu_available(mx) -> bool:
+    for backend in ('metal', 'cuda'):
+        api = getattr(mx, backend, None)
+        if api is not None and api.is_available():
+            return True
+    return False
+
+
+def _device_name(mx) -> str | None:
+    try:
+        return (mx.device_info() if hasattr(mx, 'device_info') else mx.metal.device_info()).get('device_name')
+    except Exception:  # noqa: BLE001 - only informative
+        return None
+
+
+def measure_gemm_noise(mx, device) -> float:
+    """rel_l2 of a float32 multi-row matmul against a float64 reference, on ``device``."""
+    rng = np.random.default_rng(0)
+    a = rng.normal(size=(16, 64)).astype(np.float32)
+    b = rng.normal(size=(64, 64)).astype(np.float32)
+    y = mx.matmul(mx.array(a), mx.array(b), stream=device)
+    mx.eval(y)
+    exact = a.astype(np.float64) @ b.astype(np.float64)
+    return float(np.linalg.norm(np.array(y).astype(np.float64) - exact) / np.linalg.norm(exact))
+
+
+def configure_execution(device: str = 'auto', tf32: str = 'off') -> dict[str, Any]:
+    """Select the MLX device and matmul precision, then measure what actually took effect.
+
+    By default MLX runs float32 matmul, attention and related ops in TF32 on hardware with matrix
+    units (Apple M5 Neural Accelerators, CUDA): about 1e-3 relative error, far above float32 rounding.
+    Comparisons therefore default to full float32. MLX 0.32 reads the setting once per process, at
+    the first matmul, so the measurement below is the proof, not the request.
+    The returned dict is the report block, plus ``handle``, the MLX device to run on.
+    """
+    if device not in ('auto', 'cpu', 'gpu'):
+        raise CumlxError('E_USAGE', f'unknown device {device!r}', hint='use auto, cpu or gpu')
+    if tf32 not in ('off', 'on'):
+        raise CumlxError('E_USAGE', f'unknown tf32 setting {tf32!r}', hint='use off or on')
+    mx, _ = mlx()
+    os.environ['MLX_ENABLE_TF32'] = '0' if tf32 == 'off' else '1'
+    config = getattr(mx, 'config', None)
+    if config is not None and hasattr(config, 'update'):  # MLX releases after 0.32.4
+        config.update('MLX_ENABLE_TF32', 0 if tf32 == 'off' else 1)
+    if device == 'gpu' and not gpu_available(mx):
+        raise CumlxError('E_BACKEND_UNAVAILABLE', 'MLX has no GPU backend here; refusing to fall back to the CPU',
+                         hint='use --device cpu')
+    handle = {'auto': mx.default_device(), 'cpu': mx.Device(mx.cpu), 'gpu': mx.Device(mx.gpu)}[device]
+    is_gpu = handle == mx.Device(mx.gpu)
+    noise = measure_gemm_noise(mx, handle)
+    reduced = noise > REDUCED_PRECISION_NOISE
+    if tf32 == 'off' and reduced:
+        raise CumlxError('E_BACKEND_UNAVAILABLE',
+                         f'full float32 matmul was requested but the measured error is {noise:.2e}: '
+                         'this process already ran a matmul with TF32 on',
+                         hint='start a new process with MLX_ENABLE_TF32=0, or pass --tf32 on')
+    return {'device': 'gpu' if is_gpu else 'cpu', 'device_requested': device,
+            'device_name': _device_name(mx) if is_gpu else None, 'tf32': tf32,
+            'gemm_noise_rel_l2': noise, 'reduced_precision_matmul': reduced, 'handle': handle}
+
+
+@contextlib.contextmanager
+def promoted_to_float32(model) -> Iterator[bool]:
+    """Run ``model`` in float32 arithmetic with its own weight values; restore the parameters on exit.
+
+    Isolated replay checks weights and logic. Rounding that native low-precision arithmetic
+    accumulates says nothing about either one; the chain run observes it.
+    """
+    mx, _ = mlx()
+    from mlx.utils import tree_flatten, tree_unflatten
+    saved = tree_flatten(model.parameters())
+    if not any(mx.issubdtype(v.dtype, mx.floating) and v.dtype != mx.float32 for _, v in saved):
+        yield False
+        return
+    model.set_dtype(mx.float32)
+    try:
+        yield True
+    finally:
+        model.update(tree_unflatten(saved))
+
+
+def replay(module, x, kind: str | None):
+    """Call a port module on a golden input. ``hidden`` modules also get a causal mask."""
+    mx, _ = mlx()
+    if kind != 'hidden':
+        return first_array(module(x))
+    params = list(inspect.signature(type(module).__call__).parameters.values())[2:]
+    if not any(q.name == 'mask' for q in params):
+        required = [q.name for q in params if q.default is inspect.Parameter.empty
+                    and q.kind not in (q.VAR_POSITIONAL, q.VAR_KEYWORD)]
+        if required:
+            raise TypeError(f'no adapter for the required arguments {required}')
+        return first_array(module(x))
+    n = x.shape[1]
+    if n == 1:
+        return first_array(module(x, mask=None))
+    try:
+        return first_array(module(x, mask='causal'))
+    except (TypeError, ValueError, AttributeError):  # this port wants an array mask
+        return first_array(module(x, mask=mx.tril(mx.ones((n, n), dtype=mx.bool_))))
+
+
 def to_numpy(arr) -> np.ndarray:
     mx, _ = mlx()
     if arr.dtype == mx.bfloat16:
@@ -156,8 +264,13 @@ def dequantized_weights(model) -> dict[str, np.ndarray]:
     out: dict[str, np.ndarray] = {}
     for prefix, m in named_modules(model).items():
         if hasattr(m, 'scales') and hasattr(m, 'bits'):
-            w = mx.dequantize(m['weight'], m['scales'], m.get('biases'), group_size=m.group_size,
-                              bits=m.bits, mode=getattr(m, 'mode', 'affine'), dtype=mx.float32)
+            # In float32 on the CPU stream. mx.dequantize does its arithmetic in the dtype of the scales, so bf16
+            # scales would give weights about 0.5% away from what quantized_matmul computes. Metal flushes
+            # subnormals to zero. The golden must hold the exact values.
+            def exact(a):  # FP4 scales are uint8 codes and stay as they are
+                return a.astype(mx.float32) if a is not None and mx.issubdtype(a.dtype, mx.floating) else a
+            w = mx.dequantize(m['weight'], exact(m['scales']), exact(m.get('biases')), group_size=m.group_size,
+                              bits=m.bits, mode=getattr(m, 'mode', 'affine'), dtype=mx.float32, stream=mx.cpu)
             out[(prefix + '.' if prefix else '') + 'weight'] = np.array(w)
     for name, v in tree_flatten(model.parameters()):
         leaf = name.rsplit('.', 1)[-1]

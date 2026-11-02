@@ -21,6 +21,7 @@ REQUIREMENTS = {
     'capture': ['torch', 'transformers'],
     'diff': ['mlx', 'mlx_lm'],
     'conform': ['mlx'],
+    'weights': ['mlx', 'mlx_lm'],
 }
 
 
@@ -51,6 +52,10 @@ def inspect_environment(*, probe: bool = False) -> dict[str, Any]:
                 devices['mlx_metal_available'] = bool(getattr(mx, 'metal', None) and mx.metal.is_available())
                 cuda = getattr(mx, 'cuda', None)
                 devices['mlx_cuda_available'] = bool(cuda and cuda.is_available())
+                from .mlx_port import REDUCED_PRECISION_NOISE, measure_gemm_noise
+                noise = measure_gemm_noise(mx, mx.default_device())
+                devices['mlx_default_gemm_noise_rel_l2'] = noise
+                devices['mlx_default_reduced_precision_matmul'] = noise > REDUCED_PRECISION_NOISE
             except Exception as exc:  # noqa: BLE001
                 devices['mlx_error'] = f'{type(exc).__name__}: {exc}'
                 report['commands_ready'].update(diff=False, conform=False)
@@ -67,7 +72,9 @@ def inspect_environment(*, probe: bool = False) -> dict[str, Any]:
     # The FP4 GPU kernel lab is separate from the verifier and still hardware-unvalidated.
     from ..mlx_backend import TARGET_MLX
     report['kernel_lab'] = {'mlx_api_pin': TARGET_MLX, 'device_validated': False,
-                            'note': 'MLXBackend kernels are not used by capture/diff/conform'}
+                            'note': 'MLXBackend kernels are not used by capture/diff/conform. The 35 GPU tests passed '
+                                    'on one device (Apple M5 Pro, MLX 0.32.2, 2026-11-02); that is not a general '
+                                    'certification, and speed was not measured'}
     return report
 
 

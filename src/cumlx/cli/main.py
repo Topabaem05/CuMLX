@@ -69,11 +69,16 @@ COMMANDS: dict[str, dict[str, Any]] = {
         summary='Run an MLX port on the trace inputs, compare every module and locate the first divergence.',
         requires=['diff'], stage='beta',
         examples=['cumlx diff /tmp/golden /tmp/tiny -o /tmp/report',
-                  'cumlx diff golden/ ./qwen-mlx --mode chain --profile bfloat16']),
+                  'cumlx diff golden/ ./qwen-mlx --device cpu',
+                  'cumlx diff golden/ ./qwen-mlx --tf32 on']),
     'conform': dict(
         summary='Check FP4 (NVFP4/MXFP4) decode conformance of a target against the CUMLX bit-exact codec.',
         requires=['diff'], stage='beta',
         examples=['cumlx conform --target mlx', 'cumlx conform --target mlx --formats mxfp4']),
+    'weights': dict(
+        summary='Compare port weights with the original safetensors without running a model (fast; names transposes and scale errors).',
+        requires=['diff'], stage='beta',
+        examples=['cumlx weights Qwen/Qwen2.5-0.5B ./qwen-mlx', 'cumlx weights /tmp/tiny /tmp/tiny -o weights.json']),
     'report': dict(
         summary='Summarize an existing diff report.json (re-read with a different --max-items).',
         requires=[], stage='beta',
@@ -91,6 +96,9 @@ AGENT_RULES = [
     'On divergence read data.first_divergence (module, basis, confidence, explanation) before anything else.',
     'Use --dry-run to validate paths and plans before long runs; use --max-items to bound output size.',
     'Never treat `incomplete` or skipped checks as success.',
+    'Run `cumlx weights` before `cumlx diff`: it takes seconds and names transposed or rescaled weights.',
+    'Read data.execution: results depend on the device and on TF32, which MLX enables by default on M5 and CUDA.',
+    'chain_drift is native-dtype rounding, not a defect. Read W_WEIGHT_ROUNDING_NOISE as a limit on sensitivity.',
 ]
 
 
@@ -166,6 +174,10 @@ def build_parser() -> AgentArgumentParser:
     p.add_argument('--profile', choices=['auto', 'float32', 'float16', 'bfloat16', 'quantized'], default='auto',
                    help='threshold profile; auto = from the port parameter dtype')
     p.add_argument('--rel-l2', type=float, help='override the rel_l2 threshold')
+    p.add_argument('--device', choices=['auto', 'cpu', 'gpu'], default='auto',
+                   help='MLX device; auto = the MLX default (GPU on Apple Silicon). Never falls back silently')
+    p.add_argument('--tf32', choices=['off', 'on'], default='off',
+                   help='off = full float32 matmul. on = the MLX default on M5/CUDA: reduced precision, raises the threshold')
     p.add_argument('--include', help='regex: only compare modules whose name matches (root always compared)')
     p.add_argument('--exclude', help='regex: skip modules whose name matches')
     p.add_argument('--overwrite', action='store_true')
@@ -177,12 +189,22 @@ def build_parser() -> AgentArgumentParser:
     p.add_argument('-o', '--output', help='write full findings JSON to this file')
     p.add_argument('--overwrite', action='store_true')
 
+    p = add('weights')
+    p.add_argument('original', help='HF id, local directory or safetensors file of the ORIGINAL checkpoint')
+    p.add_argument('port', help='MLX port: local directory or HF id (mlx-lm format)')
+    p.add_argument('-o', '--output', help='write every parameter to this JSON file')
+    p.add_argument('--loader', default='mlx_lm', help="'mlx_lm' or 'python:pkg.module:function' returning an nn.Module")
+    p.add_argument('--mapping', help='JSON rules mapping original parameter names to MLX names')
+    p.add_argument('--revision', help='HF revision of the original (branch, tag or commit)')
+    p.add_argument('--overwrite', action='store_true')
+
     p = add('report')
     p.add_argument('path', help='report.json written by `cumlx diff -o`')
 
     p = add('selftest')
     p.add_argument('--core-only', action='store_true', help='only checks that need no optional dependency')
     p.add_argument('--keep', metavar='DIR', help='keep fixture/trace/report files in this new directory')
+    p.add_argument('--device', choices=['auto', 'cpu', 'gpu'], default='auto', help='MLX device for the end-to-end checks')
     return parser
 
 
