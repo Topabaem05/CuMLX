@@ -2,7 +2,7 @@
 
 **MLX 포팅본이 원본 모델과 같은 계산을 하는지 모듈 단위로 증명하고, 다르면 처음 달라진 모듈을 찾습니다.**
 
-CUMLX는 모델을 변환하지 않습니다. mlx-lm이든 직접 작성한 코드든, 어떻게 만든 포팅본이든 그 뒤에 붙여 쓰는 검증 도구입니다. 포팅이 성공했다는 메시지나 그럴듯한 생성 결과는 증거가 아닙니다. 가중치 전치, RoPE 오프셋, 잘못된 양자화 scale은 오류 없이 조용히 틀린 값을 냅니다.
+지금의 CUMLX는 mlx-lm이든 직접 작성한 코드든, 어떻게 만든 포팅본이든 그 뒤에 붙여 쓰는 검증 도구입니다. 다음 목표는 RTX·CUDA에서 돌던 것을 Apple Silicon에서 돌게 만드는 것까지 넓히는 것입니다. [플랫폼 로드맵](docs/ROADMAP-PLATFORM.md)에 있으며 아직 구현하지 않았습니다. 포팅이 성공했다는 메시지나 그럴듯한 생성 결과는 증거가 아닙니다. 가중치 전치, RoPE 오프셋, 잘못된 양자화 scale은 오류 없이 조용히 틀린 값을 냅니다.
 
 ```text
 $ cumlx diff golden/ ./my-port
@@ -146,7 +146,8 @@ CLI는 stdout에 JSON 문서 하나만 내보내고, 오류마다 해결 명령�
 | [Trace 형식](docs/TRACE-FORMAT.md) | golden trace 공개 명세 |
 | [CUDA golden 측정](docs/CUDA-GOLDEN.md) | V100 측정 결과와 다른 NVIDIA 장비에서 실행할 절차 |
 | [CUDA 프로젝트 포팅 검토](docs/PORTING-CUDA-MODELS.md) | 변환 가능 범위, Isaac Sim 검토, `scan`과 `port` |
-| [로드맵](docs/ROADMAP-1MONTH.md) | 마일스톤 진행 상태 |
+| [플랫폼 로드맵](docs/ROADMAP-PLATFORM.md) | 다음 계획: Apple Silicon 실행, 오픈소스 통합, 마일스톤 |
+| [1개월 로드맵](docs/ROADMAP-1MONTH.md) | 검증기 마일스톤 진행 상태 |
 | [FP4 커널 lab](docs/FP4-KERNEL-LAB.md) | 실험용 NVFP4/MXFP4 Metal·CUDA 커널 |
 | [CI](docs/CI.md) | 자동 검사와 GPU 검증 경계 |
 
