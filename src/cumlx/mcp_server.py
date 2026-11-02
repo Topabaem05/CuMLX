@@ -12,6 +12,7 @@ them unless the person who starts this server passes ``--allow-code-execution``.
 from __future__ import annotations
 
 import argparse
+from collections.abc import Sequence
 import json
 import subprocess
 import sys
