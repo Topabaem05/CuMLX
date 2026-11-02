@@ -6,8 +6,11 @@ Run it with the Python of the environment from spikes/isaac_lab_mac.py, with mlx
     ISAACSIM_ASSET_ROOT=assets venv/bin/python spikes/isaac_lab_mlx_loop.py --controller mlx \
         --checkpoint model_99.pt --output out.json --device cpu presets=newton_mjwarp
 
---controller zero applies no force. A checkpoint from early in training is the other control.
+--controller zero applies no action. A checkpoint from early in training is the other control.
 Each run is one process, because one process holds one simulation.
+
+For a velocity task, --forward V fixes the command to V m/s along the body x axis, so that a policy
+can be shown to follow the command and not only to stay on its feet.
 """
 
 from __future__ import annotations
@@ -16,7 +19,6 @@ import argparse
 import contextlib
 import importlib.util
 import json
-import math
 from pathlib import Path
 import sys
 import time
@@ -53,6 +55,7 @@ def main() -> int:
     parser.add_argument("--steps", type=int, default=900)
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--task", default=TASK)
+    parser.add_argument("--forward", type=float, help="velocity task: fixed forward command in m/s")
     add_launcher_args(parser)
     parser.set_defaults(device=None)
     args, hydra_args = setup_preset_cli(parser, None)
@@ -77,6 +80,14 @@ def main() -> int:
     torch.manual_seed(args.seed)
     env_cfg, _ = resolve_task_config(args.task, "")
     apply_env_overrides(args, env_cfg)
+    if args.forward is not None:
+        command = env_cfg.commands.base_velocity
+        command.rel_standing_envs = 0.0
+        command.heading_command = False
+        command.ranges.lin_vel_x = (args.forward, args.forward)
+        command.ranges.lin_vel_y = (0.0, 0.0)
+        command.ranges.ang_vel_z = (0.0, 0.0)
+        command.ranges.heading = (0.0, 0.0)
 
     final: dict = {}
     with launch_simulation(env_cfg, args), contextlib.ExitStack() as cleanup:
@@ -84,6 +95,10 @@ def main() -> int:
         cleanup.callback(env.close)
         obs, _ = env.reset(seed=args.seed)
         count = env.unwrapped.num_envs
+        action_size = int(np.prod(env.unwrapped.single_action_space.shape))
+        is_velocity = hasattr(env.unwrapped, "command_manager")
+        settle = min(100, args.steps // 2)
+        speeds, errors, heights = [], [], []
         rewards, terminated, truncated = 0.0, 0, 0
         last_angles, last_upright = [], []
         worst, inference = 0.0, 0.0
@@ -92,7 +107,7 @@ def main() -> int:
             for step in range(args.steps):
                 state = obs["policy"]
                 if run_mlx is None:
-                    action = torch.zeros((count, 1))
+                    action = torch.zeros((count, action_size))
                 else:
                     tick = time.perf_counter()
                     out = run_mlx(mx.array(state.numpy()))
@@ -107,7 +122,14 @@ def main() -> int:
                 rewards += float(reward.sum())
                 terminated += int(done.sum())
                 truncated += int(cut.sum())
-                if step >= args.steps - 100:
+                if is_velocity and step >= settle:
+                    data = env.unwrapped.scene["robot"].data
+                    velocity = data.root_lin_vel_b.torch
+                    wanted = env.unwrapped.command_manager.get_command("base_velocity")
+                    speeds.append(float(velocity[:, 0].mean()))
+                    errors.append(float((wanted[:, :2] - velocity[:, :2]).norm(dim=1).mean()))
+                    heights.append(float(data.root_pos_w.torch[:, 2].mean()))
+                if not is_velocity and step >= args.steps - 100:
                     angle = torch.atan2(torch.sin(state[:, 1]), torch.cos(state[:, 1])).abs()
                     last_angles.append(float(angle.mean()))
                     last_upright.append(float((angle < 0.1).float().mean()))
@@ -121,11 +143,22 @@ def main() -> int:
             "reward_per_env_step": rewards / (count * args.steps),
             "terminated_per_env": terminated / count,
             "timed_out_per_env": truncated / count,
-            "mean_abs_pole_rad_last_100": sum(last_angles) / len(last_angles),
-            "upright_fraction_last_100": sum(last_upright) / len(last_upright),
             "seconds": round(time.monotonic() - start, 2),
-            "pole_limit_note": f"pi/2 = {math.pi / 2:.3f} rad",
         }
+        if is_velocity:
+            final.update(
+                task=args.task,
+                forward_command=args.forward,
+                mean_forward_speed=sum(speeds) / len(speeds),
+                mean_velocity_error=sum(errors) / len(errors),
+                mean_base_height=sum(heights) / len(heights),
+                window=f"after step {settle}",
+            )
+        else:
+            final.update(
+                mean_abs_pole_rad_last_100=sum(last_angles) / len(last_angles),
+                upright_fraction_last_100=sum(last_upright) / len(last_upright),
+            )
         if run_mlx is not None:
             final["mlx_vs_torch_worst_rel_l2"] = worst
             final["mlx_inference_ms_per_step"] = round(1000 * inference / args.steps, 4)

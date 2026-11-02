@@ -25,6 +25,7 @@ Three more scripts run outside `run_all.sh`. They run Isaac Lab, Newton and thei
 | Script | Question |
 |---|---|
 | `isaac_lab_mac.sh`, which starts `isaac_lab_mac.py` | Does Isaac Lab cartpole train on a Mac CPU with Newton? It returns at once and keeps running. `status` shows the state. Delete `~/cumlx-isaaclab` afterwards: it took 1.9 GB. |
+| `isaac_lab_view.sh` | Shows a trained Go2 policy in Newton's viewer. The `--video newton_gl` option of `isaaclab play` saves a clip, and it needs `moviepy`. |
 | `rsl_rl_golden.py` | What does rsl_rl's own model output for a checkpoint? |
 | `isaac_lab_mlx_loop.py` | Does the MLX policy balance the pole when it controls the simulation? Needs `mlx` in that environment. |
 

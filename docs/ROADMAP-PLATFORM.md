@@ -137,6 +137,8 @@ Apple M5 Pro 한 대에서 직접 실행했습니다. 재현 방법은 [spikes/]
 - **Isaac Lab을 Isaac Sim 없이 Mac CPU에서 실행했습니다.** Newton으로 cartpole을 100회 학습하는 데 약 18초 걸렸고, 처리량은 환경 256개에서 약 4만 step/s입니다. 시드 3개 모두 보상이 올랐고, 마지막 에피소드 길이는 300, 293, 246입니다(최대 300). 수동 구성이며 NVIDIA가 지원하지 않습니다. `uv sync`는 macOS를 거부합니다. 측정값은 `validation/isaac-lab-mac.json`, 재현은 `spikes/isaac_lab_mac.sh`입니다.
 - 그 체크포인트의 MLX 정책이 rsl_rl 원본 출력과 7.9e-8까지 일치합니다. 이 정책이 Newton 환경을 직접 제어해 시드 3개에서 막대를 100% 세웠습니다. 힘을 주지 않는 대조군은 0%, 1회차 체크포인트는 5%입니다.
 
+**범위 결정 (2026-11-03):** Isaac Sim과 Isaac Lab의 macOS 작업이 커지면 별도 저장소로 분리합니다. CuMLX에는 검증기와 레시피에 필요한 결과만 남깁니다.
+
 **확인하지 못한 것:** 실제 CUDA에서의 kernelport 원본 검증, 복잡한 USD 자산(cartpole 하나만 시험), Mitsuba가 실제로 하드웨어 레이트레이싱을 쓰는지, 정책 추론을 포함한 처리량, `mps-*`, metalsplat, mlx3D 실행(M2 첫 작업으로 넘김).
 
 - [x] 표의 항목을 모두 실행하고 `validation/spikes.json`에 기록

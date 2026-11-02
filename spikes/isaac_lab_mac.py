@@ -29,10 +29,12 @@ import urllib.parse
 import urllib.request
 
 ASSET_ROOT_URL = "https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/6.2"
-ROOT_ASSETS = (
-    "Isaac/IsaacLab/Robots/Classic/Cartpole/cartpole.usd",
-    "Isaac/IsaacLab/Environments/Grid/default_ground_plane_checker_v1/default_ground_plane.usda",
-)
+GROUND_PLANE = "Isaac/IsaacLab/Environments/Grid/default_ground_plane_checker_v1/default_ground_plane.usda"
+CARTPOLE = "Isaac-Cartpole-Direct"
+TASK_ASSETS = {
+    CARTPOLE: ("Isaac/IsaacLab/Robots/Classic/Cartpole/cartpole.usd", GROUND_PLANE),
+    "Isaac-Velocity-Flat-UnitreeGo2": ("Isaac/IsaacLab/Robots/Unitree/Go2/go2.usd", GROUND_PLANE),
+}
 # Measured on PyPI, 2026-11-02: no macOS arm64 wheel for these pinned versions.
 NO_MAC_WHEEL = {"usd-exchange", "omniverseclient", "usd-optimize"}
 USD_PROVIDER = "usd-core==26.8"  # usd-exchange 3.0.1 vendors USD 26.08.
@@ -107,9 +109,9 @@ def layer_dependencies(python: Path, layer: Path) -> list[str]:
     return json.loads(done.stdout.strip().splitlines()[-1])
 
 
-def mirror_assets(python: Path, root: Path, log: list[str]) -> dict:
-    """Copy the Cartpole assets locally. The remote path needs omni.client, which has no macOS wheel."""
-    pending = list(ROOT_ASSETS)
+def mirror_assets(python: Path, root: Path, log: list[str], roots: tuple[str, ...] = TASK_ASSETS[CARTPOLE]) -> dict:
+    """Copy a task's assets locally. The remote path needs omni.client, which has no macOS wheel."""
+    pending = list(roots)
     fetched, unresolved, placeholders = [], [], []
     while pending:
         relative = pending.pop()
@@ -141,7 +143,7 @@ def mirror_assets(python: Path, root: Path, log: list[str]) -> dict:
                 pending.append(
                     os.path.normpath(os.path.join(os.path.dirname(relative), dependency))
                 )
-    missing = [asset for asset in ROOT_ASSETS if asset not in fetched]
+    missing = [asset for asset in roots if asset not in fetched]
     if missing:
         raise OSError(f"could not fetch {missing}")
     return {"fetched": fetched, "placeholders": sorted(placeholders), "unresolved": sorted(set(unresolved))}
@@ -191,6 +193,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--checkout", type=Path, required=True, help="Isaac Lab source checkout")
     parser.add_argument("--work", type=Path, required=True, help="directory for the venv, assets, logs")
+    parser.add_argument("--task", default=CARTPOLE, choices=sorted(TASK_ASSETS))
+    parser.add_argument("--smoke-only", action="store_true", help="stop after the smoke stage")
     parser.add_argument("--learn-envs", type=int, default=256)
     parser.add_argument("--learn-iterations", type=int, default=100)
     parser.add_argument("--smoke-timeout", type=int, default=1800)
@@ -272,7 +276,7 @@ def main(argv: list[str] | None = None) -> int:
     assets = work / "assets"
     notes: list[str] = []
     try:
-        mirrored = mirror_assets(python, assets, notes)
+        mirrored = mirror_assets(python, assets, notes, TASK_ASSETS[args.task])
     except (OSError, subprocess.CalledProcessError) as exc:
         stages.record("assets", status="failed", error=str(exc)[:400], notes=notes)
         return 1
@@ -282,7 +286,7 @@ def main(argv: list[str] | None = None) -> int:
     env.pop("VIRTUAL_ENV", None)
     train = [
         str(venv / "bin" / "isaaclab"), "train", "--rl_library", "rsl_rl",
-        "--task", "Isaac-Cartpole-Direct", "--device", "cpu", "presets=newton_mjwarp",
+        "--task", args.task, "--device", "cpu", "presets=newton_mjwarp",
     ]
     # The same probe as upstream's source/isaaclab/test/install_ci/misc/cartpole_training_smoke.py, plus --device cpu.
     run_dir = work / "run"
@@ -301,6 +305,9 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
     stages.record("smoke", status="ok", seconds=seconds, checkpoints=len(checkpoints), **fields)
+    if args.smoke_only:
+        print(f"Result: {stages.path}", flush=True)
+        return 0
 
     before = earlier | set(checkpoints)
     code, text, seconds = stages.run(
