@@ -625,6 +625,7 @@ def test_quantized_moe_port_and_per_expert_scale_fault(moe, tmp_path, mode, kwar
 def test_nvfp4_moe_with_one_global_scale_per_expert(moe, tmp_path):
     """Each expert keeps its own tensor scale. Golden weights must use it, and swapping two scales must be located."""
     import mlx.core as mx
+    from cumlx.errors import CumlxError
     from cumlx.verify import mlx_port
     from cumlx.verify.capture_torch import capture_model, load_hf_model, load_mlx_weights_into
     from cumlx.verify.diff import run_diff
@@ -654,9 +655,14 @@ def test_nvfp4_moe_with_one_global_scale_per_expert(moe, tmp_path):
     w = TraceWriter(g, source={'framework': 'torch'}, max_bytes=1 << 30, golden={'kind': 'quantization-aware', 'dtype': 'float32'})
     capture_model(torch_model, [np.asarray(TOKENS)], w)
     w.finish()
+    assert run_weights(str(path), 'q', model=clean)['verdict'] == 'ok'
+    if not mlx_port.gpu_available(mx):  # MLX gather_qmm has no global scale on the CPU: reported, not passed
+        with pytest.raises(CumlxError) as err:
+            run_diff(str(g), 'q', model=clean)
+        assert err.value.code == 'E_MODEL_RUN'
+        return
     rep = run_diff(str(g), 'q', model=clean)
     assert rep['verdict'] == 'ok', rep['first_divergence']
-    assert run_weights(str(path), 'q', model=clean)['verdict'] == 'ok'
     faulty = port()
     bad = faulty.model.layers[0].mlp.switch_mlp.up_proj
     gs = bad.global_scale

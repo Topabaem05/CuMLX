@@ -203,7 +203,7 @@ Qwen2.5-0.5B의 float32·float16·bf16·4bit·8bit 포팅 모두 290개 파라�
 
 - 패딩 입력은 기록하지 않으므로, 재생은 항상 causal mask를 가정합니다.
 - 학습된 실제 MoE 모델은 검증하지 않았습니다. 공개 tiny random 모델과 fixture만 실행했습니다. transformers 4 계열의 expert별 `ModuleList` 구조는 재생하지 못하고 `unverified`로 나옵니다.
-- bf16 MoE 포팅은 CPU에서 실행되지 않습니다(MLX `gather_mm`이 CPU에서 float32만 지원). `E_MODEL_RUN`으로 보고합니다.
+- bf16 MoE 포팅과 expert별 global scale을 쓰는 NVFP4 MoE 포팅은 CPU에서 실행되지 않습니다(MLX `gather_mm`과 `gather_qmm`의 CPU 구현 제한). `E_MODEL_RUN`으로 보고합니다.
 - `hidden` 재생은 `(x, mask, cache)` 형식을 대상으로 합니다. 형식이 다른 모듈은 재생 오류로 기록되고 chain으로 판정합니다.
 - 이름 매핑은 동일 경로와 JSON 규칙만 지원합니다. mlx-lm 외의 포팅은 `--loader python:pkg.mod:fn`이 필요합니다.
 - `weights`는 safetensors 체크포인트만 읽습니다. 양자화 가중치는 방향과 scale만 판정하므로 작은 값 오류는 놓칠 수 있습니다.

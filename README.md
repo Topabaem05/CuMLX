@@ -81,7 +81,7 @@ assert report['verdict'] == 'ok', report
     prompt: Hello
 ```
 
-`ok`만 통과합니다. 불일치와 `incomplete`는 job을 실패시키고, job summary에 처음 달라진 모듈이 표시됩니다. 저장소가 비공개이면 먼저 Actions 접근을 허용해야 합니다. [예제](examples/port-ci/)가 있습니다.
+`ok`만 통과합니다. 불일치와 `incomplete`는 job을 실패시키고, job summary에 처음 달라진 모듈이 표시됩니다. 이 저장소는 비공개이므로, 다른 저장소에서 쓰려면 먼저 Settings → Actions → Access에서 접근을 허용해야 합니다. [예제](examples/port-ci/)가 있습니다.
 
 ### AI 에이전트에게 맡긴다
 

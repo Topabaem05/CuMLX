@@ -28,7 +28,8 @@
 | W3 | **upstream 보고** | ⛔ 미완료 | mlx-lm 정책이 AI의 게시물 작성을 금지. 사용자가 직접 작성해야 함 |
 | W3 | **CUDA golden 측정** | ⛔ 미완료 | V100 장비에 쓰기 권한 승인 필요. [절차](CUDA-GOLDEN.md)와 `tracediff`는 준비됨. MPS로 도구 확인 |
 | W3 | **self-hosted runner 등록** | ⛔ 미완료 | 사용자 장비에 상주 서비스 설치. 사용자 결정 필요. GPU 테스트는 로컬에서 실행함 |
-| W4 | GitHub Action | ✅ | `action.yml`, 예제 저장소. 아래 T4 |
+| W4 | GitHub Action | ✅ 저장소 내부 | `action.yml`, `examples/port-ci`, CI의 `Action test`. 깨끗한 포팅 통과, 결함 포팅 실패 |
+| W4 | **별도 예제 저장소 적용** | ⛔ 미완료 | CuMLX가 비공개라 Actions 접근 설정 변경이 필요. 사용자 승인 필요 |
 | W4 | MCP 서버와 에이전트 스킬 | ✅ | `cumlx-mcp`, `skills/cumlx-verifier` |
 | W4 | `check_op` API | ✅ | `cumlx.check_op` |
 | W4 | 부분 기록 | ✅ | `--layers`, `W_PARTIAL_TRACE` |
@@ -261,7 +262,7 @@ src/cumlx/
 | 문서 | 사용 사례 중심 README 재작성, trace 형식 명세 공개 |
 
 **테스팅 마일스톤 T4**
-- [ ] GitHub Action을 예제 저장소에 적용, 오류 주입 PR에서 실패하고 깨끗한 PR에서 통과
+- [ ] GitHub Action을 예제 저장소에 적용, 오류 주입 PR에서 실패하고 깨끗한 PR에서 통과 — 같은 판정을 이 저장소의 `Action test`로 증명함. 별도 저장소와 PR은 Actions 접근 설정이 필요
 - [x] MCP 인터페이스로 에이전트가 capture → diff → 보고서 해석까지 수행하는 데모 — [기록](../validation/mcp-agent-demo.md)
 - [x] `check_op`로 기존 `rms_norm`/`silu_mul` Metal 커널 vs PyTorch 비교 통과 — `fp4_linear`도 포함
 - [x] 7B 모델: `--layers` 부분 기록으로 trace ≤ 5 GB, capture 10분 이내 (목표치) — 322MB, 12초. 랜덤 가중치의 구조 기준 측정이며 실제 checkpoint는 미실행

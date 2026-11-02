@@ -27,6 +27,10 @@ inputs:
     description: "'true' also runs the static weight comparison"
     required: false
     default: 'true'
+  artifact-name:
+    description: Name of the uploaded report artifact. Use a different name for each use in one job
+    required: false
+    default: cumlx-report
   python-version:
     description: Python version
     required: false
@@ -84,7 +88,8 @@ runs:
       if: always()
       uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
       with:
-        name: cumlx-report
+        name: ${{ inputs.artifact-name }}
+        overwrite: true
         path: ${{ inputs.working-directory }}/cumlx-output/
         if-no-files-found: warn
         retention-days: 14

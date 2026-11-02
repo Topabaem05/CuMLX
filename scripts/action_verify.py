@@ -15,7 +15,8 @@ OUT = Path('cumlx-output')
 
 
 def run(*argv: str) -> dict:
-    p = subprocess.run([sys.executable, '-m', 'cumlx', *argv, '--format', 'json'], stdout=subprocess.PIPE, text=True, check=False)
+    env = {**os.environ, 'PYTHONPATH': os.pathsep.join(filter(None, [os.getcwd(), os.environ.get('PYTHONPATH')]))}
+    p = subprocess.run([sys.executable, '-m', 'cumlx', *argv, '--format', 'json'], stdout=subprocess.PIPE, text=True, check=False, env=env)
     try:
         return json.loads(p.stdout)
     except json.JSONDecodeError:
