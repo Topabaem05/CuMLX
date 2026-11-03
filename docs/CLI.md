@@ -17,7 +17,7 @@ Linux에서는 `diff` extra가 `mlx[cpu]`를 설치합니다. 같은 환경에 �
 | 명령 | 하는 일 | 필요 extra |
 |---|---|---|
 | `describe` | 명령·인자·exit code·error code의 기계용 명세 | - |
-| `doctor` | 의존성과 준비된 명령 보고. `--require`로 미준비 시 exit 3 | - |
+| `doctor` | 의존성과 준비된 명령 보고. `--require`로 미준비 시 exit 3. `--stack`은 플랫폼 층(MLX, mlx-lm, torch MPS, Metal 장치, Genesis, Mitsuba Metal, warp-metal, 번역기)을 이 Python 환경 기준으로 보고하고, 하나라도 준비되지 않으면 exit 3. 설치와 네트워크 접근은 하지 않고, nvcc는 찾지 않습니다 | - |
 | `fixture tiny-llama`, `fixture tiny-moe` | 오프라인 테스트용 2-layer 랜덤 Llama 또는 Qwen3 MoE 생성 | capture |
 | `capture` | 원본 PyTorch 모델의 모듈별 입출력을 golden trace로 기록 | capture |
 | `diff` | MLX 포팅본을 같은 입력으로 실행해 비교하고 처음 어긋난 모듈을 찾음 | diff |

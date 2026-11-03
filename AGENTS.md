@@ -74,6 +74,8 @@ or ignore them explicitly. Never report `incomplete` as success.
 `cumlx selftest` proves within seconds that the verifier works in the
 current environment: a clean port passes and 11 injected faults are located.
 
+`cumlx doctor --stack` reports each platform layer in this Python environment: MLX, mlx-lm, torch with MPS, the Metal device, Genesis, Mitsuba Metal, warp-metal and the translator. Any layer that is not `ok` gives exit 3 with `E_DEP_MISSING` and an install hint. It installs nothing, uses no network and does not look for nvcc. A part that a spike installed in its own environment reads as missing here. `ok` says that a part is present, not that its results are right.
+
 ## Developing this repository
 
 ```bash
