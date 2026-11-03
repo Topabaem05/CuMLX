@@ -674,7 +674,7 @@ def run_kernel_port(args) -> Result:
             raise CumlxError('E_OUTPUT_EXISTS', f'{path} exists', hint='pass --overwrite or choose a new path with -o')
     adapter = None if args.preprocess_only else kernel_port.load_translator(args.translator)
     pre = kernel_port.preprocess_file(args.source, instantiate=args.instantiate, include_dirs=args.include_dir, header=args.header,
-                                      demote_fp64=args.demote_fp64, cases_file=args.cases, case_id=args.case)
+                                      demote_fp64=args.demote_fp64, cases_file=args.cases, case_id=args.case, allow_warp_level=args.allow_warp_level)
     r = Result('kernel port')
     r.warnings.extend(pre.warnings)
     side: dict[str, Any] = {'schema': kernel_port.PORT_SCHEMA, 'source': str(args.source), 'source_sha256': pre.source_sha256,
@@ -698,7 +698,7 @@ def run_kernel_port(args) -> Result:
         header_out.write_text(result.header)
         r.artifact('metal_header', str(header_out))
     side.update(translator={'name': result.translator, 'version': result.version, 'notes': result.notes}, metal_form=result.form,
-                metal_entry_points=result.entry_points)
+                metal_entry_points=result.entry_points, metal_signatures=result.signatures)
     sidecar.write_text(json.dumps(side, indent=1) + '\n')
     r.summary = f"translated {pre.name} with {result.translator}. It is unverified until `cumlx kernel verify` compares it with a CUDA golden"
     r.data = {**side, 'grade': 'unverified'}

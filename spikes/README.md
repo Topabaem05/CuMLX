@@ -22,3 +22,7 @@ python spikes/collect.py -o validation/spikes.json <work dir>/results.jsonl
 The Isaac Sim and Isaac Lab scripts moved to the private repository [OrchardSim](https://github.com/Topabaem05/OrchardSim) on 2026-11-03. `validation/isaac-sim.json`, `validation/isaac-lab-mac.json` and `validation/isaac-lab-go2.json` stay here, because the recipes and the checkpoint test use them. The script paths in those records are the paths at the time of the run.
 
 The `probe_` prefix stops a script from shadowing the package that it imports. Delete the work directory afterwards: it took 4.8 GB. Genesis also creates `~/.cache/genesis`. In `validation/spikes.json` the last run is the complete reproduction from an empty directory, and the earlier runs repeat the throughput measurement.
+
+## M3 kernels
+
+`m3_kernels.sh` works toward the M3 gates in [the platform roadmap](../docs/ROADMAP-PLATFORM.md). It installs metal-woof into `~/cumlx-m3/woof-venv` and runs it with your permissions. `sh spikes/m3_kernels.sh capture` compiles and runs third-party kernels on the V100, and it stops if the GPU is busy. `status` shows the state, and `tools` prints the programs that it would run. It takes the kernels at the commits in [sources.json](../validation/kernel-cases-m3/sources.json), and checks each hash. Delete `~/cumlx-m3` afterwards.
