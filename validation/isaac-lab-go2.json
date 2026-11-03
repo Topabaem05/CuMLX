@@ -508,8 +508,8 @@
   "env_1024_note": "The commands of the 1024-env runs were not stored. Their JSONs record the same task, env count, steps and seed."
  },
  "video": {
-  "path": "~/Movies/cumlx/go2_4096envs_300iters.mp4",
-  "sha256": "7c23159d7ee9ac02abc83de17e76057be2d6dad9f92f93ab67b7e1011c8369f7",
+  "status": "The clip was made and then deleted on 2026-11-03. No copy is kept, so the fields below describe a file that no longer exists.",
+  "sha256":"7c23159d7ee9ac02abc83de17e76057be2d6dad9f92f93ab67b7e1011c8369f7",
   "frames": 300,
   "fps": 50,
   "seconds": 6.0,
