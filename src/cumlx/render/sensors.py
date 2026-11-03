@@ -46,6 +46,7 @@ class Camera:
     fov_x_degrees: float = 45.0
     width: int = 256
     height: int = 256
+    near_clip: float = 0.01  # Mitsuba starts each ray here, so its depth AOV is short by this distance. See `near_offsets`.
 
     def _axes(self) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         forward = np.subtract(self.target, self.origin, dtype=np.float64)
@@ -82,11 +83,17 @@ class Camera:
         directions = self._focal * forward + offsets_x * right - offsets_y * up
         return directions / np.linalg.norm(directions, axis=-1, keepdims=True)
 
+    def near_offsets(self) -> np.ndarray:
+        """Return the distance from the camera to the start of the ray at each pixel centre: near_clip over the cosine."""
+        forward, _, _ = self._axes()
+        return self.near_clip / (self.ray_grid() @ forward)
+
     def mitsuba_dict(self, mi: Any) -> dict[str, Any]:
         return {
             'type': 'perspective',
             'fov': self.fov_x_degrees,
             'fov_axis': 'x',
+            'near_clip': self.near_clip,
             'to_world': mi.ScalarTransform4f().look_at(origin=list(self.origin), target=list(self.target), up=list(self.up)),
             'film': {'type': 'hdrfilm', 'width': self.width, 'height': self.height, 'pixel_format': 'rgb',
                      'rfilter': {'type': 'box'}},
@@ -119,11 +126,12 @@ def box_scene(mi: Any, camera: Camera, half_size: float, position: Any = (0.0, 0
 class Sensors:
     """One Mitsuba scene with one camera. Every image is a NumPy array on the CPU side, so each call waits for the GPU."""
 
-    def __init__(self, scene_dict: dict[str, Any], variant: str = DEFAULT_VARIANT):
+    def __init__(self, scene_dict: dict[str, Any], variant: str = DEFAULT_VARIANT, camera: Camera | None = None):
         self.mi = load_mitsuba(variant)
         self.variant = variant
+        self.camera = camera  # Needed for depth, because of the near clip.
         self.scene = self.mi.load_dict(scene_dict)
-        if not variant.split('_')[0] in ('metal', 'cuda', 'llvm'):
+        if variant.split('_')[0] not in ('metal', 'cuda', 'llvm'):
             raise CumlxError('E_USAGE', f'Sensors needs a JIT variant, because segmentation reads shape registry ids, and {variant} is not one')
         import drjit as dr
         self.shape_ids = [shape.id() for shape in self.scene.shapes()]
@@ -138,8 +146,11 @@ class Sensors:
 
     def depth_segmentation(self, seed: int = 0) -> tuple[np.ndarray, np.ndarray]:
         """One sample per pixel, because an average of two shape indices is not a shape."""
+        if self.camera is None:
+            raise CumlxError('E_USAGE', 'depth needs the camera: pass camera= to Sensors')
         image = np.array(self.mi.render(self.scene, integrator=self._aov, spp=1, seed=seed), dtype=np.float32)
         depth, index = image[..., -2], image[..., -1]
+        depth = np.where(depth > 0, depth + self.camera.near_offsets(), 0).astype(np.float32)
         segmentation = np.full(index.shape, -1, dtype=np.int32)
         for registry, position in self._registry.items():
             segmentation[(depth > 0) & (np.rint(index).astype(np.int64) == registry)] = position

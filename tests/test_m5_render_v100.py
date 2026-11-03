@@ -4,6 +4,7 @@ The first check of each case proves that the shell finds the fake and not the re
 that does not exist, so a real ssh that slipped through would fail too.
 """
 import os
+import re
 import shutil
 import stat
 import subprocess
@@ -58,6 +59,10 @@ def test_start_on_an_idle_gpu_copies_only_its_own_files_and_pins_the_install(tmp
     assert calls.count('FAKE-SSH') >= 4  # The fake's own lines prove which program ran.
     assert 'mitsuba==3.9.1' in calls and '--variant cuda_ad_rgb --seeds 1,2,3 --out cuda' in calls
     assert 'pip install -q --python venv/bin/python mitsuba==3.9.1 numpy &&' in calls
+    remote = re.search(r"bash -lc '(.*)'$", calls, re.M)
+    assert remote is not None
+    syntax = subprocess.run(['bash', '-n', '-c', remote.group(1)], capture_output=True, text=True, check=False)  # -n reads the command and runs nothing.
+    assert syntax.returncode == 0, syntax.stderr
     source = SCRIPT.read_text()
     assert 'archive HEAD spikes/m5_render.py src/cumlx |' in source
 

@@ -1,4 +1,7 @@
 """cumlx.render.compare on synthetic images. No Mitsuba, no GPU."""
+import json
+from pathlib import Path
+
 import numpy as np
 import pytest
 
@@ -74,6 +77,17 @@ def test_too_few_seeds_other_shapes_and_shared_seeds_are_refused():
         compare_images(golden, dict(golden))
     with pytest.raises(CumlxError):
         compare_images(golden, _side(base, (1, 12, 13)))
+
+
+def test_the_record_does_not_claim_the_cuda_gate_without_a_comparison():
+    record = json.loads((Path(__file__).resolve().parent.parent / 'validation' / 'm5-render.json').read_text())
+    if record['cuda_comparison']['status'] != 'compared':
+        assert record['gates']['metal_vs_v100_cuda_grade_b'] == 'open'
+    local = record['local_checks_of_the_comparison']['spp_4096']
+    assert all(scene['grade'] == 'B' for scene in local['scalar_metal']['scenes'].values())
+    for faulty in ('metal_metal_light2', 'metal_metal_direct', 'scalar_metal_light2'):
+        assert all(scene['verdict'] == 'diverged' for scene in local[faulty]['scenes'].values()), faulty
+    assert record['physics_and_camera']['ok'] is True
 
 
 def test_psnr_of_equal_images_and_of_known_error():

@@ -72,7 +72,7 @@ def run(gs: Any, scenario: str, out: Path | None) -> dict[str, Any]:
 
     mi = load_mitsuba('metal_ad_rgb')
     render_camera = replace(CAMERA, origin=(CAMERA.origin[0] + 0.3, CAMERA.origin[1], CAMERA.origin[2])) if scenario == 'wrong_camera' else CAMERA
-    sensors = Sensors(box_scene(mi, render_camera, HALF_SIZE, position=START), 'metal_ad_rgb')
+    sensors = Sensors(box_scene(mi, render_camera, HALF_SIZE, position=START), 'metal_ad_rgb', camera=render_camera)
     body_index, floor_index = sensors.shape_ids.index('box'), sensors.shape_ids.index('floor')
 
     frames: list[dict[str, Any]] = []
@@ -131,6 +131,22 @@ def run(gs: Any, scenario: str, out: Path | None) -> dict[str, Any]:
     }
 
 
+def physics_gpu_seconds(gs: Any) -> dict[str, Any]:
+    """Does Genesis itself use the GPU? GPU time of this process over physics steps alone, with no render in between."""
+    scene = gs.Scene(sim_options=gs.options.SimOptions(dt=DT), show_viewer=False)
+    scene.add_entity(gs.morphs.Plane())
+    scene.add_entity(gs.morphs.Box(size=(2 * HALF_SIZE,) * 3, pos=START, euler=START_EULER))
+    scene.build(n_envs=256)
+    before = process_gpu_seconds(os.getpid())
+    begin = time.perf_counter()
+    for _ in range(STEPS):
+        scene.step()
+    seconds = time.perf_counter() - begin
+    after = process_gpu_seconds(os.getpid())
+    return {'backend': str(gs.backend), 'envs': 256, 'steps': STEPS, 'seconds': round(seconds, 3),
+            'gpu_seconds': None if before is None or after is None else round(after - before, 3)}
+
+
 def judge(results: dict[str, dict[str, Any]]) -> dict[str, Any]:
     drop, control, stale, wrong = (results[name] for name in ('drop', 'no_gravity', 'stale_pose', 'wrong_camera'))
     final_speed = abs(drop['frames'][-1]['position'][2] - drop['frames'][-2]['position'][2]) / (DT * STEPS_PER_FRAME)
@@ -159,10 +175,10 @@ def main() -> int:
     gs.init(backend=gs.metal, precision='32', logging_level='warning', seed=7)
     results = {name: run(gs, name, out) for name in ('drop', 'no_gravity', 'stale_pose', 'wrong_camera')}
     verdict = judge(results)
-    record = {**verdict, 'gpu_seconds_of_this_process': process_gpu_seconds(os.getpid()), 'results': results}
+    record = {**verdict, 'gpu_seconds_of_this_process': process_gpu_seconds(os.getpid()), 'physics_alone': physics_gpu_seconds(gs), 'results': results}
     if out is not None:
         (out / 'result.json').write_text(json.dumps(record, indent=1))
-    print(json.dumps({'ok': record['ok'], 'checks': record['checks'], 'final_speed': record['final_speed'], 'gpu_seconds': record['gpu_seconds_of_this_process'],
+    print(json.dumps({'ok': record['ok'], 'checks': record['checks'], 'final_speed': record['final_speed'], 'gpu_seconds': record['gpu_seconds_of_this_process'], 'physics_alone': record['physics_alone'],
                       'scenarios': {name: {k: r[k] for k in ('frames_passed', 'frames_total', 'worst_pixel_error', 'final_height', 'centroid_travel_px', 'seconds_per_frame')} for name, r in results.items()}}, indent=1))
     return 0 if record['ok'] else 1
 

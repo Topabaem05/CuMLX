@@ -51,6 +51,14 @@ def test_focal_length_follows_the_horizontal_field_of_view():
     assert camera.project((1.0, 0.0, 0.0))[0] == pytest.approx(256.0)
 
 
+def test_near_offset_is_the_near_clip_at_the_centre_and_longer_at_the_corner():
+    offsets = CAMERA.near_offsets()
+    assert offsets[128, 128] == pytest.approx(CAMERA.near_clip, rel=1e-4)
+    assert offsets[0, 0] > offsets[128, 128]
+    half_diagonal = math.hypot(127.5, 127.5) / (128 / math.tan(math.radians(CAMERA.fov_x_degrees) / 2))
+    assert offsets[0, 0] == pytest.approx(CAMERA.near_clip * math.hypot(1, half_diagonal))
+
+
 def test_rotate_by_a_known_quarter_turn_and_by_nothing():
     half = math.sqrt(0.5)
     vectors = np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]])
@@ -117,7 +125,7 @@ def test_real_metal_render_agrees_with_the_camera_and_a_stale_pose_fails():
 
     mi = load_mitsuba('metal_ad_rgb')
     camera = CAMERA
-    sensors = Sensors(box_scene(mi, camera, HALF, position=(0.0, 0.0, 1.0)), 'metal_ad_rgb')
+    sensors = Sensors(box_scene(mi, camera, HALF, position=(0.0, 0.0, 1.0)), 'metal_ad_rgb', camera=camera)
     body, floor = sensors.shape_ids.index('box'), sensors.shape_ids.index('floor')
     for position in ((0.0, 0.0, 1.0), (0.3, -0.2, 0.6)):
         sensors.set_pose('box', position)

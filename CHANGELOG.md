@@ -8,6 +8,10 @@
 
 ### Added
 
+- `cumlx.render` (experimental, extra `render`): RGB, depth and segmentation from Mitsuba on Metal, frame checks against a physics state, and a grade B comparison of path-traced images between devices. See `docs/RENDER-SENSORS.md`.
+- `examples/physics-camera/drop_box.py`: Genesis physics and a Mitsuba camera in one loop on Metal, checked frame by frame, with two wrong scenarios that must fail.
+- `spikes/m5_render.py`, `spikes/m5_render_v100.sh`: the Metal and CUDA render comparison, and the frame rate measurement. The V100 side has not run.
+
 - `cumlx run` (experimental): run an unmodified PyTorch script that assumes CUDA on MPS, and record each redirected call in `run-report.json`. A CUDA call with no equivalent, a second GPU, an operation that MPS lacks and float64 all end with an error. `PYTORCH_ENABLE_MPS_FALLBACK` is removed unless you pass `--allow-cpu-fallback`. Importing `cumlx` changes nothing in torch. MCP shows this command only with `--allow-code-execution`.
 - `spikes/m2_scripts.sh`: run 5 open-source scripts under `cumlx run`, once per seed for those that train. `--target cuda` records the golden.
 - `spikes/m2_substitutes.sh`: evaluate `mps-*`, metalsplat, msplat and mlx3D, each in its own venv at a pinned version, with checks against known numbers.

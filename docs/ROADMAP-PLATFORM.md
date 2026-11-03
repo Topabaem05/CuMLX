@@ -245,12 +245,14 @@ RTX가 필요하던 렌더링 경로를 Metal 레이트레이싱으로 대체합
 - `cumlx.sim`의 카메라 센서로 연결 (RGB, 깊이, 세그멘테이션)
 - LiDAR 같은 레이캐스트 센서를 Metal 레이트레이싱으로 구현
 
+**현재 상태 (2026-11-03):** `cumlx.render`는 Python 사전으로 만든 Mitsuba 장면에서 RGB, 깊이, 세그멘테이션을 만듭니다. USD 장면, `cumlx.sim` 연결, LiDAR는 만들지 않았습니다. 완료 조건에는 없지만 위 항목이므로 미구현으로 적어 둡니다. Mitsuba의 Metal 변형은 Metal 레이트레이싱 API를 씁니다. 이 GPU에서 그 API가 하드웨어로 가속된다는 부분은 Apple 문서의 내용이고, 카운터로 확인하지는 않았습니다.
+
 완료 조건:
 
-- [ ] 같은 장면의 Mitsuba Metal과 V100 CUDA 결과 비교, 등급 B (PSNR 허용치는 측정 전에 지정)
-- [ ] 256×256 RGB 센서 프레임 속도 측정 및 공개
-- [ ] 물리와 카메라를 함께 쓰는 예제 하나 실행
-- [ ] RTX 센서와 다른 점을 문서로 명시
+- [ ] 같은 장면의 Mitsuba Metal과 V100 CUDA 결과 비교, 등급 B (PSNR 허용치는 측정 전에 지정). 허용치는 [측정 전에 커밋](../validation/m5-render-limits.json)했고, Metal 쪽 이미지와 비교 도구는 준비했습니다. **V100 실행 전입니다.** `spikes/m5_render_v100.sh`는 가짜 ssh로만 시험했고, V100의 OptiX가 Mitsuba를 돌릴지는 모릅니다. Metal과 CPU `scalar_rgb` 비교는 두 장면 모두 등급 B이고, 주입한 결함 2종은 두 장면 모두 실패합니다. 이것으로 이 항목을 대신하지 않습니다
+- [ ] 256×256 RGB 센서 프레임 속도 측정 및 공개. **측정은 끝났고 공개는 아직입니다.** 저장소가 비공개입니다. 초당 프레임: Cornell box 16 spp 127~134, 64 spp 50~53. 매 프레임 메시를 옮기는 장면 16 spp 224~314, 64 spp 167~225. 각 5회 반복 [측정값](../validation/m5-render.json). 다른 작업이 함께 돌았습니다. 장면이 작습니다
+- [x] 물리와 카메라를 함께 쓰는 예제 하나 실행. [drop_box.py](../examples/physics-camera/drop_box.py): Genesis와 Mitsuba가 한 프로세스에서 Metal로 돕니다. 정육면체 하나의 장면이고, 61개 프레임 모두 물리 상태와 일치합니다(최악 0.48 px). 대조군은 움직이지 않고, 틀린 자세와 틀린 카메라는 실패합니다
+- [x] RTX 센서와 다른 점을 문서로 명시. [docs/RENDER-SENSORS.md](RENDER-SENSORS.md). RTX 쪽은 문서만 읽었고 직접 비교하지 않았습니다
 
 ### M6. 통합 릴리스 (01/26 ~ 01/29) → `v1.0.0`
 
