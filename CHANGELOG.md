@@ -17,6 +17,10 @@
 - `cumlx kernel port` (experimental): prepare a `.cu` file (standard headers, template instances, host code, PTX built-ins) and call a translator through `TranslatorAdapter`. A missing translator is exit 3. A feature with no Metal equivalent, such as warp-level behaviour, is refused with its reason. The woof adapter was tested only with a stub, not with woof.
 - `validation/kernel-translation.json`: the first CUDA runs of the 8 FP4 kernels, on a Tesla V100. The hand-written Metal kernels pass 29 of 29 cases on an M5 Pro, worst `rel_l2` 7.5e-8. All 9 wrong translations of 8 kinds are caught, and the 9 right ones pass.
 
+### Changed
+
+- Recipes: metalsplat, mps-flash-attn on torch 2.13, PyTorch sdpa on MPS and `torchvision.ops.deform_conv2d` now have `run` evidence, against the CPU or hand values, not CUDA. mps-bitsandbytes and the other `mps-*` packages failed on torch 2.15. `cumlx run` maps no package automatically, because none of them passed as a drop-in under the original name. `validation/m2-substitutes.json`.
+
 ### Fixed
 
 - `cumlx run script.py --target x -- args` failed with `E_USAGE` on Python 3.12.3 and 3.10, because argparse there handles this mix of positionals differently. `--help` and `--format` after `--` also went to CUMLX and not to the script. `--module` could not take arguments at all.

@@ -168,9 +168,9 @@ Apple M5 Pro 한 대에서 직접 실행했습니다. 재현 방법은 [spikes/]
 cumlx run train.py --target mps --report run-report.json
 ```
 
-- 첫 작업: M0에서 실행하지 않은 `mps-*`, metalsplat, msplat, mlx3D를 실행해 레시피에 넣을지 결정. 평가 스크립트는 `spikes/m2_substitutes.sh`이며, 아직 실행하지 않았습니다
+- 첫 작업: M0에서 실행하지 않은 `mps-*`, metalsplat, msplat, mlx3D를 실행해 레시피에 넣을지 결정. **실행했습니다(2026-11-03).** 레시피에 넣은 것은 metalsplat, torch 2.13의 mps-flash-attn, torch 자체 sdpa와 torchvision의 `deform_conv2d`입니다. 기준은 CPU와 손 계산이며 CUDA와는 비교하지 않았습니다. `validation/m2-substitutes.json`
 - `.cuda()`, `device="cuda"`, `torch.cuda.*`, `autocast("cuda")`를 MPS로 연결
-- `flash_attn`, `bitsandbytes`, `pytorch3d`, `gsplat` 등을 import 시점에 레시피의 대체품으로 연결. 지금은 `--substitute`로 직접 지정할 때만 연결합니다. 자동 연결은 `mps-*` 평가 후 결정합니다
+- `flash_attn`, `bitsandbytes`, `pytorch3d`, `gsplat` 등의 import 연결은 `--substitute`로 직접 지정할 때만 합니다. **자동 연결은 하지 않기로 했습니다.** 평가한 후보 중 원래 패키지의 API를 그대로 제공하는 것이 없습니다
 - 바꾼 호출을 모두 `run-report.json`에 기록
 - MPS에 없는 연산은 조용히 CPU로 넘기지 않고 오류 또는 명시적 허용
 

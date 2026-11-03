@@ -1,0 +1,1525 @@
+{
+ "schema": "cumlx.validation.m2-substitutes.v1",
+ "date": "2026-11-03",
+ "machine": "Apple M5 Pro, 48 GB",
+ "started_by": "the user, with spikes/m2_substitutes.sh",
+ "conditions": "Another job used the GPU during this run, so timing is not a benchmark, and system-wide GPU use cannot confirm the device for packages that hide it (msplat, mlx3D).",
+ "reference": "Torch on the CPU or a hand computation on this Mac. No CUDA device took part.",
+ "decision": "No candidate passed drop_in under the original package name, so cumlx run maps none of them automatically. --substitute stays explicit.",
+ "open": "mps-bitsandbytes, deform-conv, correlation, carafe and conv3d fail with \"must be on MPS\" on torch 2.15. A C++ ABI mismatch is the leading explanation, and it is not proven. A run on torch 2.9.1 tests it.",
+ "results": [
+  {
+   "name": "mps_flash_attn",
+   "status": "fail",
+   "reason": "not installed: /local-user/cumlx-m2-substitutes/venvs/mps_flash_attn\nerror: No solution found when resolving dependencies\n  cause: Because mps-flash-attn>=0.6.3 depends on torch>=2.5,<2.14 and you require torch==2.15.0, we can conclude that your requirements and mps-flash-attn>=0.6.3 are incompatible.",
+   "requirements": [
+    "mps-flash-attn==0.6.3"
+   ],
+   "commit": "41c7e20c86d1b783a4f7bb29c2db7bfe4b758c43",
+   "repo_licence": "LICENSE: MIT, Copyright (c) 2025 imperatormk, and it notes MIT code from metal-flash-attention.",
+   "versions": null,
+   "device": null,
+   "seconds": 0.4,
+   "numbers": null,
+   "checks": [],
+   "could_not_test": null,
+   "substitutes": []
+  },
+  {
+   "name": "mps_flash_attn_torch213",
+   "status": "pass",
+   "reason": "",
+   "requirements": [
+    "mps-flash-attn==0.6.3"
+   ],
+   "commit": "41c7e20c86d1b783a4f7bb29c2db7bfe4b758c43",
+   "repo_licence": "LICENSE: MIT, Copyright (c) 2025 imperatormk, and it notes MIT code from metal-flash-attention.",
+   "versions": {
+    "torch": "2.13.0",
+    "torchvision": null,
+    "mlx": null,
+    "numpy": "2.5.4",
+    "mps-flash-attn": "0.6.3"
+   },
+   "device": {
+    "used": "mps",
+    "evidence": "tensor.device.type of 6 outputs"
+   },
+   "seconds": 10.9,
+   "numbers": {
+    "rel_l2_vs_cpu_sdpa_fp32_n32": 1.376910384049613e-07,
+    "rel_l2_torch_mps_sdpa_vs_cpu_fp32_n32": 2.499035886453366e-07,
+    "rel_l2_vs_cpu_sdpa_fp32_n1024": 4.6204136431869985e-07,
+    "rel_l2_torch_mps_sdpa_vs_cpu_fp32_n1024": 5.993094503756831e-07,
+    "rel_l2_vs_cpu_sdpa_fp16_n32": 0.00020350450993434103,
+    "rel_l2_torch_mps_sdpa_vs_cpu_fp16_n32": 0.0004474016815887069,
+    "rel_l2_vs_cpu_sdpa_fp16_n1024": 0.0002065542600767035,
+    "rel_l2_torch_mps_sdpa_vs_cpu_fp16_n1024": 0.0005851936377359873,
+    "rel_l2_vs_cpu_sdpa_causal": 1.0969551205762893e-07,
+    "rel_l2_grad_q_vs_cpu_sdpa": 3.5687158910419346e-07,
+    "rel_l2_grad_k_vs_cpu_sdpa": 3.338489613699516e-07,
+    "rel_l2_grad_v_vs_cpu_sdpa": 2.954386626439521e-07,
+    "ms_flash_attention_fp16_n1024": 1.0822919998645375,
+    "ms_torch_mps_sdpa_fp16_n1024": 1.4377500001501176,
+    "rel_l2_patched_sdpa_vs_cpu_sdpa": 1.6919375779882938e-07
+   },
+   "checks": [
+    {
+     "name": "rel_l2_vs_cpu_sdpa_fp32_n32",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 1.376910384049613e-07,
+      "limit": 0.0001
+     }
+    },
+    {
+     "name": "rel_l2_vs_cpu_sdpa_fp32_n1024",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 4.6204136431869985e-07,
+      "limit": 0.0001
+     }
+    },
+    {
+     "name": "rel_l2_vs_cpu_sdpa_fp16_n32",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.00020350450993434103,
+      "limit": 0.01
+     }
+    },
+    {
+     "name": "rel_l2_vs_cpu_sdpa_fp16_n1024",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.0002065542600767035,
+      "limit": 0.01
+     }
+    },
+    {
+     "name": "rel_l2_vs_cpu_sdpa_causal",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 1.0969551205762893e-07,
+      "limit": 0.0001
+     }
+    },
+    {
+     "name": "causal_differs_from_uncausal",
+     "ok": true,
+     "required": true,
+     "detail": ""
+    },
+    {
+     "name": "rel_l2_grad_q_vs_cpu_sdpa",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 3.5687158910419346e-07,
+      "limit": 0.001
+     }
+    },
+    {
+     "name": "rel_l2_grad_k_vs_cpu_sdpa",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 3.338489613699516e-07,
+      "limit": 0.001
+     }
+    },
+    {
+     "name": "rel_l2_grad_v_vs_cpu_sdpa",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 2.954386626439521e-07,
+      "limit": 0.001
+     }
+    },
+    {
+     "name": "rel_l2_patched_sdpa_vs_cpu_sdpa",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 1.6919375779882938e-07,
+      "limit": 0.0001
+     }
+    },
+    {
+     "name": "output_device_is_mps",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "seen": [
+       "mps"
+      ]
+     }
+    }
+   ],
+   "could_not_test": [],
+   "substitutes": [
+    {
+     "original": "flash_attn",
+     "module": "mps_flash_attn",
+     "status": "fail",
+     "route": {
+      "flash_attention": {
+       "ok": true,
+       "rel_l2_vs_cpu_sdpa": 1.4953604152943925e-07,
+       "device": "mps"
+      }
+     },
+     "drop_in": {
+      "names": {
+       "ok": false,
+       "missing": [
+        "flash_attn_func",
+        "flash_attn_varlen_func"
+       ],
+       "present": []
+      },
+      "flash_attn_func": {
+       "ok": false,
+       "error": "AttributeError: module 'mps_flash_attn' has no attribute 'flash_attn_func'"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "mps_bitsandbytes",
+   "status": "fail",
+   "reason": "the check process ended early, exit -11",
+   "requirements": [
+    "mps-bitsandbytes==0.7.0"
+   ],
+   "commit": "a3d731dac2159eaa8f73a0a863a709c96b0b3f46",
+   "repo_licence": "No licence file in the repository at this commit. PyPI metadata says MIT. The README says MIT.",
+   "versions": {
+    "torch": "2.15.0",
+    "torchvision": null,
+    "mlx": null,
+    "numpy": "2.5.4",
+    "mps-bitsandbytes": "0.7.0"
+   },
+   "device": null,
+   "seconds": 20.6,
+   "numbers": {
+    "adam8bit_first_step_rel_l2_vs_torch": 0.0,
+    "adam8bit_final_param_rel_l2_vs_torch": 1.4943484399148105e-05,
+    "adam8bit_loss_start": 15.274944305419922,
+    "adam8bit_loss_end": 8.348095548171841e-09,
+    "torch_adam8bit_loss_end": 6.5159087014876604e-09,
+    "adam8bit_state_dtypes": [
+     "torch.float32",
+     "torch.int8",
+     "torch.uint8"
+    ],
+    "adamw8bit_first_step_rel_l2_vs_torch": 0.0,
+    "adamw8bit_final_param_rel_l2_vs_torch": 0.0004687312049963928,
+    "adamw8bit_loss_start": 15.274944305419922,
+    "adamw8bit_loss_end": 0.00020817694894503802,
+    "torch_adamw8bit_loss_end": 0.00020711230172310024,
+    "adamw8bit_state_dtypes": [
+     "torch.float32",
+     "torch.int8",
+     "torch.uint8"
+    ],
+    "sgd8bit_first_step_rel_l2_vs_torch": 0.0,
+    "sgd8bit_final_param_rel_l2_vs_torch": 1.1551032086375644e-06,
+    "sgd8bit_loss_start": 15.274944305419922,
+    "sgd8bit_loss_end": 2.8069462310043036e-09,
+    "torch_sgd8bit_loss_end": 2.7275022240758062e-09,
+    "sgd8bit_state_dtypes": [
+     "torch.float32",
+     "torch.int8"
+    ],
+    "paged_adamw_first_step_rel_l2_vs_torch": 0.0,
+    "paged_adamw_final_param_rel_l2_vs_torch": 1.620665696537616e-08,
+    "paged_adamw_loss_start": 15.274944305419922,
+    "paged_adamw_loss_end": 0.00020711254910565913,
+    "torch_paged_adamw_loss_end": 0.00020711230172310024,
+    "paged_adamw_state_dtypes": [
+     "torch.float32"
+    ],
+    "lion8bit_loss_start": 15.274944305419922,
+    "lion8bit_loss_end": 0.5856224298477173,
+    "has_native_kernels": true
+   },
+   "checks": [
+    {
+     "name": "adam8bit_first_step_rel_l2_vs_torch",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.0,
+      "limit": 0.01
+     }
+    },
+    {
+     "name": "adam8bit_final_param_rel_l2_vs_torch",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 1.4943484399148105e-05,
+      "limit": 0.1
+     }
+    },
+    {
+     "name": "adam8bit_loss_fell_by_100x",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "start": 15.274944305419922,
+      "end": 8.348095548171841e-09
+     }
+    },
+    {
+     "name": "adamw8bit_first_step_rel_l2_vs_torch",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.0,
+      "limit": 0.01
+     }
+    },
+    {
+     "name": "adamw8bit_final_param_rel_l2_vs_torch",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.0004687312049963928,
+      "limit": 0.1
+     }
+    },
+    {
+     "name": "adamw8bit_loss_fell_by_100x",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "start": 15.274944305419922,
+      "end": 0.00020817694894503802
+     }
+    },
+    {
+     "name": "sgd8bit_first_step_rel_l2_vs_torch",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.0,
+      "limit": 0.01
+     }
+    },
+    {
+     "name": "sgd8bit_final_param_rel_l2_vs_torch",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 1.1551032086375644e-06,
+      "limit": 0.1
+     }
+    },
+    {
+     "name": "sgd8bit_loss_fell_by_100x",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "start": 15.274944305419922,
+      "end": 2.8069462310043036e-09
+     }
+    },
+    {
+     "name": "adam8bit_state_is_8_bit",
+     "ok": true,
+     "required": true,
+     "detail": [
+      "torch.float32",
+      "torch.int8",
+      "torch.uint8"
+     ]
+    },
+    {
+     "name": "adamw8bit_state_is_8_bit",
+     "ok": true,
+     "required": true,
+     "detail": [
+      "torch.float32",
+      "torch.int8",
+      "torch.uint8"
+     ]
+    },
+    {
+     "name": "sgd8bit_state_is_8_bit",
+     "ok": true,
+     "required": true,
+     "detail": [
+      "torch.float32",
+      "torch.int8"
+     ]
+    },
+    {
+     "name": "paged_adamw_first_step_rel_l2_vs_torch",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.0,
+      "limit": 0.01
+     }
+    },
+    {
+     "name": "paged_adamw_final_param_rel_l2_vs_torch",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 1.620665696537616e-08,
+      "limit": 0.1
+     }
+    },
+    {
+     "name": "paged_adamw_loss_fell_by_100x",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "start": 15.274944305419922,
+      "end": 0.00020711254910565913
+     }
+    },
+    {
+     "name": "lion8bit_loss_fell_by_half",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "start": 15.274944305419922,
+      "end": 0.5856224298477173
+     }
+    },
+    {
+     "name": "native_metal_kernels_loaded",
+     "ok": true,
+     "required": true,
+     "detail": "The README says NF4, FP4, INT8 and FP8 run in Metal. False means a pure PyTorch path."
+    },
+    {
+     "name": "nf4_forward",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: Input must be on MPS\\nException raised from matmul_nf4_mps at mps_bitsandbytes/csrc/mps_bitsandbytes.mm:1959 (m"
+    }
+   ],
+   "could_not_test": [],
+   "substitutes": [
+    {
+     "original": "bitsandbytes",
+     "module": "mps_bitsandbytes",
+     "status": "fail",
+     "route": {
+      "top_level_adam8bit": {
+       "ok": true,
+       "loss": 0.00023539699031971395,
+       "device": "mps"
+      }
+     },
+     "drop_in": {
+      "optim_names": {
+       "ok": true,
+       "missing": [],
+       "present": [
+        "Adam8bit",
+        "AdamW8bit",
+        "Lion8bit",
+        "SGD8bit"
+       ]
+      },
+      "nn_names": {
+       "ok": false,
+       "missing": [
+        "Linear8bitLt",
+        "Params4bit",
+        "Int8Params"
+       ],
+       "present": [
+        "Linear4bit"
+       ]
+      },
+      "functional_names": {
+       "ok": true,
+       "missing": [],
+       "present": [
+        "dequantize_4bit"
+       ]
+      },
+      "optim_adam8bit": {
+       "ok": true,
+       "rel_l2_vs_torch_adam": 0.0006243042823760809,
+       "loss": 0.00023539699031971395
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "mps_deform_conv",
+   "status": "fail",
+   "reason": "required checks failed: zero_offset, random_offset, random_offset_bias, stride_dilation, dcnv2_mask, groups_2, backward",
+   "requirements": [
+    "mps-deform-conv==0.2.2",
+    "torchvision==0.29.2"
+   ],
+   "commit": "ff2b34bd5d37d3e0c540d80a11632f374a410904",
+   "repo_licence": "No licence file in the repository at this commit. PyPI metadata says MIT. The README says MIT.",
+   "versions": {
+    "torch": "2.15.0",
+    "torchvision": "0.29.2",
+    "mlx": null,
+    "numpy": "2.5.4",
+    "mps-deform-conv": "0.2.2"
+   },
+   "device": null,
+   "seconds": 18.0,
+   "numbers": {
+    "torchvision_on_mps_random_offset_device": "mps",
+    "torchvision_on_mps_random_offset_rel_l2_vs_cpu": 1.637392058274786e-07,
+    "torchvision_on_mps_random_offset_bias_device": "mps",
+    "torchvision_on_mps_random_offset_bias_rel_l2_vs_cpu": 1.6406369298738705e-07,
+    "torchvision_on_mps_stride_dilation_device": "mps",
+    "torchvision_on_mps_stride_dilation_rel_l2_vs_cpu": 1.656435574270231e-07,
+    "torchvision_on_mps_dcnv2_mask_device": "mps",
+    "torchvision_on_mps_dcnv2_mask_rel_l2_vs_cpu": 1.6235009177628524e-07,
+    "torchvision_on_mps_groups_2_device": "mps",
+    "torchvision_on_mps_groups_2_rel_l2_vs_cpu": 1.240859973329877e-07
+   },
+   "checks": [
+    {
+     "name": "zero_offset",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: input must be on MPS\\nException raised from deform_conv2d_forward_mps at mps_deform_conv/csrc/deform_conv2d_mps"
+    },
+    {
+     "name": "random_offset",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: input must be on MPS\\nException raised from deform_conv2d_forward_mps at mps_deform_conv/csrc/deform_conv2d_mps"
+    },
+    {
+     "name": "random_offset_bias",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: input must be on MPS\\nException raised from deform_conv2d_forward_mps at mps_deform_conv/csrc/deform_conv2d_mps"
+    },
+    {
+     "name": "stride_dilation",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: input must be on MPS\\nException raised from deform_conv2d_forward_mps at mps_deform_conv/csrc/deform_conv2d_mps"
+    },
+    {
+     "name": "dcnv2_mask",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: input must be on MPS\\nException raised from deform_conv2d_forward_mps at mps_deform_conv/csrc/deform_conv2d_mps"
+    },
+    {
+     "name": "groups_2",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: input must be on MPS\\nException raised from deform_conv2d_forward_mps at mps_deform_conv/csrc/deform_conv2d_mps"
+    },
+    {
+     "name": "backward",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: input must be on MPS\\nException raised from deform_conv2d_forward_mps at mps_deform_conv/csrc/deform_conv2d_mps"
+    },
+    {
+     "name": "torchvision_on_mps_backward",
+     "ok": false,
+     "required": false,
+     "detail": "{'api_source': 'README', 'error': \"NotImplementedError: The operator 'torchvision::_deform_conv2d_backward' is not currently implemented for the MPS device. If "
+    }
+   ],
+   "could_not_test": [],
+   "substitutes": [
+    {
+     "original": "mmcv",
+     "module": "mps_deform_conv",
+     "status": "fail",
+     "route": {
+      "deform_conv2d": {
+       "ok": false,
+       "error": "RuntimeError: input must be on MPS\nException raised from deform_conv2d_forward_mps at mps_deform_conv/csrc/deform_conv2d_mps.mm:617 (most recent call first):\nframe #0: c10::Error::Error(c10::SourceLocation, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>) + 52 (0x106f15820 in libc10.dylib)\nframe #1: c10::detail::torchCheckFail(char const*, char const*, unsigned int, char const*) + 200 (0x106f1305c in libc10.dylib)\nframe #2: deform_conv2d_forward_mps(at::Tenso"
+      }
+     },
+     "drop_in": {
+      "mmcv_ops_names": {
+       "ok": false,
+       "error": "ModuleNotFoundError: No module named 'mps_deform_conv.ops'"
+      },
+      "mmcv_ops_DeformConv2d": {
+       "ok": false,
+       "error": "ModuleNotFoundError: No module named 'mps_deform_conv.ops'"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "mps_correlation",
+   "status": "fail",
+   "reason": "required checks failed: correlation",
+   "requirements": [
+    "mps-correlation==0.2.1"
+   ],
+   "commit": "6dbb38c492d28e048f95f945db53695912cd78a0",
+   "repo_licence": "No licence file in the repository at this commit. PyPI metadata says MIT. The README says MIT.",
+   "versions": {
+    "torch": "2.15.0",
+    "torchvision": null,
+    "mlx": null,
+    "numpy": "2.5.4",
+    "mps-correlation": "0.2.1"
+   },
+   "device": null,
+   "seconds": 12.0,
+   "numbers": {},
+   "checks": [
+    {
+     "name": "correlation",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: input1 must be on MPS\\nException raised from correlation_forward_mps at mps_correlation/csrc/correlation_mps.mm"
+    }
+   ],
+   "could_not_test": [],
+   "substitutes": [
+    {
+     "original": "spatial_correlation_sampler",
+     "module": "mps_correlation",
+     "status": "fail",
+     "route": {
+      "correlation": {
+       "ok": false,
+       "error": "RuntimeError: input1 must be on MPS\nException raised from correlation_forward_mps at mps_correlation/csrc/correlation_mps.mm:470 (most recent call first):\nframe #0: c10::Error::Error(c10::SourceLocation, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>) + 52 (0x10a755820 in libc10.dylib)\nframe #1: c10::detail::torchCheckFail(char const*, char const*, unsigned int, char const*) + 200 (0x10a75305c in libc10.dylib)\nframe #2: correlation_forward_mps(at::Tensor con"
+      }
+     },
+     "drop_in": {
+      "names": {
+       "ok": false,
+       "missing": [
+        "spatial_correlation_sample",
+        "SpatialCorrelationSampler"
+       ],
+       "present": []
+      },
+      "spatial_correlation_sample": {
+       "ok": false,
+       "error": "AttributeError: module 'mps_correlation' has no attribute 'spatial_correlation_sample'"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "mps_carafe",
+   "status": "fail",
+   "reason": "required checks failed: carafe_center_kernel, carafe_uniform_kernel, carafe_random_kernel",
+   "requirements": [
+    "mps-carafe==0.2.1"
+   ],
+   "commit": "74d32f652699adb7ad927425ce302a287113e9d8",
+   "repo_licence": "No licence file in the repository at this commit. PyPI metadata says MIT. The README says MIT.",
+   "versions": {
+    "torch": "2.15.0",
+    "torchvision": null,
+    "mlx": null,
+    "numpy": "2.5.4",
+    "mps-carafe": "0.2.1"
+   },
+   "device": null,
+   "seconds": 12.6,
+   "numbers": {},
+   "checks": [
+    {
+     "name": "carafe_center_kernel",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: features must be on MPS\\nException raised from carafe_forward_mps at mps_carafe/csrc/carafe_mps.mm:397 (most re"
+    },
+    {
+     "name": "carafe_uniform_kernel",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: features must be on MPS\\nException raised from carafe_forward_mps at mps_carafe/csrc/carafe_mps.mm:397 (most re"
+    },
+    {
+     "name": "carafe_random_kernel",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: features must be on MPS\\nException raised from carafe_forward_mps at mps_carafe/csrc/carafe_mps.mm:397 (most re"
+    }
+   ],
+   "could_not_test": [],
+   "substitutes": [
+    {
+     "original": "mmcv",
+     "module": "mps_carafe",
+     "status": "fail",
+     "route": {
+      "carafe": {
+       "ok": false,
+       "error": "RuntimeError: features must be on MPS\nException raised from carafe_forward_mps at mps_carafe/csrc/carafe_mps.mm:397 (most recent call first):\nframe #0: c10::Error::Error(c10::SourceLocation, std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char>>) + 52 (0x108c15820 in libc10.dylib)\nframe #1: c10::detail::torchCheckFail(char const*, char const*, unsigned int, char const*) + 200 (0x108c1305c in libc10.dylib)\nframe #2: carafe_forward_mps(at::Tensor const&, at::Tensor co"
+      }
+     },
+     "drop_in": {
+      "mmcv_ops_names": {
+       "ok": false,
+       "error": "ModuleNotFoundError: No module named 'mps_carafe.ops'"
+      },
+      "mmcv_ops_carafe": {
+       "ok": false,
+       "error": "ModuleNotFoundError: No module named 'mps_carafe.ops'"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "mps_conv3d",
+   "status": "fail",
+   "reason": "required checks failed: padding, stride, dilation, groups_3, fp16, backward, patched_conv3d",
+   "requirements": [
+    "mps-conv3d==0.2.1"
+   ],
+   "commit": "841115d73b7724b012120691006bcb31864bc954",
+   "repo_licence": "No licence file in the repository at this commit. PyPI metadata says MIT. The README says MIT.",
+   "versions": {
+    "torch": "2.15.0",
+    "torchvision": null,
+    "mlx": null,
+    "numpy": "2.5.4",
+    "mps-conv3d": "0.2.1"
+   },
+   "device": null,
+   "seconds": 11.0,
+   "numbers": {
+    "torch_on_mps_padding_device": "mps",
+    "torch_on_mps_padding_rel_l2_vs_cpu": 3.0180770453392654e-07,
+    "torch_on_mps_stride_device": "mps",
+    "torch_on_mps_stride_rel_l2_vs_cpu": 2.9539582727764386e-07,
+    "torch_on_mps_dilation_device": "mps",
+    "torch_on_mps_dilation_rel_l2_vs_cpu": 2.643441067051869e-07,
+    "torch_on_mps_groups_3_device": "mps",
+    "torch_on_mps_groups_3_rel_l2_vs_cpu": 0.0,
+    "torch_on_mps_fp16_device": "mps",
+    "torch_on_mps_fp16_rel_l2_vs_cpu": 0.00020484446850788725,
+    "torch_on_mps_grad_rel_l2_vs_cpu": 3.9548878707478623e-07
+   },
+   "checks": [
+    {
+     "name": "padding",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: input must be on MPS\\nException raised from conv3d_forward_mps at mps_conv3d/csrc/conv3d_mps.mm:439 (most recen"
+    },
+    {
+     "name": "stride",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: input must be on MPS\\nException raised from conv3d_forward_mps at mps_conv3d/csrc/conv3d_mps.mm:439 (most recen"
+    },
+    {
+     "name": "dilation",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: input must be on MPS\\nException raised from conv3d_forward_mps at mps_conv3d/csrc/conv3d_mps.mm:439 (most recen"
+    },
+    {
+     "name": "groups_3",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: input must be on MPS\\nException raised from conv3d_forward_mps at mps_conv3d/csrc/conv3d_mps.mm:439 (most recen"
+    },
+    {
+     "name": "fp16",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: input must be on MPS\\nException raised from conv3d_forward_mps at mps_conv3d/csrc/conv3d_mps.mm:439 (most recen"
+    },
+    {
+     "name": "backward",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: input must be on MPS\\nException raised from conv3d_forward_mps at mps_conv3d/csrc/conv3d_mps.mm:439 (most recen"
+    },
+    {
+     "name": "patched_conv3d",
+     "ok": false,
+     "required": true,
+     "detail": "{'api_source': 'README', 'error': 'RuntimeError: input must be on MPS\\nException raised from conv3d_forward_mps at mps_conv3d/csrc/conv3d_mps.mm:439 (most recen"
+    },
+    {
+     "name": "unpatch_restores_torch",
+     "ok": true,
+     "required": true,
+     "detail": ""
+    }
+   ],
+   "could_not_test": [],
+   "substitutes": []
+  },
+  {
+   "name": "mpsops",
+   "status": "fail",
+   "reason": "required checks failed: readme_name_flash_attn_func_is_usable",
+   "requirements": [
+    "mpsops==0.1.19"
+   ],
+   "commit": "d28d61bdc51f6596254128c368c7b57438aa5032",
+   "repo_licence": "No licence file in the repository at this commit. PyPI metadata says MIT. The README says MIT.",
+   "versions": {
+    "torch": "2.15.0",
+    "torchvision": null,
+    "mlx": null,
+    "numpy": "2.5.4",
+    "mpsops": "0.1.19",
+    "mps-flash-attn": "0.5.1",
+    "mps-bitsandbytes": "0.7.0",
+    "mps-deform-conv": "0.2.2",
+    "mps-correlation": "0.2.1",
+    "mps-carafe": "0.2.1",
+    "mps-conv3d": "0.2.1"
+   },
+   "device": {
+    "used": "not_measured",
+    "evidence": "This entry runs no tensor. The entries for each package measure the device."
+   },
+   "seconds": 9.8,
+   "numbers": {},
+   "checks": [
+    {
+     "name": "readme_name_flash_attn_func_is_usable",
+     "ok": false,
+     "required": true,
+     "detail": "None or missing means that the import failed inside mpsops."
+    },
+    {
+     "name": "readme_name_deform_conv2d_is_usable",
+     "ok": true,
+     "required": true,
+     "detail": "None or missing means that the import failed inside mpsops."
+    },
+    {
+     "name": "readme_name_correlation_is_usable",
+     "ok": true,
+     "required": true,
+     "detail": "None or missing means that the import failed inside mpsops."
+    },
+    {
+     "name": "readme_name_carafe_is_usable",
+     "ok": true,
+     "required": true,
+     "detail": "None or missing means that the import failed inside mpsops."
+    },
+    {
+     "name": "readme_name_conv3d_is_usable",
+     "ok": true,
+     "required": true,
+     "detail": "None or missing means that the import failed inside mpsops."
+    },
+    {
+     "name": "readme_name_patch_conv3d_is_usable",
+     "ok": true,
+     "required": true,
+     "detail": "None or missing means that the import failed inside mpsops."
+    }
+   ],
+   "could_not_test": [
+    {
+     "name": "values",
+     "reason": "The README shows these names without a signature.",
+     "required": false
+    }
+   ],
+   "substitutes": []
+  },
+  {
+   "name": "metalsplat",
+   "status": "pass",
+   "reason": "",
+   "requirements": [
+    "metalsplat @ git+https://github.com/tchauffi/metalsplat@84e8c3a433f71c107e9387d3f72a765436c11f6e"
+   ],
+   "commit": "84e8c3a433f71c107e9387d3f72a765436c11f6e",
+   "repo_licence": "LICENSE: MIT, Copyright (c) 2026 Thibaut CHAUFFIER.",
+   "versions": {
+    "torch": "2.15.0",
+    "torchvision": null,
+    "mlx": null,
+    "numpy": "2.5.4",
+    "metalsplat": "0.2.0"
+   },
+   "device": {
+    "used": "mps",
+    "evidence": "tensor.device.type of 5 outputs"
+   },
+   "seconds": 15.7,
+   "numbers": {
+    "peak_u": 74.0,
+    "peak_v": 58.0,
+    "peak_error_px_vs_hand": 0.0,
+    "sigma_x_error_vs_hand": 0.007185935360496165,
+    "sigma_y_error_vs_hand": 0.0052448596203718,
+    "peak_over_color": [
+     0.4924828145239088,
+     0.49248283108075463,
+     0.49248281866312027
+    ],
+    "color_ratio_spread": 3.3619134143236806e-08,
+    "rel_l2_image_vs_analytic_gaussian": 0.014696446265911026,
+    "anisotropic_sigma_x_error": 0.0023410406254595895,
+    "anisotropic_sigma_y_error": 0.009331487505174652,
+    "composite_pixel": [
+     0.4458634853363037,
+     7.438861211994663e-05,
+     0.2237078845500946
+    ],
+    "near_gaussian_alpha_error": 0.005931302152504037,
+    "far_gaussian_through_near_error": 0.000239022179258086,
+    "grad_mean_x_kernel": -7.43572018109262e-05,
+    "grad_mean_x_finite_difference": -7.499218918383121e-05,
+    "grad_mean_x_error_vs_finite_difference": 0.008467380134062341,
+    "fit_loss_start": 0.0008414094336330891,
+    "fit_loss_end": 1.2764909129714397e-09,
+    "fit_mean": [
+     9.9880952835083,
+     -5.997409343719482,
+     127.93196868896484
+    ],
+    "fit_position_error_vs_true": 0.012183340047438573
+   },
+   "checks": [
+    {
+     "name": "readme_image_shape",
+     "ok": true,
+     "required": true,
+     "detail": [
+      128,
+      128,
+      3
+     ]
+    },
+    {
+     "name": "readme_gradient_means",
+     "ok": true,
+     "required": true,
+     "detail": ""
+    },
+    {
+     "name": "readme_gradient_raw_scales",
+     "ok": true,
+     "required": true,
+     "detail": ""
+    },
+    {
+     "name": "readme_gradient_raw_quats",
+     "ok": true,
+     "required": true,
+     "detail": ""
+    },
+    {
+     "name": "readme_gradient_raw_opacities",
+     "ok": true,
+     "required": true,
+     "detail": ""
+    },
+    {
+     "name": "readme_gradient_raw_colors",
+     "ok": true,
+     "required": true,
+     "detail": ""
+    },
+    {
+     "name": "peak_error_px_vs_hand",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.0,
+      "limit": 1.0
+     }
+    },
+    {
+     "name": "sigma_x_error_vs_hand",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.007185935360496165,
+      "limit": 0.05
+     }
+    },
+    {
+     "name": "sigma_y_error_vs_hand",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.0052448596203718,
+      "limit": 0.05
+     }
+    },
+    {
+     "name": "color_ratio_spread",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 3.3619134143236806e-08,
+      "limit": 0.02
+     }
+    },
+    {
+     "name": "rel_l2_image_vs_analytic_gaussian",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.014696446265911026,
+      "limit": 0.1
+     }
+    },
+    {
+     "name": "anisotropic_sigma_x_error",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.0023410406254595895,
+      "limit": 0.05
+     }
+    },
+    {
+     "name": "anisotropic_sigma_y_error",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.009331487505174652,
+      "limit": 0.05
+     }
+    },
+    {
+     "name": "near_gaussian_alpha_error",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.005931302152504037,
+      "limit": 0.03
+     }
+    },
+    {
+     "name": "far_gaussian_through_near_error",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.000239022179258086,
+      "limit": 0.03
+     }
+    },
+    {
+     "name": "grad_mean_x_error_vs_finite_difference",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.008467380134062341,
+      "limit": 0.2
+     }
+    },
+    {
+     "name": "fit_loss_fell_by_20x",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "start": 0.0008414094336330891,
+      "end": 1.2764909129714397e-09
+     }
+    },
+    {
+     "name": "fit_position_error_vs_true",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.012183340047438573,
+      "limit": 1.0
+     }
+    },
+    {
+     "name": "output_device_is_mps",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "seen": [
+       "mps"
+      ]
+     }
+    }
+   ],
+   "could_not_test": [],
+   "substitutes": [
+    {
+     "original": "gsplat",
+     "module": "metalsplat",
+     "status": "fail",
+     "route": {
+      "own_api_under_original_name": {
+       "ok": true,
+       "peak_xy": [
+        74,
+        57
+       ],
+       "device": "mps"
+      }
+     },
+     "drop_in": {
+      "names": {
+       "ok": false,
+       "missing": [
+        "rasterization"
+       ],
+       "present": []
+      },
+      "rasterization": {
+       "ok": false,
+       "error": "AttributeError: module 'metalsplat' has no attribute 'rasterization'"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "msplat",
+   "status": "fail",
+   "reason": "required checks failed: training_view_peak_error_px",
+   "requirements": [
+    "msplat==1.1.4"
+   ],
+   "commit": "6b819711fa7c90f054567cb4fb4937743367afdd",
+   "repo_licence": "LICENSE: Apache License 2.0.",
+   "versions": {
+    "torch": "2.15.0",
+    "torchvision": null,
+    "mlx": null,
+    "numpy": "2.5.4",
+    "msplat": "1.1.4"
+   },
+   "device": {
+    "used": "gpu_busy_during_training",
+    "evidence": {
+     "note": "msplat returns numpy arrays, so no array shows a device. This is system-wide GPU use from ioreg during training, so other apps count.",
+     "baseline_percent": 67,
+     "peak_percent": 87,
+     "samples": 2
+    }
+   },
+   "seconds": 11.0,
+   "numbers": {
+    "gpu_system_wide": {
+     "baseline_percent": 67,
+     "peak_percent": 87,
+     "samples": 2
+    },
+    "heldout_psnr_30_iterations": 12.46232000986735,
+    "heldout_psnr_1500_iterations": 35.960853576660156,
+    "heldout_ssim_1500_iterations": 0.9828612009684244,
+    "splats_after_1500_iterations": 8,
+    "training_view_peak_errors_px": [
+     1.0309515077514524,
+     2.9789814563133237,
+     2.3872950290187247,
+     3.138643609507613
+    ],
+    "training_view_peak_error_px": 3.138643609507613,
+    "msplat_world_scale": 0.3547259171803792,
+    "novel_view_peak_error_px": 0.9510806173251436,
+    "novel_view_psnr_vs_hand": 31.979839786691294,
+    "exported_splats": 8,
+    "splat_mean_error_vs_true_center_world_units": 0.0433358077797688,
+    "render_vs_hand_render_of_splats_px": [
+     0.12215801394542472,
+     0.10204408544348416,
+     0.15113792970534357,
+     0.08640538410837582
+    ],
+    "render_vs_hand_render_of_splats_max_px": 0.15113792970534357
+   },
+   "checks": [
+    {
+     "name": "heldout_psnr_rose_by_3_db",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "before": 12.46232000986735,
+      "after": 35.960853576660156
+     }
+    },
+    {
+     "name": "heldout_psnr_at_least_25_db",
+     "ok": true,
+     "required": true,
+     "detail": 35.960853576660156
+    },
+    {
+     "name": "training_view_peak_error_px",
+     "ok": false,
+     "required": true,
+     "detail": {
+      "value": 3.138643609507613,
+      "limit": 3.0
+     }
+    },
+    {
+     "name": "novel_view_peak_error_px",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.9510806173251436,
+      "limit": 3.0
+     }
+    },
+    {
+     "name": "novel_view_psnr_at_least_20_db",
+     "ok": true,
+     "required": true,
+     "detail": 0.0006338930954446561
+    },
+    {
+     "name": "export_ply_wrote_a_file",
+     "ok": true,
+     "required": true,
+     "detail": 3531
+    },
+    {
+     "name": "render_vs_hand_render_of_splats_max_px",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.15113792970534357,
+      "limit": 1.0
+     }
+    }
+   ],
+   "could_not_test": [
+    {
+     "name": "single_known_gaussian",
+     "reason": "The README has no call that places a known Gaussian, so the rasterizer was not tested alone.",
+     "required": false
+    }
+   ],
+   "substitutes": [
+    {
+     "original": "gsplat",
+     "module": "msplat",
+     "status": "fail",
+     "route": {
+      "own_api_under_original_name": {
+       "ok": true,
+       "missing": [],
+       "present": [
+        "GaussianTrainer",
+        "TrainingConfig",
+        "load_dataset"
+       ]
+      }
+     },
+     "drop_in": {
+      "names": {
+       "ok": false,
+       "missing": [
+        "rasterization"
+       ],
+       "present": []
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "mlx3d",
+   "status": "could_not_test",
+   "reason": "device: The system-wide GPU use did not rise during training, so the GPU is not confirmed: {'baseline_percent': 71, 'peak_percent': 64, 'samples': 7}",
+   "requirements": [
+    "mlx3d==0.3.2",
+    "mlx==0.32.4"
+   ],
+   "commit": "0124b891a1983800e05e3d8fdb3ebdc53b449dd5",
+   "repo_licence": "LICENSE: MIT, Copyright (c) 2026 AmirHossein Razlighi.",
+   "versions": {
+    "torch": "2.15.0",
+    "torchvision": null,
+    "mlx": "0.32.4",
+    "numpy": "2.5.4",
+    "mlx3d": "0.3.2"
+   },
+   "device": {
+    "used": "Device(gpu, 0)",
+    "evidence": {
+     "note": "MLX arrays have no device of their own. This is mx.default_device(), with render_on_cpu_stream and system-wide GPU use from ioreg during training, where other apps count.",
+     "metal_available": true,
+     "baseline_percent": 71,
+     "peak_percent": 64,
+     "samples": 7
+    }
+   },
+   "seconds": 19.0,
+   "numbers": {
+    "cluster_peak_luminance": 2.8910998106002808,
+    "cluster_center_uv": [
+     44.84160737881636,
+     54.27087998567645
+    ],
+    "cluster_center_uv_by_hand": [
+     44.68629150101524,
+     54.34314575050762
+    ],
+    "cluster_peak_error_px_vs_hand": 0.17130488219477708,
+    "project_points_error_px_vs_hand": 0.0,
+    "project_points_depth_error_vs_hand": 0.0,
+    "render_on_cpu_stream": {
+     "ran": true,
+     "rel_l2_vs_default": 1.1065540661547857e-07
+    },
+    "quaternion_quarter_turn_error": 1.1920928955078125e-07,
+    "quaternion_batch_error_vs_closed_form": 3.788775990720694e-07,
+    "axis_angle_error_vs_rodrigues": 1.4970026451788243e-07,
+    "hard_rasterizer_silhouette_radius_px": 39.830346128799995,
+    "hard_rasterizer_silhouette_radius_error": 0.0016011992296277588,
+    "sphere_silhouette_radius_px": 39.830346128799995,
+    "sphere_silhouette_radius_px_by_hand": 39.894224730705396,
+    "sphere_silhouette_radius_error": 0.0016011992296277588,
+    "sphere_alpha_center": 0.6440374851226807,
+    "sphere_alpha_center_by_formula": 0.6450129586268674,
+    "sphere_alpha_center_error_vs_formula": 0.0015123316378996554,
+    "sphere_alpha_half_radius_px": 27.034043328329254,
+    "sphere_alpha_half_radius_px_by_formula": 27.2844430721455,
+    "sphere_alpha_half_radius_error_vs_formula": 0.00917738152668679,
+    "fit_loss_start": 0.14705958310514688,
+    "fit_loss_end": 0.0020939781170454808,
+    "novel_view_peak_error_px": 0.5695747957033701,
+    "novel_view_psnr_vs_hand": 36.6011090855267,
+    "gpu_system_wide": {
+     "baseline_percent": 71,
+     "peak_percent": 64,
+     "samples": 7
+    }
+   },
+   "checks": [
+    {
+     "name": "readme_image_shape",
+     "ok": true,
+     "required": true,
+     "detail": [
+      72,
+      128,
+      3
+     ]
+    },
+    {
+     "name": "readme_image_is_finite",
+     "ok": true,
+     "required": true,
+     "detail": ""
+    },
+    {
+     "name": "cluster_is_visible",
+     "ok": true,
+     "required": true,
+     "detail": 2.8910998106002808
+    },
+    {
+     "name": "cluster_peak_error_px_vs_hand",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.17130488219477708,
+      "limit": 1.5
+     }
+    },
+    {
+     "name": "project_points_error_px_vs_hand",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.0,
+      "limit": 0.01
+     }
+    },
+    {
+     "name": "project_points_depth_error_vs_hand",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.0,
+      "limit": 0.0001
+     }
+    },
+    {
+     "name": "quaternion_quarter_turn_error",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 1.1920928955078125e-07,
+      "limit": 1e-05
+     }
+    },
+    {
+     "name": "quaternion_batch_error_vs_closed_form",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 3.788775990720694e-07,
+      "limit": 1e-05
+     }
+    },
+    {
+     "name": "axis_angle_error_vs_rodrigues",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 1.4970026451788243e-07,
+      "limit": 0.0001
+     }
+    },
+    {
+     "name": "sphere_silhouette_radius_error",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.0016011992296277588,
+      "limit": 0.05
+     }
+    },
+    {
+     "name": "sphere_alpha_center_error_vs_formula",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.0015123316378996554,
+      "limit": 0.05
+     }
+    },
+    {
+     "name": "sphere_alpha_half_radius_error_vs_formula",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.00917738152668679,
+      "limit": 0.05
+     }
+    },
+    {
+     "name": "fit_loss_fell_by_30_percent",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "start": 0.14705958310514688,
+      "end": 0.0020939781170454808
+     }
+    },
+    {
+     "name": "novel_view_peak_error_px",
+     "ok": true,
+     "required": true,
+     "detail": {
+      "value": 0.5695747957033701,
+      "limit": 3.0
+     }
+    },
+    {
+     "name": "mlx_default_device_is_gpu",
+     "ok": true,
+     "required": true,
+     "detail": "Device(gpu, 0)"
+    }
+   ],
+   "could_not_test": [
+    {
+     "name": "chamfer_and_knn",
+     "reason": "The README names them without a call.",
+     "required": false
+    },
+    {
+     "name": "device",
+     "reason": "The system-wide GPU use did not rise during training, so the GPU is not confirmed: {'baseline_percent': 71, 'peak_percent': 64, 'samples': 7}",
+     "required": true
+    }
+   ],
+   "substitutes": [
+    {
+     "original": "pytorch3d",
+     "module": "mlx3d",
+     "status": "fail",
+     "route": {
+      "transforms_on_mlx_array": {
+       "ok": true,
+       "error_on_mlx_array": 1.1920928955078125e-07
+      }
+     },
+     "drop_in": {
+      "transforms_on_torch_tensor": {
+       "ok": false,
+       "error": "TypeError: norm(): incompatible function arguments. The following argument types are supported:\n    1. norm(a: array, /, ord: None | int | float | str = None, axis: None | int | list[int] = None, keepdims: bool = False, *, stream: StreamOrDevice = None) -> array\n\nInvoked with types: torch.Tensor, kwargs = { axis: int, keepdims: bool }"
+      },
+      "ops_names": {
+       "ok": true,
+       "missing": [],
+       "present": [
+        "knn_points",
+        "sample_points_from_meshes"
+       ]
+      },
+      "loss_names": {
+       "ok": false,
+       "error": "ModuleNotFoundError: No module named 'mlx3d.loss'"
+      },
+      "structures_names": {
+       "ok": true,
+       "missing": [],
+       "present": [
+        "Meshes",
+        "Pointclouds"
+       ]
+      },
+      "renderer_names": {
+       "ok": false,
+       "missing": [
+        "MeshRenderer",
+        "MeshRasterizer",
+        "FoVPerspectiveCameras"
+       ],
+       "present": []
+      }
+     }
+    },
+    {
+     "original": "nvdiffrast",
+     "module": "mlx3d",
+     "status": "fail",
+     "route": {
+      "own_renderer_under_original_name": {
+       "ok": true,
+       "missing": [],
+       "present": [
+        "render_mesh_soft"
+       ]
+      }
+     },
+     "drop_in": {
+      "torch_names": {
+       "ok": false,
+       "error": "ModuleNotFoundError: No module named 'mlx3d.torch'"
+      }
+     }
+    }
+   ]
+  }
+ ]
+}

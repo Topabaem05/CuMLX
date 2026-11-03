@@ -188,19 +188,19 @@
     },
     {
      "name": "mps-bitsandbytes",
-     "how": "Import it in place of bitsandbytes",
+     "how": "Use its own API. Linear8bitLt, Params4bit and Int8Params are missing, so it does not replace bitsandbytes by import",
      "install": "pip install mps-bitsandbytes",
      "license": "MIT on PyPI only",
      "evidence": "docs",
      "source": "https://pypi.org/project/mps-bitsandbytes/",
      "grade": null,
      "target_grade": "B",
-     "limits": "One small project. PyPI says MIT, and its GitHub repository has no licence file. Install it yourself"
+     "limits": "One small project. PyPI says MIT, and its GitHub repository has no licence file. Install it yourself. On torch 2.15 its quantized layers failed and the process crashed (exit -11) in 2026-11-03 runs, so do not use it there. The cause is not proven"
     }
    ],
    "verify": "cumlx capture <original> -o golden/ && cumlx diff golden/ <port> -o report/",
    "limits": "",
-   "checked": "2026-11-02"
+   "checked": "2026-11-03"
   },
   {
    "id": "flash-attn",
@@ -235,27 +235,25 @@
      "how": "attn_implementation=\"sdpa\"",
      "install": "",
      "license": "BSD-3-Clause",
-     "evidence": "docs",
-     "source": "https://pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html",
-     "grade": null,
-     "target_grade": "A",
-     "limits": "Not compared by CUMLX on MPS"
+     "evidence": "run",
+     "source": "validation/m2-substitutes.json",
+     "grade": "B",
+     "limits": "Compared with torch on the CPU, not CUDA: fp32 up to 6.0e-7, fp16 up to 5.9e-4, torch 2.13.0, one run"
     },
     {
      "name": "mps-flash-attn",
-     "how": "Import it in place of flash_attn",
-     "install": "pip install mps-flash-attn",
+     "how": "Use its own API. It has no flash_attn_func, so it does not replace flash_attn by import",
+     "install": "pip install mps-flash-attn==0.6.3 torch==2.13.0",
      "license": "MIT",
-     "evidence": "docs",
-     "source": "https://pypi.org/project/mps-flash-attn/",
-     "grade": null,
-     "target_grade": "A",
-     "limits": "One small project; not run by CUMLX"
+     "evidence": "run",
+     "source": "validation/m2-substitutes.json",
+     "grade": "B",
+     "limits": "torch 2.13.0 only: 0.6.3 requires torch<2.14. Compared with torch on the CPU, not CUDA: fp32 up to 4.6e-7, fp16 up to 2.1e-4, gradients up to 3.6e-7. No speedup measured. Licence file present"
     }
    ],
    "verify": "cumlx capture <original> -o golden/ && cumlx diff golden/ <port> -o report/",
    "limits": "",
-   "checked": "2026-11-02"
+   "checked": "2026-11-03"
   },
   {
    "id": "xformers",
@@ -1009,23 +1007,22 @@
      "source": "https://github.com/rayanht/msplat",
      "grade": null,
      "target_grade": "B",
-     "limits": "Its own training pipeline, not a drop-in gsplat"
+     "limits": "Its own training pipeline, not a drop-in gsplat. One 2026-11-03 run on a synthetic blob missed a limit: training-view peak 3.14 px against 3.0. Held-out PSNR reached 36 dB. GPU use not confirmed"
     },
     {
      "name": "metalsplat",
-     "how": "Use it as the rasterizer",
-     "install": "",
+     "how": "Use its own API. It has no gsplat.rasterization, so it does not replace gsplat by import",
+     "install": "pip install git+https://github.com/tchauffi/metalsplat@84e8c3a",
      "license": "MIT",
-     "evidence": "docs",
-     "source": "https://github.com/tchauffi/metalsplat",
-     "grade": null,
-     "target_grade": "B",
-     "limits": "Not on PyPI; install from GitHub"
+     "evidence": "run",
+     "source": "validation/m2-substitutes.json",
+     "grade": "B",
+     "limits": "Compared with a hand computation on one or two Gaussians, not with gsplat on CUDA: peak error 0 px, sigma within 0.9%, image within 1.5%, backward kernel within 0.85%. Not on PyPI. No real scene"
     }
    ],
    "verify": "Compare rendered views with PSNR",
    "limits": "",
-   "checked": "2026-11-02"
+   "checked": "2026-11-03"
   },
   {
    "id": "nvdiffrast",
@@ -1049,12 +1046,12 @@
      "source": "https://github.com/amirhossein-razlighi/mlx3D",
      "grade": null,
      "target_grade": "B",
-     "limits": "A different API. Not compared with nvdiffrast. Translating nvdiffrast itself failed in M0"
+     "limits": "A different API. Not compared with nvdiffrast. Translating nvdiffrast itself failed in M0. A 2026-11-03 run matched hand values (rotations up to 3.8e-7, hard rasterizer silhouette 0.16%), but it stays unconfirmed because another job hid its GPU use. pytorch3d and nvdiffrast imports do not map to it"
     }
    ],
    "verify": "Compare rendered images with PSNR",
    "limits": "",
-   "checked": "2026-11-02"
+   "checked": "2026-11-03"
   },
   {
    "id": "pytorch3d",
@@ -1078,12 +1075,12 @@
      "source": "https://github.com/amirhossein-razlighi/mlx3D",
      "grade": null,
      "target_grade": "B",
-     "limits": "Covers part of the PyTorch3D API"
+     "limits": "Covers part of the PyTorch3D API. A 2026-11-03 run matched hand values (rotations up to 3.8e-7, hard rasterizer silhouette 0.16%), but it stays unconfirmed because another job hid its GPU use. pytorch3d and nvdiffrast imports do not map to it"
     }
    ],
    "verify": "cumlx.check_op(torch_fn, mlx_fn, inputs), against a golden recorded on an NVIDIA GPU",
    "limits": "",
-   "checked": "2026-11-02"
+   "checked": "2026-11-03"
   },
   {
    "id": "triton",
@@ -1132,6 +1129,16 @@
    ],
    "options": [
     {
+     "name": "torchvision.ops.deform_conv2d on MPS",
+     "how": "Call torchvision.ops.deform_conv2d in place of the mmcv operator",
+     "install": "pip install torchvision",
+     "license": "BSD-3-Clause",
+     "evidence": "run",
+     "source": "validation/m2-substitutes.json",
+     "grade": "B",
+     "limits": "Compared with torch on the CPU, not CUDA: 5 cases up to 1.7e-7, with the output on mps, torchvision 0.29.2. Covers deformable convolution only, and the mmcv argument order differs"
+    },
+    {
      "name": "mps-deform-conv and related mps-* packages",
      "how": "Use them in place of the operator",
      "install": "pip install mpsops",
@@ -1140,12 +1147,12 @@
      "source": "https://pypi.org/project/mpsops/",
      "grade": null,
      "target_grade": "A",
-     "limits": "Small projects. PyPI says MIT; some GitHub repositories have no licence file. Install them yourself"
+     "limits": "Small projects. PyPI says MIT; some GitHub repositories have no licence file. Install them yourself. On torch 2.15, deform-conv, correlation and carafe failed with \"must be on MPS\" in 2026-11-03 runs. The mpsops package itself pulled an older mps-flash-attn, and its README name flash_attn_func is missing"
     }
    ],
    "verify": "cumlx.check_op(torch_fn, mlx_fn, inputs), against a golden recorded on an NVIDIA GPU",
    "limits": "",
-   "checked": "2026-11-02"
+   "checked": "2026-11-03"
   },
   {
    "id": "openusd",
