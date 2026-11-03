@@ -109,10 +109,12 @@
 | Isaac Lab 처리량 | 29,771~38,849 env-step/s | 목표 100,000 | OrchardSim `validation/m4-throughput.json` | 목표에 못 미칩니다. Genesis의 값으로 대신하지 않습니다 |
 | MuJoCo Warp 일치, 첫 시험 | qpos 2.02e-3 | 1e-3 | OrchardSim `validation/warp-metal-o2.json` | float32 반올림이 드문 world의 접촉 하나를 바꾸는 것이 유력합니다. CPU도 1 ulp 잡음을 넣으면 같은 허용치를 넘습니다. 모든 커널이 옳다는 증거는 아닙니다 |
 | MuJoCo Warp 일치, 둘째 시험 | 9회 중 8회 통과. 접촉 수가 다른 world 15개 | 11개 | OrchardSim `validation/warp-metal-o2.json` | Metal에서 평균 12.3개, 대조군 7.3개로 더 잦습니다. 접촉 순서는 전체 원인이 아닙니다 |
+| MuJoCo Warp 한 스텝 진단 | 같은 상태에서 qvel 2.6e-6 차이. 1 ulp 잡음은 1.8e-7 | 없음 | OrchardSim `validation/warp-metal-o2.json` | 대조군 잡음이 실제 차이보다 작았습니다. MuJoCo C(float64)와 비교한 정확도는 Metal과 CPU가 같은 수준입니다(4.1e-6, 4.0e-6). 차이는 운동학 뒤 가속도와 구속 단계에서 커집니다. 원인은 확정하지 못했습니다 |
 | Metal 반복 일치 | 접촉이 있으면 같은 시작에서 달라집니다. qpos 최대 1.39e-2 | 없음 | OrchardSim `validation/warp-metal-o2.json` | 접촉과 제한을 끄면 정확히 같습니다. 시드 하나로 비트 단위 재현이 안 됩니다 |
 | Newton 작은 장면 | 원뿔에서 4.9e-3 | 1e-3 | OrchardSim `validation/warp-metal-o2.json` | 찾지 못했습니다. 시작 위치에 따라 약 5e-6 또는 4.89e-3입니다. Newton 자체 충돌 경로는 패치한 복사본에서만 돌고, 공식판은 `fixedarray_t`로 실패합니다 |
 | MLX PPO 업데이트, 첫 시험 | 가중치 오차 0.0186, 0.0214(시드 3개 중 2개) | 0.01 | OrchardSim `validation/mlx-ppo-o4.json` | 서로게이트 클립이 기울기를 불연속으로 만듭니다. rsl_rl도 자기와 비교해 같은 허용치를 넘습니다(0.0102, 0.0110) |
-| MLX PPO, 자유 실행 측정 | 중앙값 9.8e-3, 시드 10개 중 7개가 큼. 대조군은 4개 | 중앙값 2.2e-4 | OrchardSim `validation/mlx-ppo-o4.json` | 시드 10개로는 이 차이가 실제인지 말할 수 없습니다. 클립을 넘지 않는 경우는 1.7e-4(허용 1e-2)입니다. **게이트는 열려 있습니다** |
+| MLX PPO, 자유 실행 측정 | 포트 결함 5건을 고치기 전 중앙값 9.8e-3, 고친 뒤 9.4e-4. 시드 10개 중 5개가 큼. 대조군은 4개 | 중앙값 2.2e-4 | OrchardSim `validation/mlx-ppo-o4.json` | 실패로 남습니다. 클립을 넘지 않는 경우는 1.7e-4(허용 1e-2)입니다 |
+| MLX PPO, 넷째 측정 | 시드 120개에서 통과: 1e-3 초과 54%, rsl_rl MPS 52%, 허용 72% | 사전 작성 규칙 | OrchardSim `validation/mlx-ppo-o4.json` | **검토 결과 게이트는 열어 둡니다.** actor 규칙은 수정 전 포트와 결함 2종(gradient clip 제거, value clip 제거)을 구분하지 못하고 critic 규칙만 잡습니다. 이 업데이트로 학습을 돌린 적이 없습니다 |
 | MLX 기본 TF32로 PPO | 가중치 오차 0.40~0.43 | 0.01 | OrchardSim `validation/mlx-ppo-o4.json` | 이 M5에서 TF32를 켜면 업데이트가 틀립니다 |
 | Isaac Sim 연결 첫 실행 | 8회 중 0회 버팀 | 0.75 이상 | OrchardSim `validation/isaac-sim-o5.json` | 이 프로젝트의 관측 순서 오류. 고친 뒤 8회 중 8회입니다 |
 | Go2 rough, Metal | NaN 관측으로 종료, 23개 중 22개 실행 | 전부 | OrchardSim `validation/isaac-lab-metal.json` | 같은 설정이 CPU에서도 같은 오류를 냅니다 |
@@ -127,7 +129,7 @@
 | 조건 | 상태 |
 |---|---|
 | O2 MuJoCo Warp와 CPU 일치 | 실패, 위 표 참고 |
-| O4 PPO 업데이트 | 실패, 위 표 참고 |
+| O4 PPO 업데이트 | 넷째 측정은 통과, 검토 결과 미달. 위 표 참고 |
 | O5 V100에서 Isaac Sim 연결 | 미실행 |
 | O6 새 Mac에서 한 명령으로 재현 | 미실행 |
 
