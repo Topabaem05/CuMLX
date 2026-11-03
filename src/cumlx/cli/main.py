@@ -180,6 +180,8 @@ def build_parser() -> AgentArgumentParser:
                    help='exit 3 unless these commands are ready, e.g. capture,diff')
     p.add_argument('--stack', action='store_true',
                    help='also report each platform layer, and exit 3 unless all are ready. No install, no network, and no NVIDIA probe')
+    p.add_argument('--env', dest='env_python', action='append', default=[], metavar='PYTHON',
+                   help='with --stack: detect in this Python, in its own process, instead of this one. Repeat it for a stack spread over environments')
 
     p = add('fixture')
     p.add_argument('kind', choices=['tiny-llama', 'tiny-moe'], help='fixture to create')

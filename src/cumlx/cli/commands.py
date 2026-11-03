@@ -46,6 +46,7 @@ def run_doctor(args) -> Result:
         REQUIREMENTS,
         inspect_environment,
         inspect_stack,
+        inspect_stack_across,
         install_hint,
     )
     env = inspect_environment(probe=args.probe)
@@ -69,8 +70,10 @@ def run_doctor(args) -> Result:
                              'hint': install_hint(mods), 'details': {'command': c, 'missing': mods}})
     if not not_ready:
         r.suggest('cumlx selftest', 'prove that capture/diff/conform work in this environment')
+    if args.env_python and not args.stack:
+        raise CumlxError('E_USAGE', '--env needs --stack')
     if args.stack:
-        stack = inspect_stack()
+        stack = inspect_stack_across(args.env_python) if args.env_python else inspect_stack()
         env['stack'] = stack
         r.summary += f"; stack: {len(stack['ready'])} of {len(stack['layers'])} layers ready" + \
             (f", not ready: {', '.join(stack['not_ready'])}" if stack['not_ready'] else '')
@@ -79,6 +82,10 @@ def run_doctor(args) -> Result:
             r.exit_code = ExitCode.ENVIRONMENT
             r.errors.append({'code': 'E_DEP_MISSING', 'message': f"stack layer {name} is {layer['status']}: {layer['detail']}",
                              'hint': layer['install_hint'], 'details': {'layer': name, 'status': layer['status'], 'needed_by': layer['needed_by']}})
+        for python, reason in stack.get('unreadable', {}).items():  # An environment that cannot answer is not a pass either.
+            r.exit_code = ExitCode.ENVIRONMENT
+            r.errors.append({'code': 'E_DEP_MISSING', 'message': f'the environment {python} did not answer: {reason}',
+                             'hint': 'name the Python inside the environment, for example path/to/venv/bin/python', 'details': {'python': python}})
     return r
 
 

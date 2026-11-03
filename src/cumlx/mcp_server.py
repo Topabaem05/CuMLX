@@ -25,7 +25,7 @@ from .cli.main import COMMANDS, _describe_parser, build_parser
 SERVER_NAME = 'cumlx'
 DEFAULT_PROTOCOL = '2025-06-18'
 HIDDEN = {'command', 'format', 'verbose'}
-CODE_EXECUTION = {'trust_remote_code', 'loader', 'translator'}
+CODE_EXECUTION = {'trust_remote_code', 'loader', 'translator', 'env_python'}
 EXECUTES_FILES = {'run', 'kernel capture'}  # each runs what the caller points it at, as remote model code would
 TOOL_TIMEOUT_SECONDS = 3600
 JSON_TYPES = {'bool': 'boolean', 'int': 'integer', 'float': 'number'}

@@ -4,7 +4,10 @@ from __future__ import annotations
 import importlib
 from importlib import metadata, util
 import platform
+import json
+from pathlib import Path
 import shutil
+import subprocess
 import sys
 from typing import Any
 
@@ -113,6 +116,7 @@ STACK_NOT_CHECKED = [
     'Genesis, warp-metal and the translator: presence only. They were not imported, so no Metal device was opened through them.',
     'A translator given as python:MODULE:ATTRIBUTE: only woof is looked for.',
 ]
+STACK_VARIANT = 'metal_ad_rgb'  # The same as cumlx.render.sensors.DEFAULT_VARIANT. It is here so that `_STACK_PROBE` can read this file alone.
 _PIP_RENDER = "python -m pip install 'cumlx-lab[render]'"
 _PIP_DIFF = "python -m pip install 'cumlx-lab[diff]'"
 _PIP_CAPTURE = "python -m pip install 'cumlx-lab[capture]'"
@@ -184,7 +188,6 @@ def _metal_device() -> dict[str, Any]:
 
 
 def _mitsuba_metal() -> dict[str, Any]:
-    from ..render.sensors import DEFAULT_VARIANT
     needed_by = 'cumlx.render'
     if util.find_spec('mitsuba') is None:
         return _stack_entry('missing', 'device', 'no module mitsuba', needed_by, _PIP_RENDER)
@@ -193,10 +196,10 @@ def _mitsuba_metal() -> dict[str, Any]:
         variants = list(_import('mitsuba').variants())
     except Exception as exc:  # noqa: BLE001
         return _stack_entry('broken', 'device', f'importing mitsuba failed: {type(exc).__name__}: {exc}', needed_by, _PIP_RENDER, version)
-    if DEFAULT_VARIANT not in variants:
-        return _stack_entry('unavailable', 'device', f'Mitsuba has no variant {DEFAULT_VARIANT} on this machine: {variants}', needed_by,
-                            f'{DEFAULT_VARIANT} needs Apple Silicon', version)
-    return _stack_entry('ok', 'device', f'variant {DEFAULT_VARIANT} is listed. It was not set, and nothing was rendered', needed_by, _PIP_RENDER, version)
+    if STACK_VARIANT not in variants:
+        return _stack_entry('unavailable', 'device', f'Mitsuba has no variant {STACK_VARIANT} on this machine: {variants}', needed_by,
+                            f'{STACK_VARIANT} needs Apple Silicon', version)
+    return _stack_entry('ok', 'device', f'variant {STACK_VARIANT} is listed. It was not set, and nothing was rendered', needed_by, _PIP_RENDER, version)
 
 
 def inspect_stack() -> dict[str, Any]:
@@ -219,6 +222,57 @@ def inspect_stack() -> dict[str, Any]:
     not_ready = [name for name, layer in layers.items() if not layer['ok']]
     return {'layers': layers, 'ready': [name for name in layers if name not in not_ready], 'not_ready': not_ready,
             'scope': STACK_SCOPE, 'not_checked': STACK_NOT_CHECKED}
+
+
+# This file, loaded alone in another environment's Python. -I keeps that Python from reading the current folder or PYTHONPATH.
+_STACK_PROBE = """
+import importlib.util, json, sys
+spec = importlib.util.spec_from_file_location('cumlx_stack_probe', sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+sys.modules['cumlx_stack_probe'] = module
+spec.loader.exec_module(module)
+print('CUMLX-STACK ' + json.dumps(module.inspect_stack()))
+"""
+STACK_ENV_TIMEOUT_SECONDS = 180
+STACK_ENVS_SCOPE = ('Each named Python ran this detection in its own process. A layer counts as ready if one of them reports "ok". '
+                    'This reports a stack spread over environments: it does not show that the parts load together in one process, '
+                    'or that any result is right. Each named Python runs code of its environment, so name only your own.')
+
+
+def _probe_environment(python: str) -> dict[str, Any]:
+    """One environment's `inspect_stack`. A Python that cannot answer gives 'error', which never counts as ready."""
+    try:
+        done = subprocess.run([python, '-I', '-c', _STACK_PROBE, str(Path(__file__).resolve())], capture_output=True, text=True,
+                              timeout=STACK_ENV_TIMEOUT_SECONDS, check=False)
+    except (OSError, subprocess.SubprocessError) as exc:
+        return {'error': f'{type(exc).__name__}: {exc}'}
+    lines = [line for line in done.stdout.splitlines() if line.startswith('CUMLX-STACK ')]
+    if done.returncode != 0 or not lines:
+        return {'error': f'exit {done.returncode}: {done.stderr.strip()[-300:]}'}
+    try:
+        return json.loads(lines[-1][len('CUMLX-STACK '):])
+    except ValueError as exc:
+        return {'error': f'unreadable answer: {exc}'}
+
+
+def inspect_stack_across(pythons: list[str]) -> dict[str, Any]:
+    """Merge `inspect_stack` over environments. A layer takes its first "ok". With none, it keeps the first answer, and it is not ready."""
+    answers = {python: _probe_environment(python) for python in pythons}
+    usable = {python: answer for python, answer in answers.items() if 'error' not in answer}
+    layers: dict[str, dict[str, Any]] = {}
+    for answer in usable.values():
+        for name, entry in answer['layers'].items():
+            layers.setdefault(name, entry)
+    for name in layers:
+        statuses = {python: answer['layers'].get(name, {}).get('status', 'absent') for python, answer in usable.items()}
+        ready_in = [python for python, status in statuses.items() if status == 'ok']
+        if ready_in:
+            layers[name] = usable[ready_in[0]]['layers'][name]
+        layers[name] = {**layers[name], 'found_in': ready_in[0] if ready_in else None, 'environments': statuses}
+    not_ready = [name for name, layer in layers.items() if not layer['ok']]
+    return {'layers': layers, 'ready': [name for name in layers if name not in not_ready], 'not_ready': not_ready, 'scope': STACK_ENVS_SCOPE,
+            'not_checked': STACK_NOT_CHECKED, 'environments': pythons,
+            'unreadable': {python: answer['error'] for python, answer in answers.items() if 'error' in answer}}
 
 
 def install_hint(modules: list[str]) -> str:

@@ -47,6 +47,14 @@
       "wrong_case_that_must_fail": "the same weights with ReLU"
     }
   },
+  "camera": {
+    "written": "Before the first camera frame through cumlx.sim.",
+    "question": "Does a camera on a cumlx.sim task show the physics state of each link?",
+    "protocol": "examples/physics-camera/sim_camera.py: cartpole, one world, 21 frames over 1 second, on Genesis on Metal and on MuJoCo. RGB, depth and segmentation from Mitsuba on Metal.",
+    "limits": "PIXEL_LIMIT 3 px and the floor limits in cumlx.render.sensors, unchanged from M5",
+    "pass": "All frames pass for the right scenario, and at least one frame fails for each wrong case",
+    "wrong_cases_that_must_fail": ["the renderer keeps the first pose", "the renderer's camera is 0.3 m away from the camera that the check uses"]
+  },
   "first_run_failed_on_a_bug_of_the_task": "The first comparison, on 2026-11-04, ran with cartpole's action driving both the slider and the hinge, so a torque of up to 20 N m spun the pole. It failed these limits, and so did the time step control. The raw summary stays in validation/m4-sim.json. The fix is `actuated` in the task. The limits above did not change.",
   "memory": "Each run goes through spikes/run_guarded.py: stop at 38 GB in use, start at 33 GB or less, 16 GB per process group."
 }

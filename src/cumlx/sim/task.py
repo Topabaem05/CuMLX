@@ -57,6 +57,14 @@ class Actuation:
     armature: float | None = None  # Rotor inertia on each joint. Genesis adds its own to a URDF, so this states one value for both engines.
 
 
+@dataclass(frozen=True)
+class VisualLink:
+    """A box that stands in for a link in a camera image: its link, its centre from the link's origin, and its half extents."""
+    link: str
+    offset: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    half_extents: tuple[float, float, float] = (0.1, 0.1, 0.1)
+
+
 @dataclass
 class State:
     """Torch tensors, num_envs first. The base entries are in the world frame, and quaternions are w, x, y, z."""
@@ -103,7 +111,7 @@ class Task:
     command_ranges: tuple[tuple[float, float], ...] = ()
     command_seconds: float = 0.0
     substeps: int = 1  # Solver substeps inside one physics step.
-    links: dict[str, tuple[str, tuple[float, float, float]]] = field(default_factory=dict)  # A name: its link, and the offset of its centre.
+    links: dict[str, VisualLink] = field(default_factory=dict)  # What a camera shows, by name.
     actuated: tuple[str, ...] = ()  # The joints that the action drives. Empty: all of `joints`.
 
     @property
@@ -164,7 +172,7 @@ def _cartpole_reset(count: int, generator: Any, task: Task) -> ResetState:
 CARTPOLE = Task(
     name='cartpole', asset=Asset('mjcf', 'cartpole.xml'), joints=('slider', 'hinge'), actuation=Actuation('force', 20.0, armature=0.0),
     dt=1 / 120, decimation=2, episode_seconds=5.0, observation_size=4, observe=_cartpole_observe, reward=_cartpole_reward,
-    terminated=_cartpole_terminated, reset=_cartpole_reset, actuated=('slider',), links={'cart': ('cart', (0.0, 0.0, 0.0)), 'pole': ('pole', (0.0, 0.0, 0.5))})
+    terminated=_cartpole_terminated, reset=_cartpole_reset, actuated=('slider',), links={'cart': VisualLink('cart', half_extents=(0.2, 0.1, 0.1)), 'pole': VisualLink('pole', offset=(0.0, 0.0, 0.5), half_extents=(0.02, 0.02, 0.5))})
 
 
 # -------------------------------------------------------------------- Go2 flat
@@ -220,7 +228,7 @@ GO2_FLAT = Task(
     actuation=Actuation('position', 0.25, kp=20.0, kd=0.5, default=GO2_DEFAULT, armature=0.1), dt=0.02, decimation=1, substeps=2,
     episode_seconds=20.0, observation_size=45, observe=_go2_observe, reward=_go2_reward, terminated=_go2_terminated, reset=_go2_reset,
     action_clip=100.0, action_latency=True, command_ranges=((-1.0, 1.0), (-1.0, 1.0), (-1.0, 1.0)), command_seconds=4.0,
-    links={'base': ('base', (0.0, 0.0, 0.0))})
+    links={'base': VisualLink('base', half_extents=(0.19, 0.05, 0.05))})
 
 _TASKS = {task.name: task for task in (CARTPOLE, GO2_FLAT)}
 
