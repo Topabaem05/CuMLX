@@ -74,7 +74,7 @@
 
 | ID | 조건 | 상태 | 등급 | 기록 | 결과와 한계 |
 |---|---|---|---|---|---|
-| M5-1 | Mitsuba Metal과 V100 CUDA 비교, 등급 B | 미달 | 미검증 | `validation/m5-render.json`, `validation/m5-render-limits.json` | **V100 실행 전.** Metal과 CPU `scalar_rgb`는 두 장면 모두 등급 B(최악 56.94, 45.47 dB, 허용 40 dB)이고 결함 2종은 실패합니다. 이것으로 조건을 대신하지 않습니다 |
+| M5-1 | Mitsuba Metal과 V100 CUDA 비교, 등급 B | 미달 | 미검증 | `validation/m5-render.json`, `validation/m5-render-limits.json` | **V100 이미지 없음.** Mitsuba 3.9.1이 V100을 거부합니다(compute capability 7.5 이상 필요, V100은 7.0). 3.8.0 경로는 실행 전입니다. Metal과 CPU `scalar_rgb`는 두 장면 모두 등급 B(최악 56.94, 45.47 dB, 허용 40 dB)이고 결함 2종은 실패합니다. 이것으로 조건을 대신하지 않습니다 |
 | M5-2 | 256×256 RGB 프레임 속도 측정 및 공개 | 측정함, 미공개 | C | `validation/m5-render.json` | 초당 프레임: Cornell box 16 spp 127~134, 64 spp 50~53. 움직이는 메시 16 spp 224~314, 64 spp 167~225. 5회 반복, 다른 작업과 함께 돌렸고 장면이 작습니다 |
 | M5-3 | 물리와 카메라를 함께 쓰는 예제 실행 | 달성 | B | `validation/m5-render.json` | Genesis와 Mitsuba가 한 프로세스에서 Metal로 돕니다. 61/61 프레임, 최악 0.48 px(허용 3 px). 정육면체 하나의 장면이며 RTX와 비교한 것이 아닙니다 |
 | M5-4 | RTX 센서와 다른 점을 문서로 명시 | 달성 | 미검증 | `docs/RENDER-SENSORS.md` | RTX 쪽은 문서만 읽었고 직접 비교하지 않았습니다 |

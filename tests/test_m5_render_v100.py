@@ -57,8 +57,9 @@ def test_start_on_an_idle_gpu_copies_only_its_own_files_and_pins_the_install(tmp
     assert 'Started on' in done.stdout and '4242' in done.stdout
     calls = log.read_text()
     assert calls.count('FAKE-SSH') >= 4  # The fake's own lines prove which program ran.
-    assert 'mitsuba==3.9.1' in calls and '--variant cuda_ad_rgb --seeds 1,2,3 --out cuda' in calls
-    assert 'pip install -q --python venv/bin/python mitsuba==3.9.1 numpy &&' in calls
+    assert 'mitsuba==3.8.0' in calls and '--variant cuda_ad_rgb --seeds 1,2,3 --out cuda;' in calls
+    assert 'pip install -q --python venv/bin/python mitsuba==3.8.0 numpy &&' in calls
+    assert '--variant scalar_rgb --seeds 21,22,23 --out scalar;' in calls  # The control of the version difference runs even if CUDA fails.
     remote = re.search(r"bash -lc '(.*)'$", calls, re.M)
     assert remote is not None
     syntax = subprocess.run(['bash', '-n', '-c', remote.group(1)], capture_output=True, text=True, check=False)  # -n reads the command and runs nothing.

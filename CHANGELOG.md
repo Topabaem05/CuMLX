@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- `spikes/m5_render_v100.sh` installs Mitsuba 3.8.0, because Mitsuba 3.9 refuses a GPU under compute capability 7.5 and the V100 is 7.0. It also renders `scalar_rgb` as a control of the version difference.
 - `spikes/m5_render.py render` now prints each stage and ends with a traceback if one stage takes longer than `--stall-seconds` (default 900). A run on the V100 had sat at full CPU for 30 minutes with an empty log.
 - The kernel layer read `operator*=` as a global variable named `operator`, because of its `=`, and took the next declaration into it. It now reads a compound assignment operator as a function.
 - The recursion check knew one definition per name. A wrapper such as `make_float4(float3, float)` that calls the built-in of the same name read as recursion, and a recursive overload was missed when another definition of its name came later. Each definition is now its own node, and a call goes to each overload that accepts its number of arguments. Overloads with the same number of arguments are still refused, because this layer does not read types.

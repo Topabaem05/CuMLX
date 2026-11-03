@@ -6,7 +6,9 @@
 #   sh spikes/m5_render_v100.sh fetch     # copies the images to ~/cumlx-m5/cuda on this Mac
 #
 # It refuses to start if another job is using the GPU. The host is CUMLX_GPU_HOST, default gpu-host.
-# It copies spikes/m5_render.py and src/cumlx from HEAD, and installs only mitsuba==3.9.1 and NumPy in its own folder.
+# It copies spikes/m5_render.py and src/cumlx from HEAD, and installs only mitsuba==3.8.0 and NumPy in its own folder.
+# 3.8.0, because Dr.Jit 1.4 and later (Mitsuba 3.9) refuse a GPU under compute capability 7.5, and the V100 is 7.0.
+# It also renders scalar_rgb on the CPU, to measure what the version difference from the Mac's 3.9.1 does.
 # Delete the remote folder when the test is finished: ssh gpu-host rm -rf cumlx-m5-render
 set -u
 
@@ -28,6 +30,12 @@ fetch)
     mkdir -p "$LOCAL"
     ssh "$HOST" "cd $REMOTE/cuda && tar -c ." | tar -x -C "$LOCAL" || exit 1
     echo "Copied to $LOCAL"
+    if ssh "$HOST" "test -f $REMOTE/scalar/summary.json"; then
+        SCALAR=$(dirname -- "$LOCAL")/scalar-3.8.0
+        mkdir -p "$SCALAR"
+        ssh "$HOST" "cd $REMOTE/scalar && tar -c ." | tar -x -C "$SCALAR" || exit 1
+        echo "Copied to $SCALAR"
+    fi
     exit 0
     ;;
 start) ;;
@@ -48,7 +56,7 @@ fi
 ssh "$HOST" "mkdir -p $REMOTE/CuMLX" || exit 3
 git -C "$REPO" archive HEAD spikes/m5_render.py src/cumlx | ssh "$HOST" "tar -x -C $REMOTE/CuMLX" || exit 3
 # The login shell gives uv its PATH. Everything after this line runs on the GPU machine and survives this terminal.
-ssh "$HOST" "bash -lc 'cd $REMOTE && (uv venv -q --python 3.12 venv && uv pip install -q --python venv/bin/python mitsuba==3.9.1 numpy && PYTHONUNBUFFERED=1 nohup venv/bin/python CuMLX/spikes/m5_render.py render --variant cuda_ad_rgb --seeds 1,2,3 --out cuda) > run.log 2>&1 < /dev/null & echo \$! > $REMOTE/run.pid'" || exit 3
+ssh "$HOST" "bash -lc 'cd $REMOTE && (rm -rf venv cuda scalar && uv venv -q --python 3.12 venv && uv pip install -q --python venv/bin/python mitsuba==3.8.0 numpy && { PYTHONUNBUFFERED=1 nohup venv/bin/python CuMLX/spikes/m5_render.py render --variant cuda_ad_rgb --seeds 1,2,3 --out cuda; PYTHONUNBUFFERED=1 nohup venv/bin/python CuMLX/spikes/m5_render.py render --variant scalar_rgb --seeds 21,22,23 --out scalar; }) > run.log 2>&1 < /dev/null & echo \$! > $REMOTE/run.pid'" || exit 3
 sleep 2
 if ! ssh "$HOST" "kill -0 \$(cat $REMOTE/run.pid) 2>/dev/null"; then
     echo "error: the run stopped at once:" >&2

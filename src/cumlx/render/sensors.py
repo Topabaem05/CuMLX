@@ -33,7 +33,7 @@ def load_mitsuba(variant: str = DEFAULT_VARIANT) -> Any:
         raise missing_dependency('mitsuba', 'render', purpose='Rendering') from None
     if variant not in mi.variants():
         raise CumlxError('E_DEP_MISSING', f'Mitsuba {mi.__version__} has no variant {variant!r} on this machine: {mi.variants()}',
-                         hint='metal_ad_rgb needs Apple Silicon, and cuda_ad_rgb needs an NVIDIA GPU with OptiX in its driver')
+                         hint='metal_ad_rgb needs Apple Silicon, and cuda_ad_rgb needs an NVIDIA GPU with OptiX in its driver. Mitsuba 3.9 refuses a GPU under compute capability 7.5, and 3.8.0 accepts it')
     mi.set_variant(variant)
     return mi
 

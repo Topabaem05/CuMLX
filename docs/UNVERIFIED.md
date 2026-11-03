@@ -66,7 +66,7 @@
 
 ## 렌더링과 센서 (M5)
 
-- **Mitsuba Metal과 V100 CUDA 비교는 돌리지 않았습니다.** V100의 OptiX가 Mitsuba를 돌릴지 모릅니다. `spikes/m5_render_v100.sh`는 가짜 ssh로만 시험했습니다. `validation/m5-render.json`
+- **Mitsuba Metal과 V100 CUDA 비교는 아직 없습니다.** Mitsuba 3.9.1은 V100을 거부합니다(compute capability 7.5 이상 필요, V100은 7.0). 3.8.0 경로는 아직 돌리지 않았고, 돌아도 양쪽 버전이 다릅니다. 첫 실행이 70분간 멈춘 원인도 찾지 못했습니다. `validation/m5-render.json`
 - RTX와의 직접 비교. RTX 쪽은 문서만 읽었습니다. `docs/RENDER-SENSORS.md`
 - 하드웨어 레이트레이싱: Metal 레이트레이싱 API를 쓰는 것은 확인했지만, 전용 회로가 동작했음을 보여 주는 카운터는 읽지 않았습니다. 하드웨어 가속은 Apple 문서의 내용입니다.
 - 만들지 않은 것: LiDAR 등 레이캐스트 센서, USD 장면, 모션 벡터, 렌즈 왜곡, 시맨틱 레이블, 병렬 환경 렌더링, `cumlx.sim` 카메라 센서.

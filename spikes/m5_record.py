@@ -17,6 +17,8 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 
 
+CUDA_ATTEMPT = {'date': '2026-11-04', 'version': 'Mitsuba 3.9.1, Dr.Jit 1.5.0', 'result': 'failed before any render', 'first_run': 'Started 00:25 KST by the user. 70 minutes at full CPU on one thread, 308 MiB on the GPU, 0 percent GPU use, empty log, no OptiX library loaded. The user stopped it. The cause of this stall was not found.', 'second_run': "With stage lines. In 'load mitsuba': 'compute capability of device too low (need >= 7.5), skipping' and 'the CUDA backend is inactive because no compatible CUDA devices were found'. The V100 is compute capability 7.0.", 'next': 'validation/m5-render-limits.json, protocol_change_2026_11_04: Mitsuba 3.8.0 on the V100, with a control of the version difference. It has not run.'}
+
 def load(path: Path) -> Any:
     return json.loads(path.read_text())
 
@@ -63,7 +65,7 @@ def main() -> int:
     elif cuda_summary.exists():
         cuda = {'status': 'rendered_or_failed_not_compared', 'summary': load(cuda_summary)}
     else:
-        cuda = {'status': 'not_run', 'why': 'The V100 was busy with another job. spikes/m5_render_v100.sh was tested on a fake ssh only.'}
+        cuda = {'status': 'not_run', 'why': 'No image from the V100 yet. See cuda_attempt_with_3_9_1.'}
 
     record = {
         'schema': 'cumlx.m5-render.v1',
@@ -78,6 +80,7 @@ def main() -> int:
             'rtx_differences_document': 'docs/RENDER-SENSORS.md',
         },
         'cuda_comparison': cuda,
+        'cuda_attempt_with_3_9_1': CUDA_ATTEMPT,
         'metal_renders': metal,
         'local_checks_of_the_comparison': {
             'shows': 'The rule on real images, without CUDA: Metal against the CPU reference, and two injected faults. This does not meet the CUDA gate.',

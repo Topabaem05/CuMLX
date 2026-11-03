@@ -16,7 +16,15 @@
  },
  "cuda_comparison": {
   "status": "not_run",
-  "why": "The V100 was busy with another job. spikes/m5_render_v100.sh was tested on a fake ssh only."
+  "why": "No image from the V100 yet. See cuda_attempt_with_3_9_1."
+ },
+ "cuda_attempt_with_3_9_1": {
+  "date": "2026-11-04",
+  "version": "Mitsuba 3.9.1, Dr.Jit 1.5.0",
+  "result": "failed before any render",
+  "first_run": "Started 00:25 KST by the user. 70 minutes at full CPU on one thread, 308 MiB on the GPU, 0 percent GPU use, empty log, no OptiX library loaded. The user stopped it. The cause of this stall was not found.",
+  "second_run": "With stage lines. In 'load mitsuba': 'compute capability of device too low (need >= 7.5), skipping' and 'the CUDA backend is inactive because no compatible CUDA devices were found'. The V100 is compute capability 7.0.",
+  "next": "validation/m5-render-limits.json, protocol_change_2026_11_04: Mitsuba 3.8.0 on the V100, with a control of the version difference. It has not run."
  },
  "metal_renders": {
   "variant": "metal_ad_rgb",
