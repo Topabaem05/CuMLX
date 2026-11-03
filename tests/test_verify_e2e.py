@@ -733,3 +733,45 @@ def test_static_weights_compare_a_stored_head_with_a_tied_embedding(tmp_path, e2
     save_file({**tensors, 'lm_head.weight': tensors['model.embed_tokens.weight'] * 2}, original / 'model.safetensors')
     first = run_weights(str(original), 'port', model=port)['first_failure']
     assert first['name'] == 'lm_head.weight' and first['port_name'] == 'model.embed_tokens.weight'
+
+
+# ---------------------------------------------------------------- wrong kernel translations
+KERNEL_GOLDEN = ROOT / 'validation/kernel-golden-v100'
+KERNEL_SOURCES = ROOT / 'src/cumlx/kernels'
+
+
+def _kernel_fault_ids():
+    from cumlx.verify.faults import KERNEL_FAULTS
+    return sorted(KERNEL_FAULTS)
+
+
+@pytest.mark.gpu
+@pytest.mark.parametrize('fid', _kernel_fault_ids())
+def test_wrong_kernel_translation_is_caught_and_the_right_one_passes(gpu, tmp_path, fid):
+    """Against a golden from a real V100. Each fault has a wrong case and a right case on the same kernel and the same golden."""
+    from cumlx.verify.faults import KERNEL_FAULTS
+    from cumlx.verify.kernel_verify import verify_kernels
+    fault = KERNEL_FAULTS[fid]
+    source = (KERNEL_SOURCES / f'{fault.kernel}.metal').read_text()
+    header = str(KERNEL_SOURCES / 'common_metal.h')
+    right = tmp_path / f'{fault.kernel}.metal'
+    right.write_text(source)
+    report = verify_kernels(right, KERNEL_GOLDEN, header=header)
+    assert report['verdict'] == 'ok' and report['kernels'][fault.kernel]['grade'] == 'A', fid
+    wrong = tmp_path / 'wrong' / f'{fault.kernel}.metal'
+    wrong.parent.mkdir()
+    wrong.write_text(fault.apply(source))
+    assert wrong.read_text() != source
+    report = verify_kernels(wrong, KERNEL_GOLDEN, header=header)
+    assert report['verdict'] == 'diverged', (fid, report['summary'], report['records'])
+    assert report['kernels'][fault.kernel]['grade'] is None
+    assert report['first_divergence']['kernel'] == fault.kernel
+
+
+def test_kernel_faults_cover_five_kinds_and_every_lab_kernel():
+    from cumlx.verify.faults import KERNEL_FAULTS
+    assert len({f.kind for f in KERNEL_FAULTS.values()}) >= 5
+    assert {f.kernel for f in KERNEL_FAULTS.values()} == {p.stem for p in KERNEL_SOURCES.glob('*.metal')}
+    for fault in KERNEL_FAULTS.values():
+        source = (KERNEL_SOURCES / f'{fault.kernel}.metal').read_text()
+        assert fault.apply(source) != source

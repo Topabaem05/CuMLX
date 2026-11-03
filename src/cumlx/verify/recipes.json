@@ -598,7 +598,7 @@
      "evidence": "run",
      "source": "validation/REPORT.md",
      "grade": "A",
-     "limits": "CUMLX kernel lab: 8 kernels, compared with a reference on Metal"
+     "limits": "CUMLX kernel lab: 8 kernels, 29 cases, compared with goldens from one V100 (worst rel_l2 7.5e-8). They were written for portability, so they are easy cases"
     },
     {
      "name": "woof translator",

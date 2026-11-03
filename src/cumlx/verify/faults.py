@@ -163,3 +163,43 @@ TINY_LLAMA_TARGETS = {
 }
 # On the `cumlx fixture tiny-moe` model: (module to inject into, PyTorch module the verifier must name).
 TINY_MOE_TARGETS = {'F9': ('model.layers.1.mlp', 'model.layers.1.mlp.experts')}
+
+
+# ------------------------------------------------------------------------------- wrong translations
+@dataclass(frozen=True)
+class KernelFault:
+    """A wrong translation of one kernel, as a text edit of its correct `.metal` body. `cumlx kernel verify` must catch it."""
+    id: str
+    kind: str
+    title: str
+    kernel: str
+    old: str
+    new: str
+
+    def apply(self, source: str) -> str:
+        if self.old not in source:
+            raise CumlxError('E_INTERNAL', f'kernel fault {self.id}: {self.old!r} is not in {self.kernel}.metal')
+        return source.replace(self.old, self.new)
+
+
+KERNEL_FAULTS: dict[str, KernelFault] = {f.id: f for f in [
+    KernelFault('K1', 'builtin-map', 'blockIdx*blockDim+threadIdx mapped to the position in the threadgroup, not in the grid',
+                'silu_mul', 'thread_position_in_grid.x', 'thread_position_in_threadgroup.x'),
+    KernelFault('K2', 'bit-layout', 'low and high nibble swapped in the packed weights',
+                'fp4_gemv', 'cumlx_restore(pair & 15u, scale, wglobal[0], WF);\n    float w1 = k + 1u < K ? cumlx_restore(pair >> 4u,',
+                'cumlx_restore(pair >> 4u, scale, wglobal[0], WF);\n    float w1 = k + 1u < K ? cumlx_restore(pair & 15u,'),
+    KernelFault('K3', 'precision', 'float shared memory demoted to half',
+                'fp4_tiled', 'threadgroup float tile_a[8 * 32];', 'threadgroup half tile_a[8 * 32];'),
+    KernelFault('K4', 'reduction', 'the tree reduction starts one level too low, so half of the lanes are lost',
+                'rms_norm', 'unsigned int step = 64u;', 'unsigned int step = 32u;'),
+    KernelFault('K5', 'template-constant', 'the activation scale format instantiated with the weight format',
+                'fp4_w4a4', 'aglobal[0], AF);', 'aglobal[0], WF);'),
+    KernelFault('K6', 'integer-encoding', 'the two codes of a packed byte written in the wrong order',
+                'fp4_quantize', 'c0 | (c1 << 4u)', 'c1 | (c0 << 4u)'),
+    KernelFault('K7', 'lost-accumulator', 'fma(a, b, accum) translated as a * b',
+                'fp4_small_m', 'accum[r] = metal::fma(a0, w0, accum[r]);', 'accum[r] = a0 * w0;'),
+    KernelFault('K8', 'template-constant', 'the scale format hard-coded to NVFP4',
+                'fp4_decode', 'wglobal[0], WF);', 'wglobal[0], 0);'),
+    KernelFault('K9', 'dropped-term', 'epsilon left out of the RMS denominator',
+                'rms_norm', 'square_sum[0] / float(K) + epsilon[0]', 'square_sum[0] / float(K)'),
+]}

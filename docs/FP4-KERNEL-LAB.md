@@ -2,7 +2,7 @@
 
 **Packed FP4 커널 구현 패키지 — CPU 검증 완료 범위와 GPU 미검증 범위를 분리합니다.**
 
-NVFP4/MXFP4 payload를 전체 FP16/FP32 가중치로 펼치지 않고 읽는 Metal·CUDA 커널을 작성했습니다. 현재 상태는 **실험용 소스 구현**입니다. Metal 커널은 Apple M5 Pro 한 기기에서 컴파일되고 GPU 테스트 35개를 통과했습니다(MLX 0.32.2, 2026-11-02). CUDA 커널 실행과 속도는 검증하지 않았습니다. `allow_unvalidated=True`를 명시해야 GPU 실행을 시도합니다.
+NVFP4/MXFP4 payload를 전체 FP16/FP32 가중치로 펼치지 않고 읽는 Metal·CUDA 커널을 작성했습니다. 현재 상태는 **실험용 소스 구현**입니다. Metal 커널은 Apple M5 Pro 한 기기에서 컴파일되고 GPU 테스트 35개를 통과했습니다(MLX 0.32.2, 2026-11-02). CUDA 커널은 V100 한 대에서 실행했고, 속도는 재지 않았습니다. `allow_unvalidated=True`를 명시해야 GPU 실행을 시도합니다.
 
 이 패키지는 v0.2의 G1/G2 커널 단계를 구현합니다. **`torch.cuda` 호환 backend, CUDA-on-Metal runtime, PTX compiler, NCCL, 임의 CUDA Python wheel 지원은 구현하지 않았습니다.** CUDA 소스는 실제 NVIDIA GPU용이며, Metal 소스는 Apple GPU용입니다. 같은 연산을 양쪽에 작성한 것이지 CUDA 바이너리를 Metal로 번역한 것이 아닙니다.
 
@@ -62,7 +62,7 @@ python scripts/env_report.py
 pytest -q -m gpu --backend cuda --require-gpu
 ```
 
-MLX는 **0.32.2 이상 0.33 미만**을 허용합니다. GPU 테스트를 실행한 버전은 0.32.2와 0.32.4이고(M5 Pro 한 기기), 그 밖의 0.32.x는 경고와 함께 실행합니다. CUDA 실행 기록은 없습니다. 설치에는 플랫폼에 맞는 MLX wheel, GPU 및 드라이버/OS 요구사항이 별도로 필요합니다. Mac에서 CUDA extra를 설치하거나 Linux CPU만으로 Metal을 실행하지 않습니다. [S1–S4]
+MLX는 **0.32.2 이상 0.33 미만**을 허용합니다. GPU 테스트를 실행한 버전은 0.32.2와 0.32.4이고(M5 Pro 한 기기), 그 밖의 0.32.x는 경고와 함께 실행합니다. CUDA 실행은 V100 한 대에서 기록했습니다(커널 8개, case 29개, `validation/kernel-translation.json`). 설치에는 플랫폼에 맞는 MLX wheel, GPU 및 드라이버/OS 요구사항이 별도로 필요합니다. Mac에서 CUDA extra를 설치하거나 Linux CPU만으로 Metal을 실행하지 않습니다. [S1–S4]
 
 ## CPU에서 실제 실행할 수 있는 예제
 

@@ -1,6 +1,6 @@
 # CUMLX v0.3 — FP4 커널 상세 설계 및 구현
 
-**상태: CPU reference/host helper 검증 + GPU 소스 구현. Metal/CUDA device compile 및 실행 미검증.**
+**상태: Metal은 M5 Pro 한 기기, CUDA는 V100 한 대에서 실행했습니다. Metal 결과는 V100 golden과 비교해 커널 8개, case 29개 모두 통과했고 최악 rel_l2는 7.5e-8입니다(`validation/kernel-translation.json`). 다른 GPU는 시험하지 않았습니다.**
 
 이 문서는 배포 소스와 대응합니다. v0.2의 전체 CUDA 호환 런타임 설계를 완성한 문서가 아니라, 그중 quantized operator provider의 첫 구현입니다. Native NVIDIA와 Metal은 같은 수학을 각각 실행하도록 작성했고, CUDA API를 Metal로 가로채는 기능은 없습니다.
 

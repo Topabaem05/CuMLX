@@ -80,6 +80,69 @@ Each sample file is standard safetensors:
 | `rNNNNN.inM` | Any | Input M of record NNNNN |
 | `rNNNNN.out` | Any | Output of record NNNNN |
 
+## Op-level golden `cumlx.opgolden.v1`
+
+A trace records a whole model. An op-level golden records one kernel: what it computed on one set of inputs, on a real device. `cumlx kernel capture` writes it on an NVIDIA machine, and `cumlx kernel verify` reads it on a Mac. Any tool can write or read it.
+
+```text
+<golden>/manifest.json
+<golden>/cases/c0000.safetensors
+<golden>/cases/c0001.safetensors
+```
+
+```json
+{
+  "schema": "cumlx.opgolden.v1",
+  "cumlx_version": "0.5.0",
+  "created_utc": "2026-11-03T05:00:00Z",
+  "golden": {"kind": "cuda"},
+  "source": {
+    "framework": "cuda", "gpu": "Tesla V100-SXM2-16GB", "driver": "580.178.04", "arch": "7.0",
+    "compiler": {"name": "nvcc", "version": "12.0.140", "flags": ["-arch=native"]},
+    "cuda_runtime": 12000, "cuda_driver_api": 13000, "idle_during_capture": true, "repeats": 3
+  },
+  "floating_point": {
+    "ftz": {"flag": "false (nvcc default)", "load_flushes": false, "input_flushes": false, "output_flushes": false},
+    "fmad": {"flag": "true (nvcc default)", "contracts": true},
+    "fp64": {"available": true}
+  },
+  "kernels": {
+    "fp4_gemv": {"source_file": "fp4_gemv.cu", "source_sha256": "...", "header_sha256": "...",
+                 "form": "body", "features": {"fp64": false, "fp64_literals": 0, "atomics": false, "warp_level": []}}
+  },
+  "cases": [{
+    "id": "fp4_gemv.nvfp4.1x7x17", "kernel": "fp4_gemv",
+    "inputs":  [{"name": "x", "dtype": "float32", "shape": [1, 17]}],
+    "outputs": [{"name": "y", "dtype": "float32", "shape": [1, 7]}],
+    "constants": {"M": 1, "N": 7, "K": 17, "HAS_BIAS": true},
+    "grid": [896, 1, 1], "threadgroup": [128, 1, 1],
+    "file": "cases/c0000.safetensors", "sha256": "...", "repeat_identical": true
+  }]
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `golden.kind` | `cuda`: a real CUDA run. It must record `source.compiler`, `source.gpu` and `source.driver`. `fixture`: test data, which never earns a proof grade. A reader must reject any other value |
+| `grid`, `threadgroup` | Logical threads, as MLX counts them. CUDA launches `grid / threadgroup` blocks of `threadgroup` threads. The grid must be a whole number of threadgroups |
+| `constants` | Integer or boolean values that the kernel reads by name. In MLX they are template arguments |
+| `entry` | Optional. The function to launch when the source is a complete kernel, such as `vector_add<float>`. Default: the kernel name |
+| `kernels.*.form` | `body`: a function body, as `mx.fast.cuda_kernel` takes. `complete`: a source with `__global__` functions |
+| `kernels.*.features` | What a text scan of the original found. A `double` or an unsuffixed floating literal runs in fp64 on CUDA and cannot on Metal |
+| `floating_point` | Measured on this device by a probe kernel with the same compiler flags |
+| `cases[].repeat_identical` | Every repeat gave the same bytes, although the output memory was filled with a different pattern before each one. False means that the kernel leaves elements unwritten or depends on execution order |
+| `cases[].sha256` | SHA-256 of the case file. A reader must reject a mismatch |
+
+Each case file holds `in.<name>` and `out.<name>` for each tensor, in little-endian, with the dtype of the manifest. Output `out.<name>` is the first repeat.
+
+### Cases file `cumlx.kernel-cases.v1`
+
+The input of `cumlx kernel capture`. It has the same case fields, without `file` and `sha256`. An input also says where its data is: `"values": [...]` inline, or `"file": "inputs.safetensors"` with an optional `"tensor"` name. The file must stay beside the cases file. `scripts/make_kernel_cases.py` writes the cases of the FP4 kernels.
+
+### Comparison
+
+`cumlx kernel verify` judges each output by `KERNEL_THRESHOLDS` in `verify/metrics.py`. Integer outputs must match exactly. In a float output, NaN and infinity must sit at the same elements, and the finite elements must satisfy `rel_l2 <= 1e-5` and `max |a - g| / max |g| <= 1e-5`. If all finite golden elements are zero, the limit is `max |a| <= 1e-6`.
+
 ## Compatibility
 
 A new optional field does not change the schema name. A reader must ignore unknown fields and must use the defaults above for missing ones. A change that a v1 reader would misread needs a new schema name. A reader must reject an unknown schema or `golden.kind`.

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from importlib import metadata, util
 import platform
+import shutil
 import sys
 from typing import Any
 
@@ -26,7 +27,12 @@ REQUIREMENTS = {
     'recipe': [],
     'run': ['torch'],
     'port': ['torch', 'transformers', 'mlx', 'mlx_lm'],
+    'kernel capture': [],  # needs the tools below
+    'kernel verify': ['mlx'],
+    'kernel port': [],  # the translator is checked by the command itself
 }
+# command -> programs that must be on PATH. They come from the CUDA toolkit, not from a Python extra.
+REQUIRED_PROGRAMS = {'kernel capture': ['nvcc', 'nvidia-smi']}
 
 
 def _version(dist: str) -> str | None:
@@ -41,8 +47,10 @@ def inspect_environment(*, probe: bool = False) -> dict[str, Any]:
     for mod, (dist, extra) in DEPENDENCIES.items():
         present = util.find_spec(mod) is not None
         deps[mod] = {'installed': present, 'version': _version(dist) if present else None, 'extra': extra}
-    ready = {cmd: all(deps[m]['installed'] for m in mods) for cmd, mods in REQUIREMENTS.items()}
     missing = {cmd: [m for m in mods if not deps[m]['installed']] for cmd, mods in REQUIREMENTS.items()}
+    for cmd, programs in REQUIRED_PROGRAMS.items():
+        missing[cmd] += [p for p in programs if shutil.which(p) is None]
+    ready = {cmd: not missing[cmd] for cmd in REQUIREMENTS}
     report: dict[str, Any] = {
         'python': sys.version.split()[0], 'platform': platform.platform(), 'machine': platform.machine(),
         'dependencies': deps, 'commands_ready': ready, 'missing_by_command': {k: v for k, v in missing.items() if v},
@@ -83,5 +91,8 @@ def inspect_environment(*, probe: bool = False) -> dict[str, Any]:
 
 
 def install_hint(modules: list[str]) -> str:
+    programs = [m for m in modules if m not in DEPENDENCIES]
+    if programs:
+        return f"install the CUDA toolkit on a machine with an NVIDIA GPU: {', '.join(programs)} must be on PATH"
     extras = sorted({DEPENDENCIES[m][1] for m in modules if DEPENDENCIES[m][1]})
     return f"python -m pip install 'cumlx-lab[{','.join(extras)}]'" if extras else 'python -m pip install numpy'

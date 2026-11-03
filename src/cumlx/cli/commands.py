@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -588,6 +589,123 @@ def run_rundiff(args) -> Result:
         r.warn('W_RUNDIFF_FIRST_STEPS_ONLY', 'Grade A here covers the first steps of training only. Later steps can move apart through rounding.')
     if rep['statistical']:
         r.warn('W_RUNDIFF_ONE_STREAM', 'All losses of a run form one stream. A script with two optimizers, such as a GAN, is compared on their average.')
+    return r
+
+
+# --------------------------------------------------------------------------- kernel
+def run_kernel_capture(args) -> Result:
+    from ..verify.kernel_capture import capture_kernels, plan_capture
+    from ..verify.opgolden import MANIFEST
+    from ..verify.trace import check_output_dir, prepare_output_dir
+    plan = plan_capture(args.kernels, args.cases, args.header)
+    check_output_dir(args.output, overwrite=args.overwrite, marker=MANIFEST)
+    case_ids = [c.id for c, _ in plan['cases']]
+    r = Result('kernel capture')
+    if plan['not_covered']:
+        r.warn('W_KERNEL_NOT_COVERED', f"These sources have no cases, so they are not in the golden: {plan['not_covered']}", kernels=plan['not_covered'])
+    if args.dry_run:
+        r.summary = f"valid: {len(case_ids)} case(s) of {len(plan['kernels'])} kernel(s). Nothing was compiled or run"
+        r.data = {'dry_run': True, 'cases': cap(case_ids, args.max_items, r), 'kernels': sorted(plan['kernels'])}
+        return r
+    out = Path(args.output)
+    with tempfile.TemporaryDirectory(prefix='cumlx-kernel-golden-') as tmp:
+        staged = Path(tmp) / 'golden'
+        result = capture_kernels(plan, staged, arch=args.arch, extra_flags=args.nvcc_flag, repeats=args.repeats, timeout=args.timeout,
+                                 jobs=args.jobs, require_idle=args.require_idle_gpu, log=_logger(args))
+        if result['manifest'] is not None:
+            prepare_output_dir(out, overwrite=args.overwrite, marker=MANIFEST)
+            shutil.copytree(staged, out, dirs_exist_ok=True)
+    not_repeating = [c['id'] for c in (result['manifest'] or {}).get('cases', []) if not c.get('repeat_identical')]
+    r.data = {'kernels_recorded': result['kernels_recorded'], 'cases_recorded': result['recorded'], 'cases_total': len(case_ids),
+              'source': result['source'], 'floating_point': result['floating_point'],
+              'failed': cap(result['failures'], args.max_items, r), 'not_repeating': not_repeating}
+    if not_repeating:
+        r.warn('W_KERNEL_NOT_REPEATABLE', f'These cases gave different bytes across repeats, so the golden holds one of several results: {not_repeating}')
+    r.summary = (f"recorded {result['recorded']} of {len(case_ids)} case(s), {len(result['kernels_recorded'])} kernel(s), "
+                 f"on {result['source']['gpu']} (driver {result['source']['driver']}, nvcc {result['source']['compiler']['version']})")
+    if result['failures']:
+        r.exit_code = ExitCode.INCOMPLETE
+        r.summary += f"; {len(result['failures'])} case(s) did not compile or run and are not in the golden"
+        for failure in result['failures'][:args.max_items if args.max_items >= 0 else None]:
+            r.warn('W_KERNEL_CASE_FAILED', f"{failure['case']} ({failure['stage']}): {failure['message'][:400]}", case=failure['case'], stage=failure['stage'])
+    if result['manifest'] is not None:
+        r.artifact('golden', str(out))
+        r.suggest(f'cumlx kernel verify foo.metal {_q(out)}', 'on a Mac: compare a Metal kernel with this golden')
+    return r
+
+
+def run_kernel_verify(args) -> Result:
+    from ..verify.kernel_verify import report_markdown, verify_kernels
+    from ..verify.trace import check_output_dir, prepare_output_dir
+    if args.output:
+        check_output_dir(args.output, overwrite=args.overwrite, marker='report.json')
+    report = verify_kernels(args.metal, args.golden, kernel=args.kernel, cases=args.case or None, header=args.header,
+                            engine_name=args.engine, repeats=args.repeats, log=_logger(args))
+    r = Result('kernel verify', exit_code=VERDICT_EXIT[report['verdict']])
+    s = report['summary']
+    r.summary = (f"{report['verdict']}: {s['kernels']['pass']} kernel(s) pass, {s['kernels']['fail']} fail, {s['kernels']['unverified']} unverified; "
+                 f"{s['cases']['pass']} of {sum(s['cases'].values())} case(s) pass; {len(s['unmapped'])} unmapped, {len(s['not_covered'])} not covered")
+    failures = [{'case': x['case'], 'kernel': x['kernel'], 'outputs': x['outputs']} for x in report['records'] if x['status'] == 'fail']
+    unverified = [{'case': x['case'], 'kernel': x['kernel'], 'stage': x.get('stage'), 'reason': x.get('reason')}
+                  for x in report['records'] if x['status'] == 'unverified']
+    r.data = {'verdict': report['verdict'], 'first_divergence': report['first_divergence'], 'summary': s, 'kernels': report['kernels'],
+              'golden_kind': report['golden_kind'], 'thresholds': report['thresholds'], 'execution': report['execution'],
+              'translations': report['translations'], 'failures': cap(failures, args.max_items, r), 'unverified': cap(unverified, args.max_items, r)}
+    r.warnings.extend(report['warnings'])
+    if args.output:
+        from .output import _sanitize
+        out = prepare_output_dir(args.output, overwrite=args.overwrite, marker='report.json')
+        (out / 'report.json').write_text(json.dumps(_sanitize(report), indent=1, allow_nan=False) + '\n')
+        (out / 'report.md').write_text(report_markdown(report))
+        r.artifact('report', str(out / 'report.json'))
+        r.artifact('report_md', str(out / 'report.md'))
+    if s['unmapped']:
+        r.suggest(f'cumlx kernel verify {_q(args.metal)} {_q(args.golden)} --kernel NAME', 'name the golden kernel that this file translates')
+    return r
+
+
+def run_kernel_port(args) -> Result:
+    from ..verify import kernel_port
+    out = Path(args.output)
+    sidecar = out.with_name(out.name.split('.')[0] + '.port.json')
+    header_out = out.with_name(out.name.split('.')[0] + '.header.metal')
+    for path in (out, sidecar):
+        if path.exists() and not args.overwrite:
+            raise CumlxError('E_OUTPUT_EXISTS', f'{path} exists', hint='pass --overwrite or choose a new path with -o')
+    adapter = None if args.preprocess_only else kernel_port.load_translator(args.translator)
+    pre = kernel_port.preprocess_file(args.source, instantiate=args.instantiate, include_dirs=args.include_dir, header=args.header,
+                                      demote_fp64=args.demote_fp64, cases_file=args.cases, case_id=args.case)
+    r = Result('kernel port')
+    r.warnings.extend(pre.warnings)
+    side: dict[str, Any] = {'schema': kernel_port.PORT_SCHEMA, 'source': str(args.source), 'source_sha256': pre.source_sha256,
+                            'prepared_sha256': kernel_port.sha256_text(pre.source), 'kernel': pre.name,
+                            'form': pre.form, 'entry_points': pre.entry_points, 'preprocess': pre.record}
+    if adapter is None:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text((pre.header + '\n' if pre.header else '') + pre.source)
+        side['translator'] = None
+        sidecar.write_text(json.dumps(side, indent=1) + '\n')
+        r.summary = f'prepared {pre.name}: nothing was translated'
+        r.data = {**side}
+        r.artifact('prepared_source', str(out))
+        r.artifact('port_record', str(sidecar))
+        r.warn('W_KERNEL_NOT_TRANSLATED', '--preprocess-only stops before translation. This is not a Metal kernel.')
+        return r
+    result = kernel_port.translate(pre, adapter, args.include_dir)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(result.msl)
+    if result.header.strip():
+        header_out.write_text(result.header)
+        r.artifact('metal_header', str(header_out))
+    side.update(translator={'name': result.translator, 'version': result.version, 'notes': result.notes}, metal_form=result.form,
+                metal_entry_points=result.entry_points)
+    sidecar.write_text(json.dumps(side, indent=1) + '\n')
+    r.summary = f"translated {pre.name} with {result.translator}. It is unverified until `cumlx kernel verify` compares it with a CUDA golden"
+    r.data = {**side, 'grade': 'unverified'}
+    r.artifact('metal', str(out))
+    r.artifact('port_record', str(sidecar))
+    r.warn('W_KERNEL_NOT_VERIFIED', 'A kernel that translates is not a kernel that is right. Compare it with a CUDA golden.')
+    r.suggest(f'cumlx kernel verify {_q(out)} kgolden/', 'compare the translation with a golden recorded on an NVIDIA machine')
     return r
 
 

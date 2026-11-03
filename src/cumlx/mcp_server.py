@@ -6,8 +6,9 @@ Every tool runs one ``cumlx`` command in a subprocess and returns its ``cumlx.re
 the same contract as the CLI. Tool schemas come from the argparse parser and cannot drift from it. A divergence is
 a normal result: read ``exit_code`` and ``status``. ``isError`` is set only when the envelope reports an error.
 
-Two arguments run code from elsewhere: ``--trust-remote-code`` and ``--loader python:...``. An agent cannot enable
-them unless the person who starts this server passes ``--allow-code-execution``.
+Three arguments run code from elsewhere: ``--trust-remote-code``, ``--loader python:...`` and ``--translator``. Two
+commands execute a file: ``run`` and ``kernel capture``. An agent cannot use any of them unless the person who starts
+this server passes ``--allow-code-execution``.
 """
 from __future__ import annotations
 
@@ -24,7 +25,8 @@ from .cli.main import COMMANDS, _describe_parser, build_parser
 SERVER_NAME = 'cumlx'
 DEFAULT_PROTOCOL = '2025-06-18'
 HIDDEN = {'command', 'format', 'verbose'}
-CODE_EXECUTION = {'trust_remote_code', 'loader'}
+CODE_EXECUTION = {'trust_remote_code', 'loader', 'translator'}
+EXECUTES_FILES = {'run', 'kernel capture'}  # each runs what the caller points it at, as remote model code would
 TOOL_TIMEOUT_SECONDS = 3600
 JSON_TYPES = {'bool': 'boolean', 'int': 'integer', 'float': 'number'}
 
@@ -59,11 +61,11 @@ def _schema(arguments: list[dict], *, allow_code: bool) -> tuple[dict, dict]:
 def build_tools(*, allow_code: bool = False) -> dict[str, dict]:
     tools = {}
     for name, spec in _describe_parser(build_parser()).items():
-        if name == 'run' and not allow_code:
-            continue  # `cumlx run` executes a file. Like remote model code, it needs --allow-code.
+        if name in EXECUTES_FILES and not allow_code:
+            continue
         schema, by_name = _schema(spec['arguments'], allow_code=allow_code)
-        tools[f'cumlx_{name}'] = {'command': name, 'arguments': by_name, 'schema': schema,
-                                  'description': COMMANDS[name]['summary']}
+        tools[f"cumlx_{name.replace(' ', '_')}"] = {'command': name, 'arguments': by_name, 'schema': schema,
+                                                    'description': COMMANDS[name]['summary']}
     return tools
 
 
@@ -72,7 +74,7 @@ def _argv(tool: dict, params: dict[str, Any], options: Sequence[str] = ()) -> li
 
     A positional list goes after --, so that its items stay arguments of the script. ``options`` go before it.
     """
-    argv = [tool['command']]
+    argv = tool['command'].split()
     trailing: list[str] = []
     unknown = sorted(set(params) - set(tool['arguments']))
     if unknown:
@@ -172,7 +174,8 @@ def serve(server: Server, stdin=None, stdout=None) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(prog='cumlx-mcp', description='MCP stdio server for the cumlx verifier')
     ap.add_argument('--allow-code-execution', action='store_true',
-                    help='let agents pass --trust-remote-code and --loader python:... (runs code from models or paths)')
+                    help='let agents use `run`, `kernel capture`, --trust-remote-code, --translator and --loader python:... '
+                         '(runs code from models or paths)')
     args = ap.parse_args()
     serve(Server(allow_code=args.allow_code_execution))
 
