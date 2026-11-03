@@ -231,12 +231,14 @@ Isaac Sim 대체가 아니라, **Isaac Lab 스타일 학습 작업을 Mac에서 
 - 등급 B 지표: 같은 초기 상태와 행동의 궤적 오차, 같은 정책의 평균 보상
 - 학습한 정책을 MLX로 내보내고 `check_op`으로 검증 (이미 있는 `examples/robot-policy` 확장)
 
+**현재 상태 (2026-11-03):** 학습과 측정은 OrchardSim에서 했습니다. `cumlx.sim`은 만들지 않았습니다. 완료 조건에는 없지만 위 항목이므로 미구현으로 적어 둡니다.
+
 완료 조건:
 
-- [ ] cartpole, 사족 보행 작업이 Mac GPU에서 학습 완료. Go2는 warp-metal로 물리를 Apple GPU에 올려 학습했지만(OrchardSim `validation/isaac-lab-metal.json`, 시드 1개), cartpole은 Metal에서 3회 스모크만 돌렸으므로 이 항목은 미달입니다
-- [ ] 기준 물리(MuJoCo)와의 궤적 오차를 사전에 정한 허용치로 등급 B 판정
+- [x] cartpole, 사족 보행 작업이 Mac GPU에서 학습 완료. 두 작업 모두 물리를 warp-metal로 Apple GPU에서 돌렸고, 판정 기준은 실행 전에 커밋했습니다. cartpole은 시드 3개 모두 통과했습니다(세운 비율 1.0, 0.9997, 1.0, 대조군 0.051 이하). 학습기는 CPU입니다. Go2는 학습기가 MPS이고, 새 시드 2개 중 1개만 통과했습니다. 시드 2는 +0.87, -0.87, 0.00 m/s입니다. **시드 1은 학습은 끝났지만 +0.8 m/s에서 넘어짐이 0.14로 기준 0.1을 넘어 실패입니다.** 시드 42는 기준을 쓰기 전의 실행입니다(+0.87, -0.88, 0.00). 시뮬레이션 결과이고 PhysX나 실제 로봇과는 비교하지 않았습니다. OrchardSim `validation/m4-cartpole-metal.json`, `validation/m4-go2-seeds.json`
+- [x] 기준 물리(MuJoCo)와의 궤적 오차를 사전에 정한 허용치로 등급 B 판정. MuJoCo Warp on `metal:0`과 MuJoCo C(float64)를 같은 시작과 행동으로 비교했습니다. 256개 world, 200 step, 시작 3개, 반복 2회로 6회 모두 통과했습니다. 최악 qpos 오차의 중앙값 7.7e-5~1.0e-4(허용 1e-2), p90 7.9e-3~3.9e-2(허용 5e-2)이고, CPU의 Warp 대조군과 비슷합니다. 주입한 결함 2종은 걸러집니다. **모델은 Go2가 아니라 humanoid입니다.** 드문 world는 1.31까지 벗어나며 이 허용치는 그 값을 제한하지 않습니다. OrchardSim `validation/m4-trajectory.json`
 - [x] 실제 Isaac Lab 체크포인트 하나를 MLX에서 실행, 등급 A. cartpole 4-32-32-1, rsl_rl 출력과 최악 7.9e-8. Go2 사족 보행 정책도 MLX에서 최악 2.48e-7이지만, 기준은 rsl_rl 출력이 아니라 직접 만든 torch 구현입니다
-- [ ] 처리량(env-step/s)을 여러 번 측정해 범위로 공개. 목표: 4096 환경에서 10만 step/s 이상. M0의 Go2 임의 행동은 8.1만~13.3만이며, 정책 추론은 포함하지 않았습니다
+- [ ] 처리량(env-step/s)을 여러 번 측정해 범위로 공개. 목표: 4096 환경에서 10만 step/s 이상. **측정은 끝났고 공개는 아직입니다.** 저장소가 비공개입니다. Go2 평지, 물리 Metal, MLX 정책 추론 포함, 학습기 제외, 5회 반복입니다. Genesis는 173,832~327,866(중앙값 181,172)으로 목표를 넘습니다. Isaac Lab은 29,771~38,849(중앙값 30,994)로 **목표에 못 미칩니다.** Genesis는 Isaac Lab과 다른 엔진이고 작업과 모델도 다릅니다. 첫 반복이 다른 값의 약 2배인데 원인은 찾지 못했습니다. 다른 작업이 함께 돌았습니다. OrchardSim `validation/m4-throughput.json`
 
 ### M5. 레이트레이싱과 센서 (01/12 ~ 01/23) → `v0.9.0`
 
