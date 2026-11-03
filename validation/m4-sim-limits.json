@@ -22,6 +22,14 @@
       "why_wider": "Each engine has its own contact model, and the robot lands on its feet in this window.",
       "faults_that_must_fail": ["drive stiffness 0.5 times"]
     },
+    "cartpole_before_rail": {
+      "written": "After the cartpole test above failed, and before any run on these seeds. It asks another question, and the test above stays failed.",
+      "why": "The first failure's data show agreement to about 1e-6 until the carts reach the end of the rail, at about 50 control steps. So this asks how close the two engines are with no joint limit active. It says nothing about joint limits, where the engines differ.",
+      "worlds": 256, "control_steps": 40, "seeds": [201, 202, 203], "action_hold_steps": 30, "action_range": 1.0,
+      "values": "cart position, pole angle",
+      "median_limit": 0.0001, "p90_limit": 0.001,
+      "faults_that_must_fail": ["gravity 5 percent stronger", "action scale 1.1"]
+    },
     "control": "MuJoCo with a 4 times smaller time step against MuJoCo, reported beside each task, to show the size of the time step's own effect."
   },
   "training": {
@@ -39,5 +47,6 @@
       "wrong_case_that_must_fail": "the same weights with ReLU"
     }
   },
+  "first_run_failed_on_a_bug_of_the_task": "The first comparison, on 2026-11-04, ran with cartpole's action driving both the slider and the hinge, so a torque of up to 20 N m spun the pole. It failed these limits, and so did the time step control. The raw summary stays in validation/m4-sim.json. The fix is `actuated` in the task. The limits above did not change.",
   "memory": "Each run goes through spikes/run_guarded.py: stop at 38 GB in use, start at 33 GB or less, 16 GB per process group."
 }

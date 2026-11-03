@@ -104,10 +104,15 @@ class Task:
     command_seconds: float = 0.0
     substeps: int = 1  # Solver substeps inside one physics step.
     links: dict[str, tuple[str, tuple[float, float, float]]] = field(default_factory=dict)  # A name: its link, and the offset of its centre.
+    actuated: tuple[str, ...] = ()  # The joints that the action drives. Empty: all of `joints`.
+
+    @property
+    def action_joints(self) -> tuple[str, ...]:
+        return self.actuated or self.joints
 
     @property
     def num_actions(self) -> int:
-        return len(self.joints)
+        return len(self.action_joints)
 
     @property
     def control_dt(self) -> float:
@@ -159,7 +164,7 @@ def _cartpole_reset(count: int, generator: Any, task: Task) -> ResetState:
 CARTPOLE = Task(
     name='cartpole', asset=Asset('mjcf', 'cartpole.xml'), joints=('slider', 'hinge'), actuation=Actuation('force', 20.0, armature=0.0),
     dt=1 / 120, decimation=2, episode_seconds=5.0, observation_size=4, observe=_cartpole_observe, reward=_cartpole_reward,
-    terminated=_cartpole_terminated, reset=_cartpole_reset, links={'cart': ('cart', (0.0, 0.0, 0.0)), 'pole': ('pole', (0.0, 0.0, 0.5))})
+    terminated=_cartpole_terminated, reset=_cartpole_reset, actuated=('slider',), links={'cart': ('cart', (0.0, 0.0, 0.0)), 'pole': ('pole', (0.0, 0.0, 0.5))})
 
 
 # -------------------------------------------------------------------- Go2 flat

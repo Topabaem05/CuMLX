@@ -69,7 +69,7 @@ def cmd_record(args: argparse.Namespace) -> int:
         task = replace(task, actuation=replace(task.actuation, kp=task.actuation.kp * args.kp_scale))
     if args.action_scale != 1.0:
         task = replace(task, actuation=replace(task.actuation, scale=task.actuation.scale * args.action_scale))
-    spec = LIMITS['trajectory'][args.task]
+    spec = LIMITS['trajectory'][args.measure or args.task]
     args.envs = spec['worlds']
     backend = make_backend(task, args)
     backend.reset(torch.arange(args.envs, device=backend.device), task.reset(args.envs, torch.Generator().manual_seed(args.seed), task))
@@ -89,7 +89,7 @@ def cmd_record(args: argparse.Namespace) -> int:
 
 
 def cmd_compare(args: argparse.Namespace) -> int:
-    spec = LIMITS['trajectory'][args.task]
+    spec = LIMITS['trajectory'][args.measure or args.task]
     a, b = np.load(args.reference), np.load(args.other)
     result = compare_trajectories(a['values'], b['values'], median_limit=spec['median_limit'], p90_limit=spec['p90_limit'])
     print(json.dumps({'reference': Path(args.reference).name, 'other': Path(args.other).name, **result}))
@@ -226,11 +226,13 @@ def main() -> int:
     sub.add_argument('--steps', type=int, default=20)
     sub = add('record', cmd_record)
     sub.add_argument('--out', required=True)
+    sub.add_argument('--measure', help='a measure in validation/m4-sim-limits.json, if not the one named after the task')
     sub.add_argument('--gravity', type=float, default=-9.81)
     sub.add_argument('--action-scale', type=float, default=1.0)
     sub.add_argument('--kp-scale', type=float, default=1.0)
     sub.add_argument('--substep-scale', type=int, default=1)
     sub = add('compare', cmd_compare, engine=False)
+    sub.add_argument('--measure')
     sub.add_argument('reference')
     sub.add_argument('other')
     sub = add('train', cmd_train)

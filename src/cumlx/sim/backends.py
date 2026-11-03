@@ -48,9 +48,10 @@ class GenesisBackend:
         self.scene.build(n_envs=num_envs)
         self.dofs = torch.tensor([self.entity.get_joint(n).dofs_idx_local[0] for n in task.joints], dtype=torch.long, device=self.device)
         self.qs = torch.tensor([self.entity.get_joint(n).qs_idx_local[0] for n in task.joints], dtype=torch.long, device=self.device)
+        self.action_dofs = torch.tensor([self.entity.get_joint(n).dofs_idx_local[0] for n in task.action_joints], dtype=torch.long, device=self.device)
         if task.actuation.kind == 'position':
-            self.entity.set_dofs_kp([task.actuation.kp] * len(task.joints), self.dofs)
-            self.entity.set_dofs_kv([task.actuation.kd] * len(task.joints), self.dofs)
+            self.entity.set_dofs_kp([task.actuation.kp] * task.num_actions, self.action_dofs)
+            self.entity.set_dofs_kv([task.actuation.kd] * task.num_actions, self.action_dofs)
         self.base_q = torch.zeros(self.entity.n_qs, device=self.device)
         if self.floating:
             self.base_q[:3] = self.base_q.new_tensor(task.asset.base_pos)
@@ -66,9 +67,9 @@ class GenesisBackend:
     def apply(self, actions: Any) -> None:
         act = self.task.actuation
         if act.kind == 'force':
-            self.entity.control_dofs_force(actions * act.scale, self.dofs)
+            self.entity.control_dofs_force(actions * act.scale, self.action_dofs)
         else:
-            self.entity.control_dofs_position(actions * act.scale + actions.new_tensor(act.default), self.dofs)
+            self.entity.control_dofs_position(actions * act.scale + actions.new_tensor(act.default), self.action_dofs)
 
     def step(self) -> None:
         for _ in range(self.task.decimation):
@@ -141,7 +142,9 @@ class MujocoBackend:
         self.data = [mujoco.MjData(self.model) for _ in range(num_envs)]
         self.joint_q = np.array([self.model.joint(n).qposadr[0] for n in task.joints])
         self.joint_v = np.array([self.model.joint(n).dofadr[0] for n in task.joints])
-        self.targets = np.zeros((num_envs, len(task.joints)))
+        self.action_q = np.array([self.model.joint(n).qposadr[0] for n in task.action_joints])
+        self.action_v = np.array([self.model.joint(n).dofadr[0] for n in task.action_joints])
+        self.targets = np.zeros((num_envs, task.num_actions))
         self.default = np.array(task.actuation.default) if task.actuation.kind == 'position' else None
 
     def reset(self, envs: Any, values: ResetState) -> None:
@@ -166,9 +169,9 @@ class MujocoBackend:
         for env, data in enumerate(self.data):
             for _ in range(self.steps_per_action):
                 if act.kind == 'force':
-                    data.qfrc_applied[self.joint_v] = self.targets[env]
+                    data.qfrc_applied[self.action_v] = self.targets[env]
                 else:
-                    data.qfrc_applied[self.joint_v] = act.kp * (self.targets[env] - data.qpos[self.joint_q]) - act.kd * data.qvel[self.joint_v]
+                    data.qfrc_applied[self.action_v] = act.kp * (self.targets[env] - data.qpos[self.action_q]) - act.kd * data.qvel[self.action_v]
                 self.mujoco.mj_step(self.model, data)
 
     def state(self) -> State:
