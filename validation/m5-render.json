@@ -1,0 +1,1242 @@
+{
+ "schema": "cumlx.m5-render.v1",
+ "date": "2026-11-03",
+ "machine": "Apple M5 Pro, 48 GB, macOS 27",
+ "versions": {
+  "mitsuba": "3.9.1",
+  "drjit": "1.5.0",
+  "numpy": "2.5.4"
+ },
+ "limits": "validation/m5-render-limits.json",
+ "gates": {
+  "metal_vs_v100_cuda_grade_b": "open",
+  "frame_rate_256": "measured, see frame_rate",
+  "physics_and_camera_example": "ran, see physics_and_camera",
+  "rtx_differences_document": "docs/RENDER-SENSORS.md"
+ },
+ "cuda_comparison": {
+  "status": "not_run",
+  "why": "The V100 was busy with another job. spikes/m5_render_v100.sh was tested on a fake ssh only."
+ },
+ "metal_renders": {
+  "variant": "metal_ad_rgb",
+  "spp": 4096,
+  "pass_spp": 64,
+  "fault": null,
+  "machine": "arm64",
+  "system": "Darwin",
+  "renders": [
+   {
+    "scene": "cornell_box",
+    "seed": 11,
+    "seconds": 1.497,
+    "first_render_seconds": 0.065,
+    "mean": [
+     0.24017874896526337,
+     0.1411411166191101,
+     0.059986647218465805
+    ],
+    "shape": [
+     256,
+     256,
+     3
+    ],
+    "mega_paths_per_s": 179.33
+   },
+   {
+    "scene": "cornell_box",
+    "seed": 12,
+    "seconds": 1.482,
+    "first_render_seconds": 0.065,
+    "mean": [
+     0.24017904698848724,
+     0.14113768935203552,
+     0.05998624861240387
+    ],
+    "shape": [
+     256,
+     256,
+     3
+    ],
+    "mega_paths_per_s": 181.18
+   },
+   {
+    "scene": "cornell_box",
+    "seed": 13,
+    "seconds": 1.501,
+    "first_render_seconds": 0.065,
+    "mean": [
+     0.2401738464832306,
+     0.1411430537700653,
+     0.05998891219496727
+    ],
+    "shape": [
+     256,
+     256,
+     3
+    ],
+    "mega_paths_per_s": 178.89
+   },
+   {
+    "scene": "cornell_spheres",
+    "seed": 11,
+    "seconds": 2.203,
+    "first_render_seconds": 0.201,
+    "mean": [
+     0.2628980278968811,
+     0.1574409008026123,
+     0.06764444708824158
+    ],
+    "shape": [
+     256,
+     256,
+     3
+    ],
+    "mega_paths_per_s": 121.87
+   },
+   {
+    "scene": "cornell_spheres",
+    "seed": 12,
+    "seconds": 2.192,
+    "first_render_seconds": 0.201,
+    "mean": [
+     0.26284319162368774,
+     0.1574181765317917,
+     0.06762886047363281
+    ],
+    "shape": [
+     256,
+     256,
+     3
+    ],
+    "mega_paths_per_s": 122.44
+   },
+   {
+    "scene": "cornell_spheres",
+    "seed": 13,
+    "seconds": 2.193,
+    "first_render_seconds": 0.201,
+    "mean": [
+     0.26290419697761536,
+     0.15744595229625702,
+     0.06765574216842651
+    ],
+    "shape": [
+     256,
+     256,
+     3
+    ],
+    "mega_paths_per_s": 122.4
+   }
+  ],
+  "mitsuba": "3.9.1",
+  "drjit": "1.5.0",
+  "numpy": "2.5.4",
+  "nvidia_compute_apps": null,
+  "process_gpu_seconds": 7.23847125,
+  "status": "rendered"
+ },
+ "local_checks_of_the_comparison": {
+  "shows": "The rule on real images, without CUDA: Metal against the CPU reference, and two injected faults. This does not meet the CUDA gate.",
+  "spp_4096": {
+   "metal_metal_direct": {
+    "golden": "metal_ad_rgb",
+    "golden_fault": null,
+    "candidate": "metal_ad_rgb",
+    "candidate_fault": "direct_only",
+    "scenes": {
+     "cornell_box": {
+      "verdict": "diverged",
+      "grade": null,
+      "failures": [
+       "worst PSNR across devices 24.73 dB is under 40.0 dB",
+       "MSE across devices is 4675.68 times the MSE within a device, limit 2.0",
+       "R mean differs by 0.0748, allowed 0.0014",
+       "G mean differs by 0.0263, allowed 0.00067",
+       "B mean differs by 0.0077, allowed 0.000279"
+      ],
+      "worst_psnr_across_db": 24.732403006910797,
+      "worst_psnr_within_db": 58.71122688856565,
+      "mse_ratio": 4675.677994387517,
+      "channel_mean_difference": [
+       0.07476919889450073,
+       0.02633209154009819,
+       0.007699156180024147
+      ],
+      "channel_mean_allowed": [
+       0.0013970298459753394,
+       0.0006698762299492955,
+       0.0002786985714919865
+      ]
+     },
+     "cornell_spheres": {
+      "verdict": "diverged",
+      "grade": null,
+      "failures": [
+       "worst PSNR across devices 20.10 dB is under 40.0 dB",
+       "MSE across devices is 701.41 times the MSE within a device, limit 2.0",
+       "R mean differs by 0.0862, allowed 0.00152",
+       "G mean differs by 0.0376, allowed 0.000785",
+       "B mean differs by 0.0131, allowed 0.00034"
+      ],
+      "worst_psnr_across_db": 20.099495399098227,
+      "worst_psnr_within_db": 45.632049268378566,
+      "mse_ratio": 701.4126898055674,
+      "channel_mean_difference": [
+       0.08618012070655823,
+       0.03763144835829735,
+       0.013122288510203362
+      ],
+      "channel_mean_allowed": [
+       0.0015210272977128625,
+       0.0007846931111998856,
+       0.0003396648389752954
+      ]
+     }
+    }
+   },
+   "metal_metal_light2": {
+    "golden": "metal_ad_rgb",
+    "golden_fault": null,
+    "candidate": "metal_ad_rgb",
+    "candidate_fault": "light_2pct",
+    "scenes": {
+     "cornell_box": {
+      "verdict": "diverged",
+      "grade": null,
+      "failures": [
+       "MSE across devices is 4.58 times the MSE within a device, limit 2.0",
+       "R mean differs by 0.00264, allowed 0.0014",
+       "G mean differs by 0.00119, allowed 0.00067",
+       "B mean differs by 0.000423, allowed 0.000279"
+      ],
+      "worst_psnr_across_db": 52.023916810217194,
+      "worst_psnr_within_db": 58.57692645288762,
+      "mse_ratio": 4.584331792868399,
+      "channel_mean_difference": [
+       0.0026411712169647217,
+       0.0011894479393959045,
+       0.0004232581704854965
+      ],
+      "channel_mean_allowed": [
+       0.0013970298459753394,
+       0.0006698762299492955,
+       0.0002786985714919865
+      ]
+     },
+     "cornell_spheres": {
+      "verdict": "diverged",
+      "grade": null,
+      "failures": [
+       "R mean differs by 0.00274, allowed 0.00152",
+       "G mean differs by 0.00136, allowed 0.000785",
+       "B mean differs by 0.000539, allowed 0.00034"
+      ],
+      "worst_psnr_across_db": 44.71324204574483,
+      "worst_psnr_within_db": 45.57449967010886,
+      "mse_ratio": 1.2188315094977953,
+      "channel_mean_difference": [
+       0.0027363747358322144,
+       0.001360468566417694,
+       0.0005385354161262512
+      ],
+      "channel_mean_allowed": [
+       0.0015210272977128625,
+       0.0007846931111998856,
+       0.0003396648389752954
+      ]
+     }
+    }
+   },
+   "scalar_metal": {
+    "golden": "scalar_rgb",
+    "golden_fault": null,
+    "candidate": "metal_ad_rgb",
+    "candidate_fault": null,
+    "scenes": {
+     "cornell_box": {
+      "verdict": "ok",
+      "grade": "B",
+      "failures": [],
+      "worst_psnr_across_db": 56.93949309047237,
+      "worst_psnr_within_db": 58.71122688856565,
+      "mse_ratio": 1.5294817114637986,
+      "channel_mean_difference": [
+       5.230307579040527e-06,
+       9.73045825958252e-06,
+       3.6483630537986755e-05
+      ],
+      "channel_mean_allowed": [
+       0.0013970822328701615,
+       0.0006699735531583428,
+       0.0002790634171105921
+      ]
+     },
+     "cornell_spheres": {
+      "verdict": "ok",
+      "grade": "B",
+      "failures": [],
+      "worst_psnr_across_db": 45.46741555315377,
+      "worst_psnr_within_db": 45.632049268378566,
+      "mse_ratio": 1.0271871454391222,
+      "channel_mean_difference": [
+       5.240738391876221e-05,
+       4.4479966163635254e-05,
+       4.770606756210327e-05
+      ],
+      "channel_mean_allowed": [
+       0.0015215513994917274,
+       0.0007851379341445863,
+       0.0003401419089641422
+      ]
+     }
+    }
+   },
+   "scalar_metal_light2": {
+    "golden": "scalar_rgb",
+    "golden_fault": null,
+    "candidate": "metal_ad_rgb",
+    "candidate_fault": "light_2pct",
+    "scenes": {
+     "cornell_box": {
+      "verdict": "diverged",
+      "grade": null,
+      "failures": [
+       "MSE across devices is 4.95 times the MSE within a device, limit 2.0",
+       "R mean differs by 0.00264, allowed 0.0014",
+       "G mean differs by 0.00118, allowed 0.00067",
+       "B mean differs by 0.000387, allowed 0.000279"
+      ],
+      "worst_psnr_across_db": 51.777439618127715,
+      "worst_psnr_within_db": 58.57692645288762,
+      "mse_ratio": 4.946847637810072,
+      "channel_mean_difference": [
+       0.002635940909385681,
+       0.001179717481136322,
+       0.00038677453994750977
+      ],
+      "channel_mean_allowed": [
+       0.0013970822328701615,
+       0.0006699735531583428,
+       0.0002790634171105921
+      ]
+     },
+     "cornell_spheres": {
+      "verdict": "diverged",
+      "grade": null,
+      "failures": [
+       "R mean differs by 0.00268, allowed 0.00152",
+       "G mean differs by 0.00132, allowed 0.000785",
+       "B mean differs by 0.000491, allowed 0.00034"
+      ],
+      "worst_psnr_across_db": 44.75191112705305,
+      "worst_psnr_within_db": 45.57449967010886,
+      "mse_ratio": 1.2428361697650325,
+      "channel_mean_difference": [
+       0.002683967351913452,
+       0.0013159886002540588,
+       0.000490829348564148
+      ],
+      "channel_mean_allowed": [
+       0.0015215513994917274,
+       0.0007851379341445863,
+       0.0003401419089641422
+      ]
+     }
+    }
+   }
+  },
+  "spp_1024_first_protocol": {
+   "metal_metal_direct": {
+    "golden": "metal_ad_rgb",
+    "golden_fault": null,
+    "candidate": "metal_ad_rgb",
+    "candidate_fault": "direct_only",
+    "scenes": {
+     "cornell_box": {
+      "verdict": "diverged",
+      "grade": null,
+      "failures": [
+       "worst PSNR across devices 24.73 dB is under 40.0 dB",
+       "MSE across devices is 1164.91 times the MSE within a device, limit 2.0",
+       "R mean differs by 0.0748, allowed 0.0014",
+       "G mean differs by 0.0263, allowed 0.00067",
+       "B mean differs by 0.0077, allowed 0.000279"
+      ],
+      "worst_psnr_across_db": 24.727319845304937,
+      "worst_psnr_within_db": 52.689292184684376,
+      "mse_ratio": 1164.9138049744076,
+      "channel_mean_difference": [
+       0.07475997507572174,
+       0.026328183710575104,
+       0.007697656750679016
+      ],
+      "channel_mean_allowed": [
+       0.0013969369465485215,
+       0.0006698337965644896,
+       0.00027867627795785666
+      ]
+     },
+     "cornell_spheres": {
+      "verdict": "diverged",
+      "grade": null,
+      "failures": [
+       "worst PSNR across devices 20.06 dB is under 40.0 dB",
+       "MSE across devices is 180.34 times the MSE within a device, limit 2.0",
+       "R mean differs by 0.0861, allowed 0.00152",
+       "G mean differs by 0.0376, allowed 0.000784",
+       "B mean differs by 0.0131, allowed 0.00034"
+      ],
+      "worst_psnr_across_db": 20.057848083651663,
+      "worst_psnr_within_db": 39.75599529075352,
+      "mse_ratio": 180.3366230179304,
+      "channel_mean_difference": [
+       0.08610954135656357,
+       0.037608686834573746,
+       0.013118034228682518
+      ],
+      "channel_mean_allowed": [
+       0.001520379795692861,
+       0.0007844952051527798,
+       0.00033963288296945393
+      ]
+     }
+    }
+   },
+   "metal_metal_light2": {
+    "golden": "metal_ad_rgb",
+    "golden_fault": null,
+    "candidate": "metal_ad_rgb",
+    "candidate_fault": "light_2pct",
+    "scenes": {
+     "cornell_box": {
+      "verdict": "diverged",
+      "grade": null,
+      "failures": [
+       "R mean differs by 0.00267, allowed 0.0014",
+       "G mean differs by 0.0012, allowed 0.00067",
+       "B mean differs by 0.000428, allowed 0.000279"
+      ],
+      "worst_psnr_across_db": 49.78287828740182,
+      "worst_psnr_within_db": 52.49136188286737,
+      "mse_ratio": 1.9060513211467482,
+      "channel_mean_difference": [
+       0.0026674270629882812,
+       0.0011993944644927979,
+       0.0004282072186470032
+      ],
+      "channel_mean_allowed": [
+       0.0013969369465485215,
+       0.0006698337965644896,
+       0.00027867627795785666
+      ]
+     },
+     "cornell_spheres": {
+      "verdict": "diverged",
+      "grade": null,
+      "failures": [
+       "worst PSNR across devices 39.34 dB is under 40.0 dB",
+       "R mean differs by 0.00277, allowed 0.00152",
+       "G mean differs by 0.00137, allowed 0.000784",
+       "B mean differs by 0.000543, allowed 0.00034"
+      ],
+      "worst_psnr_across_db": 39.340061704042455,
+      "worst_psnr_within_db": 39.660252187651224,
+      "mse_ratio": 1.0581232063778732,
+      "channel_mean_difference": [
+       0.0027735382318496704,
+       0.001374080777168274,
+       0.0005431510508060455
+      ],
+      "channel_mean_allowed": [
+       0.001520379795692861,
+       0.0007844952051527798,
+       0.00033963288296945393
+      ]
+     }
+    }
+   },
+   "scalar_metal": {
+    "golden": "scalar_rgb",
+    "golden_fault": null,
+    "candidate": "metal_ad_rgb",
+    "candidate_fault": null,
+    "scenes": {
+     "cornell_box": {
+      "verdict": "ok",
+      "grade": "B",
+      "failures": [],
+      "worst_psnr_across_db": 52.1675568096246,
+      "worst_psnr_within_db": 52.689292184684376,
+      "mse_ratio": 1.1389425769444417,
+      "channel_mean_difference": [
+       9.700655937194824e-06,
+       1.1973083019256592e-05,
+       3.6951154470443726e-05
+      ],
+      "channel_mean_allowed": [
+       0.0013970339205116034,
+       0.0006699535297229886,
+       0.00027904578018933535
+      ]
+     },
+     "cornell_spheres": {
+      "verdict": "diverged",
+      "grade": null,
+      "failures": [
+       "worst PSNR across devices 39.64 dB is under 40.0 dB"
+      ],
+      "worst_psnr_across_db": 39.64144551354953,
+      "worst_psnr_within_db": 39.75599529075352,
+      "mse_ratio": 1.0162680199471674,
+      "channel_mean_difference": [
+       0.0001630634069442749,
+       5.4858624935150146e-05,
+       4.7050416469573975e-05
+      ],
+      "channel_mean_allowed": [
+       0.001522010425105691,
+       0.0007850438123568892,
+       0.0003401033754926175
+      ]
+     }
+    }
+   },
+   "scalar_metal_light2": {
+    "golden": "scalar_rgb",
+    "golden_fault": null,
+    "candidate": "metal_ad_rgb",
+    "candidate_fault": "light_2pct",
+    "scenes": {
+     "cornell_box": {
+      "verdict": "diverged",
+      "grade": null,
+      "failures": [
+       "R mean differs by 0.00266, allowed 0.0014",
+       "G mean differs by 0.00119, allowed 0.00067",
+       "B mean differs by 0.000391, allowed 0.000279"
+      ],
+      "worst_psnr_across_db": 49.60894959254713,
+      "worst_psnr_within_db": 52.49136188286737,
+      "mse_ratio": 1.9900062557765834,
+      "channel_mean_difference": [
+       0.0026577264070510864,
+       0.0011874213814735413,
+       0.00039125606417655945
+      ],
+      "channel_mean_allowed": [
+       0.0013970339205116034,
+       0.0006699535297229886,
+       0.00027904578018933535
+      ]
+     },
+     "cornell_spheres": {
+      "verdict": "diverged",
+      "grade": null,
+      "failures": [
+       "worst PSNR across devices 39.43 dB is under 40.0 dB",
+       "R mean differs by 0.00261, allowed 0.00152",
+       "G mean differs by 0.00132, allowed 0.000785",
+       "B mean differs by 0.000496, allowed 0.00034"
+      ],
+      "worst_psnr_across_db": 39.43207747347148,
+      "worst_psnr_within_db": 39.660252187651224,
+      "mse_ratio": 1.0595391490940085,
+      "channel_mean_difference": [
+       0.0026104748249053955,
+       0.0013192221522331238,
+       0.0004961006343364716
+      ],
+      "channel_mean_allowed": [
+       0.001522010425105691,
+       0.0007850438123568892,
+       0.0003401033754926175
+      ]
+     }
+    }
+   }
+  }
+ },
+ "frame_rate": {
+  "variant": "metal_ad_rgb",
+  "resolution": [
+   256,
+   256
+  ],
+  "repeats": 5,
+  "frames_per_repeat": 200,
+  "note": "Each frame is a NumPy copy of the finished image, so the time covers the GPU work. The first frame of a repeat is left out and shown apart, because it can compile kernels.",
+  "uptime": "21:17  up  9:34, 3 users, load averages: 6.76 7.75 5.99",
+  "process_gpu_seconds": 29.024040833,
+  "frames_per_second_range": {
+   "cornell_box spp=1": {
+    "min": 761.54,
+    "median": 775.61,
+    "max": 791.43
+   },
+   "cornell_box spp=4": {
+    "min": 372.75,
+    "median": 415.18,
+    "max": 417.89
+   },
+   "cornell_box spp=16": {
+    "min": 127.14,
+    "median": 130.03,
+    "max": 134.01
+   },
+   "cornell_box spp=64": {
+    "min": 50.44,
+    "median": 51.92,
+    "max": 53.26
+   },
+   "box_on_floor_moving spp=1": {
+    "min": 313.79,
+    "median": 428.57,
+    "max": 480.18
+   },
+   "box_on_floor_moving spp=4": {
+    "min": 413.66,
+    "median": 510.52,
+    "max": 615.58
+   },
+   "box_on_floor_moving spp=16": {
+    "min": 223.88,
+    "median": 304.99,
+    "max": 314.38
+   },
+   "box_on_floor_moving spp=64": {
+    "min": 167.1,
+    "median": 218.19,
+    "max": 224.5
+   }
+  },
+  "runs": [
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 1,
+    "repeat": 0,
+    "frames": 200,
+    "seconds": 0.2626,
+    "frames_per_second": 761.54,
+    "first_frame_seconds": 0.1629,
+    "system_used_gb_before": 30.366695424
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 1,
+    "repeat": 1,
+    "frames": 200,
+    "seconds": 0.2541,
+    "frames_per_second": 786.99,
+    "first_frame_seconds": 0.0025,
+    "system_used_gb_before": 30.616879104
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 1,
+    "repeat": 2,
+    "frames": 200,
+    "seconds": 0.2527,
+    "frames_per_second": 791.43,
+    "first_frame_seconds": 0.0022,
+    "system_used_gb_before": 30.6171904
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 1,
+    "repeat": 3,
+    "frames": 200,
+    "seconds": 0.2579,
+    "frames_per_second": 775.61,
+    "first_frame_seconds": 0.002,
+    "system_used_gb_before": 30.605164544
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 1,
+    "repeat": 4,
+    "frames": 200,
+    "seconds": 0.2616,
+    "frames_per_second": 764.41,
+    "first_frame_seconds": 0.0022,
+    "system_used_gb_before": 30.622810112
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 4,
+    "repeat": 0,
+    "frames": 200,
+    "seconds": 0.5366,
+    "frames_per_second": 372.75,
+    "first_frame_seconds": 0.0041,
+    "system_used_gb_before": 30.624497664
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 4,
+    "repeat": 1,
+    "frames": 200,
+    "seconds": 0.5036,
+    "frames_per_second": 397.14,
+    "first_frame_seconds": 0.0034,
+    "system_used_gb_before": 30.61366784
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 4,
+    "repeat": 2,
+    "frames": 200,
+    "seconds": 0.4798,
+    "frames_per_second": 416.85,
+    "first_frame_seconds": 0.0032,
+    "system_used_gb_before": 30.613848064
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 4,
+    "repeat": 3,
+    "frames": 200,
+    "seconds": 0.4786,
+    "frames_per_second": 417.89,
+    "first_frame_seconds": 0.003,
+    "system_used_gb_before": 30.584045568
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 4,
+    "repeat": 4,
+    "frames": 200,
+    "seconds": 0.4817,
+    "frames_per_second": 415.18,
+    "first_frame_seconds": 0.0028,
+    "system_used_gb_before": 30.576377856
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 16,
+    "repeat": 0,
+    "frames": 200,
+    "seconds": 1.5382,
+    "frames_per_second": 130.03,
+    "first_frame_seconds": 0.008,
+    "system_used_gb_before": 30.252220416
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 16,
+    "repeat": 1,
+    "frames": 200,
+    "seconds": 1.5731,
+    "frames_per_second": 127.14,
+    "first_frame_seconds": 0.0093,
+    "system_used_gb_before": 30.615420928
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 16,
+    "repeat": 2,
+    "frames": 200,
+    "seconds": 1.5578,
+    "frames_per_second": 128.39,
+    "first_frame_seconds": 0.0086,
+    "system_used_gb_before": 30.635180032
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 16,
+    "repeat": 3,
+    "frames": 200,
+    "seconds": 1.4996,
+    "frames_per_second": 133.37,
+    "first_frame_seconds": 0.0081,
+    "system_used_gb_before": 30.6307072
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 16,
+    "repeat": 4,
+    "frames": 200,
+    "seconds": 1.4924,
+    "frames_per_second": 134.01,
+    "first_frame_seconds": 0.0083,
+    "system_used_gb_before": 30.602805248
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 64,
+    "repeat": 0,
+    "frames": 200,
+    "seconds": 3.8522,
+    "frames_per_second": 51.92,
+    "first_frame_seconds": 0.02,
+    "system_used_gb_before": 30.606524416
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 64,
+    "repeat": 1,
+    "frames": 200,
+    "seconds": 3.7552,
+    "frames_per_second": 53.26,
+    "first_frame_seconds": 0.0192,
+    "system_used_gb_before": 30.635769856
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 64,
+    "repeat": 2,
+    "frames": 200,
+    "seconds": 3.9648,
+    "frames_per_second": 50.44,
+    "first_frame_seconds": 0.0185,
+    "system_used_gb_before": 30.184538112
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 64,
+    "repeat": 3,
+    "frames": 200,
+    "seconds": 3.813,
+    "frames_per_second": 52.45,
+    "first_frame_seconds": 0.0193,
+    "system_used_gb_before": 30.6446336
+   },
+   {
+    "scene": "cornell_box",
+    "pose_update_each_frame": false,
+    "spp": 64,
+    "repeat": 4,
+    "frames": 200,
+    "seconds": 3.9086,
+    "frames_per_second": 51.17,
+    "first_frame_seconds": 0.021,
+    "system_used_gb_before": 30.170791936
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 1,
+    "repeat": 0,
+    "frames": 200,
+    "seconds": 0.6374,
+    "frames_per_second": 313.79,
+    "first_frame_seconds": 0.1771,
+    "system_used_gb_before": 31.682904064
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 1,
+    "repeat": 1,
+    "frames": 200,
+    "seconds": 0.4957,
+    "frames_per_second": 403.46,
+    "first_frame_seconds": 0.0016,
+    "system_used_gb_before": 31.59678976
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 1,
+    "repeat": 2,
+    "frames": 200,
+    "seconds": 0.4667,
+    "frames_per_second": 428.57,
+    "first_frame_seconds": 0.0024,
+    "system_used_gb_before": 31.678103552
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 1,
+    "repeat": 3,
+    "frames": 200,
+    "seconds": 0.4358,
+    "frames_per_second": 458.97,
+    "first_frame_seconds": 0.0028,
+    "system_used_gb_before": 31.644319744
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 1,
+    "repeat": 4,
+    "frames": 200,
+    "seconds": 0.4165,
+    "frames_per_second": 480.18,
+    "first_frame_seconds": 0.0019,
+    "system_used_gb_before": 31.568396288
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 4,
+    "repeat": 0,
+    "frames": 200,
+    "seconds": 0.4835,
+    "frames_per_second": 413.66,
+    "first_frame_seconds": 0.0018,
+    "system_used_gb_before": 31.551488
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 4,
+    "repeat": 1,
+    "frames": 200,
+    "seconds": 0.4711,
+    "frames_per_second": 424.51,
+    "first_frame_seconds": 0.0022,
+    "system_used_gb_before": 31.532859392
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 4,
+    "repeat": 2,
+    "frames": 200,
+    "seconds": 0.3918,
+    "frames_per_second": 510.52,
+    "first_frame_seconds": 0.002,
+    "system_used_gb_before": 31.60784896
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 4,
+    "repeat": 3,
+    "frames": 200,
+    "seconds": 0.3261,
+    "frames_per_second": 613.36,
+    "first_frame_seconds": 0.0019,
+    "system_used_gb_before": 31.63471872
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 4,
+    "repeat": 4,
+    "frames": 200,
+    "seconds": 0.3249,
+    "frames_per_second": 615.58,
+    "first_frame_seconds": 0.0017,
+    "system_used_gb_before": 31.68722944
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 16,
+    "repeat": 0,
+    "frames": 200,
+    "seconds": 0.8309,
+    "frames_per_second": 240.72,
+    "first_frame_seconds": 0.0033,
+    "system_used_gb_before": 31.580438528
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 16,
+    "repeat": 1,
+    "frames": 200,
+    "seconds": 0.8933,
+    "frames_per_second": 223.88,
+    "first_frame_seconds": 0.0058,
+    "system_used_gb_before": 31.3110528
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 16,
+    "repeat": 2,
+    "frames": 200,
+    "seconds": 0.6362,
+    "frames_per_second": 314.38,
+    "first_frame_seconds": 0.0036,
+    "system_used_gb_before": 31.604752384
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 16,
+    "repeat": 3,
+    "frames": 200,
+    "seconds": 0.6544,
+    "frames_per_second": 305.61,
+    "first_frame_seconds": 0.0024,
+    "system_used_gb_before": 31.59801856
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 16,
+    "repeat": 4,
+    "frames": 200,
+    "seconds": 0.6558,
+    "frames_per_second": 304.99,
+    "first_frame_seconds": 0.0033,
+    "system_used_gb_before": 31.598149632
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 64,
+    "repeat": 0,
+    "frames": 200,
+    "seconds": 1.1969,
+    "frames_per_second": 167.1,
+    "first_frame_seconds": 0.0056,
+    "system_used_gb_before": 31.65462528
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 64,
+    "repeat": 1,
+    "frames": 200,
+    "seconds": 1.1609,
+    "frames_per_second": 172.28,
+    "first_frame_seconds": 0.0059,
+    "system_used_gb_before": 31.640010752
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 64,
+    "repeat": 2,
+    "frames": 200,
+    "seconds": 0.9166,
+    "frames_per_second": 218.19,
+    "first_frame_seconds": 0.0055,
+    "system_used_gb_before": 31.588990976
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 64,
+    "repeat": 3,
+    "frames": 200,
+    "seconds": 0.8909,
+    "frames_per_second": 224.5,
+    "first_frame_seconds": 0.0049,
+    "system_used_gb_before": 31.457050624
+   },
+   {
+    "scene": "box_on_floor_moving",
+    "pose_update_each_frame": true,
+    "spp": 64,
+    "repeat": 4,
+    "frames": 200,
+    "seconds": 0.9103,
+    "frames_per_second": 219.71,
+    "first_frame_seconds": 0.0049,
+    "system_used_gb_before": 31.10035456
+   }
+  ]
+ },
+ "frame_rate_note": "Other jobs ran on this Mac during the measurement, so the load average is in `uptime`. Noisy images: spp 1 and 4 are not usable without a denoiser. box_on_floor_moving updates the mesh and rebuilds the acceleration structure each frame.",
+ "physics_and_camera": {
+  "example": "examples/physics-camera/drop_box.py",
+  "physics": "Genesis 1.4.5 on Metal, a cube of side 0.5 m. In physics_alone, backend 4 is gs.metal.",
+  "camera": "Mitsuba metal_ad_rgb, 256 x 256, RGB at 16 spp, depth and segmentation at 1 spp, one frame per 5 physics steps",
+  "ok": true,
+  "checks": {
+   "drop: every frame passes": true,
+   "drop: the cube fell": true,
+   "drop: it rests within 0.02 m of half its side": true,
+   "drop: its last vertical speed is under 0.02 m/s": true,
+   "drop: the cube moved in the image": true,
+   "no_gravity: every frame passes": true,
+   "no_gravity: the pixels moved under 0.5 px": true,
+   "stale_pose: the check fails": true,
+   "wrong_camera: the check fails": true
+  },
+  "final_speed": 0.0,
+  "gpu_seconds_of_the_process": 3.128047999,
+  "physics_alone": {
+   "backend": "4",
+   "envs": 256,
+   "steps": 300,
+   "seconds": 2.129,
+   "gpu_seconds": 0.683
+  },
+  "scenarios": {
+   "drop": {
+    "frames_passed": 61,
+    "frames_total": 61,
+    "worst_pixel_error": 0.4762316925151379,
+    "final_height": 0.2498922199010849,
+    "height_range": [
+     0.24964679777622223,
+     1.5
+    ],
+    "centroid_travel_px": 60.602253831699336,
+    "seconds_per_frame": {
+     "pose": 0.001,
+     "rgb": 0.0039,
+     "depth_segmentation": 0.004
+    },
+    "build_seconds": 5.05,
+    "worst_floor_mean_rel": 4.690319234851335e-05,
+    "worst_floor_median_rel": 0.0017983856023722211,
+    "first_failed_frame": null,
+    "height_every_60_steps": [
+     1.5,
+     0.3011,
+     0.2621,
+     0.2499,
+     0.2499,
+     0.2499
+    ]
+   },
+   "no_gravity": {
+    "frames_passed": 61,
+    "frames_total": 61,
+    "worst_pixel_error": 0.32831803742902366,
+    "final_height": 1.5,
+    "height_range": [
+     1.5,
+     1.5
+    ],
+    "centroid_travel_px": 0.3255796355173457,
+    "seconds_per_frame": {
+     "pose": 0.0009,
+     "rgb": 0.0028,
+     "depth_segmentation": 0.0034
+    },
+    "build_seconds": 0.34,
+    "worst_floor_mean_rel": -4.6391860597410795e-05,
+    "worst_floor_median_rel": 0.0017763373058201637,
+    "first_failed_frame": null,
+    "height_every_60_steps": [
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5,
+     1.5
+    ]
+   },
+   "stale_pose": {
+    "frames_passed": 2,
+    "frames_total": 61,
+    "worst_pixel_error": 60.13705819817453,
+    "final_height": 0.2498922199010849,
+    "height_range": [
+     0.24964679777622223,
+     1.5
+    ],
+    "centroid_travel_px": 0.3255796355173457,
+    "seconds_per_frame": {
+     "pose": 0.0009,
+     "rgb": 0.0027,
+     "depth_segmentation": 0.0033
+    },
+    "build_seconds": 0.31,
+    "worst_floor_mean_rel": -4.6391860597410795e-05,
+    "worst_floor_median_rel": 0.0017763373058201637,
+    "first_failed_frame": {
+     "step": 10,
+     "failures": [
+      "the body is 3.12 px from its projected position, limit 3.0",
+      "the body depth is 5.316 to 5.893, and the body is 5.321 to 6.187 away"
+     ]
+    },
+    "height_every_60_steps": [
+     1.5,
+     0.3011,
+     0.2621,
+     0.2499,
+     0.2499,
+     0.2499
+    ]
+   },
+   "wrong_camera": {
+    "frames_passed": 0,
+    "frames_total": 61,
+    "worst_pixel_error": 1.3509252133512426,
+    "final_height": 0.2498922199010849,
+    "height_range": [
+     0.24964679777622223,
+     1.5
+    ],
+    "centroid_travel_px": 58.83205030957576,
+    "seconds_per_frame": {
+     "pose": 0.0009,
+     "rgb": 0.0028,
+     "depth_segmentation": 0.0033
+    },
+    "build_seconds": 0.31,
+    "worst_floor_mean_rel": 0.040589270695039904,
+    "worst_floor_median_rel": 0.026654021850992193,
+    "first_failed_frame": {
+     "step": 0,
+     "failures": [
+      "the mean floor depth error is 3.97e-02, limit 0.001",
+      "the median floor depth error is 2.63e-02, limit 0.005"
+     ]
+    },
+    "height_every_60_steps": [
+     1.5,
+     0.3011,
+     0.2621,
+     0.2499,
+     0.2499,
+     0.2499
+    ]
+   }
+  },
+  "first_run_failed": {
+   "what": "All frames of all scenarios failed the floor depth limit, limit 1e-3.",
+   "worst_floor_mean_rel": -0.0015965157343019033,
+   "cause": "Mitsuba starts camera rays at near_clip, 0.01 by default, and its depth AOV counts from there. The error was about 1 cm at every distance. Sensors now adds that distance. The limits did not change. See worst_floor_mean_rel here and in scenarios.drop."
+  }
+ },
+ "hardware_ray_tracing": {
+  "measured": {
+   "kernel_lines": [
+    "_inter.assume_geometry_type(raytracing::geometry_type::triangle);",
+    "_inter.force_opacity(raytracing::forced_opacity::opaque);",
+    "constant raytracing::instance_acceleration_structure& r29 = *(constant raytracing::instance_acceleration_structure*) &pa",
+    "if (_ht != raytracing::intersection_type::none) {",
+    "jit_metal_configure_scene(): freeing MetalScene (ift_lib=<0x0>, n_ift=0, n_pso_cached=0)",
+    "jit_metal_configure_scene(accel=<0x7a8a452840>, n_resources=10, ift_lib=<0x0>, n_ift=0, geom_mask=1)",
+    "raytracing::intersector<raytracing::triangle_data, raytracing::instancing> _inter;",
+    "raytracing::ray _r;"
+   ],
+   "device": "Apple M5 Pro: supportsRaytracing true, supportsRaytracingFromRender true, MTLGPUFamily.apple9 true (Swift, Metal API)",
+   "libraries": "libdrjit-core.dylib holds raytracing::intersector and instance_acceleration_structure. libmitsuba.dylib holds MTLAccelerationStructure and newAccelerationStructure."
+  },
+  "documents": "Apple: hardware-accelerated ray tracing comes to the Mac with the M3 family, and M5 has a third-generation ray-tracing engine.",
+  "not_measured": "Metal ray tracing also runs on Apple6 GPUs, which have no ray tracing hardware. No counter that shows the dedicated circuit at work was read.",
+  "conclusion": "Mitsuba on Metal uses the Metal ray tracing API, and on this GPU that API is hardware-accelerated according to Apple. The second half is from documents."
+ },
+ "not_built": [
+  "LiDAR and other ray cast sensors",
+  "USD scenes",
+  "motion vectors",
+  "lens distortion",
+  "semantic labels",
+  "batched environments",
+  "a cumlx.sim camera sensor"
+ ]
+}

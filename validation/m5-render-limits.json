@@ -1,0 +1,66 @@
+{
+  "schema": "cumlx.m5-render-limits.v1",
+  "date": "2026-11-03",
+  "committed_before_any_measurement": true,
+  "gate": "docs/ROADMAP-PLATFORM.md M5: the same scene in Mitsuba Metal and V100 CUDA, grade B, with the PSNR limit set before measuring",
+  "code": "src/cumlx/render/compare.py",
+  "known_before_this_commit": {
+    "m0_metal_vs_scalar_cornell_box_1024_spp_db": 52.1,
+    "note": "validation/spikes.json. One pair of one scene. No CUDA image had been rendered."
+  },
+  "protocol": {
+    "scenes": [
+      "cornell_box (Mitsuba's own, diffuse)",
+      "cornell_spheres (the same box with one conductor and one dielectric sphere)"
+    ],
+    "film": "256 x 256",
+    "spp": 4096,
+    "seeds": {
+      "golden_cuda_ad_rgb": [
+        1,
+        2,
+        3
+      ],
+      "candidate_metal_ad_rgb": [
+        11,
+        12,
+        13
+      ]
+    },
+    "note": "The seed sets are separate, so shared random numbers cannot flatter the result. Each scene must pass by itself."
+  },
+  "limits": {
+    "psnr_floor_db": 40.0,
+    "noise_ratio": 2.0,
+    "channel_mean": "max(3 standard errors of the difference in means, 1% of the golden mean)",
+    "min_seeds": 3,
+    "inconclusive": "Two seeds on one device under the floor: the noise is too high to judge. This is not a pass."
+  },
+  "reasons": {
+    "psnr_floor_db": "12 dB under the M0 pair. It is a floor for gross errors. By itself it would miss small errors, so the noise ratio does that work.",
+    "noise_ratio": "If the two devices compute the same estimator, the MSE across devices equals the MSE between two seeds. A ratio of 2 is about 3 dB, and it allows one device to be noisier than the other without hiding a bias of the size of the noise.",
+    "channel_mean": "The rule of cumlx rundiff grade B, for a brightness error that the noise covers per pixel."
+  },
+  "synthetic_cases": {
+    "test": "tests/test_render_compare.py",
+    "right": "the same image with other noise: grade B",
+    "wrong": [
+      "2% too bright",
+      "one pixel to the right",
+      "red channel missing",
+      "+0.02 in one corner, which stays above the 40 dB floor"
+    ],
+    "refused": [
+      "fewer than 3 seeds",
+      "other shapes",
+      "shared seeds"
+    ]
+  },
+  "protocol_change_after_the_first_render": {
+    "date": "2026-11-03",
+    "change": "spp from 1024 to 4096, on every device. The limits did not change.",
+    "reason": "On Metal against scalar_rgb at 1024 spp, cornell_spheres gave 39.64 dB across devices and 39.76 dB between two seeds on one device, ratio 1.016. Two seeds on one device were under the 40 dB floor, so the noise was too high to judge. No CUDA image existed at this point.",
+    "direction": "More samples lower the noise, so the same noise ratio and floor are stricter. The 1024 spp results stay in validation/m5-render.json.",
+    "code_change": "compare_images reported that case as diverged, against its own stated rule. It now reports inconclusive. Neither is a pass."
+  }
+}
