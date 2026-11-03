@@ -13,6 +13,7 @@ REPO=${CUMLX_ACTION_EXAMPLE_REPO:-Topabaem05/CuMLX-port-ci-example}
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 ROOT=$(dirname -- "$HERE")
 OUT=${CUMLX_ACTION_EXAMPLE:-$HOME/code/cumlx-port-ci-example}
+PY=$ROOT/.venv/bin/python
 
 commit() {
     git -C "$OUT" add -A
@@ -25,8 +26,12 @@ prepare() {
         echo "error: $OUT exists. Remove it first." >&2
         exit 4
     fi
+    if [ ! -x "$PY" ]; then
+        echo "error: $PY not found. Make it with: python -m venv .venv && .venv/bin/pip install -e '.[dev,capture,diff]' build" >&2
+        exit 3
+    fi
     work=$(mktemp -d)
-    "$ROOT/.venv/bin/python" -m build --wheel -o "$work" "$ROOT" >/dev/null
+    "$PY" -m build --wheel -o "$work" "$ROOT" >/dev/null
     wheel=$(basename "$work"/*.whl)
     mkdir -p "$OUT"
     git -C "$OUT" init -q -b main
@@ -38,8 +43,7 @@ prepare() {
     cp "$work/$wheel" "$OUT/.cumlx-action/"
     rm -rf "$work"
     "$ROOT/.venv/bin/cumlx" fixture tiny-llama -o "$OUT/original" --format json >/dev/null 2>&1
-    sed -i '' "s|      - uses: Topabaem05/CuMLX@main|      - uses: ./.cumlx-action|" "$OUT/.github/workflows/verify-port.yml"
-    sed -i '' "/id: cumlx/{n;s|        with:|        with:\n          cumlx-package: \${{ github.workspace }}/.cumlx-action/$wheel|;}" "$OUT/.github/workflows/verify-port.yml"
+    "$PY" "$HERE/t4_edit_workflow.py" "$OUT/.github/workflows/verify-port.yml" "$wheel"
     printf '__pycache__/\ncumlx-output/\n' > "$OUT/.gitignore"
     cat > "$OUT/README.md" <<R
 # CUMLX port CI example
