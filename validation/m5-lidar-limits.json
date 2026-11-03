@@ -1,0 +1,23 @@
+{
+  "schema": "cumlx.m5_lidar_limits.v1",
+  "date": "2026-11-04",
+  "committed_before_any_measurement": "In the commit before the first scan.",
+  "gate": "Not a completion gate of M5. It is the M5 item for a raycast sensor on Metal ray tracing.",
+  "code": "src/cumlx/render/lidar.py, spikes/m5_lidar.py",
+  "protocol": {
+    "scene": "A floor at z = 0, a box and a sphere, in Mitsuba metal_ad_rgb",
+    "reference": "Exact distances to the same shapes, in float64",
+    "pattern": "16 elevations from -25 to +5 degrees, 1024 azimuths, range limit 20 m",
+    "origins": 2
+  },
+  "limits": {
+    "range_limit_m": 0.001,
+    "hit_mismatch_limit": 0.001
+  },
+  "reasons": {
+    "range_limit_m": "1 mm at up to 20 m. Rays are float32, whose spacing at 20 m is about 2 micrometers, so this leaves room for the renderer's own ray start offset.",
+    "hit_mismatch_limit": "A ray on the edge of a shape can go either way in float32. One ray in a thousand is far more than those edges."
+  },
+  "wrong_cases_that_must_fail": ["the origin 5 cm off", "the elevations 0.5 degrees off", "the box 5 cm off"],
+  "not_shown": "A real sensor's beam width, reflectivity, noise, or motion during a sweep. Any comparison with an RTX LiDAR. Whether the Metal ray tracing circuit ran: no counter was read."
+}
