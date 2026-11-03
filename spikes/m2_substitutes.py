@@ -22,8 +22,11 @@ Status rules:
 A substitute run has its own status, because the two decisions differ: a package can be a good recipe
 and still not work as an automatic import mapping. See `final_status` and `substitute_status`.
 
-These checks have never run against the real packages, because this file was written where they must
-not be installed. Each failure holds its traceback, so read it before you blame the package.
+The first run against the real packages was on 2026-11-03. It found three bugs in these checks, now fixed:
+mlx3d's alpha is not coverage, native_modules missed lazy imports, and the GPU-use rule accepted another
+app's load. Each failure holds its traceback, so read it before you blame the package.
+
+`--torch` replaces the pinned torch. Use it with another work folder, to test a package on an older torch.
 """
 from __future__ import annotations
 
@@ -237,9 +240,12 @@ class GpuSampler:
         return {'baseline_percent': baseline, 'peak_percent': max(self.samples) if self.samples else None, 'samples': len(self.samples)}
 
     def busy(self, baseline: int | None) -> bool:
-        """Above half, or 10 points over the reading before the work. An app that already uses the GPU must not hide it."""
+        """10 points over the reading before the work. A high reading alone proves nothing, because another app can cause it.
+
+        The per-process accumulatedGPUTime in ioreg read 0 after real GPU work on macOS 27.0.1, so it cannot replace this.
+        """
         peak = max(self.samples) if self.samples else None
-        return peak is not None and (peak >= 50 or peak >= (baseline or 0) + 10)
+        return peak is not None and baseline is not None and peak >= baseline + 10
 
 
 def _rel(a: Any, b: Any) -> float:
@@ -368,50 +374,8 @@ def check_bitsandbytes(rec: Recorder) -> None:
     import torch
     import torch.nn.functional as F
 
-    native = rec.attempt('has_native_kernels', lambda: bool(bnb.has_native_kernels()))
-    rec.number('has_native_kernels', native)
-    rec.check('native_metal_kernels_loaded', native is True, 'The README says NF4, FP4, INT8 and FP8 run in Metal. False means a pure PyTorch path or an ABI mismatch with this torch.')
-
-    torch.manual_seed(0)
-    linear = torch.nn.Linear(256, 128).half().to('mps')
-    torch.nn.init.normal_(linear.weight, std=0.02)
-    x = torch.randn(16, 256, device='mps', dtype=torch.float16)
-    reference = linear(x)
-
-    def layer_case(label: str, make: Callable[[], Any], limit: float) -> None:
-        layer = rec.attempt(f'{label}_from_linear', make)
-        if layer is None:
-            return
-        out = rec.attempt(f'{label}_forward', lambda: layer(x))
-        if out is not None:
-            rec.expect_mps(out)
-            rec.at_most(f'rel_l2_{label}_vs_float_linear', _rel(out, reference), limit)
-
-    # Limits for weights drawn from a normal distribution, set from the bit width and not from a run.
-    layer_case('nf4', lambda: bnb.Linear4bit.from_linear(linear), 0.35)
-    layer_case('fp4', lambda: bnb.Linear4bit.from_linear(linear, quant_type='fp4'), 0.5)
-    layer_case('int8', lambda: bnb.Linear8bit.from_linear(linear), 0.05)
-    layer_case('fp8', lambda: bnb.LinearFP8.from_linear(linear), 0.05)
-
-    # A hand reference for NF4: per block of 64 weights, scale by the largest magnitude and take the nearest table value.
-    flat = linear.weight.detach().float().cpu().flatten()
-    table = torch.tensor(NF4_TABLE)
-    blocks = flat.split(64)
-    quantized = torch.cat([table[((b / b.abs().max()).unsqueeze(1) - table).abs().argmin(1)] * b.abs().max() for b in blocks]).view_as(linear.weight).to('mps')
-    hand_error = _rel(F.linear(x.float(), quantized, linear.bias.float()), reference)
-    rec.number('rel_l2_hand_nf4_vs_float_linear', hand_error)
-    nf4_error = rec.data['numbers'].get('rel_l2_nf4_vs_float_linear')
-    if nf4_error is not None:
-        rec.at_most('nf4_error_over_hand_nf4_error', nf4_error / hand_error, 1.5)
-
-    weight = torch.randn(128, 256, device='mps', dtype=torch.float16)
-
-    def readme_functional() -> Any:
-        packed, absmax = bnb.quantize_nf4(weight, block_size=64)
-        return bnb.matmul_nf4(x, packed, absmax)
-
-    rec.attempt('readme_functional_nf4_as_written', readme_functional, required=False)
-
+    # The README's table says that the optimizers are pure PyTorch and the layers are Metal. So the optimizers
+    # run first: on torch 2.15.0 a native layer ended this process with SIGSEGV, and that lost every later number.
     # Optimizers on one least-squares problem. The reference is the torch optimizer from the same start.
     torch.manual_seed(2)
     a = torch.randn(64, 16, device='mps')
@@ -462,6 +426,51 @@ def check_bitsandbytes(rec: Recorder) -> None:
         rec.number('lion8bit_loss_start', lion['loss0'])
         rec.number('lion8bit_loss_end', lion['loss_end'])
         rec.check('lion8bit_loss_fell_by_half', lion['loss_end'] <= lion['loss0'] / 2, {'start': lion['loss0'], 'end': lion['loss_end']})
+    native = rec.attempt('has_native_kernels', lambda: bool(bnb.has_native_kernels()))
+    rec.number('has_native_kernels', native)
+    # True proves only that _C imports. On torch 2.15.0 it was True while each kernel refused an MPS tensor.
+    rec.check('native_metal_kernels_loaded', native is True, 'The README says NF4, FP4, INT8 and FP8 run in Metal. False means a pure PyTorch path.')
+
+    torch.manual_seed(0)
+    linear = torch.nn.Linear(256, 128).half().to('mps')
+    torch.nn.init.normal_(linear.weight, std=0.02)
+    x = torch.randn(16, 256, device='mps', dtype=torch.float16)
+    reference = linear(x)
+
+    def layer_case(label: str, make: Callable[[], Any], limit: float) -> None:
+        layer = rec.attempt(f'{label}_from_linear', make)
+        if layer is None:
+            return
+        out = rec.attempt(f'{label}_forward', lambda: layer(x))
+        if out is not None:
+            rec.expect_mps(out)
+            rec.at_most(f'rel_l2_{label}_vs_float_linear', _rel(out, reference), limit)
+
+    # Limits for weights drawn from a normal distribution, set from the bit width and not from a run.
+    layer_case('nf4', lambda: bnb.Linear4bit.from_linear(linear), 0.35)
+    layer_case('fp4', lambda: bnb.Linear4bit.from_linear(linear, quant_type='fp4'), 0.5)
+    layer_case('int8', lambda: bnb.Linear8bit.from_linear(linear), 0.05)
+    layer_case('fp8', lambda: bnb.LinearFP8.from_linear(linear), 0.05)
+
+    # A hand reference for NF4: per block of 64 weights, scale by the largest magnitude and take the nearest table value.
+    flat = linear.weight.detach().float().cpu().flatten()
+    table = torch.tensor(NF4_TABLE)
+    blocks = flat.split(64)
+    quantized = torch.cat([table[((b / b.abs().max()).unsqueeze(1) - table).abs().argmin(1)] * b.abs().max() for b in blocks]).view_as(linear.weight).to('mps')
+    hand_error = _rel(F.linear(x.float(), quantized, linear.bias.float()), reference)
+    rec.number('rel_l2_hand_nf4_vs_float_linear', hand_error)
+    nf4_error = rec.data['numbers'].get('rel_l2_nf4_vs_float_linear')
+    if nf4_error is not None:
+        rec.at_most('nf4_error_over_hand_nf4_error', nf4_error / hand_error, 1.5)
+
+    weight = torch.randn(128, 256, device='mps', dtype=torch.float16)
+
+    def readme_functional() -> Any:
+        packed, absmax = bnb.quantize_nf4(weight, block_size=64)
+        return bnb.matmul_nf4(x, packed, absmax)
+
+    rec.attempt('readme_functional_nf4_as_written', readme_functional, required=False)
+
     rec.cannot('huggingface_integration', 'The README needs transformers and a model download. This spike has neither.', required=False)
 
 
@@ -492,9 +501,17 @@ def check_deform_conv(rec: Recorder) -> None:
         rec.expect_mps(zero)
         rec.at_most('rel_l2_zero_offset_vs_conv2d', _rel(zero, F.conv2d(x, weight, padding=1)), FP32)
 
+    def native_option(label: str, fn: Callable[[], Any], reference: Any) -> None:
+        """The option with no package at all: torch's own path on MPS. It is optional, and only numbers are recorded."""
+        out = rec.attempt(label, fn, required=False)
+        if out is not None:
+            rec.number(f'{label}_device', out.device.type)
+            rec.number(f'{label}_rel_l2_vs_cpu', _rel(out, reference))
+
     def case(label: str, offsets: Any, weights: Any, inputs: Any = x, **kw: Any) -> None:
         reference = torchvision_deform(inputs, offsets, weights, **kw)
         moved = {k: (_mps(v) if torch.is_tensor(v) else v) for k, v in kw.items()}
+        native_option(f'torchvision_on_mps_{label}', lambda: torchvision_deform(_mps(inputs), _mps(offsets), _mps(weights), **moved), reference)
         out = rec.attempt(label, lambda: deform_conv2d(_mps(inputs), _mps(offsets), _mps(weights), **moved))
         if out is not None:
             rec.expect_mps(out)
@@ -515,11 +532,11 @@ def check_deform_conv(rec: Recorder) -> None:
         rec.at_most('rel_l2_grad_input_vs_torchvision_cpu', _rel(grad_x.grad, ref_x.grad), GRAD)
 
     # Does torch itself need this package? The README says that torchvision has no MPS path.
-    try:
-        native = torchvision_deform(_mps(x), _mps(offset), _mps(weight), padding=(1, 1))
-        rec.number('torchvision_deform_on_mps_rel_l2_vs_cpu', _rel(native, torchvision_deform(x, offset, weight, padding=(1, 1))))
-    except Exception as exc:
-        rec.number('torchvision_deform_on_mps_error', f'{type(exc).__name__}: {exc}'[:300])
+    grad_native = _mps(x).clone().requires_grad_()
+    grad_cpu = x.clone().requires_grad_()
+    if rec.attempt('torchvision_on_mps_backward', lambda: torchvision_deform(grad_native, _mps(offset), _mps(weight), padding=(1, 1)).pow(2).sum().backward() or True, required=False) is not None:
+        torchvision_deform(grad_cpu, offset, weight, padding=(1, 1)).pow(2).sum().backward()
+        rec.number('torchvision_on_mps_grad_rel_l2_vs_cpu', _rel(grad_native.grad, grad_cpu.grad))
 
 
 def _correlation_volume(f1: Any, f2: Any, d: int, order: str) -> Any:
@@ -663,14 +680,13 @@ def check_conv3d(rec: Recorder) -> None:
     w = torch.randn(6, 3, 3, 5, 5)
     original = F.conv3d
 
-    # Does torch itself still need this package? The README says that MPS has no conv3d.
-    try:
-        rec.number('torch_native_conv3d_on_mps_rel_l2_vs_cpu', _rel(original(_mps(x), _mps(w), padding=(1, 2, 2)), original(x, w, padding=(1, 2, 2))))
-    except Exception as exc:
-        rec.number('torch_native_conv3d_on_mps_error', f'{type(exc).__name__}: {exc}'[:300])
-
     def case(label: str, inputs: Any, weights: Any, limit: float = FP32, **kw: Any) -> None:
         reference = original(inputs.float(), weights.float(), **kw)
+        # Does torch itself still need this package? The README says that MPS has no conv3d. This is optional, and only numbers are recorded.
+        native = rec.attempt(f'torch_on_mps_{label}', lambda: original(_mps(inputs), _mps(weights), **kw), required=False)
+        if native is not None:
+            rec.number(f'torch_on_mps_{label}_device', native.device.type)
+            rec.number(f'torch_on_mps_{label}_rel_l2_vs_cpu', _rel(native, reference))
         out = rec.attempt(label, lambda: conv3d(_mps(inputs), _mps(weights), **kw))
         if out is not None:
             rec.expect_mps(out)
@@ -681,6 +697,12 @@ def check_conv3d(rec: Recorder) -> None:
     case('dilation', x, w, padding=(2, 4, 4), dilation=(2, 2, 2))
     case('groups_3', x, torch.randn(6, 1, 3, 5, 5), padding=(1, 2, 2), groups=3)
     case('fp16', x.half(), w.half(), limit=FP16, padding=(1, 2, 2))
+
+    grad_native = _mps(x).clone().requires_grad_()
+    grad_cpu = x.clone().requires_grad_()
+    if rec.attempt('torch_on_mps_backward', lambda: original(grad_native, _mps(w), padding=(1, 2, 2)).pow(2).sum().backward() or True, required=False) is not None:
+        original(grad_cpu, w, padding=(1, 2, 2)).pow(2).sum().backward()
+        rec.number('torch_on_mps_grad_rel_l2_vs_cpu', _rel(grad_native.grad, grad_cpu.grad))
 
     grad_x = _mps(x).clone().requires_grad_()
     ref_x = x.clone().requires_grad_()
@@ -943,6 +965,43 @@ def _write_nerfstudio_scene(root: Path, count: int, size: int, focal: float, rad
     return poses
 
 
+def _read_splat_ply(path: Path) -> dict[str, Any]:
+    """The standard 3DGS PLY: every property is float32. This reads the numbers only, and runs no package code."""
+    import numpy as np
+    head, body = Path(path).read_bytes().split(b'end_header\n', 1)
+    names = [line.split()[-1].decode() for line in head.splitlines() if line.startswith(b'property')]
+    count = int(next(line for line in head.splitlines() if line.startswith(b'element vertex')).split()[-1])
+    rows = np.frombuffer(body, dtype='<f4', count=count * len(names)).reshape(count, -1).astype(np.float64)
+    column = dict(zip(names, rows.T))
+    quats = np.stack([column[f'rot_{i}'] for i in range(4)], 1)
+    return {'means': np.stack([column['x'], column['y'], column['z']], 1), 'opacities': 1 / (1 + np.exp(-column['opacity'])),
+            'scales': np.exp(np.stack([column[f'scale_{i}'] for i in range(3)], 1)), 'quats': quats / np.linalg.norm(quats, axis=1, keepdims=True),
+            'colors': 0.5 + 0.28209479 * np.stack([column[f'f_dc_{i}'] for i in range(3)], 1)}
+
+
+def _render_splats_by_hand(splats: dict[str, Any], pose: Any, focal: float, size: int) -> Any:
+    """Standard 3DGS by hand, nearest first, with an OpenGL camera. DC color only: no view-dependent spherical harmonics."""
+    import numpy as np
+    world_to_camera = pose[:3, :3].T
+    centers = (splats['means'] - pose[:3, 3]) @ pose[:3, :3]  # Row vectors: this is world_to_camera @ (point - eye).
+    ys, xs = np.mgrid[0:size, 0:size]
+    image, through = np.zeros((size, size, 3)), np.ones((size, size))
+    for i in np.argsort(-centers[:, 2]):
+        w, x, y, z = splats['quats'][i]
+        rotation = np.array([[1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y)], [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)],
+                             [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)]])
+        covariance = world_to_camera @ rotation @ np.diag(splats['scales'][i] ** 2) @ rotation.T @ world_to_camera.T
+        cx, cy, cz = centers[i]
+        depth = -cz
+        jacobian = focal / depth * np.array([[1, 0, cx / depth], [0, -1, -cy / depth]])
+        inverse = np.linalg.inv(jacobian @ covariance @ jacobian.T + np.eye(2) * 0.3)
+        dx, dy = xs + 0.5 - (size / 2 + focal * cx / depth), ys + 0.5 - (size / 2 - focal * cy / depth)
+        alpha = splats['opacities'][i] * np.exp(-0.5 * (inverse[0, 0] * dx * dx + 2 * inverse[0, 1] * dx * dy + inverse[1, 1] * dy * dy))
+        image += (through * alpha)[..., None] * splats['colors'][i]
+        through = through * (1 - alpha)
+    return image
+
+
 def check_msplat(rec: Recorder) -> None:
     # README of msplat 1.1.4 on PyPI, the API this check relies on:
     #   dataset = msplat.load_dataset("path/to/colmap/", eval_mode=True)
@@ -961,6 +1020,10 @@ def check_msplat(rec: Recorder) -> None:
     # - It gives no loss. So "a loss goes down" is held-out PSNR that rises with training.
     # - It does not describe the file layout. This writes the Nerfstudio layout, and the black background
     #   is `bg_color` from the stubs (the default is magenta). Both are from the stubs and loader at v1.1.4.
+    # What replaces the known Gaussian: `trainer.export_ply` writes the trained splats, and a hand render of
+    # them must land where msplat's own render does. That tests the rasterizer apart from the training.
+    # That limit of 1 px was added after the first run, where the hand render differed by 0.12 px or less in error size.
+    # The peak limit of 3 px against the true blob stays as it was. It measures how well the training fitted the blob.
     import msplat
     import numpy as np
     size, focal, radius, count = 128, 150.0, 3.0, 24
@@ -1004,7 +1067,7 @@ def check_msplat(rec: Recorder) -> None:
         return
     dataset, trainer = full
     center = size / 2
-    errors = []
+    errors, renders = [], {}
     for index in (0, 7, 13, 19):
         rendered = rec.attempt(f'render_from_pose_{index}', lambda i=index: trainer.render_from_pose(dataset.camera_pose(i)))
         if rendered is None:
@@ -1012,6 +1075,7 @@ def check_msplat(rec: Recorder) -> None:
         got_u, got_v, _ = _blob_center(rendered)
         want_u, want_v, _ = _project_gl(poses[index], BLOB['center'], focal, center)
         errors.append(float(math.hypot(got_u - want_u, got_v - want_v)))
+        renders[index] = rendered
     if errors:
         rec.number('training_view_peak_errors_px', errors)
         rec.at_most('training_view_peak_error_px', max(errors), 3.0)
@@ -1033,6 +1097,20 @@ def check_msplat(rec: Recorder) -> None:
     exported = rec.attempt('export_ply', lambda: trainer.export_ply('output.ply') or Path('output.ply').stat().st_size)
     if exported is not None:
         rec.check('export_ply_wrote_a_file', exported > 0, exported)
+        splats = _read_splat_ply(Path('output.ply'))
+        rec.number('exported_splats', len(splats['means']))
+        mass = splats['opacities'] * splats['scales'].prod(1)
+        mean = (splats['means'] * mass[:, None]).sum(0) / mass.sum()
+        rec.number('splat_mean_error_vs_true_center_world_units', float(np.linalg.norm(mean / scale - np.asarray(BLOB['center']))))
+        differences = []
+        for index, rendered in renders.items():
+            by_hand = _render_splats_by_hand(splats, dataset.camera_pose(index).astype(np.float64), focal, size)
+            hand_u, hand_v, _ = _blob_center(by_hand)
+            got_u, got_v, _ = _blob_center(rendered)
+            differences.append(float(math.hypot(got_u - hand_u, got_v - hand_v)))
+        if differences:
+            rec.number('render_vs_hand_render_of_splats_px', differences)
+            rec.at_most('render_vs_hand_render_of_splats_max_px', max(differences), 1.0)
 
 
 def _project_opencv(eye: Any, point: Any, focal: float, center: float, up: Any = (0.0, 1.0, 0.0)) -> tuple[float, float, float]:
@@ -1150,14 +1228,50 @@ def check_mlx3d(rec: Recorder) -> None:
         camera = Camera.look_at(eye=eye, at=(0, 0, 0), up=(0, 1, 0), fov=45.0, width=size, height=size)
         out = render_mesh_soft(camera, mesh, verts_colors=mx.ones_like(mesh.verts_packed()), sigma=3e-3, background=(0.0, 0.0, 0.0))
         mx.eval(out['alpha'])
-        area = float((np.array(out['alpha']) > 0.5).sum())
-        measured = math.sqrt(area / math.pi)
-        # The silhouette of a unit sphere at distance 4, by hand: fx * tan(asin(1/4)).
+        alpha = np.array(out['alpha'])
+        # The hand value is fx * tan(asin(1/4)), the silhouette of a unit sphere at distance 4.
         by_hand = focal * math.tan(math.asin(1 / 4))
+        # This alpha is not coverage. Source at v0.3.2: alpha = 1 - exp(-sum(w)), w = exp(min(T*(1/z - 1/min_z), 0)), T = 25.
+        # A pixel has a front and a back face, so by hand alpha is about 0.65 at the center and 0.32 at the rim.
+        # The first run measured `alpha > 0.5`, which gave 27.03 px against 39.89 px. That threshold tests the wrong
+        # thing: alpha = 0.5 falls at 27.3 px by this formula. The edge is measured at 0.15, under half of the rim
+        # value, and the 5% limit is unchanged. Each alpha value below is also compared with the formula.
+        measured = math.sqrt(float((alpha > 0.15).sum()) / math.pi)
         rec.number('sphere_silhouette_radius_px', measured)
         rec.number('sphere_silhouette_radius_px_by_hand', by_hand)
         rec.at_most('sphere_silhouette_radius_error', abs(measured / by_hand - 1), 0.05)
+        min_z = float(np.array(mesh.verts_packed())[:, 2].min()) + 4.0
 
+        def soft_alpha(radius: float) -> float:
+            angle = math.atan(radius / focal)
+            root = math.sqrt(max(1 - (4 * math.sin(angle)) ** 2, 0.0))
+            depths = [(4 * math.cos(angle) + sign * root) * math.cos(angle) for sign in (-1, 1)]
+            return 1 - math.exp(-sum(math.exp(min(25.0 * (1 / z - 1 / min_z), 0.0)) for z in depths))
+
+        center_alpha = float(alpha[size // 2 - 1:size // 2 + 1, size // 2 - 1:size // 2 + 1].mean())
+        rec.number('sphere_alpha_center', center_alpha)
+        rec.number('sphere_alpha_center_by_formula', soft_alpha(0.0))
+        rec.at_most('sphere_alpha_center_error_vs_formula', abs(center_alpha / soft_alpha(0.0) - 1), 0.05)
+        half = math.sqrt(float((alpha > 0.5).sum()) / math.pi)
+        low, high = 0.0, by_hand
+        for _ in range(50):
+            middle = (low + high) / 2
+            low, high = (middle, high) if soft_alpha(middle) > 0.5 else (low, middle)
+        rec.number('sphere_alpha_half_radius_px', half)
+        rec.number('sphere_alpha_half_radius_px_by_formula', low)
+        rec.at_most('sphere_alpha_half_radius_error_vs_formula', abs(half / low - 1), 0.05)
+
+    def hard_mesh_check() -> None:
+        # The closer match to nvdiffrast: a hard z-buffer. Its docstring calls it the O(H*W) hard rasterizer. It is optional, because the README does not name it.
+        from mlx3d.renderer.rasterizer import rasterize_meshes
+        from mlx3d.utils import ico_sphere
+        fragments = rasterize_meshes(Camera.look_at(eye=eye, at=(0, 0, 0), up=(0, 1, 0), fov=45.0, width=size, height=size), ico_sphere(level=3, radius=1.0))
+        covered = np.array(fragments.valid)
+        measured = math.sqrt(float(covered.sum()) / math.pi)
+        rec.number('hard_rasterizer_silhouette_radius_px', measured)
+        rec.number('hard_rasterizer_silhouette_radius_error', abs(measured / (focal * math.tan(math.asin(1 / 4))) - 1))
+
+    rec.attempt('hard_rasterizer', hard_mesh_check, api='source at v0.3.2', required=False)
     rec.attempt('mesh_rasterizer', mesh_check, api='examples/render_mesh.py')
 
     def train() -> tuple[Any, list[float]]:
@@ -1277,6 +1391,8 @@ def child_main(check: str, out: Path, module: str, dist: str | None) -> int:
     except Exception as exc:
         rec.check('check_raised', False, {'error': f'{type(exc).__name__}: {exc}'[:800], 'traceback': traceback.format_exc()[-2000:], 'note': 'Could be a bug in this check. Read the traceback.'})
     rec.close_device()
+    # Again here: mps_deform_conv and others load their native library at the first call, not at import.
+    rec.data['native_modules'] = sorted(name for name, m in sys.modules.items() if name.startswith(module + '.') and str(getattr(m, '__file__', '')).endswith(('.so', '.dylib')))
     rec.data['finished'] = True
     rec.save()
     return 0
@@ -1682,6 +1798,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument('--only', help='comma-separated candidate names. Earlier results for other candidates stay in summary.json')
     parser.add_argument('--manifest', type=Path, help='JSON list of entries in place of CANDIDATES, with no venv and no download. Used by the tests')
     parser.add_argument('--target', choices=['mps', 'cpu'], default='mps', help='target of cumlx run. The tests use cpu where MPS is missing')
+    parser.add_argument('--torch', help='a requirement that replaces the pinned torch, such as torch==2.9.1. Use another work folder')
     parser.add_argument('--check-timeout', type=float, default=CHECK_TIMEOUT)
     parser.add_argument('--substitute-timeout', type=float, default=SUBSTITUTE_TIMEOUT)
     parser.add_argument('--child', help=argparse.SUPPRESS)
@@ -1703,6 +1820,8 @@ def main(argv: list[str] | None = None) -> int:
         if shutil.which('uv') is None:
             print('error: uv not found', file=sys.stderr)
             return 3
+    if args.torch:
+        entries = [{**e, 'torch': args.torch, 'note': f'Not the pinned torch: --torch {args.torch}.'} for e in entries]
     wanted = entries
     if args.only:
         names = set(args.only.split(','))

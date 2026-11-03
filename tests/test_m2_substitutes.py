@@ -284,3 +284,41 @@ def test_the_launcher_starts_in_the_background_and_has_a_status_mode(tmp_path):
     assert status.stdout.startswith('not running') and '[done] 1 pass, 1 fail' in status.stdout
     summary = json.loads((tmp_path / 'root' / 'summary.json').read_text())
     assert [r['status'] for r in summary['results']] == ['pass', 'fail']
+
+
+def test_gpu_use_counts_only_when_it_rises_over_the_reading_before_the_work():
+    driver = _driver()
+    sampler = driver.GpuSampler()
+    sampler.samples = [80, 89]
+    assert sampler.busy(80) is False, 'another app caused this load, as in the first real run'
+    sampler.samples = [5, 90]
+    assert sampler.busy(5) is True
+    assert sampler.busy(None) is False
+    sampler.samples = []
+    assert sampler.busy(0) is False
+
+
+def test_a_hand_render_of_a_known_exported_splat_lands_on_the_hand_projection(tmp_path):
+    np = pytest.importorskip('numpy')
+    driver = _driver()
+    names = ['x', 'y', 'z', 'opacity', 'scale_0', 'scale_1', 'scale_2', 'rot_0', 'rot_1', 'rot_2', 'rot_3', 'f_dc_0', 'f_dc_1', 'f_dc_2']
+    row = [0.4, 0.2, -0.3, 2.0, *[np.log(0.25)] * 3, 1.0, 0.0, 0.0, 0.0, 1.0, 0.5, -0.5]
+    header = 'ply\nformat binary_little_endian 1.0\nelement vertex 1\n' + ''.join(f'property float {n}\n' for n in names) + 'end_header\n'
+    path = tmp_path / 'one.ply'
+    path.write_bytes(header.encode() + np.array(row, dtype='<f4').tobytes())
+    splats = driver._read_splat_ply(path)
+    assert splats['opacities'][0] == pytest.approx(1 / (1 + np.exp(-2.0)), rel=1e-5)
+    assert splats['scales'][0] == pytest.approx([0.25] * 3, rel=1e-5)
+    pose = driver._gl_camera(driver._ring_eye(30.0, 20.0, 3.0))
+    want_u, want_v, depth = driver._project_gl(pose, (0.4, 0.2, -0.3), 150.0, 64.0)
+    image = driver._render_splats_by_hand(splats, pose, 150.0, 128)
+    got_u, got_v, _ = driver._blob_center(image)
+    assert (got_u, got_v) == pytest.approx((want_u, want_v), abs=0.05)
+    assert driver._axis_sigma(image[int(want_v), :, 0]) == pytest.approx(150.0 * 0.25 / depth, rel=0.02)
+
+
+def test_torch_override_replaces_the_pin_in_every_entry_and_stays_in_the_result(tmp_path):
+    manifest = _manifest(tmp_path, {'one': (CHECK, 'good', {})})
+    assert _run(manifest, tmp_path / 'work', '--torch', 'torch==2.9.1').returncode == 0
+    result = json.loads((tmp_path / 'work' / 'summary.json').read_text())['results'][0]
+    assert result['torch_pin'] == 'torch==2.9.1' and 'Not the pinned torch' in result['note']
