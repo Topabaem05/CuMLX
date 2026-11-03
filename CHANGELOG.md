@@ -21,6 +21,7 @@
 
 ### Added
 
+- CI: a base-install job on Linux (Python 3.10, 3.14) and macOS (3.12), Python 3.14 on the Linux CPU job, and required `shellcheck`. No runner tests a GPU: macOS runners may have no usable Metal device, and none has an NVIDIA GPU.
 - `cumlx doctor --probe` reports memory in use, RAM and the limit for long runs, on any size of machine. `tests/test_m_series_generic.py` fails if code branches on one chip's name.
 - `scripts/compat_check.py`: checks the CLI contract on a base install, with no MLX, torch or NVIDIA tools. It refuses an environment that has them. Run on a fresh venv with the built wheel: 14 of 14, on one Mac with Python 3.15 ([record](validation/compat-base-install.json)).
 - `tests/test_launchers_portable.py`: every launcher parses in the shell that it names, and uses no flag or syntax of only one system. `shellcheck` runs where it is installed, and CI requires it.

@@ -34,7 +34,14 @@ jobs:
           python -m mypy src/cumlx/verify/checkpoint.py src/cumlx/verify/checkop.py src/cumlx/verify/report_html.py src/cumlx/render/compare.py src/cumlx/render/sensors.py
           src/cumlx/verify/trace_compare.py src/cumlx/verify/metrics.py src/cumlx/verify/mapping.py
           src/cumlx/verify/weights.py src/cumlx/verify/portability.py src/cumlx/verify/recipes.py src/cumlx/verify/run_compare.py src/cumlx/compat/runner.py src/cumlx/mcp_server.py
-          src/cumlx/verify/opgolden.py src/cumlx/verify/kernel_source.py src/cumlx/verify/kernel_capture.py src/cumlx/verify/kernel_verify.py src/cumlx/verify/kernel_port.py
+          src/cumlx/verify/opgolden.py src/cumlx/verify/kernel_source.py src/cumlx/verify/kernel_capture.py src/cumlx/verify/kernel_verify.py src/cumlx/verify/kernel_port.py src/cumlx/sysmem.py
+      - name: Launchers parse and use no flag of only one system (shellcheck is required here)
+        env:
+          CUMLX_REQUIRE_SHELLCHECK: '1'
+        run: |
+          shellcheck --version | head -2
+          python -m pip install pytest
+          python -m pytest -q tests/test_launchers_portable.py
       - name: Python syntax
         run: python -m compileall -q src tests scripts benchmarks
       - name: Check generated sources match the generator
@@ -50,7 +57,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.10', '3.11', '3.12', '3.13']
+        python: ['3.10', '3.11', '3.12', '3.13', '3.14']
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
@@ -119,6 +126,39 @@ jobs:
           path: ci-results/
           if-no-files-found: error
           retention-days: 14
+
+  # A wheel with only NumPy on each system. macOS minutes cost ten times Linux minutes in a private repository, so this job is short.
+  # It does not test a GPU: GitHub's macOS runners may have no usable Metal device, and no runner has an NVIDIA GPU.
+  compat:
+    name: Base install on ${{ matrix.os }} (Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-24.04, python: '3.10'}
+          - {os: ubuntu-24.04, python: '3.14'}
+          - {os: macos-15, python: '3.12'}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install build pytest numpy
+      - run: python -m build --wheel
+      - name: Fresh environment with only the wheel and NumPy
+        shell: bash
+        run: |
+          python -m venv "$RUNNER_TEMP/base"
+          "$RUNNER_TEMP/base/bin/python" -m pip install dist/*.whl
+          python scripts/compat_check.py --python "$RUNNER_TEMP/base/bin/python" -o "$RUNNER_TEMP/compat.json"
+      - name: Tests of what differs between systems
+        run: >-
+          python -m pytest -q tests/test_sysmem.py tests/test_launcher_host.py tests/test_launchers_portable.py
+          tests/test_base_install.py tests/test_m_series_generic.py tests/test_t4_action_example.py
 
   build:
     name: Build distributions and isolated wheel smoke test
