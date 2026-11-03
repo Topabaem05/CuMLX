@@ -64,6 +64,16 @@ class KernelCase:
     grid: tuple[int, int, int] = (1, 1, 1)
     threadgroup: tuple[int, int, int] = (1, 1, 1)
     entry: str | None = None
+    call: tuple[str, ...] | None = None  # the arguments, in the order of the kernel's parameters
+    initial: dict[str, str] = field(default_factory=dict)  # output -> the input that fills it before each launch
+
+    @property
+    def arguments(self) -> tuple[str, ...]:
+        """The tensors that the kernel receives, in order. An input that only fills an output is not one of them."""
+        if self.call is not None:
+            return self.call
+        sources = set(self.initial.values())
+        return tuple(t.name for t in self.inputs if t.name not in sources) + tuple(t.name for t in self.outputs)
 
     @property
     def blocks(self) -> tuple[int, int, int]:
@@ -77,6 +87,10 @@ class KernelCase:
             'grid': list(self.grid), 'threadgroup': list(self.threadgroup)}
         if self.entry:
             out['entry'] = self.entry
+        if self.call is not None:
+            out['call'] = list(self.call)
+        if self.initial:
+            out['initial'] = dict(self.initial)
         return out
 
 
@@ -98,6 +112,32 @@ def _triple(raw: Any, where: str, field_name: str) -> tuple[int, int, int]:
             or any(isinstance(v, bool) or not isinstance(v, int) or v <= 0 for v in raw)):
         raise _invalid(where, f'{field_name} must be three positive integers, got {raw!r}')
     return raw[0], raw[1], raw[2]
+
+
+def _parse_initial(raw: Any, inputs: list[TensorSpec], outputs: list[TensorSpec], where: str) -> dict[str, str]:
+    if raw is None:
+        return {}
+    if not isinstance(raw, dict):
+        raise _invalid(where, 'initial must map an output to the input that fills it')
+    by_input, by_output = {t.name: t for t in inputs}, {t.name: t for t in outputs}
+    for output, source in raw.items():
+        if output not in by_output or source not in by_input:
+            raise _invalid(where, f'initial maps {output!r} to {source!r}, and it needs an output and an input')
+        a, b = by_output[output], by_input[source]
+        if (a.dtype, a.shape) != (b.dtype, b.shape):
+            raise _invalid(where, f'initial: {source} is {b.dtype}{list(b.shape)}, and {output} is {a.dtype}{list(a.shape)}')
+    return dict(raw)
+
+
+def _parse_call(raw: Any, inputs: list[TensorSpec], outputs: list[TensorSpec], initial: dict[str, str], where: str) -> tuple[str, ...] | None:
+    if raw is None:
+        return None
+    if not isinstance(raw, list) or any(not isinstance(name, str) for name in raw):
+        raise _invalid(where, 'call must be a list of tensor names')
+    expected = {t.name for t in inputs if t.name not in set(initial.values())} | {t.name for t in outputs}
+    if len(set(raw)) != len(raw) or set(raw) != expected:
+        raise _invalid(where, f'call must name each of {sorted(expected)} once, and it names {raw}')
+    return tuple(raw)
 
 
 def parse_case(raw: Any) -> KernelCase:
@@ -132,7 +172,9 @@ def parse_case(raw: Any) -> KernelCase:
     threadgroup = _triple(raw.get('threadgroup'), where, 'threadgroup')
     if any(g % t for g, t in zip(grid, threadgroup)):
         raise _invalid(where, f'grid {grid} is not a whole number of threadgroups {threadgroup}')
-    return KernelCase(case_id, kernel, inputs, outputs, dict(constants), grid, threadgroup, entry)
+    initial = _parse_initial(raw.get('initial'), inputs, outputs, where)
+    call = _parse_call(raw.get('call'), inputs, outputs, initial, where)
+    return KernelCase(case_id, kernel, inputs, outputs, dict(constants), grid, threadgroup, entry, call, initial)
 
 
 def as_dtype(array: np.ndarray, spec: TensorSpec, where: str) -> np.ndarray:

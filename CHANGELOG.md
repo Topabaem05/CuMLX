@@ -2,12 +2,20 @@
 
 ## Unreleased
 
+### Fixed
+
+- `is_complete_metal` and the signature reader did not see the `[[kernel]] void` form that woof writes, so a complete library read as a function body.
+
 ### Changed
 
 - The Isaac Sim and Isaac Lab scripts moved to the private repository [OrchardSim](https://github.com/Topabaem05/OrchardSim). The `spikes/isaac_*` and `spikes/rsl_rl_golden.py` entries below describe files that are now there. The records stay in `validation/`, and the recipes name the new location.
 
 ### Added
 
+- `spikes/m3_kernels.sh`: record the kernelport zoo and sam2's kernels on the V100, translate them with woof in their own environment, and compare. Prepared and tested on stubs only; `validation/kernel-m3.json` says that no third-party kernel has run yet.
+- `cumlx kernel verify --engine woof`: run a woof translation through woof's own launcher, which binds its scalars and threadgroup memory. Tested on a stub only.
+- `cumlx kernel port --allow-warp-level`: pass warp-level built-ins to the translator instead of refusing them, with `W_KERNEL_WARP_LEVEL_PASSED`. The default is still to refuse.
+- `call` and `initial` in `cumlx.opgolden.v1` and `cumlx.kernel-cases.v1`: scalar parameters in any position, and buffers that a kernel reads and writes. Older goldens read the same.
 - `cumlx run` (experimental): run an unmodified PyTorch script that assumes CUDA on MPS, and record each redirected call in `run-report.json`. A CUDA call with no equivalent, a second GPU, an operation that MPS lacks and float64 all end with an error. `PYTORCH_ENABLE_MPS_FALLBACK` is removed unless you pass `--allow-cpu-fallback`. Importing `cumlx` changes nothing in torch. MCP shows this command only with `--allow-code-execution`.
 - `spikes/m2_scripts.sh`: run 5 open-source scripts under `cumlx run`, once per seed for those that train. `--target cuda` records the golden.
 - `spikes/m2_substitutes.sh`: evaluate `mps-*`, metalsplat, msplat and mlx3D, each in its own venv at a pinned version, with checks against known numbers.

@@ -78,4 +78,4 @@ def is_complete_cuda(text: str) -> bool:
 
 def is_complete_metal(text: str) -> bool:
     """A complete library has a ``kernel`` function. Otherwise it is a function body, as ``metal_kernel`` takes."""
-    return bool(re.search(r'\b(?:\[\[\s*kernel\s*\]\]|kernel)\s+void\b', mask_source(text)))
+    return bool(re.search(r'(?:\[\[\s*kernel\s*\]\]|\bkernel)\s+void\b', mask_source(text)))

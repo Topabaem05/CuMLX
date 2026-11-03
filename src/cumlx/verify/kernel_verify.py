@@ -10,6 +10,7 @@ import gc
 import hashlib
 import importlib.util
 import json
+import os
 from pathlib import Path
 import re
 from typing import Any, Protocol
@@ -85,6 +86,8 @@ class MLXEngine:
                 'device': info.get('device_name') or info.get('architecture') or str(self.mx.gpu)}
 
     def run(self, case: KernelCase, source: str, header: str, inputs: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+        if case.initial or case.call is not None:
+            raise KernelRunError('bind', f'{case.id} sets call or initial, and mx.fast.metal_kernel takes only inputs and new outputs. Use --engine torch')
         mx = self.mx
         input_names = [t.name for t in case.inputs]
         output_names = [t.name for t in case.outputs]
@@ -148,7 +151,7 @@ def wrap_metal_body(case: KernelCase, source: str, header: str, *, entry: str = 
 def _complete_signature(source: str, wanted: list[str]) -> tuple[str, list[str]]:
     """Find the entry point of a complete library and the parameter name of each buffer, in buffer order."""
     masked = mask_source(source)
-    found = {m.group(1): m.end() for m in re.finditer(r'\bkernel\s+void\s+([A-Za-z_]\w*)\s*\(', masked)}
+    found = {m.group(1): m.end() for m in re.finditer(r'(?:\[\[\s*kernel\s*\]\]|\bkernel)\s+void\s+([A-Za-z_]\w*)\s*\(', masked)}
     if not found:
         raise KernelRunError('bind', 'no `kernel void` function in this library')
     entry = next((name for name in wanted if name in found), None)
@@ -200,7 +203,8 @@ class TorchEngine:
         else:
             library = wrap_metal_body(case, source, header)
             entry, order = 'cumlx_kernel', [t.name for t in case.inputs + case.outputs]
-        outputs = {t.name: torch.from_numpy(_poison(t).copy()).to('mps') for t in case.outputs}
+        outputs = {t.name: torch.from_numpy(np.array(inputs[case.initial[t.name]]) if t.name in case.initial else _poison(t).copy()).to('mps')
+                   for t in case.outputs}
         missing = sorted(set(outputs) - set(order))
         if missing:
             raise KernelRunError('bind', f'{entry} has no buffer for output(s) {missing}; its buffers are {order}')
@@ -219,7 +223,79 @@ class TorchEngine:
             raise _classify_error(exc) from None
 
 
+class WoofEngine:
+    """Runs a library that woof translated through woof's own launcher, which binds its scalar struct and threadgroup memory.
+
+    ``torch.mps.compile_shader`` sets neither. The signature of each kernel comes from NAME.port.json. A function body goes to
+    MLX: only the floating-point probe is one here. It has been tested only with a stub package that has the same names, not
+    with woof, until validation/kernel-m3.json says otherwise.
+    """
+    name = 'woof'
+
+    def __init__(self) -> None:
+        if importlib.util.find_spec('woof') is None:
+            raise CumlxError('E_KERNEL_TRANSLATOR_MISSING', '`--engine woof` needs the Python package woof, which is not installed. Nothing ran, and this is not a pass.',
+                             hint='install it yourself in its own environment if you accept its terms: spikes/m3_kernels.sh')
+        os.environ.setdefault('WOOF_BACKEND', 'mlx')
+        self._woof = importlib.import_module('woof')  # it installs the cupy facade, so it comes first
+        self._facade = importlib.import_module('cupy')
+        self._translate = importlib.import_module('woof.backend.translate')
+        self._loader = importlib.import_module('woof.backend.metal.loader')
+        self._body = MLXEngine()
+        self._signatures: dict[str, dict[str, Any]] = {}
+        self._modules: dict[str, Any] = {}
+
+    def describe(self) -> dict[str, Any]:
+        from importlib import metadata
+        try:
+            version = metadata.version('metal-woof')
+        except metadata.PackageNotFoundError:
+            version = None
+        return {'engine': self.name, 'api': 'woof.backend.metal.loader', 'woof': version, 'math_mode': 'safe',
+                'device': self._body.describe()['device'], 'probe': 'mx.fast.metal_kernel, not the translator: woof sets its own FMA contraction'}
+
+    def use_translations(self, translations: dict[str, Any]) -> None:
+        self._signatures = {k: v.get('metal_signatures') or {} for k, v in translations.items()}
+
+    def _unit(self, kernel: str, source: str) -> Any:
+        signatures = self._signatures.get(kernel)
+        if not signatures:
+            raise KernelRunError('bind', f'{kernel}.port.json has no metal_signatures. Translate it with `cumlx kernel port --translator woof`')
+        t = self._translate
+        kernels = {name: t.KernelSignature(**{**s, 'params': tuple(t.Param(**p) for p in s['params'])}) for name, s in signatures.items()}
+        return t.TranslatedUnit(source, kernels, sha256_text(source))
+
+    def run(self, case: KernelCase, source: str, header: str, inputs: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
+        if not is_complete_metal(source):
+            return self._body.run(case, source, header, inputs)
+        key = sha256_text(source)
+        entry = (case.entry or case.kernel).split('<')[0]
+        by_input = {t.name: t for t in case.inputs}
+        made: dict[str, Any] = {}
+        args: list[Any] = []
+        for name in case.arguments:
+            if name in by_input:
+                value = inputs[name]
+                args.append(self._facade.asarray(np.array(value)) if by_input[name].shape else value[()])
+            else:
+                spec = next(t for t in case.outputs if t.name == name)
+                start = inputs[case.initial[name]] if name in case.initial else _poison(spec)
+                made[name] = self._facade.asarray(np.array(start))
+                args.append(made[name])
+        try:
+            if key not in self._modules:
+                self._modules[key] = self._loader.MetalModule(self._unit(case.kernel, source), case.kernel)
+            self._modules[key].get_function(entry)(case.blocks, case.threadgroup, tuple(args))
+            return {name: np.array(self._facade.asnumpy(array)) for name, array in made.items()}
+        except KernelRunError:
+            raise
+        except Exception as exc:  # noqa: BLE001 - any failure here means that the kernel did not produce outputs
+            raise _classify_error(exc) from None
+
+
 def select_engine(name: str, *, needs_complete: bool) -> Engine:
+    if name == 'woof':
+        return WoofEngine()
     if name == 'mlx':
         if needs_complete:
             raise CumlxError('E_USAGE', '--engine mlx takes a function body, and this file is a complete library (`kernel void`).',
@@ -338,6 +414,8 @@ def verify_kernels(metal: str | Path, golden_path: str | Path, *, kernel: str | 
     measured: dict[str, Any] = {}
     if sources and engine is None:
         engine = select_engine(engine_name, needs_complete=needs_complete)
+    if engine is not None and hasattr(engine, 'use_translations'):
+        engine.use_translations(translations)
     if engine is not None and sources:
         execution = engine.describe()
         measured = probe_device(engine)

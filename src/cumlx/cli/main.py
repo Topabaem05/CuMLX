@@ -338,8 +338,8 @@ def build_parser() -> AgentArgumentParser:
     p.add_argument('--kernel', help='the golden kernel that this file translates, when its name differs')
     p.add_argument('--case', action='append', default=[], metavar='ID', help='compare only this case. Repeatable. The verdict then covers only these')
     p.add_argument('--header', help='Metal source to put before the kernel; default: NAME.header.metal, or common_metal.h beside it')
-    p.add_argument('--engine', choices=['auto', 'mlx', 'torch'], default='auto',
-                   help='auto = mx.fast.metal_kernel for a function body, torch.mps.compile_shader for a complete library')
+    p.add_argument('--engine', choices=['auto', 'mlx', 'torch', 'woof'], default='auto',
+                   help='auto = mx.fast.metal_kernel for a function body, torch.mps.compile_shader for a complete library. woof = its own launcher, for its translations; it runs that package')
     p.add_argument('--repeats', type=int, default=3, help='runs per case. Each run is compared')
     p.add_argument('--overwrite', action='store_true')
 
@@ -354,6 +354,7 @@ def build_parser() -> AgentArgumentParser:
     p.add_argument('--cases', help='for a function body: a cases file that gives its launch constants. Use with --case')
     p.add_argument('--case', help='the case in --cases. It wraps the body in a complete kernel with those constants')
     p.add_argument('--demote-fp64', action='store_true', help='turn double into float. Changes what the kernel computes; `cumlx kernel verify` judges the result')
+    p.add_argument('--allow-warp-level', action='store_true', help='pass warp-level built-ins to the translator instead of refusing them. Metal does not promise their meaning; `cumlx kernel verify` judges the result on this device')
     p.add_argument('--overwrite', action='store_true')
     return parser
 

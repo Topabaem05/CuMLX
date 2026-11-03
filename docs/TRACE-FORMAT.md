@@ -127,6 +127,8 @@ A trace records a whole model. An op-level golden records one kernel: what it co
 | `grid`, `threadgroup` | Logical threads, as MLX counts them. CUDA launches `grid / threadgroup` blocks of `threadgroup` threads. The grid must be a whole number of threadgroups |
 | `constants` | Integer or boolean values that the kernel reads by name. In MLX they are template arguments |
 | `entry` | Optional. The function to launch when the source is a complete kernel, such as `vector_add<float>`. Default: the kernel name |
+| `call` | Optional. The tensor names in the order of the kernel's parameters, each once. It leaves out an input that only fills an output. Default: the inputs, then the outputs. An input with shape `[]` is passed by value |
+| `initial` | Optional. Maps an output to the input that fills it before each launch, for a buffer that the kernel reads and writes. Default: the output starts as a fill pattern. It must have the same dtype and shape |
 | `kernels.*.form` | `body`: a function body, as `mx.fast.cuda_kernel` takes. `complete`: a source with `__global__` functions |
 | `kernels.*.features` | What a text scan of the original found. A `double` or an unsuffixed floating literal runs in fp64 on CUDA and cannot on Metal |
 | `floating_point` | Measured on this device by a probe kernel with the same compiler flags |

@@ -1,0 +1,54 @@
+{
+ "schema": "cumlx.kernel-sources.v1",
+ "note": "Third-party kernels for the M3 gates. The sources are not in this repository: spikes/m3_kernels.py fetches them at these commits and checks each hash. nvdiffrast is under the NVIDIA Source Code License, which allows non-commercial use only, so its files must not be copied here.",
+ "fetched_on": "2026-11-03",
+ "translator": {
+  "package": "metal-woof",
+  "version": "1.1.5.2",
+  "wheel_sha256": "c9b4b6fd036db93c5bda884c2cbd5dca97779a8fd1360a227d4b6d85af2d22dc",
+  "license": "MIT, as its package states; check before you redistribute"
+ },
+ "repositories": {
+  "kernelport": {
+   "url": "https://github.com/PS12007/kernelport",
+   "commit": "a10eb68327f147102bfe97e0a6b0eddfebb7bb31",
+   "archive_sha256": "883bb115032c27ad7f42de76e7145cd270aa4750cfb90516a7bcf4574e1474de",
+   "license": "MIT"
+  },
+  "nvdiffrast": {
+   "url": "https://github.com/NVlabs/nvdiffrast",
+   "commit": "253ac4fcea7de5f396371124af597e6cc957bfae",
+   "archive_sha256": "351a15c952448fdc24c069eeedb2f7836071ff87ab30792265cd0f43cc5fb0f8",
+   "license": "NVIDIA Source Code License (1-Way Commercial): not copied here"
+  },
+  "sam2": {
+   "url": "https://github.com/facebookresearch/sam2",
+   "commit": "2b90b9f5ceec907a1c18123530e92e794ad901a4",
+   "license": "Apache-2.0"
+  }
+ },
+ "zoo": {
+  "cumsum": "3952140da7d99f68a4acf06d3445a8bea43bdc2a16725472038810044cc1c8aa",
+  "embedding_gather": "ba717aebcb4d8e91517a8ab089e9b35ccc3211bc4de42246f032ad01b33c67ed",
+  "layernorm": "28c791effdde916df7f0d6dffe414b50f609f4b8afced8204a3c73055adb94a5",
+  "matmul_naive": "426a417ea1656064108253e18a0163b36ddab5346f89422a1c60243ba83207bc",
+  "reduce_sum": "d90f60c459d371261b0c7b491588e2a150013552dc74ebacc1d13cbe2268be97",
+  "relu": "fc5a63e6a9a2d452d07b76a658701475423f8a43b86e55872345dc3e8484bfdf",
+  "rmsnorm": "1ce837f154763d5f9fa082795a9d78a7a27a38412396673f346b879f2298ce31",
+  "rope": "6ccf29889f35369f9996e55594130c93e2c7ea685e52e4711ea9cb828eb1e53c",
+  "saxpy": "0eabbd1b09b3dd9ee4be97003458510dc4b92fe6225d3a53e574a4f2b03be86c",
+  "softmax": "ab92323e21b2d9a1d933a640c0a2cfd2b40e57a8408e1de30dd8a22e8dd840f1",
+  "transpose": "9fe6eff85a311c724d01e7e6a0622c8322399193d54db0a7ac245fe9888b5bec",
+  "vector_add": "c91b9636881c6191d72f608709f828a566fd6076826e6a7921215421ed43d5a5"
+ },
+ "sam2_file": {
+  "path": "sam2/csrc/connected_components.cu",
+  "sha256": "926c277e24f40609622bb4ce49912838d1c799e63edcccc1c75e65e701acd497"
+ },
+ "nvdiffrast_files": {
+  "interpolate": "a2ff0f402a0aeaa82346e28088d3b020910932625d4f0212026e25d2da723e41",
+  "rasterize": "286e85b2a0c59342a22e0f6e53d612418bc5c7f1d2c679255171342f335c690c",
+  "antialias": "820afbe9bb181f6e0f748e95881c753a0780f67e44c8da9239c81e43031956e2",
+  "texture_kernel": "f54788e2df76490f4bfbc74a129d00ac31d6d954859be18d193b12a712d363ff"
+ }
+}

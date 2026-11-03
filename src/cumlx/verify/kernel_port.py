@@ -10,7 +10,7 @@ error, and a translated kernel is unverified until `cumlx kernel verify` compare
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, is_dataclass
 import importlib
 import importlib.util
 from pathlib import Path
@@ -19,7 +19,14 @@ from typing import Any, Protocol
 
 from ..errors import CumlxError
 from .kernel_capture import wrap_body
-from .kernel_source import FP64_LITERAL, IDENT, line_of, mask_source, strip_comments
+from .kernel_source import (
+    FP64_LITERAL,
+    IDENT,
+    WARP_LEVEL,
+    line_of,
+    mask_source,
+    strip_comments,
+)
 from .opgolden import KernelCase, read_cases, sha256_text
 
 PORT_SCHEMA = 'cumlx.kernel-port.v1'
@@ -423,7 +430,7 @@ def split_declarations(source: str) -> list[Chunk]:
 
 
 # ---------------------------------------------------------------------------- device-code checks
-def _check_device_code(text: str, *, base_line: int, demote_fp64: bool) -> tuple[list[Refusal], dict[str, str], dict[str, str]]:
+def _check_device_code(text: str, *, base_line: int, demote_fp64: bool, allow_warp_level: bool = False) -> tuple[list[Refusal], dict[str, str], dict[str, str]]:
     """Return refusals, the built-ins used that the translator must know, and the built-ins this layer rewrites."""
     masked = mask_source(text)
     refusals: list[Refusal] = []
@@ -434,7 +441,9 @@ def _check_device_code(text: str, *, base_line: int, demote_fp64: bool) -> tuple
         line = base_line + masked.count('\n', 0, match.start())
         builtin = PTX_BUILTINS.get(token)
         if builtin:
-            if builtin.status == 'refuse':
+            if builtin.status == 'refuse' and builtin.reason == _WARP and allow_warp_level:
+                direct[token] = 'passed to the translator by --allow-warp-level'
+            elif builtin.status == 'refuse':
                 feature = ('warp-level' if builtin.reason == _WARP else 'rounding-mode' if builtin.reason == _ROUNDING
                            else 'no-metal-equivalent')
                 refusals.append(Refusal(feature, token, builtin.reason, line))
@@ -643,7 +652,7 @@ def _call_graph_cycle(functions: dict[str, str]) -> list[str] | None:
 
 
 def preprocess_complete(flat: str, *, name: str, sha: str, record: HeaderRecord, refusals: list[Refusal], instantiate: dict[str, list[list[str]]],
-                        demote_fp64: bool, warnings: list[dict[str, Any]]) -> Preprocessed:
+                        demote_fp64: bool, warnings: list[dict[str, Any]], allow_warp_level: bool = False) -> Preprocessed:
     chunks = split_declarations(flat)
     device_functions = [c for c in chunks if c.kind in ('function', 'prototype') and c.device]
     entries = [c for c in device_functions if c.is_global and c.kind == 'function']
@@ -796,13 +805,13 @@ def preprocess_complete(flat: str, *, name: str, sha: str, record: HeaderRecord,
     direct_all: dict[str, str] = {}
     rewritten_all: dict[str, str] = {}
     for text, line in checked + [(t, line_of(flat, first_entry)) for t in helper_instances.values()]:
-        found, direct, rewritten = _check_device_code(text, base_line=line, demote_fp64=demote_fp64)
+        found, direct, rewritten = _check_device_code(text, base_line=line, demote_fp64=demote_fp64, allow_warp_level=allow_warp_level)
         refusals.extend(found)
         direct_all.update(direct)
         rewritten_all.update(rewritten)
     for chunk in chunks:  # a type or macro that device code needs is checked with it
         if id(chunk) in kept and chunk.kind in ('type', 'directive', 'variable'):
-            found, direct, rewritten = _check_device_code(chunk.text, base_line=line_of(flat, chunk.start), demote_fp64=demote_fp64)
+            found, direct, rewritten = _check_device_code(chunk.text, base_line=line_of(flat, chunk.start), demote_fp64=demote_fp64, allow_warp_level=allow_warp_level)
             refusals.extend(found)
             direct_all.update(direct)
             rewritten_all.update(rewritten)
@@ -827,11 +836,11 @@ def _unique(refusals: list[Refusal]) -> list[Refusal]:
 
 
 def _preprocess_body(text: str, header_text: str, *, name: str, sha: str, record: HeaderRecord, refusals: list[Refusal],
-                     demote_fp64: bool, wrap: KernelCase | None, warnings: list[dict[str, Any]]) -> Preprocessed:
+                     demote_fp64: bool, wrap: KernelCase | None, warnings: list[dict[str, Any]], allow_warp_level: bool = False) -> Preprocessed:
     direct_all: dict[str, str] = {}
     rewritten_all: dict[str, str] = {}
     for label, part in (('header', header_text), ('body', text)):
-        found, direct, rewritten = _check_device_code(part, base_line=1, demote_fp64=demote_fp64)
+        found, direct, rewritten = _check_device_code(part, base_line=1, demote_fp64=demote_fp64, allow_warp_level=allow_warp_level)
         for item in found:
             item.reason = f'{label}: {item.reason}'
         refusals.extend(found)
@@ -853,7 +862,8 @@ def _preprocess_body(text: str, header_text: str, *, name: str, sha: str, record
 
 
 def preprocess_file(path: str | Path, *, instantiate: list[str] | None = None, include_dirs: list[str] | None = None, header: str | None = None,
-                    demote_fp64: bool = False, cases_file: str | None = None, case_id: str | None = None) -> Preprocessed:
+                    demote_fp64: bool = False, cases_file: str | None = None, case_id: str | None = None,
+                    allow_warp_level: bool = False) -> Preprocessed:
     p = Path(path)
     if not p.is_file():
         raise CumlxError('E_INPUT_NOT_FOUND', f'{p} does not exist')
@@ -882,7 +892,7 @@ def preprocess_file(path: str | Path, *, instantiate: list[str] | None = None, i
         if wrap is not None:
             raise CumlxError('E_USAGE', '--case wraps a function body, and this source is already a complete kernel')
         out = preprocess_complete(flat, name=name, sha=sha, record=record, refusals=refusals, instantiate=parse_instantiate(instantiate or []),
-                                  demote_fp64=demote_fp64, warnings=warnings)
+                                  demote_fp64=demote_fp64, warnings=warnings, allow_warp_level=allow_warp_level)
     else:
         if instantiate:
             raise CumlxError('E_USAGE', '--instantiate needs a complete kernel, and this source is a function body')
@@ -892,7 +902,7 @@ def preprocess_file(path: str | Path, *, instantiate: list[str] | None = None, i
         if header and not header_path.is_file():
             raise CumlxError('E_INPUT_NOT_FOUND', f'--header {header} does not exist')
         header_text = flatten_includes(header_path.read_text(errors='replace'), header_path.parent, dirs, record, refusals) if header_path.is_file() else ''
-        out = _preprocess_body(flat, header_text, name=name, sha=sha, record=record, refusals=refusals, demote_fp64=demote_fp64, wrap=wrap, warnings=warnings)
+        out = _preprocess_body(flat, header_text, name=name, sha=sha, record=record, refusals=refusals, demote_fp64=demote_fp64, wrap=wrap, warnings=warnings, allow_warp_level=allow_warp_level)
     out.record['headers'] = asdict(record)
     if record.unknown_dropped:
         out.warnings.append({'code': 'W_KERNEL_HEADER_DROPPED', 'message': f'These unknown headers were dropped: {record.unknown_dropped}. If a kernel needs one, the translator ends with an error.',
@@ -900,6 +910,9 @@ def preprocess_file(path: str | Path, *, instantiate: list[str] | None = None, i
     literals = len(FP64_LITERAL.findall(mask_source(out.source + out.header)))
     if literals:
         out.warnings.append({'code': 'W_KERNEL_FP64_LITERAL', 'message': f'{literals} unsuffixed floating literal(s) in device code: double on CUDA and float on Metal. Values can differ.', 'count': literals})
+    passed = sorted(token for token in set(IDENT.findall(mask_source(out.source + out.header))) if token in WARP_LEVEL)
+    if allow_warp_level and passed:
+        out.warnings.append({'code': 'W_KERNEL_WARP_LEVEL_PASSED', 'message': f'--allow-warp-level passed {passed} to the translator. Metal does not promise a SIMD group of 32 or a lane equal to threadIdx.x % 32, so only `cumlx kernel verify` can say whether it works, on this device only.', 'tokens': passed})
     if demote_fp64:
         out.warnings.append({'code': 'W_KERNEL_FP64_DEMOTED', 'message': '--demote-fp64 turned double into float. The port no longer computes what the original computes in fp64.'})
     return out
@@ -926,6 +939,7 @@ class TranslationResult:
     header: str = ''
     entry_points: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    signatures: dict[str, Any] = field(default_factory=dict)  # for an engine that binds the kernel with the translator's own launcher
 
 
 class TranslatorAdapter(Protocol):
@@ -963,7 +977,9 @@ class WoofAdapter:
             version = metadata.version('metal-woof')
         except metadata.PackageNotFoundError:
             version = None
-        return TranslationResult(result.msl, 'complete', self.name, version, entry_points=sorted(result.kernels))
+        signatures = {name: asdict(s) for name, s in result.kernels.items() if is_dataclass(s) and not isinstance(s, type)}
+        notes = ['the unit has module globals, which `--engine woof` does not bind'] if getattr(result, 'globals', None) else []
+        return TranslationResult(result.msl, 'complete', self.name, version, entry_points=sorted(result.kernels), notes=notes, signatures=signatures)
 
 
 def load_translator(spec: str) -> TranslatorAdapter:

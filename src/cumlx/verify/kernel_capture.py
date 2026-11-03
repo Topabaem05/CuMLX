@@ -55,10 +55,15 @@ def read_probe(values: np.ndarray) -> dict[str, bool]:
 
 
 def _params(case: KernelCase) -> list[str]:
+    inputs = {t.name: t for t in case.inputs}
+    outputs = {t.name: t for t in case.outputs}
     params = []
-    for t in case.inputs:
-        params.append(f'const {CUDA_TYPES[t.dtype]} {t.name}' if not t.shape else f'const {CUDA_TYPES[t.dtype]}* {t.name}')
-    params += [f'{CUDA_TYPES[t.dtype]}* {t.name}' for t in case.outputs]
+    for name in case.arguments:
+        if name in outputs:
+            params.append(f'{CUDA_TYPES[outputs[name].dtype]}* {name}')
+        else:
+            t = inputs[name]
+            params.append(f'const {CUDA_TYPES[t.dtype]} {name}' if not t.shape else f'const {CUDA_TYPES[t.dtype]}* {name}')
     return params
 
 
@@ -103,28 +108,31 @@ static void write_all(const std::string& path, const void* data, size_t size) {
             '    std::string dir = argv[1];',
             '    int repeats = atoi(argv[2]);',
             f'    static const int fills[{len(FILL_BYTES)}] = {{{", ".join(str(b) for b in FILL_BYTES)}}};']
-    args = []
+    sources = set(case.initial.values())
     for t in case.inputs:
         size = int(np.prod(t.shape, dtype=np.int64)) * np.dtype(DTYPES[t.dtype]).itemsize
         body.append(f'    std::vector<char> host_{t.name} = read_all(dir + "/in.{t.name}.bin", {size});')
+        if t.name in sources:
+            continue  # it only fills an output, before each launch
         if t.shape:
             body += [f'    {CUDA_TYPES[t.dtype]}* dev_{t.name} = nullptr;',
                      f'    CUMLX_CHECK(cudaMalloc(&dev_{t.name}, {size}));',
                      f'    CUMLX_CHECK(cudaMemcpy(dev_{t.name}, host_{t.name}.data(), {size}, cudaMemcpyHostToDevice));']
-            args.append(f'dev_{t.name}')
         else:
             body.append(f'    {CUDA_TYPES[t.dtype]} dev_{t.name}; memcpy(&dev_{t.name}, host_{t.name}.data(), {size});')
-            args.append(f'dev_{t.name}')
     for t in case.outputs:
         size = int(np.prod(t.shape, dtype=np.int64)) * np.dtype(DTYPES[t.dtype]).itemsize
         body += [f'    {CUDA_TYPES[t.dtype]}* dev_{t.name} = nullptr;',
                  f'    CUMLX_CHECK(cudaMalloc(&dev_{t.name}, {size}));',
                  f'    std::vector<char> host_{t.name}({size});']
-        args.append(f'dev_{t.name}')
+    args = [f'dev_{name}' for name in case.arguments]
     body.append('    for (int rep = 0; rep < repeats; ++rep) {')
     for t in case.outputs:
         size = int(np.prod(t.shape, dtype=np.int64)) * np.dtype(DTYPES[t.dtype]).itemsize
-        body.append(f'        CUMLX_CHECK(cudaMemset(dev_{t.name}, fills[rep % {len(FILL_BYTES)}], {size}));')
+        if t.name in case.initial:
+            body.append(f'        CUMLX_CHECK(cudaMemcpy(dev_{t.name}, host_{case.initial[t.name]}.data(), {size}, cudaMemcpyHostToDevice));')
+        else:
+            body.append(f'        CUMLX_CHECK(cudaMemset(dev_{t.name}, fills[rep % {len(FILL_BYTES)}], {size}));')
     bx, by, bz = case.blocks
     tx, ty, tz = case.threadgroup
     body += [f'        {entry}<<<dim3({bx}, {by}, {bz}), dim3({tx}, {ty}, {tz})>>>({", ".join(args)});',

@@ -1,0 +1,333 @@
+{
+ "schema": "cumlx.kernel-m3.v1",
+ "date": "2026-11-03",
+ "status": "PREPARED, NOT MEASURED. No third-party kernel has run on the V100 or on Metal. Every gate below is open.",
+ "gates": {
+  "goldens_20": {
+   "met": false,
+   "count": 8,
+   "needs": 20,
+   "after_capture_would_be": 21,
+   "waits_on": "an idle V100: sh spikes/m3_kernels.sh capture"
+  },
+  "grade_a_70_percent": {
+   "met": false,
+   "measured": null,
+   "needs": "14 of 20, or 15 of 21 with sam2",
+   "waits_on": "the user running sh spikes/m3_kernels.sh, because the install was denied here"
+  },
+  "zoo_12_compared": {
+   "met": false,
+   "compared": 0,
+   "waits_on": "both of the above"
+  },
+  "one_repository": {
+   "met": false,
+   "repository": "sam2",
+   "waits_on": "both of the above"
+  }
+ },
+ "limits_written_before_measuring": {
+  "kernel": "rel_l2 <= 1e-5, max_rel <= 1e-5, integers exact: unchanged from commit f93ac26"
+ },
+ "denied_here": {
+  "install_of_metal_woof": "The auto mode classifier denied it once: [Code from External]. It was not retried. The user can run: sh spikes/m3_kernels.sh",
+  "compile_check_on_v100": "The auto mode classifier denied a compile-only check of the harnesses: [Remote Shell Writes]. So the generated harnesses of these kernels have not been compiled by nvcc. The capture reports any that fail, and records the rest."
+ },
+ "what_ran": {
+  "preprocess_only": "cumlx kernel port --preprocess-only on all 17 files, on the Mac. It translates nothing.",
+  "read_only": "The source of metal-woof 1.1.5.2 was read from its wheel, without installing or running it.",
+  "stub_tests": "tests/test_m3_kernels.py runs the woof engine, the launcher and the gates on stubs. That is not woof."
+ },
+ "preprocess_results": {
+  "cumsum": {
+   "prepared": true,
+   "entry_points": [
+    "cumsum"
+   ],
+   "prepared_sha256": "349dfb61c98d3de2b81dd334dd9a35393d17098c967478159badfaccbdd958b7",
+   "host_removed": [],
+   "builtins_rewritten": {}
+  },
+  "embedding_gather": {
+   "prepared": true,
+   "entry_points": [
+    "embedding_gather"
+   ],
+   "prepared_sha256": "0c3faf82fb3fcc4122cb270d0d785d8d15d42d46e90e7055eaf3798804e943f0",
+   "host_removed": [],
+   "builtins_rewritten": {}
+  },
+  "layernorm": {
+   "prepared": true,
+   "entry_points": [
+    "layernorm"
+   ],
+   "prepared_sha256": "582c5428b859aef5fa863075083a2e10c95a81a19fb8a60b21818fbda5cd6b26",
+   "host_removed": [],
+   "builtins_rewritten": {
+    "rsqrtf": "cumlx_rsqrtf"
+   }
+  },
+  "matmul_naive": {
+   "prepared": true,
+   "entry_points": [
+    "matmul_naive"
+   ],
+   "prepared_sha256": "6203d04283bc6caaf96aae3465903b213b91aadb8e8fb13188dfd7ae5bb5500c",
+   "host_removed": [],
+   "builtins_rewritten": {}
+  },
+  "reduce_sum": {
+   "prepared": true,
+   "entry_points": [
+    "reduce_sum"
+   ],
+   "prepared_sha256": "6e673e4c04bfddfcc60a8be8640e5f104b8d08e5ac4cb6961207990810a00391",
+   "host_removed": [],
+   "builtins_rewritten": {}
+  },
+  "relu": {
+   "prepared": true,
+   "entry_points": [
+    "relu"
+   ],
+   "prepared_sha256": "1760bf99898989aae63d85854408f2fc06abde32980647170cc43e48ab7e6236",
+   "host_removed": [],
+   "builtins_rewritten": {}
+  },
+  "rmsnorm": {
+   "prepared": false,
+   "refused_count": 1,
+   "refused_features": [
+    "warp-level"
+   ],
+   "refused_tokens": [
+    "__shfl_xor_sync"
+   ],
+   "reason": "kernel cannot be ported: __shfl_xor_sync: warp-level."
+  },
+  "rope": {
+   "prepared": true,
+   "entry_points": [
+    "rope"
+   ],
+   "prepared_sha256": "dae8ec6acfc3b24dab81972903bb6ef949be16e239ee80369dabd2beb4d29659",
+   "host_removed": [],
+   "builtins_rewritten": {}
+  },
+  "saxpy": {
+   "prepared": true,
+   "entry_points": [
+    "saxpy"
+   ],
+   "prepared_sha256": "e9119da92e23d7dc68e6295c1a28760727a1b7ff9f13979a6ee0fc34b0b14c22",
+   "host_removed": [],
+   "builtins_rewritten": {}
+  },
+  "softmax": {
+   "prepared": true,
+   "entry_points": [
+    "softmax"
+   ],
+   "prepared_sha256": "f6cf1bb9b77d4090615c945ad922ba230930e3c735c63210df4023098403f930",
+   "host_removed": [],
+   "builtins_rewritten": {}
+  },
+  "transpose": {
+   "prepared": true,
+   "entry_points": [
+    "transpose"
+   ],
+   "prepared_sha256": "998a147c96d9d1a309b9ccbe9fb35251f96d8061191cf73a9f93cd9f4b7f9bb5",
+   "host_removed": [],
+   "builtins_rewritten": {}
+  },
+  "vector_add": {
+   "prepared": true,
+   "entry_points": [
+    "vector_add"
+   ],
+   "prepared_sha256": "857f67635b2c7a2f889f59869bba00f2feeaa28b54945430039114533e492489",
+   "host_removed": [],
+   "builtins_rewritten": {}
+  },
+  "connected_components": {
+   "prepared": true,
+   "entry_points": [
+    "init_labeling",
+    "merge",
+    "compression",
+    "final_labeling",
+    "init_counting",
+    "final_counting"
+   ],
+   "prepared_sha256": "434eef4935cd2fd8b67cf48d72a73f671a979d2033af1bbf5c8c79cd60e4f8ea",
+   "host_removed": [
+    "PYBIND11_MODULE",
+    "get_connected_componnets"
+   ],
+   "builtins_rewritten": {}
+  },
+  "nvdiffrast.interpolate": {
+   "prepared": false,
+   "refused_count": 10,
+   "refused_features": [
+    "device-global",
+    "recursion",
+    "template-specialization",
+    "unknown-builtin",
+    "warp-level"
+   ],
+   "refused_tokens": [
+    "?",
+    "__all_sync",
+    "__float_as_int",
+    "__int_as_float",
+    "__match_any_sync",
+    "make_float4 -> make_float4",
+    "operator"
+   ],
+   "reason": "interpolate cannot be ported: operator: device-global; ?: template-specialization; ?: template-specialization; ?: template-specialization; make_float4 -> make_float4: recursion; __float_as_int: unknown-builtin and 4 more."
+  },
+  "nvdiffrast.rasterize": {
+   "prepared": false,
+   "refused_count": 12,
+   "refused_features": [
+    "device-global",
+    "recursion",
+    "template-specialization",
+    "unknown-builtin",
+    "warp-level"
+   ],
+   "refused_tokens": [
+    "?",
+    "__float_as_int",
+    "__int_as_float",
+    "__match_any_sync",
+    "make_float4 -> make_float4",
+    "operator"
+   ],
+   "reason": "rasterize cannot be ported: operator: device-global; ?: template-specialization; ?: template-specialization; ?: template-specialization; make_float4 -> make_float4: recursion; __float_as_int: unknown-builtin and 6 more."
+  },
+  "nvdiffrast.antialias": {
+   "prepared": false,
+   "refused_count": 18,
+   "refused_features": [
+    "device-global",
+    "recursion",
+    "template-specialization",
+    "unknown-builtin",
+    "warp-level"
+   ],
+   "refused_tokens": [
+    "?",
+    "__ballot_sync",
+    "__float_as_int",
+    "__float_as_uint",
+    "__int_as_float",
+    "__match_any_sync",
+    "make_int4 -> make_int4",
+    "operator"
+   ],
+   "reason": "antialias cannot be ported: operator: device-global; ?: template-specialization; ?: template-specialization; ?: template-specialization; make_int4 -> make_int4: recursion; __float_as_int: unknown-builtin and 12 more."
+  },
+  "nvdiffrast.texture_kernel": {
+   "prepared": false,
+   "refused_count": 26,
+   "refused_features": [
+    "device-global",
+    "recursion",
+    "rounding-mode",
+    "template-specialization",
+    "unknown-builtin",
+    "warp-level"
+   ],
+   "refused_tokens": [
+    "?",
+    "__float2int_rd",
+    "__float_as_int",
+    "__float_as_uint",
+    "__frcp_rz",
+    "__int_as_float",
+    "__match_any_sync",
+    "__uint_as_float",
+    "make_float3 -> make_float3",
+    "operator"
+   ],
+   "reason": "texture_kernel cannot be ported: operator: device-global; ?: template-specialization; ?: template-specialization; ?: template-specialization; make_float3 -> make_float3: recursion; __float_as_int: unknown-builtin and 20 more."
+  }
+ },
+ "predictions_not_measurements": {
+  "cumsum": {
+   "prediction": "translates and runs",
+   "basis": "The prepared source has no feature that woof refuses by name, as read in its translate/__init__.py. In M0 the same file stopped because templates were not instantiated, and vector_add ran with error 0 once it was."
+  },
+  "embedding_gather": {
+   "prediction": "translates and runs",
+   "basis": "The prepared source has no feature that woof refuses by name, as read in its translate/__init__.py. In M0 the same file stopped because templates were not instantiated, and vector_add ran with error 0 once it was."
+  },
+  "layernorm": {
+   "prediction": "uncertain",
+   "basis": "In M0 woof gave an MSL error for block_sum, which takes a threadgroup pointer. rsqrtf is now rewritten by this layer. The block_sum error is not addressed here, and the cause was not established."
+  },
+  "matmul_naive": {
+   "prediction": "translates and runs",
+   "basis": "The prepared source has no feature that woof refuses by name, as read in its translate/__init__.py. In M0 the same file stopped because templates were not instantiated, and vector_add ran with error 0 once it was."
+  },
+  "reduce_sum": {
+   "prediction": "translates and runs",
+   "basis": "woof has atomicAdd on device float. Inputs are multiples of 1/16, so sums do not depend on the order. The accumulate case starts from a non-zero out."
+  },
+  "relu": {
+   "prediction": "translates and runs",
+   "basis": "The prepared source has no feature that woof refuses by name, as read in its translate/__init__.py. In M0 the same file stopped because templates were not instantiated, and vector_add ran with error 0 once it was."
+  },
+  "rmsnorm": {
+   "prediction": "refused by default. With --allow-warp-level: may translate, values uncertain",
+   "basis": "woof maps __shfl_xor_sync to simd_shuffle with __woof_lane() = simd_prefix_exclusive_sum(1u). The kernel takes its lane from threadIdx.x % 32. Metal does not promise that the two agree. Only a run can say."
+  },
+  "rope": {
+   "prediction": "translates and runs",
+   "basis": "The prepared source has no feature that woof refuses by name, as read in its translate/__init__.py. In M0 the same file stopped because templates were not instantiated, and vector_add ran with error 0 once it was."
+  },
+  "saxpy": {
+   "prediction": "translates and runs",
+   "basis": "The prepared source has no feature that woof refuses by name, as read in its translate/__init__.py. In M0 the same file stopped because templates were not instantiated, and vector_add ran with error 0 once it was."
+  },
+  "softmax": {
+   "prediction": "translates and runs",
+   "basis": "The prepared source has no feature that woof refuses by name, as read in its translate/__init__.py. In M0 the same file stopped because templates were not instantiated, and vector_add ran with error 0 once it was."
+  },
+  "transpose": {
+   "prediction": "translates and runs",
+   "basis": "The prepared source has no feature that woof refuses by name, as read in its translate/__init__.py. In M0 the same file stopped because templates were not instantiated, and vector_add ran with error 0 once it was."
+  },
+  "vector_add": {
+   "prediction": "translates and runs",
+   "basis": "The prepared source has no feature that woof refuses by name, as read in its translate/__init__.py. In M0 the same file stopped because templates were not instantiated, and vector_add ran with error 0 once it was."
+  },
+  "connected_components": {
+   "prediction": "translates and runs. merge and compression are the risk",
+   "basis": "They spin on shared labels with atomicMin. woof binds int atomics, and each step has a time limit. Only merge on a sparse image is compared, because a dense image can give another valid forest on each run."
+  },
+  "nvdiffrast.interpolate": {
+   "prediction": "refused",
+   "basis": "Measured refusal from this layer, below. Part of it is a defect of this layer on these headers: \"operator\" as a device global and make_float4 -> make_float4 as recursion are false reasons from its framework.h. __match_any_sync and __frcp_rz are real ones. nvdiffrast is not the repository for the gate."
+  },
+  "nvdiffrast.rasterize": {
+   "prediction": "refused",
+   "basis": "Measured refusal from this layer, below. Part of it is a defect of this layer on these headers: \"operator\" as a device global and make_float4 -> make_float4 as recursion are false reasons from its framework.h. __match_any_sync and __frcp_rz are real ones. nvdiffrast is not the repository for the gate."
+  },
+  "nvdiffrast.antialias": {
+   "prediction": "refused",
+   "basis": "Measured refusal from this layer, below. Part of it is a defect of this layer on these headers: \"operator\" as a device global and make_float4 -> make_float4 as recursion are false reasons from its framework.h. __match_any_sync and __frcp_rz are real ones. nvdiffrast is not the repository for the gate."
+  },
+  "nvdiffrast.texture_kernel": {
+   "prediction": "refused",
+   "basis": "Measured refusal from this layer, below. Part of it is a defect of this layer on these headers: \"operator\" as a device global and make_float4 -> make_float4 as recursion are false reasons from its framework.h. __match_any_sync and __frcp_rz are real ones. nvdiffrast is not the repository for the gate."
+  }
+ },
+ "cases": "validation/kernel-cases-m3/: 71 cases of 13 files, float32 only. The zoo also lists float16 and bfloat16. Only cases with at most 20000 elements per tensor, so the largest launches are not covered.",
+ "sources": "validation/kernel-cases-m3/sources.json: pinned commits and hashes. No third-party kernel source is in this repository."
+}

@@ -155,6 +155,8 @@ cumlx kernel verify foo.metal kgolden/ -o report/                               
 | FMA 축약 | `a*b+c`를 합침 | 합침 | 다르면 `W_KERNEL_FMAD_DIFFERS` |
 | 실행 순서 | warp 32 | SIMD 그룹 32 | atomic, warp 단위 코드, 반복 결과 차이가 있으면 `W_KERNEL_EXEC_ORDER` |
 
+`--engine woof`는 woof가 번역한 라이브러리를 woof의 실행기로 돌립니다. woof의 스칼라 구조체와 threadgroup 메모리는 `torch.mps.compile_shader`가 설정하지 못합니다. 서명은 `NAME.port.json`의 `metal_signatures`에서 읽습니다. 패키지가 없으면 `E_KERNEL_TRANSLATOR_MISSING`(exit 3)입니다. 지금까지 stub으로만 시험했습니다.
+
 **port.** 번역 전에 다음을 처리합니다. 결과는 `NAME.port.json`에 모두 기록합니다.
 
 | 단계 | 하는 일 |
@@ -165,6 +167,8 @@ cumlx kernel verify foo.metal kgolden/ -o report/                               
 | PTX 내장 함수 | `direct`(번역기가 처리), `rewrite`(`rsqrtf`, `__clz` 등을 이식 가능한 함수로 교체), `refuse` 세 가지입니다 |
 
 **거부(`E_KERNEL_UNPORTABLE`, exit 4).** 이유를 모두 `errors[].details.refused`에 적습니다. warp 단위 동작(`__match_any_sync`, `__shfl_*`, `__ballot_sync`), 반올림 모드(`__frcp_rz` 등), `double`(`--demote-fp64`로 명시 가능), 텍스처, 전역 `__device__` 변수, 재귀, `printf`, 인라인 PTX, 장치 코드의 커널 실행, 모르는 `__` 이름, 찾을 수 없는 지역 헤더가 대상입니다.
+
+`--allow-warp-level`은 warp 단위 내장 함수를 거부하지 않고 번역기로 넘기며 `W_KERNEL_WARP_LEVEL_PASSED`를 표시합니다. Metal은 SIMD 그룹 32도, `threadIdx.x % 32`와 같은 lane도 보장하지 않으므로, 결과는 `cumlx kernel verify`로 그 장치에서만 판단합니다. 기본값은 거부입니다.
 
 **번역기.** `TranslatorAdapter`로 연결합니다. 기본값은 `woof`이고, CUMLX는 설치하지 않습니다. 없으면 `E_KERNEL_TRANSLATOR_MISSING`(exit 3)이며 아무것도 쓰지 않습니다. `--preprocess-only`는 번역기 없이 전처리 결과만 씁니다. woof는 완전한 커널만 받으므로, 함수 본문은 `--cases cases.json --case ID`로 상수를 주어 감쌉니다. 번역 결과는 항상 `W_KERNEL_NOT_VERIFIED`입니다.
 

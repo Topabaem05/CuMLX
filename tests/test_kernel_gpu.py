@@ -15,7 +15,7 @@ from cumlx.errors import CumlxError, ExitCode
 from cumlx.verify import kernel_verify
 from cumlx.verify.kernel_port import preprocess_file
 from cumlx.verify.metrics import compare_kernel_output
-from cumlx.verify.opgolden import OpGolden
+from cumlx.verify.opgolden import OpGolden, parse_case, write_golden
 
 pytestmark = pytest.mark.gpu
 ROOT = Path(__file__).resolve().parents[1]
@@ -103,6 +103,21 @@ def test_a_library_with_the_wrong_buffers_is_incomplete(gpu, capsys, tmp_path):
     code, doc = run(capsys, 'kernel', 'verify', str(lib), str(GOLDEN), '--case', 'silu_mul.float32')
     assert code == ExitCode.INCOMPLETE and doc['data']['unverified']['items'][0]['stage'] == 'bind'
     assert 'no buffer for output' in doc['data']['unverified']['items'][0]['reason']
+
+
+@pytest.mark.parametrize('body, verdict', [('y[i] = x[i] + y[i];', 'ok'), ('y[i] = x[i];', 'diverged')])
+def test_initial_reaches_the_kernel_through_torch(gpu, tmp_path, body, verdict):
+    """The right kernel reads the buffer that the case filled. The wrong one ignores it, and fails on the same golden."""
+    case = parse_case({'id': 'inout', 'kernel': 'add_in_place', 'grid': [3, 1, 1], 'threadgroup': [3, 1, 1],
+                       'inputs': [{'name': 'x', 'dtype': 'float32', 'shape': [3]}, {'name': 'y_in', 'dtype': 'float32', 'shape': [3]}],
+                       'outputs': [{'name': 'y', 'dtype': 'float32', 'shape': [3]}], 'initial': {'y': 'y_in'}})
+    x, start = np.array([1, 2, 3], np.float32), np.array([10, 20, 30], np.float32)
+    write_golden(tmp_path / 'g', kind='fixture', source={'framework': 'test'}, kernels={'add_in_place': {'source_sha256': 'aaa', 'features': {}}}, floating_point={},
+                 cases=[{'case': case, 'inputs': {'x': x, 'y_in': start}, 'outputs': {'y': x + start}, 'repeat_identical': True}])
+    metal = tmp_path / 'add_in_place.metal'
+    metal.write_text('kernel void add_in_place(const constant float* x [[buffer(0)]], device float* y [[buffer(1)]], uint i [[thread_position_in_grid]]) { ' + body + ' }\n')
+    report = kernel_verify.verify_kernels(metal, tmp_path / 'g', engine_name='torch', repeats=2)
+    assert report['verdict'] == verdict
 
 
 def test_changed_golden_is_refused(gpu, capsys, tmp_path):
