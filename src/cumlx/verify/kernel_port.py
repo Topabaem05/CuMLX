@@ -179,6 +179,7 @@ PTX_BUILTINS = _build_builtins()
 ALLOWED_DUNDER = frozenset({'__global__', '__device__', '__host__', '__forceinline__', '__inline__', '__shared__', '__constant__', '__restrict__',
                             '__half', '__FILE__', '__LINE__', '__func__', '__attribute__', '__builtin_expect', '__noinline__',
                             '__launch_bounds__', '__grid_constant__', '__maxnreg__'})
+OPERATOR_NAME = re.compile(r'\boperator\s*(?:\(\s*\)|\[\s*\]|[-+*/%^&|~!=<>,]+)(?=\s*\()')
 STRIPPED_MARKERS = re.compile(r'\b(?:__launch_bounds__|__maxnreg__)\s*\([^()]*\)[ \t]*|\b(?:__noinline__|__grid_constant__)\b[ \t]*')
 _SIMPLE_TYPES = frozenset({'float', 'int', 'unsigned', 'unsigned int', 'char', 'unsigned char', 'short', 'unsigned short', 'long', 'long long',
                            'unsigned long long', 'bool', 'double', 'uint8_t', 'uint16_t', 'uint32_t', 'uint64_t', 'int8_t', 'int16_t', 'int32_t',
@@ -324,6 +325,14 @@ def _function_name(head: str) -> str | None:
     return match.group(1) if match else None
 
 
+def _declaration_shape(rest: str) -> tuple[int, bool]:
+    """Where the first parenthesis is, and whether an `=` comes before it. The name of `operator*=` counts as neither."""
+    plain = OPERATOR_NAME.sub(lambda m: ' ' * len(m.group(0)), rest)
+    first_paren = plain.find('(')
+    before = plain[:first_paren] if first_paren >= 0 else plain
+    return first_paren, re.search(r'(?<![=!<>])=(?!=)', before) is not None
+
+
 def _classify(head: str, text: str, start: int, ended_with_body: bool) -> Chunk:
     template, rest = _template_head(head)
     tokens = set(IDENT.findall(rest))
@@ -334,9 +343,8 @@ def _classify(head: str, text: str, start: int, ended_with_body: bool) -> Chunk:
         if rest.lstrip().startswith('using namespace'):
             return Chunk('other', text, start, None)
         return Chunk('type', text, start, names[-1] if names else None, template=template)
-    first_paren = rest.find('(')
+    first_paren, has_assign = _declaration_shape(rest)
     keyword = re.search(r'\b(struct|class|union|enum)\b', rest[:first_paren] if first_paren >= 0 else rest)
-    has_assign = re.search(r'(?<![=!<>])=(?!=)', rest[:first_paren] if first_paren >= 0 else rest) is not None
     if keyword and not ended_with_body:
         after = IDENT.findall(rest[keyword.end():].split('{')[0].split(':')[0])
         after = [t for t in after if t not in ('class', 'struct')]
@@ -402,9 +410,8 @@ def split_declarations(source: str) -> list[Chunk]:
                         j = -1
                         continue
                     _, rest = _template_head(head)
-                    first_paren = rest.find('(')
+                    first_paren, has_assign = _declaration_shape(rest)
                     is_type = re.search(r'\b(struct|class|union|enum)\b', rest[:first_paren] if first_paren >= 0 else rest)
-                    has_assign = re.search(r'(?<![=!<>])=(?!=)', rest[:first_paren] if first_paren >= 0 else rest)
                     if first_paren >= 0 and not is_type and not has_assign:
                         j = close + 1
                         ended_with_body = True
@@ -623,18 +630,89 @@ def parse_instantiate(items: list[str]) -> dict[str, list[list[str]]]:
     return out
 
 
-def _call_graph_cycle(functions: dict[str, str]) -> list[str] | None:
-    graph = {name: {m.group(1) for m in re.finditer(r'\b([A-Za-z_]\w*)\s*\(', mask_source(text[max(text.find('{'), 0):])) if m.group(1) in functions}
-             for name, text in functions.items()}
-    state: dict[str, int] = {}
-    stack: list[str] = []
+def _plain_comma_count(text: str) -> int:
+    """How many items `text` holds if a `<` in it is a comparison. `_split_args` reads it as a bracket."""
+    if not text.strip():
+        return 0
+    count, depth = 1, 0
+    for c in text:
+        depth += {'(': 1, '[': 1, '{': 1, ')': -1, ']': -1, '}': -1}.get(c, 0)
+        count += c == ',' and depth == 0
+    return count
 
-    def visit(node: str) -> list[str] | None:
+
+def _parameter_range(masked: str) -> tuple[int, int | None]:
+    """The fewest and the most arguments that a call to this definition can have. None means no upper limit."""
+    brace = masked.find('{')
+    head = _strip_attributes(masked[:brace] if brace >= 0 else masked)
+    close = head.rfind(')')
+    if close < 0:
+        return 0, None
+    depth, opening = 0, close
+    while opening >= 0:
+        depth += {')': 1, '(': -1}.get(head[opening], 0)
+        if depth == 0:
+            break
+        opening -= 1
+    inner = head[opening + 1:close].strip()
+    if inner == 'void':
+        return 0, 0
+    params = _split_args(inner)
+    required = sum(1 for p in params if '=' not in p and '...' not in p)
+    if '...' in inner:
+        return required, None
+    return required, max(len(params), _plain_comma_count(inner))
+
+
+def _call_arities(masked: str, opening: int) -> set[int] | None:
+    """The argument counts that this call can have, or None if the parentheses cannot be read here."""
+    try:
+        close = _match_close(masked, opening, '(', ')')
+    except CumlxError:
+        return None
+    inner = masked[opening + 1:close]
+    return {len(_split_args(inner)), _plain_comma_count(inner)}
+
+
+_CallNode = tuple[str, int]  # a function's name and which definition of that name
+
+
+def _call_graph_cycle(functions: dict[str, list[str]]) -> list[str] | None:
+    """Find a call cycle. Each definition is its own node, so a wrapper of a built-in with the same name is not a cycle.
+
+    A call goes to each overload that accepts its number of arguments. This layer does not read types, so overloads
+    with the same number of arguments are all candidates: a cycle among them is reported, because it cannot be ruled out.
+    """
+    bodies: dict[_CallNode, str] = {}
+    ranges: dict[_CallNode, tuple[int, int | None]] = {}
+    for name, texts in functions.items():
+        for index, text in enumerate(texts):
+            masked = mask_source(text)
+            bodies[name, index] = masked[max(masked.find('{'), 0):]
+            ranges[name, index] = _parameter_range(masked)
+
+    def accepts(node: _CallNode, arities: set[int] | None) -> bool:
+        if arities is None:
+            return True
+        low, high = ranges[node]
+        return any(low <= n and (high is None or n <= high) for n in arities)
+
+    graph: dict[_CallNode, set[_CallNode]] = {}
+    for node, body in bodies.items():
+        graph[node] = set()
+        for m in re.finditer(r'\b([A-Za-z_]\w*)\s*\(', body):
+            if m.group(1) in functions:
+                arities = _call_arities(body, m.end() - 1)
+                graph[node].update((m.group(1), i) for i in range(len(functions[m.group(1)])) if accepts((m.group(1), i), arities))
+    state: dict[_CallNode, int] = {}
+    stack: list[_CallNode] = []
+
+    def visit(node: _CallNode) -> list[str] | None:
         state[node] = 1
         stack.append(node)
         for callee in sorted(graph[node]):
             if state.get(callee) == 1:
-                return stack[stack.index(callee):] + [callee]
+                return [n[0] for n in stack[stack.index(callee):]] + [callee[0]]
             if callee not in state:
                 found = visit(callee)
                 if found:
@@ -643,9 +721,9 @@ def _call_graph_cycle(functions: dict[str, str]) -> list[str] | None:
         state[node] = 2
         return None
 
-    for name in sorted(graph):
-        if name not in state:
-            found = visit(name)
+    for node in sorted(graph):
+        if node not in state:
+            found = visit(node)
             if found:
                 return found
     return None
@@ -723,7 +801,7 @@ def preprocess_complete(flat: str, *, name: str, sha: str, record: HeaderRecord,
     helper_instances: dict[str, str] = {}
     used_helpers: set[str] = set()
     checked: list[tuple[str, int]] = []
-    function_texts: dict[str, str] = {}
+    function_texts: dict[str, list[str]] = {}
 
     def expand_helpers(text: str) -> str:
         """Replace `helper<args>(` with a named instance, and record each instance to emit."""
@@ -765,18 +843,18 @@ def preprocess_complete(flat: str, *, name: str, sha: str, record: HeaderRecord,
                 text = expand_helpers(_instantiate(chunk, args, new_name))
                 entry_points.append(new_name)
                 entry_map[f"{chunk.name}<{', '.join(args)}>" if args else chunk.name] = new_name
-                function_texts[new_name] = text
+                function_texts.setdefault(new_name, []).append(text)
                 pieces.append((chunk.start, 'extern "C" ' + re.sub(r'^\s*(?:static\s+)?', '', text.lstrip()) + '\n'))
                 checked.append((text, line_of(flat, chunk.start)))
             continue
         if chunk.template is not None and chunk.name in template_helpers:
             used_helpers.add(chunk.name)
             checked.append((chunk.text, line_of(flat, chunk.start)))
-            function_texts[chunk.name] = chunk.text
+            function_texts.setdefault(chunk.name, []).append(chunk.text)
             continue  # placed below if a call still deduces its arguments
         text = expand_helpers(chunk.text) if chunk.kind in ('function', 'variable', 'type') else chunk.text
         if chunk.kind == 'function' and chunk.name:
-            function_texts[chunk.name] = text
+            function_texts.setdefault(chunk.name, []).append(text)
         if chunk.is_global and chunk.kind == 'function' and chunk.name:
             entry_points.append(chunk.name)
             text = 'extern "C" ' + re.sub(r'^\s*(?:static\s+)?', '', text.lstrip())
@@ -784,7 +862,7 @@ def preprocess_complete(flat: str, *, name: str, sha: str, record: HeaderRecord,
         checked.append((text, line_of(flat, chunk.start)))
     cycle = _call_graph_cycle(function_texts)
     if cycle:
-        refusals.append(Refusal('recursion', ' -> '.join(cycle), 'Metal does not allow recursion in a kernel. Rewrite it as a loop.'))
+        refusals.append(Refusal('recursion', ' -> '.join(cycle), 'Metal does not allow recursion in a kernel. Rewrite it as a loop. If these are overloads with the same number of arguments, this layer cannot tell them apart by type: rename one.'))
 
     # A helper called with deduced arguments stays a template, and the translator must deduce them. State this.
     kept_templates = []

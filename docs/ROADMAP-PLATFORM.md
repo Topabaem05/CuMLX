@@ -212,7 +212,7 @@ cumlx kernel verify foo.metal kgolden/                         # Mac: 비교
 - FP4 커널 8개를 Tesla V100(driver 580.178.04, nvcc 12.0.140)에서 처음 실행해 29개 case를 기록했습니다. 손으로 쓴 Metal 커널이 M5 Pro에서 29개 모두 합격입니다(최악 `rel_l2` 7.5e-8, 허용치 1e-5). 허용치는 측정 전에 커밋했습니다.
 - 전처리한 lab 커널 8개를 nvcc로 다시 컴파일한 결과는 원본과 byte까지 같습니다. 바꾼 내장 함수는 정수 출력이 같고, 부동소수 출력은 최대 1 ULP 차이입니다.
 - 번역기 연결은 **직접 쓴 stub으로만** 시험했습니다. woof를 실행하지 않았으므로, 자동 번역의 범위와 정확도는 아직 측정하지 않았습니다.
-- 외부 커널을 돌릴 준비를 마쳤습니다. **아직 측정이 아닙니다.** [spikes/m3_kernels.sh](../spikes/m3_kernels.sh)가 고정한 커밋에서 받은 zoo 12개와 sam2 1개를 V100에서 기록하고, woof로 번역해 비교합니다. 소스는 저장소에 넣지 않습니다. 전처리만 실행한 결과, zoo 11개와 sam2는 통과하고 `rmsnorm`은 `__shfl_xor_sync` 때문에 거부되며(`--allow-warp-level`을 주면 번역기로 넘기고 값으로 판정합니다), nvdiffrast 4개는 거부됩니다. nvdiffrast 거부 이유 일부는 이 계층이 헤더를 잘못 읽어 생긴 것입니다. [기록](../validation/kernel-m3.json)
+- 외부 커널을 돌릴 준비를 마쳤습니다. **아직 측정이 아닙니다.** [spikes/m3_kernels.sh](../spikes/m3_kernels.sh)가 고정한 커밋에서 받은 zoo 12개와 sam2 1개를 V100에서 기록하고, woof로 번역해 비교합니다. 소스는 저장소에 넣지 않습니다. 전처리만 실행한 결과, zoo 11개와 sam2는 통과하고 `rmsnorm`은 `__shfl_xor_sync` 때문에 거부되며(`--allow-warp-level`을 주면 번역기로 넘기고 값으로 판정합니다), nvdiffrast 4개는 거부됩니다. [기록](../validation/kernel-m3.json) nvdiffrast 거부 이유 중 `operator`의 device global과 `make_float4 -> make_float4`류의 재귀는 이 계층의 오류여서 고쳤습니다. 다시 전처리한 결과 파일마다 거부가 2건씩 줄어 8, 10, 16, 24건이 됐고 새 이유는 없습니다. 통과하는 커널의 전처리 결과 해시는 그대로입니다. **4개 파일 모두 여전히 거부됩니다.** 전부 `__match_any_sync`를 쓰기 때문입니다. `zero_value` 전체 특수화 3건은 이 계층이 처리하지 못하는 것이고, Metal의 한계는 아닙니다
 
 완료 조건:
 

@@ -225,6 +225,82 @@ __global__ void k(int* out) { out[0] = f(3); }
     assert exc.value.details['refused'][0]['feature'] == 'recursion'
 
 
+FLOAT2_OPERATORS = '''
+__device__ __forceinline__ float2& operator*=(float2& a, const float2& b) { a.x *= b.x; a.y *= b.y; return a; }
+__device__ __forceinline__ float2& operator+=(float2& a, float b) { a.x += b; a.y += b; return a; }
+__device__ __forceinline__ bool operator!=(const float2& a, const float2& b) { return a.x != b.x || a.y != b.y; }
+__device__ __forceinline__ float2 operator*(const float2& a, float b) { return make_float2(a.x * b, a.y * b); }
+struct Accum { float v; };
+__device__ __forceinline__ Accum& operator-=(Accum& a, float b) { a.v -= b; return a; }
+__device__ float scale(float x) { return x * 2.0f; }
+'''
+
+
+def test_a_compound_assignment_operator_is_a_function_and_not_a_device_global(tmp_path):
+    """The `=` of `operator*=` read as an initializer: a global named `operator`, and the next declaration inside it."""
+    source = FLOAT2_OPERATORS + '__global__ void k(float* out) { out[0] = scale(1.0f); }\n'
+    pre = preprocess_file(write(tmp_path, source))
+    assert pre.entry_points == ['k']
+    chunks = split_declarations(source)
+    operators = [c for c in chunks if 'operator' in c.text]
+    assert [c.kind for c in operators] == ['function'] * 5
+    assert all(c.device for c in operators)
+    # Each stays its own declaration, so the one after an operator is not swallowed.
+    assert [c.name for c in chunks if c.kind == 'function' and c.name] == ['scale', 'k']
+    for token in ('operator*=', 'operator+=', 'operator!=', 'operator-='):
+        assert token in pre.source
+
+
+@pytest.mark.parametrize('declaration, token', [
+    ('__device__ int counter;', 'counter'),
+    ('__device__ int counter = 3;', 'counter'),
+    ('__device__ int operator_count = 3;', 'operator_count'),
+    ('__device__ float2 origin = make_float2(0.0f, 0.0f);', 'origin'),
+])
+def test_a_real_device_global_is_still_refused_with_its_name(tmp_path, declaration, token):
+    with pytest.raises(CumlxError) as exc:
+        preprocess_file(write(tmp_path, f'{declaration}\n__global__ void k(float* out) {{ out[0] = 1.0f; }}\n'))
+    assert [(r['feature'], r['token']) for r in exc.value.details['refused']] == [('device-global', token)]
+
+
+def test_an_overload_that_calls_another_arity_of_its_name_is_not_recursion(tmp_path):
+    """A wrapper of a CUDA built-in has the same name, and the built-in is not in this source."""
+    for overloads in ('''
+__device__ __forceinline__ float4 make_float4(const float3& a, float w) { return make_float4(a.x, a.y, a.z, w); }
+''', '''
+__device__ __forceinline__ float4 make_float4(const float2& a) { return make_float4(a.x, a.y, 0.0f, 1.0f); }
+__device__ __forceinline__ float4 make_float4(const float3& a, float w) { return make_float4(a.x, a.y, a.z, w); }
+''', '''
+__device__ __forceinline__ float2 pair(float a, float b) { return make_float2(a, b); }
+__device__ __forceinline__ float2 pair(float a) { return pair(a, a); }
+'''):
+        pre = preprocess_file(write(tmp_path, overloads + '__global__ void k(float* out) { out[0] = 1.0f; }\n'))
+        assert pre.entry_points == ['k']
+
+
+@pytest.mark.parametrize('source, token', [
+    # Direct, as before.
+    ('__device__ int f(int n) { return n ? f(n - 1) : 0; }\n', 'f -> f'),
+    # The first overload recurses and the second does not: only the last definition of a name used to be looked at.
+    ('__device__ int f(int n) { return n ? f(n - 1) : 0; }\n__device__ int f(int a, int b) { return a + b; }\n', 'f -> f'),
+    # Two overloads that call each other. No function calls its own arity.
+    ('__device__ int f(int a, int b);\n__device__ int f(int a) { return f(a, 1); }\n__device__ int f(int a, int b) { return b ? f(a) : a; }\n', 'f -> f -> f'),
+    # The same arity: types decide, and this layer does not read them, so it does not call this safe.
+    ('__device__ int f(float a) { return a; }\n__device__ int f(int a) { return f(a - 1); }\n', 'f -> f'),
+    # A default argument and a variadic list both accept this call.
+    ('__device__ int f(int a, int b = 0) { return f(a); }\n', 'f -> f'),
+    ('__device__ int f(int a, ...) { return f(a, 1, 2); }\n', 'f -> f'),
+    # `<` in an argument must not hide the call by miscounting it.
+    ('__device__ int f(int a, int b) { return f(a < b, a > b); }\n', 'f -> f'),
+    # Through a name with other overloads, across two functions.
+    ('__device__ int g(int a);\n__device__ int f(int a, int b) { return g(a) + b; }\n__device__ int g(int a) { return f(a, 1); }\n', 'f -> g -> f'),
+])
+def test_real_recursion_is_still_refused(tmp_path, source, token):
+    with pytest.raises(CumlxError) as exc:
+        preprocess_file(write(tmp_path, source + '__global__ void k(int* out) { out[0] = 1; }\n'))
+    assert [(r['feature'], r['token']) for r in exc.value.details['refused']] == [('recursion', token)]
+
+
 def test_constant_global_stays(tmp_path):
     pre = preprocess_file(write(tmp_path, '__constant__ float table[2] = {1.0f, 2.0f};\n__global__ void k(float* out) { out[threadIdx.x] = table[1]; }\n'))
     assert '__constant__ float table[2]' in pre.source

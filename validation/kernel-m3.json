@@ -171,6 +171,81 @@
   },
   "nvdiffrast.interpolate": {
    "prepared": false,
+   "refused_count": 8,
+   "refused_features": [
+    "template-specialization",
+    "unknown-builtin",
+    "warp-level"
+   ],
+   "refused_tokens": [
+    "?",
+    "__all_sync",
+    "__float_as_int",
+    "__int_as_float",
+    "__match_any_sync"
+   ],
+   "reason": "interpolate cannot be ported: ?: template-specialization; ?: template-specialization; ?: template-specialization; __float_as_int: unknown-builtin; __int_as_float: unknown-builtin; __all_sync: warp-level and 2 more."
+  },
+  "nvdiffrast.rasterize": {
+   "prepared": false,
+   "refused_count": 10,
+   "refused_features": [
+    "template-specialization",
+    "unknown-builtin",
+    "warp-level"
+   ],
+   "refused_tokens": [
+    "?",
+    "__float_as_int",
+    "__int_as_float",
+    "__match_any_sync"
+   ],
+   "reason": "rasterize cannot be ported: ?: template-specialization; ?: template-specialization; ?: template-specialization; __float_as_int: unknown-builtin; __int_as_float: unknown-builtin; __float_as_int: unknown-builtin and 4 more."
+  },
+  "nvdiffrast.antialias": {
+   "prepared": false,
+   "refused_count": 16,
+   "refused_features": [
+    "template-specialization",
+    "unknown-builtin",
+    "warp-level"
+   ],
+   "refused_tokens": [
+    "?",
+    "__ballot_sync",
+    "__float_as_int",
+    "__float_as_uint",
+    "__int_as_float",
+    "__match_any_sync"
+   ],
+   "reason": "antialias cannot be ported: ?: template-specialization; ?: template-specialization; ?: template-specialization; __float_as_int: unknown-builtin; __int_as_float: unknown-builtin; __float_as_int: unknown-builtin and 10 more."
+  },
+  "nvdiffrast.texture_kernel": {
+   "prepared": false,
+   "refused_count": 24,
+   "refused_features": [
+    "rounding-mode",
+    "template-specialization",
+    "unknown-builtin",
+    "warp-level"
+   ],
+   "refused_tokens": [
+    "?",
+    "__float2int_rd",
+    "__float_as_int",
+    "__float_as_uint",
+    "__frcp_rz",
+    "__int_as_float",
+    "__match_any_sync",
+    "__uint_as_float"
+   ],
+   "reason": "texture_kernel cannot be ported: ?: template-specialization; ?: template-specialization; ?: template-specialization; __float_as_int: unknown-builtin; __int_as_float: unknown-builtin; __frcp_rz: rounding-mode and 18 more."
+  }
+ },
+ "preprocess_results_note": "Rerun on 2026-11-03 with commit 745b014. Every prepared hash is unchanged. Each nvdiffrast file loses two false reasons of this layer and gains none. The `?` tokens are 3 full specializations of zero_value in nvdiffrast's common.h: they are real, this layer does not handle them, and Metal itself could. All 4 files are still refused, and each holds __match_any_sync, which is a real warp-level refusal.",
+ "preprocess_results_before_745b014": {
+  "nvdiffrast.interpolate": {
+   "prepared": false,
    "refused_count": 10,
    "refused_features": [
     "device-global",
