@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,7 +8,7 @@ version = "0.5.0"
 description = "CUDA-to-MLX porting parity verifier and experimental packed FP4 kernels"
 requires-python = ">=3.10"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 dependencies = ["numpy>=1.24"]
 
 [project.scripts]

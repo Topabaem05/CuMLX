@@ -265,7 +265,7 @@ src/cumlx/
 | 문서 | 사용 사례 중심 README 재작성, trace 형식 명세 공개 |
 
 **테스팅 마일스톤 T4**
-- [ ] GitHub Action을 예제 저장소에 적용, 오류 주입 PR에서 실패하고 깨끗한 PR에서 통과 — 같은 판정을 이 저장소의 `Action test`로 증명함. 별도 저장소와 PR은 Actions 접근 설정이 필요
+- [ ] GitHub Action을 예제 저장소에 적용, 오류 주입 PR에서 실패하고 깨끗한 PR에서 통과 — 같은 판정을 이 저장소의 `Action test`로 증명함. 별도 비공개 저장소를 만드는 단계는 권한 분류기가 막아 사용자가 실행해야 함: `sh spikes/t4_action_example.sh`. 준비한 브랜치로 액션 본문을 로컬에서 돌린 결과는 깨끗한 쪽 `ok`, 결함 쪽 `diverged`(`model.layers.1.self_attn`)이고, GitHub에서 PR로 돌린 결과는 아직 없음
 - [x] MCP 인터페이스로 에이전트가 capture → diff → 보고서 해석까지 수행하는 데모 — [기록](../validation/mcp-agent-demo.md)
 - [x] `check_op`로 기존 `rms_norm`/`silu_mul` Metal 커널 vs PyTorch 비교 통과 — `fp4_linear`도 포함
 - [x] 7B 모델: `--layers` 부분 기록으로 trace ≤ 5 GB, capture 10분 이내 (목표치) — 322MB, 12초. 랜덤 가중치의 구조 기준 측정이며 실제 checkpoint는 미실행
