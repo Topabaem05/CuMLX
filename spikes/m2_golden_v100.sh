@@ -5,14 +5,26 @@
 #   sh spikes/m2_golden_v100.sh status    # shows the state of the run
 #   sh spikes/m2_golden_v100.sh fetch     # copies the reports to ~/cumlx-m2-golden on this Mac
 #
-# It refuses to start if another job is using the GPU. The host is CUMLX_GPU_HOST, default gpu-host.
-# Delete the remote folder when the test is finished: ssh gpu-host rm -rf cumlx-m2-golden
+# It refuses to start if another job is using the GPU. The host is CUMLX_GPU_HOST, or the content of ~/.config/cumlx/gpu-host. There is no default.
+# Delete the remote folder when the test is finished: ssh <host> rm -rf cumlx-m2-golden
 set -u
 
-HOST=${CUMLX_GPU_HOST:-gpu-host}
+HOST=${CUMLX_GPU_HOST:-}
+HOST_FILE=${XDG_CONFIG_HOME:-$HOME/.config}/cumlx/gpu-host
+if [ -z "$HOST" ] && [ -f "$HOST_FILE" ]; then
+    HOST=$(cat "$HOST_FILE")
+fi
+need_host() {
+    if [ -z "$HOST" ]; then
+        echo "error: no GPU machine is set. Set CUMLX_GPU_HOST to an ssh host with an NVIDIA GPU, or write that host to $HOST_FILE" >&2
+        exit 3
+    fi
+}
 REMOTE=cumlx-m2-golden
 REPO=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 LOCAL=${CUMLX_M2_GOLDEN:-$HOME/cumlx-m2-golden}
+
+need_host
 
 case "${1:-start}" in
 status)

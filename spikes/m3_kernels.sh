@@ -13,7 +13,17 @@ set -u
 
 ROOT=${CUMLX_M3_ROOT:-$HOME/cumlx-m3}
 REPO=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-HOST=${CUMLX_GPU_HOST:-gpu-host}
+HOST=${CUMLX_GPU_HOST:-}
+HOST_FILE=${XDG_CONFIG_HOME:-$HOME/.config}/cumlx/gpu-host
+if [ -z "$HOST" ] && [ -f "$HOST_FILE" ]; then
+    HOST=$(cat "$HOST_FILE")
+fi
+need_host() {
+    if [ -z "$HOST" ]; then
+        echo "error: no GPU machine is set. Set CUMLX_GPU_HOST to an ssh host with an NVIDIA GPU, or write that host to $HOST_FILE" >&2
+        exit 3
+    fi
+}
 PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
 export PATH
 UV=${CUMLX_M3_UV:-uv}
@@ -69,6 +79,7 @@ capture | start)
     fi
     mkdir -p "$ROOT"
     if [ "${1:-start}" = "capture" ]; then
+        need_host
         if [ ! -x "$REPO/.venv/bin/python" ]; then
             echo "error: $REPO/.venv/bin/python not found" >&2
             exit 3

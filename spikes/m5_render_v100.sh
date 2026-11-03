@@ -5,17 +5,29 @@
 #   sh spikes/m5_render_v100.sh status    # shows the state of the run
 #   sh spikes/m5_render_v100.sh fetch     # copies the images to ~/cumlx-m5/cuda on this Mac
 #
-# It refuses to start if another job is using the GPU. The host is CUMLX_GPU_HOST, default gpu-host.
+# It refuses to start if another job is using the GPU. The host is CUMLX_GPU_HOST, or the content of ~/.config/cumlx/gpu-host. There is no default.
 # It copies spikes/m5_render.py and src/cumlx from HEAD, and installs only mitsuba==3.8.0 and NumPy in its own folder.
 # 3.8.0, because Dr.Jit 1.4 and later (Mitsuba 3.9) refuse a GPU under compute capability 7.5, and the V100 is 7.0.
 # It also renders scalar_rgb on the CPU, to measure what the version difference from the Mac's 3.9.1 does.
-# Delete the remote folder when the test is finished: ssh gpu-host rm -rf cumlx-m5-render
+# Delete the remote folder when the test is finished: ssh <host> rm -rf cumlx-m5-render
 set -u
 
-HOST=${CUMLX_GPU_HOST:-gpu-host}
+HOST=${CUMLX_GPU_HOST:-}
+HOST_FILE=${XDG_CONFIG_HOME:-$HOME/.config}/cumlx/gpu-host
+if [ -z "$HOST" ] && [ -f "$HOST_FILE" ]; then
+    HOST=$(cat "$HOST_FILE")
+fi
+need_host() {
+    if [ -z "$HOST" ]; then
+        echo "error: no GPU machine is set. Set CUMLX_GPU_HOST to an ssh host with an NVIDIA GPU, or write that host to $HOST_FILE" >&2
+        exit 3
+    fi
+}
 REMOTE=cumlx-m5-render
 REPO=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 LOCAL=${CUMLX_M5_GOLDEN:-$HOME/cumlx-m5/cuda}
+
+need_host
 
 case "${1:-start}" in
 status)

@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- `spikes/m2_golden_v100.sh`, `m5_render_v100.sh` and `m3_kernels.sh capture` defaulted to one person's ssh host. The host now comes from `CUMLX_GPU_HOST` or `~/.config/cumlx/gpu-host`, and with neither the launcher ends with exit 3 before it contacts anything.
 - The long-run memory limit was a fixed number for one 48 GB Mac. `cumlx.sysmem` reads memory on macOS and Linux, with the page size that `vm_stat` states, and the limit is now 73% of this machine's RAM or `CUMLX_MAX_USED_GB`. On a 48 GiB Mac that is 37.6 GB. `spikes/m3_kernels.py` and `spikes/m5_render.py` use it.
 - The spikes stop at 38 GB of system memory in use, down from 43 GB, on the user's instruction.
 - `spikes/m5_render_v100.sh` installs Mitsuba 3.8.0, because Mitsuba 3.9 refuses a GPU under compute capability 7.5 and the V100 is 7.0. It also renders `scalar_rgb` as a control of the version difference.
