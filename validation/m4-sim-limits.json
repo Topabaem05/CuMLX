@@ -55,6 +55,16 @@
     "pass": "All frames pass for the right scenario, and at least one frame fails for each wrong case",
     "wrong_cases_that_must_fail": ["the renderer keeps the first pose", "the renderer's camera is 0.3 m away from the camera that the check uses"]
   },
+  "camera_surface": {
+    "written": "After the camera test above failed, and before any run of this rule, with a new start seed. The test above stays failed: on MuJoCo, seed 7, the pole's centroid is 2.3 to 5.1 px from its projection in 20 of 21 frames, limit 3 px. The cart stays within 0.35 px, and it hides the base of the pole, which moves the pole's centroid.",
+    "question": "Does each pixel of a link lie on the box at its physics pose?",
+    "measure": "Each pixel of a link goes back to 3D with the check camera and the depth. The distance outside the box at the physics pose, p99 over the link's pixels.",
+    "surface_limit_m": 0.01,
+    "min_link_pixels": 20,
+    "floor": "The floor limits in cumlx.render.sensors, unchanged from M5",
+    "pass": "All frames pass for the right scenario on both engines, and at least one frame fails for each wrong case",
+    "seed": 8
+  },
   "first_run_failed_on_a_bug_of_the_task": "The first comparison, on 2026-11-04, ran with cartpole's action driving both the slider and the hinge, so a torque of up to 20 N m spun the pole. It failed these limits, and so did the time step control. The raw summary stays in validation/m4-sim.json. The fix is `actuated` in the task. The limits above did not change.",
   "memory": "Each run goes through spikes/run_guarded.py: stop at 38 GB in use, start at 33 GB or less, 16 GB per process group."
 }
