@@ -8,6 +8,8 @@ import shutil
 import sys
 from typing import Any
 
+from .. import sysmem
+
 DEPENDENCIES = {
     # module: (distribution, extra)
     'numpy': ('numpy', None),
@@ -82,6 +84,7 @@ def inspect_environment(*, probe: bool = False) -> dict[str, Any]:
                 devices['torch_error'] = f'{type(exc).__name__}: {exc}'
                 report['commands_ready'].update(capture=False, fixture=False)
         report['devices'] = devices
+        report['memory'] = _memory()
     # The FP4 GPU kernel lab is separate from the verifier and still hardware-unvalidated.
     from ..mlx_backend import TARGET_MLX
     report['kernel_lab'] = {'mlx_api_pin': TARGET_MLX, 'device_validated': False,
@@ -89,6 +92,16 @@ def inspect_environment(*, probe: bool = False) -> dict[str, Any]:
                                     'on one device (Apple M5 Pro, MLX 0.32.2, 2026-11-02); that is not a general '
                                     'certification, and speed was not measured'}
     return report
+
+
+def _memory() -> dict[str, Any]:
+    """Memory on this machine, whatever its size. An unknown reading is None."""
+    out: dict[str, Any] = {'used_gb': sysmem.used_gb(), 'total_gb': sysmem.total_gb(), 'limit_gb': None}
+    try:
+        out['limit_gb'] = sysmem.limit_gb()
+    except ValueError as exc:
+        out['limit_error'] = str(exc)
+    return out
 
 
 # ---------------------------------------------------------------------- whole stack, `cumlx doctor --stack`

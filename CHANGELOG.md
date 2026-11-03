@@ -21,6 +21,7 @@
 
 ### Added
 
+- `cumlx doctor --probe` reports memory in use, RAM and the limit for long runs, on any size of machine. `tests/test_m_series_generic.py` fails if code branches on one chip's name.
 - `scripts/compat_check.py`: checks the CLI contract on a base install, with no MLX, torch or NVIDIA tools. It refuses an environment that has them. Run on a fresh venv with the built wheel: 14 of 14, on one Mac with Python 3.15 ([record](validation/compat-base-install.json)).
 - `tests/test_launchers_portable.py`: every launcher parses in the shell that it names, and uses no flag or syntax of only one system. `shellcheck` runs where it is installed, and CI requires it.
 - `cumlx doctor --stack`: report each platform layer in this Python environment, and exit 3 with `E_DEP_MISSING` and an install hint unless all are ready. It installs nothing, uses no network and does not look for nvcc.
