@@ -51,8 +51,8 @@ def test_a_small_change_in_one_corner_is_caught_by_the_noise_ratio():
 def test_noise_too_high_to_judge_is_not_a_pass():
     base = _base()
     result = compare_images(_side(base, GOLDEN_SEEDS, noise=0.02), _side(base, CANDIDATE_SEEDS, noise=0.02))
-    assert result['verdict'] in ('inconclusive', 'diverged')
-    assert result['grade'] is None
+    assert result['verdict'] == 'inconclusive'
+    assert result['grade'] is None and result['failures']
 
 
 def test_a_non_finite_image_fails():

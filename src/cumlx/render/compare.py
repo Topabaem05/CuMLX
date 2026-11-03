@@ -73,7 +73,8 @@ def compare_images(golden: dict[int, np.ndarray], candidate: dict[int, np.ndarra
     worst_within_db = _db(max(within_golden + within_candidate))
     worst_across_db = _db(max(across))
     failures = []
-    if worst_across_db < PSNR_FLOOR_DB:
+    # When two seeds on one device are under the floor too, the noise explains it. That case ends as inconclusive below.
+    if worst_across_db < PSNR_FLOOR_DB <= worst_within_db:
         failures.append(f'worst PSNR across devices {worst_across_db:.2f} dB is under {PSNR_FLOOR_DB} dB')
     if within > 0 and across_mean > NOISE_RATIO * within:
         failures.append(f'MSE across devices is {across_mean / within:.2f} times the MSE within a device, limit {NOISE_RATIO}')

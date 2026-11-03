@@ -9,10 +9,24 @@
     "note": "validation/spikes.json. One pair of one scene. No CUDA image had been rendered."
   },
   "protocol": {
-    "scenes": ["cornell_box (Mitsuba's own, diffuse)", "cornell_spheres (the same box with one conductor and one dielectric sphere)"],
+    "scenes": [
+      "cornell_box (Mitsuba's own, diffuse)",
+      "cornell_spheres (the same box with one conductor and one dielectric sphere)"
+    ],
     "film": "256 x 256",
-    "spp": 1024,
-    "seeds": {"golden_cuda_ad_rgb": [1, 2, 3], "candidate_metal_ad_rgb": [11, 12, 13]},
+    "spp": 4096,
+    "seeds": {
+      "golden_cuda_ad_rgb": [
+        1,
+        2,
+        3
+      ],
+      "candidate_metal_ad_rgb": [
+        11,
+        12,
+        13
+      ]
+    },
     "note": "The seed sets are separate, so shared random numbers cannot flatter the result. Each scene must pass by itself."
   },
   "limits": {
@@ -30,7 +44,23 @@
   "synthetic_cases": {
     "test": "tests/test_render_compare.py",
     "right": "the same image with other noise: grade B",
-    "wrong": ["2% too bright", "one pixel to the right", "red channel missing", "+0.02 in one corner, which stays above the 40 dB floor"],
-    "refused": ["fewer than 3 seeds", "other shapes", "shared seeds"]
+    "wrong": [
+      "2% too bright",
+      "one pixel to the right",
+      "red channel missing",
+      "+0.02 in one corner, which stays above the 40 dB floor"
+    ],
+    "refused": [
+      "fewer than 3 seeds",
+      "other shapes",
+      "shared seeds"
+    ]
+  },
+  "protocol_change_after_the_first_render": {
+    "date": "2026-11-03",
+    "change": "spp from 1024 to 4096, on every device. The limits did not change.",
+    "reason": "On Metal against scalar_rgb at 1024 spp, cornell_spheres gave 39.64 dB across devices and 39.76 dB between two seeds on one device, ratio 1.016. Two seeds on one device were under the 40 dB floor, so the noise was too high to judge. No CUDA image existed at this point.",
+    "direction": "More samples lower the noise, so the same noise ratio and floor are stricter. The 1024 spp results stay in validation/m5-render.json.",
+    "code_change": "compare_images reported that case as diverged, against its own stated rule. It now reports inconclusive. Neither is a pass."
   }
 }
