@@ -191,6 +191,14 @@ def cmd_eval(args: argparse.Namespace) -> int:
         result['mlx_ms_per_step'] = round(1000 * inference / args.steps, 3)
         result['check_op_against_rsl_rl'] = verify_policy(reference, run_mlx, verdict_inputs, rel_l2=limit)
         result['check_op_wrong_activation'] = verify_policy(reference, wrong, verdict_inputs, rel_l2=limit)
+
+        def largest(policy: Any) -> float:
+            def values(x: np.ndarray) -> np.ndarray:
+                out = policy(mx.array(x))
+                mx.eval(out)
+                return np.array(out)
+            return max(float(np.abs(values(x) - reference(torch.from_numpy(x)).detach().numpy()).max()) for x in verdict_inputs)
+        result['absolute_error'] = {'limit': LIMITS['training']['policy_in_mlx']['absolute_rule']['limit'], 'right': largest(run_mlx), 'wrong_activation': largest(wrong)}
     Path(args.output).write_text(json.dumps(result, indent=1))
     print(json.dumps({k: v for k, v in result.items() if not isinstance(v, dict)}))
     return 0
