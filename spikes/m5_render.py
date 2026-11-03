@@ -11,6 +11,7 @@ src/cumlx/render/compare.py and validation/m5-render-limits.json. They were comm
 from __future__ import annotations
 
 import argparse
+import faulthandler
 import json
 import os
 from pathlib import Path
@@ -38,6 +39,16 @@ SPP = 4096  # 1024 was too noisy for the floor. See validation/m5-render-limits.
 PASS_SPP = 64  # All samples in passes, so that one wavefront stays near 4 million paths.
 RATE_SPP = (1, 4, 16, 64)
 MAX_SYSTEM_USED_GB = 43.0
+
+
+def stage(name: str, stall_seconds: float) -> None:
+    """Say what starts now, and end the process with a traceback if it is still in this stage after `stall_seconds`.
+
+    A run on the V100 sat at 100 percent CPU for 30 minutes with an empty log, so the stuck stage could not be named.
+    faulthandler's own thread needs no GIL, so a stall inside native code still ends. The exit code is 1, and no summary is written.
+    """
+    print(json.dumps({'stage': name}), flush=True)
+    faulthandler.dump_traceback_later(stall_seconds, exit=True)
 
 
 def check_memory() -> None:
@@ -88,15 +99,19 @@ def run_render(args: argparse.Namespace) -> int:
     summary: dict[str, Any] = {'variant': args.variant, 'spp': SPP, 'pass_spp': PASS_SPP, 'fault': args.fault, 'machine': platform.machine(), 'system': platform.system(), 'renders': []}
     status = 0
     try:
+        stage('load mitsuba', args.stall_seconds)
         mi = load_mitsuba(args.variant)
         import drjit as dr
         summary.update(mitsuba=mi.__version__, drjit=dr.__version__, numpy=np.__version__)
         for name in SCENES:
+            stage(f'load scene {name}', args.stall_seconds)
             scene = mi.load_dict(scene_dict(mi, name, args.fault))
+            stage(f'first render {name}', args.stall_seconds)
             begin = time.perf_counter()
             np.array(mi.render(scene, spp=4, seed=0))  # The first render compiles the kernels.
             compile_seconds = time.perf_counter() - begin
             for seed in (int(s) for s in args.seeds.split(',')):
+                stage(f'render {name} seed {seed}', args.stall_seconds)
                 begin = time.perf_counter()
                 image = render_seed(mi, scene, seed)
                 seconds = time.perf_counter() - begin
@@ -108,6 +123,7 @@ def run_render(args: argparse.Namespace) -> int:
     except Exception as exc:  # noqa: BLE001 - a failure of the variant is the result, and it must reach summary.json.
         summary['error'] = f'{type(exc).__name__}: {exc}'[:2000]
         status = 1
+    faulthandler.cancel_dump_traceback_later()
     summary['nvidia_compute_apps'] = nvidia_compute_apps()
     summary['process_gpu_seconds'] = process_gpu_seconds(os.getpid())
     summary['status'] = 'failed' if status else 'rendered'
@@ -187,6 +203,7 @@ def main() -> int:
     render = commands.add_parser('render')
     render.add_argument('--variant', required=True)
     render.add_argument('--seeds', required=True)
+    render.add_argument('--stall-seconds', type=float, default=900.0, help='end the run with a traceback if one stage takes longer')
     render.add_argument('--out', required=True)
     render.add_argument('--fault', choices=['light_2pct', 'direct_only'])
     compare = commands.add_parser('compare')
