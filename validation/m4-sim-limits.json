@@ -1,0 +1,43 @@
+{
+  "schema": "cumlx.m4_sim_limits.v1",
+  "date": "2026-11-04",
+  "committed_before_any_measurement": "These limits are in the commit before the first comparison or training run through cumlx.sim. A smoke run that opened each engine came first: it compared nothing, and it trained nothing.",
+  "code": "src/cumlx/sim/compare.py, spikes/m4_sim.py",
+  "scope": "The tasks are in the style of Isaac Lab's direct tasks. They are not Isaac Lab, its assets or PhysX. These limits do not change a gate of M4.",
+  "trajectory": {
+    "question": "Do Genesis and MuJoCo agree from the same start under the same actions?",
+    "reference": "MuJoCo C, float64, CPU",
+    "other": "Genesis on Metal, float32",
+    "measure": "For each world, the largest absolute difference over all steps and values, in meters and radians. Median and p90 over worlds. The largest world is reported, and is not limited.",
+    "cartpole": {
+      "worlds": 256, "control_steps": 120, "seeds": [101, 102, 103], "action_hold_steps": 30, "action_range": 1.0,
+      "values": "cart position, pole angle",
+      "median_limit": 0.02, "p90_limit": 0.05,
+      "faults_that_must_fail": ["gravity 5 percent stronger", "action scale 1.1"]
+    },
+    "go2_flat": {
+      "worlds": 64, "control_steps": 50, "seeds": [101, 102, 103], "action_hold_steps": 10, "action_std": 0.3,
+      "values": "12 joint angles, base position",
+      "median_limit": 0.1, "p90_limit": 0.2,
+      "why_wider": "Each engine has its own contact model, and the robot lands on its feet in this window.",
+      "faults_that_must_fail": ["drive stiffness 0.5 times"]
+    },
+    "control": "MuJoCo with a 4 times smaller time step against MuJoCo, reported beside each task, to show the size of the time step's own effect."
+  },
+  "training": {
+    "cartpole": {
+      "engines": ["genesis on Metal", "mujoco on the CPU"], "seed": 1,
+      "pass": "upright fraction of the last 100 control steps at least 0.95 with the trained policy in MLX. First iteration and no-action controls at most 0.20."
+    },
+    "go2_flat": {
+      "engines": ["genesis on Metal"], "seed": 1, "envs": 4096, "iterations": 300,
+      "pass": "With a fixed command, mean forward speed within 0.2 m/s of +0.8 and -0.8, within 0.1 m/s of 0 for the stop command, and both controls within 0.1 m/s of 0. Falls at most 0.1 per world in 1000 steps."
+    },
+    "policy_in_mlx": {
+      "reference": "rsl_rl's own actor, on observations of the closed loop",
+      "limit_rel_l2": 1e-4,
+      "wrong_case_that_must_fail": "the same weights with ReLU"
+    }
+  },
+  "memory": "Each run goes through spikes/run_guarded.py: stop at 38 GB in use, start at 33 GB or less, 16 GB per process group."
+}

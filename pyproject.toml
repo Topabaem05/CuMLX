@@ -27,6 +27,8 @@ diff = [
 ]
 # Camera sensors with Mitsuba on Metal or on CUDA with OptiX.
 render = ["mitsuba==3.9.1"]
+# Task definitions on Genesis and MuJoCo. Training also needs rsl-rl-lib, and a policy in MLX needs the metal extra.
+sim = ["genesis-world==1.4.5", "mujoco>=3.3", "torch>=2.2", "tensordict"]
 metal = ["mlx>=0.32.2,<0.33; sys_platform == 'darwin' and platform_machine == 'arm64'"]
 cuda = ["mlx[cuda12]==0.32.2; sys_platform == 'linux'"]
 
@@ -34,7 +36,7 @@ cuda = ["mlx[cuda12]==0.32.2; sys_platform == 'linux'"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-cumlx = ["kernels/*.metal", "kernels/*.cu", "kernels/*.h", "py.typed", "verify/recipes.json", "compat/site/*.py"]
+cumlx = ["kernels/*.metal", "kernels/*.cu", "kernels/*.h", "py.typed", "verify/recipes.json", "compat/site/*.py", "sim/assets/*.xml"]
 
 [tool.pytest.ini_options]
 addopts = "-ra"
