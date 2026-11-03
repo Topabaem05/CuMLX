@@ -1,0 +1,721 @@
+{
+ "schema": "cumlx.opgolden.v1",
+ "cumlx_version": "0.5.0",
+ "created_utc": "2026-11-03T02:07:17Z",
+ "golden": {
+  "kind": "cuda"
+ },
+ "source": {
+  "framework": "cuda",
+  "gpu": "Tesla V100-SXM2-16GB",
+  "driver": "580.178.04",
+  "arch": "7.0",
+  "compiler": {
+   "name": "nvcc",
+   "version": "12.0.140",
+   "flags": [
+    "-arch=native"
+   ]
+  },
+  "cuda_runtime": 12000,
+  "cuda_driver_api": 13000,
+  "host": {
+   "machine": "x86_64",
+   "system": "Linux"
+  },
+  "repeats": 3,
+  "idle_during_capture": true
+ },
+ "floating_point": {
+  "ftz": {
+   "flag": "false (nvcc default)",
+   "load_flushes": false,
+   "input_flushes": false,
+   "output_flushes": false
+  },
+  "fmad": {
+   "flag": "true (nvcc default)",
+   "contracts": true
+  },
+  "fp64": {
+   "available": true
+  },
+  "warp_size": 32,
+  "probe_outputs": [
+   9.99994610111476e-41,
+   9.99994610111476e-41,
+   9.99994610111476e-41,
+   7.346839692639297e-40,
+   5.960464477539063e-08
+  ]
+ },
+ "kernels": {
+  "fp4_decode": {
+   "source_file": "fp4_decode.cu",
+   "source_sha256": "feb43f373003258d79fb104805507d38cdae2990a4288823e87387e5c633d4a0",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  },
+  "fp4_gemv": {
+   "source_file": "fp4_gemv.cu",
+   "source_sha256": "7c529ee2ecfabf8e250c51946f4eee8a1c3802cb4a77589276deb0a21a09ef85",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  },
+  "fp4_quantize": {
+   "source_file": "fp4_quantize.cu",
+   "source_sha256": "6f03cda3e1b4c13859405c8d2fde48cb5d41d123675e3bc85f292599f3566c2d",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  },
+  "fp4_small_m": {
+   "source_file": "fp4_small_m.cu",
+   "source_sha256": "34cf4848090cb44b0ec8d30f899583a07c37885894fc41c6de54b5b0a33b0098",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  },
+  "fp4_tiled": {
+   "source_file": "fp4_tiled.cu",
+   "source_sha256": "7349648843d754c4242acec2448eb01c121f31431f97811b2397e8524c434b76",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  },
+  "fp4_w4a4": {
+   "source_file": "fp4_w4a4.cu",
+   "source_sha256": "ccec2af65b7423356eb90518e2f06fdc6d98dc70651b5e93647c642c9bdf81a1",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  },
+  "rms_norm": {
+   "source_file": "rms_norm.cu",
+   "source_sha256": "66c0b7641e9f644b51f42b7420d2b533998682fc409072d4fafcb60fc3ef0b3a",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  },
+  "silu_mul": {
+   "source_file": "silu_mul.cu",
+   "source_sha256": "fd0bb89bf2c12038b7dcb9d71f6b099e826e622acf516ebc04363af3fee362d2",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "fp4_decode.nvfp4.allbytes",
+   "kernel": "fp4_decode",
+   "inputs": [
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      256,
+      1
+     ]
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      256,
+      1
+     ]
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      256,
+      2
+     ]
+    }
+   ],
+   "constants": {
+    "N": 256,
+    "K": 2,
+    "WP": 1,
+    "WSG": 1,
+    "WG": 16,
+    "WF": 0
+   },
+   "grid": [
+    512,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ],
+   "file": "cases/c0000.safetensors",
+   "sha256": "7ddd9f49e7e6b6bc451c225db21702cbaa66f3fc79d1cd72f3fb6b796a33a330",
+   "repeat_identical": true
+  },
+  {
+   "id": "fp4_gemv.mxfp4.1x33x65",
+   "kernel": "fp4_gemv",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1,
+      65
+     ]
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      33,
+      33
+     ]
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      33,
+      3
+     ]
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      33
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      1,
+      33
+     ]
+    }
+   ],
+   "constants": {
+    "M": 1,
+    "N": 33,
+    "K": 65,
+    "WP": 33,
+    "WSG": 3,
+    "WG": 32,
+    "WF": 1,
+    "HAS_BIAS": true,
+    "APPLY_SILU": false,
+    "BM": 1
+   },
+   "grid": [
+    4224,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ],
+   "file": "cases/c0001.safetensors",
+   "sha256": "e6fc321f0cd91d48da6ef0e328f183e8b7fad4a753726d4aedd8ff8463f80bc3",
+   "repeat_identical": true
+  },
+  {
+   "id": "fp4_small_m.mxfp4.3x33x67",
+   "kernel": "fp4_small_m",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      3,
+      67
+     ]
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      33,
+      34
+     ]
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      33,
+      3
+     ]
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      33
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      3,
+      33
+     ]
+    }
+   ],
+   "constants": {
+    "M": 3,
+    "N": 33,
+    "K": 67,
+    "WP": 34,
+    "WSG": 3,
+    "WG": 32,
+    "WF": 1,
+    "HAS_BIAS": true,
+    "APPLY_SILU": false,
+    "BM": 4
+   },
+   "grid": [
+    4224,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ],
+   "file": "cases/c0002.safetensors",
+   "sha256": "c98f0ad4c1aa12de614e4c6a4486091634b502346f7f86298c8d28b235fb0740",
+   "repeat_identical": true
+  },
+  {
+   "id": "fp4_tiled.nvfp4.17x65x129.silu",
+   "kernel": "fp4_tiled",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      17,
+      129
+     ]
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      65,
+      65
+     ]
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      65,
+      9
+     ]
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      17,
+      65
+     ]
+    }
+   ],
+   "constants": {
+    "M": 17,
+    "N": 65,
+    "K": 129,
+    "WP": 65,
+    "WSG": 9,
+    "WG": 16,
+    "WF": 0,
+    "HAS_BIAS": false,
+    "APPLY_SILU": true
+   },
+   "grid": [
+    1152,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ],
+   "file": "cases/c0003.safetensors",
+   "sha256": "a582574b8d03126ef788c7cea4aaa65be873a261edda8b65377c580525749b6d",
+   "repeat_identical": true
+  },
+  {
+   "id": "fp4_w4a4.nvfp4xnvfp4.9x35x67",
+   "kernel": "fp4_w4a4",
+   "inputs": [
+    {
+     "name": "aq",
+     "dtype": "uint8",
+     "shape": [
+      9,
+      34
+     ]
+    },
+    {
+     "name": "ascales",
+     "dtype": "uint8",
+     "shape": [
+      9,
+      5
+     ]
+    },
+    {
+     "name": "aglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      35,
+      34
+     ]
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      35,
+      5
+     ]
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      9,
+      35
+     ]
+    }
+   ],
+   "constants": {
+    "M": 9,
+    "N": 35,
+    "K": 67,
+    "AP": 34,
+    "ASG": 5,
+    "AG": 16,
+    "AF": 0,
+    "WP": 34,
+    "WSG": 5,
+    "WG": 16,
+    "WF": 0,
+    "HAS_BIAS": false,
+    "APPLY_SILU": false
+   },
+   "grid": [
+    512,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ],
+   "file": "cases/c0004.safetensors",
+   "sha256": "3d36ed49298b608d40d23e1fec11972c1f0b06bf1acb15605457087b8e23f177",
+   "repeat_identical": true
+  },
+  {
+   "id": "fp4_quantize.nvfp4.3x67",
+   "kernel": "fp4_quantize",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      3,
+      67
+     ]
+    },
+    {
+     "name": "global",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "name": "outq",
+     "dtype": "uint8",
+     "shape": [
+      3,
+      34
+     ]
+    },
+    {
+     "name": "outs",
+     "dtype": "uint8",
+     "shape": [
+      3,
+      5
+     ]
+    }
+   ],
+   "constants": {
+    "N": 3,
+    "K": 67,
+    "SG": 5,
+    "G": 16,
+    "F": 0,
+    "P": 34
+   },
+   "grid": [
+    128,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ],
+   "file": "cases/c0005.safetensors",
+   "sha256": "9967799ec5e65b3b7b2338996a2cde3022363710209cd61648fe94b6c80ed0fd",
+   "repeat_identical": true
+  },
+  {
+   "id": "rms_norm.residual.3x300",
+   "kernel": "rms_norm",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      3,
+      300
+     ]
+    },
+    {
+     "name": "residual",
+     "dtype": "float32",
+     "shape": [
+      3,
+      300
+     ]
+    },
+    {
+     "name": "weight",
+     "dtype": "float32",
+     "shape": [
+      300
+     ]
+    },
+    {
+     "name": "epsilon",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      3,
+      300
+     ]
+    }
+   ],
+   "constants": {
+    "K": 300,
+    "HAS_RESIDUAL": true
+   },
+   "grid": [
+    384,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ],
+   "file": "cases/c0006.safetensors",
+   "sha256": "018e225c0f5474e0dcb986382a1bb884cc2a3fa747b8193529e3b39dca5676b9",
+   "repeat_identical": true
+  },
+  {
+   "id": "silu_mul.float32",
+   "kernel": "silu_mul",
+   "inputs": [
+    {
+     "name": "gate",
+     "dtype": "float32",
+     "shape": [
+      300
+     ]
+    },
+    {
+     "name": "up",
+     "dtype": "float32",
+     "shape": [
+      300
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      300
+     ]
+    }
+   ],
+   "constants": {
+    "SIZE": 300
+   },
+   "grid": [
+    384,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ],
+   "file": "cases/c0007.safetensors",
+   "sha256": "5a991e18f302d0e77034f04f28f88c5f110b44071e434fb7f0531bc8c1533e9c",
+   "repeat_identical": true
+  }
+ ]
+}

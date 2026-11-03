@@ -46,6 +46,12 @@ ERROR_CODES: dict[str, tuple[ExitCode, str]] = {
     'E_RUN_MPS_DTYPE': (ExitCode.ENVIRONMENT, 'The script used a data type that MPS does not have.'),
     'E_RUN_NOT_COMPARABLE': (ExitCode.INPUT, 'These run reports are not runs of one script with one set of arguments, or one of them failed.'),
     'E_RUN_MISSING_PACKAGE': (ExitCode.ENVIRONMENT, 'The script imports a package that is not installed.'),
+    'E_KERNEL_NO_CUDA': (ExitCode.ENVIRONMENT, '`cumlx kernel capture` needs an NVIDIA GPU, nvcc and nvidia-smi.'),
+    'E_KERNEL_GPU_BUSY': (ExitCode.ENVIRONMENT, 'The GPU has other compute processes, and --require-idle-gpu was given.'),
+    'E_KERNEL_COMPILE': (ExitCode.INPUT, 'The compiler rejected a kernel or its generated program.'),
+    'E_KERNEL_TRANSLATOR_MISSING': (ExitCode.ENVIRONMENT, 'The CUDA-to-Metal translator is not installed or cannot run. Nothing was translated.'),
+    'E_KERNEL_TRANSLATE_FAILED': (ExitCode.INPUT, 'The translator failed on this kernel or returned an unusable result.'),
+    'E_KERNEL_UNPORTABLE': (ExitCode.INPUT, 'The kernel uses a feature with no Metal equivalent. errors[].details.refused names each one and its reason.'),
     'E_SIZE_LIMIT': (ExitCode.USAGE, 'The operation would exceed a configured size limit.'),
     'E_INTERNAL': (ExitCode.INTERNAL, 'Unexpected internal error.'),
 }

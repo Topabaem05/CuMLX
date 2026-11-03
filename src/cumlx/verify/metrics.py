@@ -182,7 +182,8 @@ def compare_kernel_output(actual: np.ndarray, expected: np.ndarray,
     out['subnormal_flushed'] = int((subnormal & (a64 == 0)).sum())
     if not finite.any():
         return {**out, 'verdict': 'pass', 'basis': 'all_special_values'}
-    diff = np.where(finite, a64 - e64, 0.0)
+    diff = np.zeros(e64.shape)
+    diff[finite] = a64[finite] - e64[finite]
     worst = _first(np.abs(diff) == np.max(np.abs(diff)))
     max_abs = float(np.abs(diff[worst]))
     scale = float(np.max(np.abs(e64[finite])))

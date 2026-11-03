@@ -1,0 +1,2198 @@
+{
+ "schema": "cumlx.kernel-cases.v1",
+ "seed": 20261103,
+ "cases": [
+  {
+   "id": "fp4_decode.nvfp4.7x17",
+   "kernel": "fp4_decode",
+   "inputs": [
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      7,
+      9
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.nvfp4.7x17/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      7,
+      2
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.nvfp4.7x17/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.nvfp4.7x17/wglobal"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      7,
+      17
+     ]
+    }
+   ],
+   "constants": {
+    "N": 7,
+    "K": 17,
+    "WP": 9,
+    "WSG": 2,
+    "WG": 16,
+    "WF": 0
+   },
+   "grid": [
+    128,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_decode.mxfp4.5x65",
+   "kernel": "fp4_decode",
+   "inputs": [
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      5,
+      33
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.mxfp4.5x65/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      5,
+      3
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.mxfp4.5x65/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.mxfp4.5x65/wglobal"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      5,
+      65
+     ]
+    }
+   ],
+   "constants": {
+    "N": 5,
+    "K": 65,
+    "WP": 33,
+    "WSG": 3,
+    "WG": 32,
+    "WF": 1
+   },
+   "grid": [
+    384,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_decode.nvfp4.allbytes",
+   "kernel": "fp4_decode",
+   "inputs": [
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      256,
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.nvfp4.allbytes/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      256,
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.nvfp4.allbytes/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.nvfp4.allbytes/wglobal"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      256,
+      2
+     ]
+    }
+   ],
+   "constants": {
+    "N": 256,
+    "K": 2,
+    "WP": 1,
+    "WSG": 1,
+    "WG": 16,
+    "WF": 0
+   },
+   "grid": [
+    512,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_decode.mxfp4.allbytes",
+   "kernel": "fp4_decode",
+   "inputs": [
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      256,
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.mxfp4.allbytes/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      256,
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.mxfp4.allbytes/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.mxfp4.allbytes/wglobal"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      256,
+      2
+     ]
+    }
+   ],
+   "constants": {
+    "N": 256,
+    "K": 2,
+    "WP": 1,
+    "WSG": 1,
+    "WG": 32,
+    "WF": 1
+   },
+   "grid": [
+    512,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_decode.nvfp4.nan-scale",
+   "kernel": "fp4_decode",
+   "inputs": [
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      256,
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.nvfp4.nan-scale/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      256,
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.nvfp4.nan-scale/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.nvfp4.nan-scale/wglobal"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      256,
+      2
+     ]
+    }
+   ],
+   "constants": {
+    "N": 256,
+    "K": 2,
+    "WP": 1,
+    "WSG": 1,
+    "WG": 16,
+    "WF": 0
+   },
+   "grid": [
+    512,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_decode.mxfp4.nan-scale",
+   "kernel": "fp4_decode",
+   "inputs": [
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      256,
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.mxfp4.nan-scale/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      256,
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.mxfp4.nan-scale/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_decode.mxfp4.nan-scale/wglobal"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      256,
+      2
+     ]
+    }
+   ],
+   "constants": {
+    "N": 256,
+    "K": 2,
+    "WP": 1,
+    "WSG": 1,
+    "WG": 32,
+    "WF": 1
+   },
+   "grid": [
+    512,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_gemv.nvfp4.1x7x17",
+   "kernel": "fp4_gemv",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1,
+      17
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.nvfp4.1x7x17/x"
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      7,
+      9
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.nvfp4.1x7x17/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      7,
+      2
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.nvfp4.1x7x17/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.nvfp4.1x7x17/wglobal"
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      7
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.nvfp4.1x7x17/bias"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      1,
+      7
+     ]
+    }
+   ],
+   "constants": {
+    "M": 1,
+    "N": 7,
+    "K": 17,
+    "WP": 9,
+    "WSG": 2,
+    "WG": 16,
+    "WF": 0,
+    "HAS_BIAS": true,
+    "APPLY_SILU": false,
+    "BM": 1
+   },
+   "grid": [
+    896,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_gemv.mxfp4.1x33x65",
+   "kernel": "fp4_gemv",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1,
+      65
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.mxfp4.1x33x65/x"
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      33,
+      33
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.mxfp4.1x33x65/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      33,
+      3
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.mxfp4.1x33x65/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.mxfp4.1x33x65/wglobal"
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      33
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.mxfp4.1x33x65/bias"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      1,
+      33
+     ]
+    }
+   ],
+   "constants": {
+    "M": 1,
+    "N": 33,
+    "K": 65,
+    "WP": 33,
+    "WSG": 3,
+    "WG": 32,
+    "WF": 1,
+    "HAS_BIAS": true,
+    "APPLY_SILU": false,
+    "BM": 1
+   },
+   "grid": [
+    4224,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_gemv.nvfp4.1x5x601.silu",
+   "kernel": "fp4_gemv",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1,
+      601
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.nvfp4.1x5x601.silu/x"
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      5,
+      301
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.nvfp4.1x5x601.silu/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      5,
+      38
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.nvfp4.1x5x601.silu/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.nvfp4.1x5x601.silu/wglobal"
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.nvfp4.1x5x601.silu/bias"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      1,
+      5
+     ]
+    }
+   ],
+   "constants": {
+    "M": 1,
+    "N": 5,
+    "K": 601,
+    "WP": 301,
+    "WSG": 38,
+    "WG": 16,
+    "WF": 0,
+    "HAS_BIAS": false,
+    "APPLY_SILU": true,
+    "BM": 1
+   },
+   "grid": [
+    640,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_small_m.nvfp4.2x17x31",
+   "kernel": "fp4_small_m",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      2,
+      31
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.nvfp4.2x17x31/x"
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      17,
+      16
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.nvfp4.2x17x31/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      17,
+      2
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.nvfp4.2x17x31/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.nvfp4.2x17x31/wglobal"
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      17
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.nvfp4.2x17x31/bias"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      2,
+      17
+     ]
+    }
+   ],
+   "constants": {
+    "M": 2,
+    "N": 17,
+    "K": 31,
+    "WP": 16,
+    "WSG": 2,
+    "WG": 16,
+    "WF": 0,
+    "HAS_BIAS": true,
+    "APPLY_SILU": false,
+    "BM": 4
+   },
+   "grid": [
+    2176,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_small_m.mxfp4.3x33x67",
+   "kernel": "fp4_small_m",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      3,
+      67
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.mxfp4.3x33x67/x"
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      33,
+      34
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.mxfp4.3x33x67/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      33,
+      3
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.mxfp4.3x33x67/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.mxfp4.3x33x67/wglobal"
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      33
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.mxfp4.3x33x67/bias"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      3,
+      33
+     ]
+    }
+   ],
+   "constants": {
+    "M": 3,
+    "N": 33,
+    "K": 67,
+    "WP": 34,
+    "WSG": 3,
+    "WG": 32,
+    "WF": 1,
+    "HAS_BIAS": true,
+    "APPLY_SILU": false,
+    "BM": 4
+   },
+   "grid": [
+    4224,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_small_m.nvfp4.7x5x9.silu",
+   "kernel": "fp4_small_m",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      7,
+      9
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.nvfp4.7x5x9.silu/x"
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      5,
+      5
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.nvfp4.7x5x9.silu/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      5,
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.nvfp4.7x5x9.silu/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.nvfp4.7x5x9.silu/wglobal"
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.nvfp4.7x5x9.silu/bias"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      7,
+      5
+     ]
+    }
+   ],
+   "constants": {
+    "M": 7,
+    "N": 5,
+    "K": 9,
+    "WP": 5,
+    "WSG": 1,
+    "WG": 16,
+    "WF": 0,
+    "HAS_BIAS": false,
+    "APPLY_SILU": true,
+    "BM": 4
+   },
+   "grid": [
+    1280,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_tiled.nvfp4.3x33x67",
+   "kernel": "fp4_tiled",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      3,
+      67
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.nvfp4.3x33x67/x"
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      33,
+      34
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.nvfp4.3x33x67/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      33,
+      5
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.nvfp4.3x33x67/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.nvfp4.3x33x67/wglobal"
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      33
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.nvfp4.3x33x67/bias"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      3,
+      33
+     ]
+    }
+   ],
+   "constants": {
+    "M": 3,
+    "N": 33,
+    "K": 67,
+    "WP": 34,
+    "WSG": 5,
+    "WG": 16,
+    "WF": 0,
+    "HAS_BIAS": true,
+    "APPLY_SILU": false
+   },
+   "grid": [
+    256,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_tiled.mxfp4.9x35x63",
+   "kernel": "fp4_tiled",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      9,
+      63
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.mxfp4.9x35x63/x"
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      35,
+      32
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.mxfp4.9x35x63/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      35,
+      2
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.mxfp4.9x35x63/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.mxfp4.9x35x63/wglobal"
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      35
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.mxfp4.9x35x63/bias"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      9,
+      35
+     ]
+    }
+   ],
+   "constants": {
+    "M": 9,
+    "N": 35,
+    "K": 63,
+    "WP": 32,
+    "WSG": 2,
+    "WG": 32,
+    "WF": 1,
+    "HAS_BIAS": true,
+    "APPLY_SILU": false
+   },
+   "grid": [
+    512,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_tiled.nvfp4.17x65x129.silu",
+   "kernel": "fp4_tiled",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      17,
+      129
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.nvfp4.17x65x129.silu/x"
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      65,
+      65
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.nvfp4.17x65x129.silu/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      65,
+      9
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.nvfp4.17x65x129.silu/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.nvfp4.17x65x129.silu/wglobal"
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.nvfp4.17x65x129.silu/bias"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      17,
+      65
+     ]
+    }
+   ],
+   "constants": {
+    "M": 17,
+    "N": 65,
+    "K": 129,
+    "WP": 65,
+    "WSG": 9,
+    "WG": 16,
+    "WF": 0,
+    "HAS_BIAS": false,
+    "APPLY_SILU": true
+   },
+   "grid": [
+    1152,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_tiled.mxfp4.1x1x1",
+   "kernel": "fp4_tiled",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.mxfp4.1x1x1/x"
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      1,
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.mxfp4.1x1x1/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      1,
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.mxfp4.1x1x1/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.mxfp4.1x1x1/wglobal"
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_tiled.mxfp4.1x1x1/bias"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1
+     ]
+    }
+   ],
+   "constants": {
+    "M": 1,
+    "N": 1,
+    "K": 1,
+    "WP": 1,
+    "WSG": 1,
+    "WG": 32,
+    "WF": 1,
+    "HAS_BIAS": true,
+    "APPLY_SILU": false
+   },
+   "grid": [
+    128,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_gemv.nvfp4.float16-input",
+   "kernel": "fp4_gemv",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float16",
+     "shape": [
+      1,
+      17
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.nvfp4.float16-input/x"
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      9,
+      9
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.nvfp4.float16-input/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      9,
+      2
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.nvfp4.float16-input/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.nvfp4.float16-input/wglobal"
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_gemv.nvfp4.float16-input/bias"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      1,
+      9
+     ]
+    }
+   ],
+   "constants": {
+    "M": 1,
+    "N": 9,
+    "K": 17,
+    "WP": 9,
+    "WSG": 2,
+    "WG": 16,
+    "WF": 0,
+    "HAS_BIAS": false,
+    "APPLY_SILU": false,
+    "BM": 1
+   },
+   "grid": [
+    1152,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_w4a4.nvfp4xnvfp4.9x35x67",
+   "kernel": "fp4_w4a4",
+   "inputs": [
+    {
+     "name": "aq",
+     "dtype": "uint8",
+     "shape": [
+      9,
+      34
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.nvfp4xnvfp4.9x35x67/aq"
+    },
+    {
+     "name": "ascales",
+     "dtype": "uint8",
+     "shape": [
+      9,
+      5
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.nvfp4xnvfp4.9x35x67/ascales"
+    },
+    {
+     "name": "aglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.nvfp4xnvfp4.9x35x67/aglobal"
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      35,
+      34
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.nvfp4xnvfp4.9x35x67/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      35,
+      5
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.nvfp4xnvfp4.9x35x67/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.nvfp4xnvfp4.9x35x67/wglobal"
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.nvfp4xnvfp4.9x35x67/bias"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      9,
+      35
+     ]
+    }
+   ],
+   "constants": {
+    "M": 9,
+    "N": 35,
+    "K": 67,
+    "AP": 34,
+    "ASG": 5,
+    "AG": 16,
+    "AF": 0,
+    "WP": 34,
+    "WSG": 5,
+    "WG": 16,
+    "WF": 0,
+    "HAS_BIAS": false,
+    "APPLY_SILU": false
+   },
+   "grid": [
+    512,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_w4a4.mxfp4xmxfp4.3x33x65",
+   "kernel": "fp4_w4a4",
+   "inputs": [
+    {
+     "name": "aq",
+     "dtype": "uint8",
+     "shape": [
+      3,
+      33
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.mxfp4xmxfp4.3x33x65/aq"
+    },
+    {
+     "name": "ascales",
+     "dtype": "uint8",
+     "shape": [
+      3,
+      3
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.mxfp4xmxfp4.3x33x65/ascales"
+    },
+    {
+     "name": "aglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.mxfp4xmxfp4.3x33x65/aglobal"
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      33,
+      33
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.mxfp4xmxfp4.3x33x65/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      33,
+      3
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.mxfp4xmxfp4.3x33x65/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.mxfp4xmxfp4.3x33x65/wglobal"
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.mxfp4xmxfp4.3x33x65/bias"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      3,
+      33
+     ]
+    }
+   ],
+   "constants": {
+    "M": 3,
+    "N": 33,
+    "K": 65,
+    "AP": 33,
+    "ASG": 3,
+    "AG": 32,
+    "AF": 1,
+    "WP": 33,
+    "WSG": 3,
+    "WG": 32,
+    "WF": 1,
+    "HAS_BIAS": false,
+    "APPLY_SILU": false
+   },
+   "grid": [
+    256,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_w4a4.nvfp4xmxfp4.9x35x67",
+   "kernel": "fp4_w4a4",
+   "inputs": [
+    {
+     "name": "aq",
+     "dtype": "uint8",
+     "shape": [
+      9,
+      34
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.nvfp4xmxfp4.9x35x67/aq"
+    },
+    {
+     "name": "ascales",
+     "dtype": "uint8",
+     "shape": [
+      9,
+      5
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.nvfp4xmxfp4.9x35x67/ascales"
+    },
+    {
+     "name": "aglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.nvfp4xmxfp4.9x35x67/aglobal"
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      35,
+      34
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.nvfp4xmxfp4.9x35x67/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      35,
+      3
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.nvfp4xmxfp4.9x35x67/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.nvfp4xmxfp4.9x35x67/wglobal"
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_w4a4.nvfp4xmxfp4.9x35x67/bias"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      9,
+      35
+     ]
+    }
+   ],
+   "constants": {
+    "M": 9,
+    "N": 35,
+    "K": 67,
+    "AP": 34,
+    "ASG": 5,
+    "AG": 16,
+    "AF": 0,
+    "WP": 34,
+    "WSG": 3,
+    "WG": 32,
+    "WF": 1,
+    "HAS_BIAS": false,
+    "APPLY_SILU": false
+   },
+   "grid": [
+    512,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_quantize.nvfp4.3x67",
+   "kernel": "fp4_quantize",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      3,
+      67
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_quantize.nvfp4.3x67/x"
+    },
+    {
+     "name": "global",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_quantize.nvfp4.3x67/global"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "outq",
+     "dtype": "uint8",
+     "shape": [
+      3,
+      34
+     ]
+    },
+    {
+     "name": "outs",
+     "dtype": "uint8",
+     "shape": [
+      3,
+      5
+     ]
+    }
+   ],
+   "constants": {
+    "N": 3,
+    "K": 67,
+    "SG": 5,
+    "G": 16,
+    "F": 0,
+    "P": 34
+   },
+   "grid": [
+    128,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_quantize.mxfp4.3x67",
+   "kernel": "fp4_quantize",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      3,
+      67
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_quantize.mxfp4.3x67/x"
+    },
+    {
+     "name": "global",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_quantize.mxfp4.3x67/global"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "outq",
+     "dtype": "uint8",
+     "shape": [
+      3,
+      34
+     ]
+    },
+    {
+     "name": "outs",
+     "dtype": "uint8",
+     "shape": [
+      3,
+      3
+     ]
+    }
+   ],
+   "constants": {
+    "N": 3,
+    "K": 67,
+    "SG": 3,
+    "G": 32,
+    "F": 1,
+    "P": 34
+   },
+   "grid": [
+    128,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "rms_norm.plain.4x129",
+   "kernel": "rms_norm",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      4,
+      129
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "rms_norm.plain.4x129/x"
+    },
+    {
+     "name": "residual",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "rms_norm.plain.4x129/residual"
+    },
+    {
+     "name": "weight",
+     "dtype": "float32",
+     "shape": [
+      129
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "rms_norm.plain.4x129/weight"
+    },
+    {
+     "name": "epsilon",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "rms_norm.plain.4x129/epsilon"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      4,
+      129
+     ]
+    }
+   ],
+   "constants": {
+    "K": 129,
+    "HAS_RESIDUAL": false
+   },
+   "grid": [
+    512,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "rms_norm.residual.3x300",
+   "kernel": "rms_norm",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      3,
+      300
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "rms_norm.residual.3x300/x"
+    },
+    {
+     "name": "residual",
+     "dtype": "float32",
+     "shape": [
+      3,
+      300
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "rms_norm.residual.3x300/residual"
+    },
+    {
+     "name": "weight",
+     "dtype": "float32",
+     "shape": [
+      300
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "rms_norm.residual.3x300/weight"
+    },
+    {
+     "name": "epsilon",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "rms_norm.residual.3x300/epsilon"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      3,
+      300
+     ]
+    }
+   ],
+   "constants": {
+    "K": 300,
+    "HAS_RESIDUAL": true
+   },
+   "grid": [
+    384,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "rms_norm.small-input.2x67",
+   "kernel": "rms_norm",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      2,
+      67
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "rms_norm.small-input.2x67/x"
+    },
+    {
+     "name": "residual",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "rms_norm.small-input.2x67/residual"
+    },
+    {
+     "name": "weight",
+     "dtype": "float32",
+     "shape": [
+      67
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "rms_norm.small-input.2x67/weight"
+    },
+    {
+     "name": "epsilon",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "rms_norm.small-input.2x67/epsilon"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      2,
+      67
+     ]
+    }
+   ],
+   "constants": {
+    "K": 67,
+    "HAS_RESIDUAL": false
+   },
+   "grid": [
+    256,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "silu_mul.float32",
+   "kernel": "silu_mul",
+   "inputs": [
+    {
+     "name": "gate",
+     "dtype": "float32",
+     "shape": [
+      300
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "silu_mul.float32/gate"
+    },
+    {
+     "name": "up",
+     "dtype": "float32",
+     "shape": [
+      300
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "silu_mul.float32/up"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      300
+     ]
+    }
+   ],
+   "constants": {
+    "SIZE": 300
+   },
+   "grid": [
+    384,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "silu_mul.float16-input",
+   "kernel": "silu_mul",
+   "inputs": [
+    {
+     "name": "gate",
+     "dtype": "float16",
+     "shape": [
+      300
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "silu_mul.float16-input/gate"
+    },
+    {
+     "name": "up",
+     "dtype": "float16",
+     "shape": [
+      300
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "silu_mul.float16-input/up"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      300
+     ]
+    }
+   ],
+   "constants": {
+    "SIZE": 300
+   },
+   "grid": [
+    384,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "silu_mul.subnormal-gates",
+   "kernel": "silu_mul",
+   "inputs": [
+    {
+     "name": "gate",
+     "dtype": "float32",
+     "shape": [
+      300
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "silu_mul.subnormal-gates/gate"
+    },
+    {
+     "name": "up",
+     "dtype": "float32",
+     "shape": [
+      300
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "silu_mul.subnormal-gates/up"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      300
+     ]
+    }
+   ],
+   "constants": {
+    "SIZE": 300
+   },
+   "grid": [
+    384,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "fp4_small_m.nvfp4.2x5x601",
+   "kernel": "fp4_small_m",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      2,
+      601
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.nvfp4.2x5x601/x"
+    },
+    {
+     "name": "wq",
+     "dtype": "uint8",
+     "shape": [
+      5,
+      301
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.nvfp4.2x5x601/wq"
+    },
+    {
+     "name": "ws",
+     "dtype": "uint8",
+     "shape": [
+      5,
+      38
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.nvfp4.2x5x601/ws"
+    },
+    {
+     "name": "wglobal",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.nvfp4.2x5x601/wglobal"
+    },
+    {
+     "name": "bias",
+     "dtype": "float32",
+     "shape": [
+      1
+     ],
+     "file": "inputs.safetensors",
+     "tensor": "fp4_small_m.nvfp4.2x5x601/bias"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      2,
+      5
+     ]
+    }
+   ],
+   "constants": {
+    "M": 2,
+    "N": 5,
+    "K": 601,
+    "WP": 301,
+    "WSG": 38,
+    "WG": 16,
+    "WF": 0,
+    "HAS_BIAS": false,
+    "APPLY_SILU": false,
+    "BM": 4
+   },
+   "grid": [
+    640,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ]
+  }
+ ]
+}

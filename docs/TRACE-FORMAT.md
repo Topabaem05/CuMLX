@@ -99,7 +99,7 @@ A trace records a whole model. An op-level golden records one kernel: what it co
   "source": {
     "framework": "cuda", "gpu": "Tesla V100-SXM2-16GB", "driver": "580.178.04", "arch": "7.0",
     "compiler": {"name": "nvcc", "version": "12.0.140", "flags": ["-arch=native"]},
-    "cuda_runtime": "12.0", "idle_during_capture": true, "repeats": 3
+    "cuda_runtime": 12000, "cuda_driver_api": 13000, "idle_during_capture": true, "repeats": 3
   },
   "floating_point": {
     "ftz": {"flag": "false (nvcc default)", "load_flushes": false, "input_flushes": false, "output_flushes": false},

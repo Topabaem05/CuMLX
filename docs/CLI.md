@@ -27,6 +27,9 @@ Linux에서는 `diff` extra가 `mlx[cpu]`를 설치합니다. 같은 환경에 �
 | `scan` | CUDA 저장소나 HF 모델의 소스를 텍스트로 읽어, Apple Silicon으로 옮기는 작업량을 분류. 대상 코드는 실행하지 않음 | - |
 | `run` | CUDA를 전제한 PyTorch 스크립트를 수정 없이 MPS에서 실행하고, 바꾼 호출을 모두 기록. 실행은 증명이 아닙니다 | `torch` |
 | `recipe` | CUDA 의존성에 대해 Apple Silicon에서 쓸 대체품을 안내. 선택지마다 직접 실행했는지 문서만 읽었는지 표시 | - |
+| `kernel capture` | NVIDIA 장비에서 원본 `.cu` 커널을 nvcc로 컴파일해 실행하고 연산 단위 golden을 기록. 코드를 실행합니다 | `nvcc`, `nvidia-smi` |
+| `kernel verify` | Metal 커널을 golden 입력으로 실행해 비교. 모르는 커널과 매핑되지 않은 커널은 합격이 아닙니다 | `metal` 또는 `torch` |
+| `kernel port` | `.cu` 파일의 헤더, 템플릿, 호스트 코드, PTX 내장 함수를 처리하고 번역기를 호출. Metal 대응이 없는 기능은 이유를 밝혀 거부 | 번역기 |
 | `port` | mlx-lm으로 변환한 뒤 가중치 비교, golden 기록, diff까지 한 번에 실행 | capture, diff |
 | `weights` | 모델을 실행하지 않고 원본 safetensors와 포팅본 가중치를 비교. 전치·부호·scale 오류를 이름으로 지목 | diff |
 | `report` | 기존 `report.json` 요약 (`--max-items`로 다시 읽기) | - |
@@ -119,6 +122,75 @@ cumlx rundiff golden/ mps/
 허용 범위는 차이의 표준오차 3배와 golden 평균의 1% 중 큰 값입니다. 허용 범위가 golden 평균의 10%를 넘으면 합격시키지 않습니다. 이 값은 오픈소스 스크립트를 재기 전에 고정했고, 결과를 본 뒤 바꾸지 않습니다. 근거는 [fixture 측정값](../validation/run-compare-limits.json)입니다. 여기서 CPU와 MPS의 차이는 2번째 스텝에서 최대 1.7e-7이고, 학습률이 5% 틀린 경우도 `diverged`입니다. 이 측정에 CUDA는 없었습니다.
 
 **한계.** 등급 A는 처음 두 스텝만 보장합니다(`W_RUNDIFF_FIRST_STEPS_ONLY`). 등급 B는 잡음보다 작은 차이를 찾지 못합니다. 한 실행의 손실은 하나로 묶으므로 GAN처럼 옵티마이저가 둘이면 평균으로 비교합니다(`W_RUNDIFF_ONE_STREAM`). 손실만 비교하므로, 샘플링 결과나 저장한 모델은 비교하지 않습니다. golden이 CUDA가 아니면 `W_RUNDIFF_GOLDEN_NOT_CUDA`를 표시합니다.
+
+## cumlx kernel
+
+CUDA 커널을 Metal로 옮기고 실제 CUDA 결과로 증명합니다. 형식은 [`cumlx.opgolden.v1`](TRACE-FORMAT.md)입니다.
+
+```bash
+cumlx kernel capture kernels/ --cases cases.json -o kgolden/ --require-idle-gpu   # NVIDIA 장비
+cumlx kernel port kernels/foo.cu -o foo.metal                                     # 번역기가 필요합니다
+cumlx kernel verify foo.metal kgolden/ -o report/                                 # Mac
+```
+
+**capture.** 각 case를 nvcc로 컴파일해 실행합니다. 출력 메모리를 반복마다 다른 값으로 채우므로, 쓰지 않은 원소가 있으면 `repeat_identical`이 false가 됩니다. 컴파일이나 실행에 실패한 case는 golden에 넣지 않고 exit 5로 보고합니다. nvcc가 없으면 exit 3입니다. 공유 장비에서는 `--require-idle-gpu`를 쓰십시오. 다른 프로세스가 GPU에 있으면 시작하지 않고, 도중에 나타나면 golden을 쓰지 않고 멈춥니다. 원격 실행은 `scripts/kernel_capture_remote.sh`가 맡습니다. MCP에서는 `--allow-code-execution`을 줄 때만 보입니다.
+
+**verify.** 입력이 함수 본문이면 `mx.fast.metal_kernel`로, `kernel void`가 있는 완전한 라이브러리면 `torch.mps.compile_shader`로 실행합니다. 파일 이름이 golden의 커널 이름이 되고, 다르면 `--kernel`로 지정합니다.
+
+| 결과 | 조건 | exit |
+|---|---|---|
+| `ok`, 등급 A | 모든 case의 모든 출력이 허용치 안. 등급은 golden이 실제 CUDA일 때만 붙습니다 | 0 |
+| `diverged` | 한 출력이라도 허용치 밖. `data.first_divergence`를 읽으십시오 | 1 |
+| `incomplete` | 모르는 커널, golden의 커널을 덮지 못한 폴더, 컴파일 실패, 버퍼 불일치, float64 | 5 |
+| 오류 | golden 손상 또는 해시 불일치 (4), Metal 또는 의존성 없음 (3) | 3, 4 |
+
+허용치는 `rel_l2 ≤ 1e-5`, `최대 오차 / 최대 golden ≤ 1e-5`이며, 정수는 정확히 같아야 하고 NaN과 무한대는 같은 위치에 있어야 합니다. 측정 전에 커밋했습니다(`f93ac26`). MLX는 출력 버퍼를 비우지 않고 재사용하므로, 실행 전에 같은 크기의 버퍼를 NaN으로 채워 돌려줍니다. 커널이 쓰지 않은 원소는 `nan_mismatch`로 나타납니다. 재사용을 보장하는 API는 없어서 이 동작은 측정으로만 확인했습니다. 원소를 쓰지 않는 커널은 이 단계가 있을 때 5/5(`nan_mismatch`), 없을 때도 5/5(`rel_l2`) 실패했습니다. 즉 이 단계는 실패의 원인을 분명하게 할 뿐이며, 필요하다는 것을 보인 것은 아닙니다.
+
+**`data.execution.differences`는 항상 네 항목을 말합니다.** 값은 같은 엔진으로 실행한 시험 커널로 그때그때 잽니다.
+
+| 항목 | V100 (측정) | M5 Pro (측정) | 영향 |
+|---|---|---|---|
+| fp64 | 있음 | 없음 | 원본에 `double`이나 접미사 없는 실수 리터럴이 있으면 `W_KERNEL_FP64` |
+| FTZ | 서브노멀 유지 | 복사는 유지, 산술 입력과 결과는 0으로 | `W_KERNEL_FTZ_DIFFERS`, 출력마다 `subnormal_flushed` |
+| FMA 축약 | `a*b+c`를 합침 | 합침 | 다르면 `W_KERNEL_FMAD_DIFFERS` |
+| 실행 순서 | warp 32 | SIMD 그룹 32 | atomic, warp 단위 코드, 반복 결과 차이가 있으면 `W_KERNEL_EXEC_ORDER` |
+
+**port.** 번역 전에 다음을 처리합니다. 결과는 `NAME.port.json`에 모두 기록합니다.
+
+| 단계 | 하는 일 |
+|---|---|
+| 표준 헤더 | `cmath`, `cstdint`는 정규화하고 `cuda_runtime.h`, `cfloat`, `climits`는 없앱니다. 쓰는 상수만 정의합니다 |
+| 호스트 코드 분리 | `main`, `ATen`, `iostream`과 호스트 함수를 없애고, 장치 코드가 쓰는 선언만 남깁니다 |
+| 템플릿 | 호스트의 `foo<float><<<`나 `--instantiate`에서 구체 타입을 찾아 인스턴스를 만듭니다. 못 찾으면 거부합니다 |
+| PTX 내장 함수 | `direct`(번역기가 처리), `rewrite`(`rsqrtf`, `__clz` 등을 이식 가능한 함수로 교체), `refuse` 세 가지입니다 |
+
+**거부(`E_KERNEL_UNPORTABLE`, exit 4).** 이유를 모두 `errors[].details.refused`에 적습니다. warp 단위 동작(`__match_any_sync`, `__shfl_*`, `__ballot_sync`), 반올림 모드(`__frcp_rz` 등), `double`(`--demote-fp64`로 명시 가능), 텍스처, 전역 `__device__` 변수, 재귀, `printf`, 인라인 PTX, 장치 코드의 커널 실행, 모르는 `__` 이름, 찾을 수 없는 지역 헤더가 대상입니다.
+
+**번역기.** `TranslatorAdapter`로 연결합니다. 기본값은 `woof`이고, CUMLX는 설치하지 않습니다. 없으면 `E_KERNEL_TRANSLATOR_MISSING`(exit 3)이며 아무것도 쓰지 않습니다. `--preprocess-only`는 번역기 없이 전처리 결과만 씁니다. woof는 완전한 커널만 받으므로, 함수 본문은 `--cases cases.json --case ID`로 상수를 주어 감쌉니다. 번역 결과는 항상 `W_KERNEL_NOT_VERIFIED`입니다.
+
+**검증 기록 (2026-11-03, [측정값](../validation/kernel-translation.json)).** Tesla V100-SXM2-16GB, driver 580.178.04, nvcc 12.0.140, `-arch=native`, 유휴 상태. Metal은 Apple M5 Pro, MLX 0.32.4, 안전 수학 모드입니다.
+
+| 측정 | 결과 |
+|---|---|
+| 손으로 쓴 Metal 커널 8개, case 29개 | MLX 29/29, PyTorch 29/29 합격. 최악 `rel_l2` 7.5e-8 |
+| V100 반복성 | case 28개가 별도 실행에서 byte까지 같음 |
+| 전처리 후 감싼 lab 커널 8개를 nvcc로 다시 실행 | 원본과 byte까지 같음 |
+| 바꾼 내장 함수와 원본, 같은 V100 | 정수 48개 동일. 실수 72개 중 7개가 1 ULP 차이(`rsqrtf`, `__frsqrt_rn`, `__fdividef`) |
+| 틀린 번역 9건, 8종 | 9건 모두 `diverged`, 같은 커널의 맞는 번역 9건 모두 `ok` |
+
+| 결함 | 종류 | 커널 | 실패한 case | 첫 실패 |
+|---|---|---|---|---|
+| K1 | 내장 함수 대응 오류 | `silu_mul` | 3/3 | NaN 위치 불일치 172개 |
+| K2 | 비트 배치 | `fp4_gemv` | 4/4 | `rel_l2` 1.8 |
+| K3 | float를 half로 낮춤 | `fp4_tiled` | 4/4 | `rel_l2` 2.2e-4 |
+| K4 | 축소 단계 누락 | `rms_norm` | 3/3 | `rel_l2` 0.34 |
+| K5 | 템플릿 상수 | `fp4_w4a4` | 1/3 | `rel_l2` 1.0 |
+| K6 | 정수 인코딩 | `fp4_quantize` | 2/2 | 정수 98개 불일치 |
+| K7 | 누산기 유실 | `fp4_small_m` | 1/4 | K > 256인 case만 |
+| K8 | 템플릿 상수 | `fp4_decode` | 2/6 | `rel_l2` 926 |
+| K9 | 항 누락 (epsilon) | `rms_norm` | 1/3 | 입력이 작은 case만, `rel_l2` 2.6 |
+
+**한계.** 이 저장소의 커널만 실행했고, 이 커널들은 처음부터 이식을 염두에 두고 썼으며 warp 단위 동작이 없습니다. V100과 M5 Pro 한 대씩입니다. 번역기는 stub으로만 시험했으므로 woof의 실제 호출은 확인하지 않았습니다. 전처리는 토큰과 선언 단위로 동작해서 매크로가 기능을 숨길 수 있습니다. 호출에서 인자를 추론하는 템플릿 함수는 템플릿으로 남기고 `W_KERNEL_TEMPLATE_KEPT`를 표시합니다. 서브노멀만 있는 출력은 FTZ 때문에 `diverged`가 됩니다. 입력이 실행하지 않는 경로의 오류는 찾지 못합니다. K7이 그 예입니다.
 
 ## 권장 순서
 

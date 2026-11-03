@@ -1,0 +1,26 @@
+{
+ "schema": "cumlx.kernel-cases.v1",
+ "cases": [
+  {"id": "vector_add.float", "kernel": "vector_add",
+   "inputs": [
+    {"name": "a", "dtype": "float32", "shape": [8], "values": [1.5, -2.25, 0.1, 1e-3, 3.0, 0.7, 100.0, -0.5]},
+    {"name": "b", "dtype": "float32", "shape": [8], "values": [0.3, 7.0, -0.9, 2.0, 1e3, 0.25, -100.0, 0.125]}
+   ],
+   "outputs": [{"name": "out", "dtype": "float32", "shape": [8]}],
+   "grid": [8, 1, 1], "threadgroup": [4, 1, 1]},
+  {"id": "norm_mixed.rows", "kernel": "norm_mixed",
+   "inputs": [{"name": "x", "dtype": "float32", "shape": [8], "values": [1.0, 2.0, 3.0, 4.0, -0.5, 0.25, 8.0, 0.125]}],
+   "outputs": [{"name": "out", "dtype": "float32", "shape": [8]}],
+   "grid": [8, 1, 1], "threadgroup": [4, 1, 1]},
+  {"id": "builtin_map.mixed", "kernel": "builtin_map",
+   "inputs": [
+    {"name": "a", "dtype": "float32", "shape": [6], "values": [1.5, -2.25, 0.1, 1e-3, 3.0, 0.7]},
+    {"name": "b", "dtype": "float32", "shape": [6], "values": [0.3, 7.0, -0.9, 2.0, 1e3, 0.25]},
+    {"name": "c", "dtype": "float32", "shape": [6], "values": [-0.45, 15.75, 0.09, -2e-3, -3000.0, -0.175]},
+    {"name": "m", "dtype": "int32", "shape": [6], "values": [0, 1, -1, 2147483647, 305419896, 16]},
+    {"name": "n", "dtype": "int32", "shape": [6], "values": [5, -7, 9, -11, 13, -1]}
+   ],
+   "outputs": [{"name": "out", "dtype": "float32", "shape": [72]}, {"name": "ints", "dtype": "int32", "shape": [48]}],
+   "grid": [6, 1, 1], "threadgroup": [6, 1, 1]}
+ ]
+}

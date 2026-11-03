@@ -1,0 +1,593 @@
+{
+ "schema": "cumlx.kernel-translation.v1",
+ "date": "2026-11-03",
+ "golden_source": {
+  "framework": "cuda",
+  "gpu": "Tesla V100-SXM2-16GB",
+  "driver": "580.178.04",
+  "arch": "7.0",
+  "compiler": {
+   "name": "nvcc",
+   "version": "12.0.140",
+   "flags": [
+    "-arch=native"
+   ]
+  },
+  "cuda_runtime": 12000,
+  "cuda_driver_api": 13000,
+  "host": {
+   "machine": "x86_64",
+   "system": "Linux"
+  },
+  "repeats": 3,
+  "idle_during_capture": true
+ },
+ "golden_floating_point": {
+  "ftz": {
+   "flag": "false (nvcc default)",
+   "load_flushes": false,
+   "input_flushes": false,
+   "output_flushes": false
+  },
+  "fmad": {
+   "flag": "true (nvcc default)",
+   "contracts": true
+  },
+  "fp64": {
+   "available": true
+  },
+  "warp_size": 32,
+  "probe_outputs": [
+   9.99994610111476e-41,
+   9.99994610111476e-41,
+   9.99994610111476e-41,
+   7.346839692639297e-40,
+   5.960464477539063e-08
+  ]
+ },
+ "metal": {
+  "machine": "arm64",
+  "system": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+  "engine": "mlx",
+  "api": "mx.fast.metal_kernel",
+  "mlx": "0.32.4",
+  "math_mode": "safe",
+  "device": "Apple M5 Pro"
+ },
+ "limits": {
+  "rel_l2": 1e-05,
+  "max_rel": 1e-05,
+  "zero_atol": 1e-06
+ },
+ "limits_written_before_measuring": "commit f93ac26, before the first CUDA or Metal output of these kernels was compared",
+ "golden_count": {
+  "lab_kernels": 8,
+  "lab_cases": 29,
+  "test_kernels": 3,
+  "m3_gate_needs": 20
+ },
+ "hand_written_metal_against_v100": {
+  "mlx": {
+   "verdict": "ok",
+   "summary": {
+    "kernels": {
+     "pass": 8,
+     "fail": 0,
+     "unverified": 0
+    },
+    "cases": {
+     "pass": 29,
+     "fail": 0,
+     "unverified": 0
+    },
+    "unmapped": [],
+    "not_covered": [],
+    "repeats": 3,
+    "grade_a_kernels": [
+     "fp4_decode",
+     "fp4_gemv",
+     "fp4_quantize",
+     "fp4_small_m",
+     "fp4_tiled",
+     "fp4_w4a4",
+     "rms_norm",
+     "silu_mul"
+    ]
+   },
+   "kernels": {
+    "fp4_decode": {
+     "status": "pass",
+     "cases": 6,
+     "passed": 6,
+     "worst_rel_l2": 0.0,
+     "worst_ulp": 0,
+     "grade": "A"
+    },
+    "fp4_gemv": {
+     "status": "pass",
+     "cases": 4,
+     "passed": 4,
+     "worst_rel_l2": 1.4408136160614293e-15,
+     "worst_ulp": 4,
+     "grade": "A"
+    },
+    "fp4_quantize": {
+     "status": "pass",
+     "cases": 2,
+     "passed": 2,
+     "worst_rel_l2": null,
+     "worst_ulp": null,
+     "grade": "A"
+    },
+    "fp4_small_m": {
+     "status": "pass",
+     "cases": 4,
+     "passed": 4,
+     "worst_rel_l2": 4.58123608848994e-08,
+     "worst_ulp": 3,
+     "grade": "A"
+    },
+    "fp4_tiled": {
+     "status": "pass",
+     "cases": 4,
+     "passed": 4,
+     "worst_rel_l2": 4.549172168661538e-09,
+     "worst_ulp": 22,
+     "grade": "A"
+    },
+    "fp4_w4a4": {
+     "status": "pass",
+     "cases": 3,
+     "passed": 3,
+     "worst_rel_l2": 0.0,
+     "worst_ulp": 0,
+     "grade": "A"
+    },
+    "rms_norm": {
+     "status": "pass",
+     "cases": 3,
+     "passed": 3,
+     "worst_rel_l2": 7.531801862820606e-08,
+     "worst_ulp": 3,
+     "grade": "A"
+    },
+    "silu_mul": {
+     "status": "pass",
+     "cases": 3,
+     "passed": 3,
+     "worst_rel_l2": 1.9599188201241627e-08,
+     "worst_ulp": 35681,
+     "grade": "A"
+    }
+   },
+   "failures": [],
+   "unverified": []
+  },
+  "torch": {
+   "verdict": "ok",
+   "summary": {
+    "kernels": {
+     "pass": 8,
+     "fail": 0,
+     "unverified": 0
+    },
+    "cases": {
+     "pass": 29,
+     "fail": 0,
+     "unverified": 0
+    },
+    "unmapped": [],
+    "not_covered": [],
+    "repeats": 1,
+    "grade_a_kernels": [
+     "fp4_decode",
+     "fp4_gemv",
+     "fp4_quantize",
+     "fp4_small_m",
+     "fp4_tiled",
+     "fp4_w4a4",
+     "rms_norm",
+     "silu_mul"
+    ]
+   },
+   "kernels": {
+    "fp4_decode": {
+     "status": "pass",
+     "cases": 6,
+     "passed": 6,
+     "worst_rel_l2": 0.0,
+     "worst_ulp": 0,
+     "grade": "A"
+    },
+    "fp4_gemv": {
+     "status": "pass",
+     "cases": 4,
+     "passed": 4,
+     "worst_rel_l2": 3.494486309323178e-16,
+     "worst_ulp": 1,
+     "grade": "A"
+    },
+    "fp4_quantize": {
+     "status": "pass",
+     "cases": 2,
+     "passed": 2,
+     "worst_rel_l2": null,
+     "worst_ulp": null,
+     "grade": "A"
+    },
+    "fp4_small_m": {
+     "status": "pass",
+     "cases": 4,
+     "passed": 4,
+     "worst_rel_l2": 2.1667913999367834e-08,
+     "worst_ulp": 3,
+     "grade": "A"
+    },
+    "fp4_tiled": {
+     "status": "pass",
+     "cases": 4,
+     "passed": 4,
+     "worst_rel_l2": 1.634095319111157e-09,
+     "worst_ulp": 3,
+     "grade": "A"
+    },
+    "fp4_w4a4": {
+     "status": "pass",
+     "cases": 3,
+     "passed": 3,
+     "worst_rel_l2": 0.0,
+     "worst_ulp": 0,
+     "grade": "A"
+    },
+    "rms_norm": {
+     "status": "pass",
+     "cases": 3,
+     "passed": 3,
+     "worst_rel_l2": 0.0,
+     "worst_ulp": 0,
+     "grade": "A"
+    },
+    "silu_mul": {
+     "status": "pass",
+     "cases": 3,
+     "passed": 3,
+     "worst_rel_l2": 1.4609998338456716e-08,
+     "worst_ulp": 35681,
+     "grade": "A"
+    }
+   },
+   "failures": [],
+   "unverified": []
+  },
+  "execution": [
+   {
+    "topic": "fp64",
+    "cuda": "double runs in 64 bits, and an unsuffixed literal such as 1.0 is a double",
+    "metal": "no double; an unsuffixed literal is a float",
+    "differs": false,
+    "kernels": [],
+    "effect": "No kernel here uses double or an unsuffixed floating literal (text scan; a macro can hide one)."
+   },
+   {
+    "topic": "ftz",
+    "cuda": {
+     "load_flushes": false,
+     "input_flushes": false,
+     "output_flushes": false,
+     "flag": "false (nvcc default)"
+    },
+    "metal": {
+     "load_flushes": false,
+     "input_flushes": true,
+     "output_flushes": true
+    },
+    "differs": true,
+    "effect": "Read `subnormal_flushed` in each output. A flushed element changes the result only as much as its size."
+   },
+   {
+    "topic": "fmad",
+    "cuda": {
+     "flag": "true (nvcc default)",
+     "contracts": true
+    },
+    "metal": {
+     "contracts": true
+    },
+    "differs": false,
+    "effect": "a*b+c rounds once when fused and twice when not. Explicit fma calls are the same on both."
+   },
+   {
+    "topic": "execution_order",
+    "cuda": "threads in a block run in no set order, in warps of 32",
+    "metal": "threads in a threadgroup run in no set order, in SIMD groups of 32",
+    "differs": false,
+    "kernels_with_atomics": [],
+    "kernels_with_warp_level": [],
+    "golden_repeats_bitwise": true,
+    "port_repeats_bitwise": true,
+    "effect": "A kernel that sums by lane in a fixed tree gives the same result in any order. An atomic float sum does not, and warp-level code depends on the group size."
+   }
+  ],
+  "measured_on_metal": {
+   "load_flushes": false,
+   "input_flushes": true,
+   "output_flushes": true,
+   "contracts": true,
+   "probe_outputs": [
+    9.99994610111476e-41,
+    0.0,
+    0.0,
+    0.0,
+    5.960464477539063e-08
+   ],
+   "simd_width": 32
+  },
+  "warnings": [
+   {
+    "code": "W_KERNEL_FTZ_DIFFERS",
+    "message": "CUDA and Metal treat subnormal floats differently. 16 golden subnormal output element(s) were flushed to zero here.",
+    "subnormal_flushed": 16
+   }
+  ]
+ },
+ "wrong_and_right_translations": [
+  {
+   "fault": "K1",
+   "kind": "builtin-map",
+   "title": "blockIdx*blockDim+threadIdx mapped to the position in the threadgroup, not in the grid",
+   "kernel": "silu_mul",
+   "right": {
+    "verdict": "ok",
+    "grade": "A",
+    "cases_passed": 3,
+    "cases": 3,
+    "worst_rel_l2": 1.9599188201241627e-08
+   },
+   "wrong": {
+    "verdict": "diverged",
+    "cases_failed": 3,
+    "cases": 3,
+    "first_case": "silu_mul.float32",
+    "reason": "nan_mismatch",
+    "rel_l2": null,
+    "max_rel": null,
+    "mismatched": 172
+   }
+  },
+  {
+   "fault": "K2",
+   "kind": "bit-layout",
+   "title": "low and high nibble swapped in the packed weights",
+   "kernel": "fp4_gemv",
+   "right": {
+    "verdict": "ok",
+    "grade": "A",
+    "cases_passed": 4,
+    "cases": 4,
+    "worst_rel_l2": 1.4408136160614293e-15
+   },
+   "wrong": {
+    "verdict": "diverged",
+    "cases_failed": 4,
+    "cases": 4,
+    "first_case": "fp4_gemv.nvfp4.1x7x17",
+    "reason": "rel_l2_above_limit",
+    "rel_l2": 1.8193932762693572,
+    "max_rel": 1.6929749713402666,
+    "mismatched": null
+   }
+  },
+  {
+   "fault": "K3",
+   "kind": "precision",
+   "title": "float shared memory demoted to half",
+   "kernel": "fp4_tiled",
+   "right": {
+    "verdict": "ok",
+    "grade": "A",
+    "cases_passed": 4,
+    "cases": 4,
+    "worst_rel_l2": 4.549172168661538e-09
+   },
+   "wrong": {
+    "verdict": "diverged",
+    "cases_failed": 4,
+    "cases": 4,
+    "first_case": "fp4_tiled.nvfp4.3x33x67",
+    "reason": "rel_l2_above_limit",
+    "rel_l2": 0.0002150967139891635,
+    "max_rel": 0.0002195544979663427,
+    "mismatched": null
+   }
+  },
+  {
+   "fault": "K4",
+   "kind": "reduction",
+   "title": "the tree reduction starts one level too low, so half of the lanes are lost",
+   "kernel": "rms_norm",
+   "right": {
+    "verdict": "ok",
+    "grade": "A",
+    "cases_passed": 3,
+    "cases": 3,
+    "worst_rel_l2": 7.531801862820606e-08
+   },
+   "wrong": {
+    "verdict": "diverged",
+    "cases_failed": 3,
+    "cases": 3,
+    "first_case": "rms_norm.plain.4x129",
+    "reason": "rel_l2_above_limit",
+    "rel_l2": 0.3391544583968689,
+    "max_rel": 0.3164262327475523,
+    "mismatched": null
+   }
+  },
+  {
+   "fault": "K5",
+   "kind": "template-constant",
+   "title": "the activation scale format instantiated with the weight format",
+   "kernel": "fp4_w4a4",
+   "right": {
+    "verdict": "ok",
+    "grade": "A",
+    "cases_passed": 3,
+    "cases": 3,
+    "worst_rel_l2": 0.0
+   },
+   "wrong": {
+    "verdict": "diverged",
+    "cases_failed": 1,
+    "cases": 3,
+    "first_case": "fp4_w4a4.nvfp4xmxfp4.9x35x67",
+    "reason": "rel_l2_above_limit",
+    "rel_l2": 0.9998145886383006,
+    "max_rel": 0.9998528021171281,
+    "mismatched": null
+   }
+  },
+  {
+   "fault": "K6",
+   "kind": "integer-encoding",
+   "title": "the two codes of a packed byte written in the wrong order",
+   "kernel": "fp4_quantize",
+   "right": {
+    "verdict": "ok",
+    "grade": "A",
+    "cases_passed": 2,
+    "cases": 2,
+    "worst_rel_l2": null
+   },
+   "wrong": {
+    "verdict": "diverged",
+    "cases_failed": 2,
+    "cases": 2,
+    "first_case": "fp4_quantize.nvfp4.3x67",
+    "reason": "integer_mismatch",
+    "rel_l2": null,
+    "max_rel": null,
+    "mismatched": 98
+   }
+  },
+  {
+   "fault": "K7",
+   "kind": "lost-accumulator",
+   "title": "fma(a, b, accum) translated as a * b",
+   "kernel": "fp4_small_m",
+   "right": {
+    "verdict": "ok",
+    "grade": "A",
+    "cases_passed": 4,
+    "cases": 4,
+    "worst_rel_l2": 4.58123608848994e-08
+   },
+   "wrong": {
+    "verdict": "diverged",
+    "cases_failed": 1,
+    "cases": 4,
+    "first_case": "fp4_small_m.nvfp4.2x5x601",
+    "reason": "rel_l2_above_limit",
+    "rel_l2": 0.5520701177868609,
+    "max_rel": 0.6633940028079367,
+    "mismatched": null
+   }
+  },
+  {
+   "fault": "K8",
+   "kind": "template-constant",
+   "title": "the scale format hard-coded to NVFP4",
+   "kernel": "fp4_decode",
+   "right": {
+    "verdict": "ok",
+    "grade": "A",
+    "cases_passed": 6,
+    "cases": 6,
+    "worst_rel_l2": 0.0
+   },
+   "wrong": {
+    "verdict": "diverged",
+    "cases_failed": 2,
+    "cases": 6,
+    "first_case": "fp4_decode.mxfp4.5x65",
+    "reason": "rel_l2_above_limit",
+    "rel_l2": 926.3982657153912,
+    "max_rel": 895.0,
+    "mismatched": null
+   }
+  },
+  {
+   "fault": "K9",
+   "kind": "dropped-term",
+   "title": "epsilon left out of the RMS denominator",
+   "kernel": "rms_norm",
+   "right": {
+    "verdict": "ok",
+    "grade": "A",
+    "cases_passed": 3,
+    "cases": 3,
+    "worst_rel_l2": 7.531801862820606e-08
+   },
+   "wrong": {
+    "verdict": "diverged",
+    "cases_failed": 1,
+    "cases": 3,
+    "first_case": "rms_norm.small-input.2x67",
+    "reason": "rel_l2_above_limit",
+    "rel_l2": 2.574821583779023,
+    "max_rel": 2.322570278111508,
+    "mismatched": null
+   }
+  }
+ ],
+ "pre_translation_on_v100": {
+  "lab_kernels_wrapped_against_original": [
+   {
+    "case": "fp4_decode.nvfp4.allbytes",
+    "bytes_identical": true
+   },
+   {
+    "case": "fp4_gemv.mxfp4.1x33x65",
+    "bytes_identical": true
+   },
+   {
+    "case": "fp4_small_m.mxfp4.3x33x67",
+    "bytes_identical": true
+   },
+   {
+    "case": "fp4_tiled.nvfp4.17x65x129.silu",
+    "bytes_identical": true
+   },
+   {
+    "case": "fp4_w4a4.nvfp4xnvfp4.9x35x67",
+    "bytes_identical": true
+   },
+   {
+    "case": "fp4_quantize.nvfp4.3x67",
+    "bytes_identical": true
+   },
+   {
+    "case": "rms_norm.residual.3x300",
+    "bytes_identical": true
+   },
+   {
+    "case": "silu_mul.float32",
+    "bytes_identical": true
+   }
+  ],
+  "rewritten_builtins_against_original": {
+   "integer_outputs_identical": true,
+   "integer_elements": 48,
+   "float_verdict": "pass",
+   "float_elements": 72,
+   "float_rel_l2": 4.3122315201108164e-11,
+   "float_max_ulp": 1,
+   "float_elements_that_differ": 7,
+   "builtins_that_differ": [
+    "__fdividef",
+    "__frsqrt_rn",
+    "rsqrtf"
+   ]
+  }
+ },
+ "limits_of_this_evidence": "One V100 and one M5 Pro. The kernels are this repository's own, written for portability, and they use no warp-level behaviour. No third-party translator ran: `cumlx kernel port` was tested with a stub. The inputs are normal floats, plus subnormals in one case and NaN scales in two. Subnormal and overflow regions are not certified."
+}

@@ -1,0 +1,140 @@
+{
+ "schema": "cumlx.opgolden.v1",
+ "cumlx_version": "0.5.0",
+ "created_utc": "2026-11-03T02:14:55Z",
+ "golden": {
+  "kind": "cuda"
+ },
+ "source": {
+  "framework": "cuda",
+  "gpu": "Tesla V100-SXM2-16GB",
+  "driver": "580.178.04",
+  "arch": "7.0",
+  "compiler": {
+   "name": "nvcc",
+   "version": "12.0.140",
+   "flags": [
+    "-arch=native"
+   ]
+  },
+  "cuda_runtime": 12000,
+  "cuda_driver_api": 13000,
+  "host": {
+   "machine": "x86_64",
+   "system": "Linux"
+  },
+  "repeats": 3,
+  "idle_during_capture": true
+ },
+ "floating_point": {
+  "ftz": {
+   "flag": "false (nvcc default)",
+   "load_flushes": false,
+   "input_flushes": false,
+   "output_flushes": false
+  },
+  "fmad": {
+   "flag": "true (nvcc default)",
+   "contracts": true
+  },
+  "fp64": {
+   "available": true
+  },
+  "warp_size": 32,
+  "probe_outputs": [
+   9.99994610111476e-41,
+   9.99994610111476e-41,
+   9.99994610111476e-41,
+   7.346839692639297e-40,
+   5.960464477539063e-08
+  ]
+ },
+ "kernels": {
+  "builtin_map": {
+   "source_file": "builtin_map.cu",
+   "source_sha256": "9e94b14f405ec1e053ba3abf0ac209fe0033570c540f895acb2c6e2599ae7a1e",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "builtin_map.mixed",
+   "kernel": "builtin_map",
+   "inputs": [
+    {
+     "name": "a",
+     "dtype": "float32",
+     "shape": [
+      6
+     ]
+    },
+    {
+     "name": "b",
+     "dtype": "float32",
+     "shape": [
+      6
+     ]
+    },
+    {
+     "name": "c",
+     "dtype": "float32",
+     "shape": [
+      6
+     ]
+    },
+    {
+     "name": "m",
+     "dtype": "int32",
+     "shape": [
+      6
+     ]
+    },
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": [
+      6
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      72
+     ]
+    },
+    {
+     "name": "ints",
+     "dtype": "int32",
+     "shape": [
+      48
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    6,
+    1,
+    1
+   ],
+   "threadgroup": [
+    6,
+    1,
+    1
+   ],
+   "file": "cases/c0000.safetensors",
+   "sha256": "a4a7b9e53ad0fdae4cd767e9a97dd5ab72fcb552418cc65356a232a8aca5e9f1",
+   "repeat_identical": true
+  }
+ ]
+}

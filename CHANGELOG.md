@@ -12,6 +12,10 @@
 - `spikes/isaac_lab_mac.sh`: train Isaac Lab cartpole on a Mac CPU with Newton, without Isaac Sim. NVIDIA does not support this, and Isaac Lab's `uv sync` refuses macOS, so it builds the environment by hand.
 - `spikes/rsl_rl_golden.py` and `verify_policy.py --golden`: compare an MLX policy with rsl_rl's own outputs. Before this, the reference was a torch version written in the same file.
 - `spikes/isaac_lab_mlx_loop.py`: let an MLX policy control an Isaac Lab environment, with controls.
+- `cumlx kernel capture` (experimental): compile the original CUDA kernels with nvcc, run them on a real NVIDIA GPU and record an op-level golden, `cumlx.opgolden.v1`. It executes the code, so MCP shows it only with `--allow-code-execution`.
+- `cumlx kernel verify` (experimental): run a Metal kernel through `mx.fast.metal_kernel` or `torch.mps.compile_shader` on the golden inputs and compare the outputs. An unknown kernel, a gap, a failed compile and float64 are exit 5. Each report states fp64, FTZ, FMA contraction and execution order, measured on the device.
+- `cumlx kernel port` (experimental): prepare a `.cu` file (standard headers, template instances, host code, PTX built-ins) and call a translator through `TranslatorAdapter`. A missing translator is exit 3. A feature with no Metal equivalent, such as warp-level behaviour, is refused with its reason. The woof adapter was tested only with a stub, not with woof.
+- `validation/kernel-translation.json`: the first CUDA runs of the 8 FP4 kernels, on a Tesla V100. The hand-written Metal kernels pass 29 of 29 cases on an M5 Pro, worst `rel_l2` 7.5e-8. All 9 wrong translations of 8 kinds are caught, and the 9 right ones pass.
 
 ### Fixed
 

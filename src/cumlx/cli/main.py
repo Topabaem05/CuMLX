@@ -115,6 +115,21 @@ COMMANDS: dict[str, dict[str, Any]] = {
         summary='Prove the verifier works here: clean port must pass and injected faults must be located.',
         requires=[], stage='beta',
         examples=['cumlx selftest', 'cumlx selftest --core-only']),
+    'kernel capture': dict(
+        summary='Compile the original CUDA kernels with nvcc, run them on a real NVIDIA GPU and record an op-level golden. Executes the code.',
+        requires=['nvcc'], stage='experimental',
+        examples=['cumlx kernel capture kernels/ --cases cases.json -o kgolden/ --require-idle-gpu',
+                  'cumlx kernel capture kernels/ --cases cases.json -o kgolden/ --dry-run']),
+    'kernel verify': dict(
+        summary='Run a Metal kernel on the inputs of an op-level golden and compare the outputs. An unknown or unmapped kernel is never a pass.',
+        requires=['metal'], stage='experimental',
+        examples=['cumlx kernel verify foo.metal kgolden/', 'cumlx kernel verify kernels/ kgolden/ -o report/',
+                  'cumlx kernel verify translated.metal kgolden/ --kernel foo --engine torch']),
+    'kernel port': dict(
+        summary='Prepare a .cu file for translation (headers, templates, host code, PTX built-ins) and call a translator. A feature with no Metal equivalent is refused.',
+        requires=[], stage='experimental',
+        examples=['cumlx kernel port foo.cu -o foo.metal', 'cumlx kernel port foo.cu --preprocess-only -o foo.pre.cu',
+                  'cumlx kernel port foo.cu -o foo.metal --instantiate "foo<float>"']),
 }
 
 AGENT_RULES = [
@@ -289,6 +304,57 @@ def build_parser() -> AgentArgumentParser:
     p.add_argument('--core-only', action='store_true', help='only checks that need no optional dependency')
     p.add_argument('--keep', metavar='DIR', help='keep fixture/trace/report files in this new directory')
     p.add_argument('--device', choices=['auto', 'cpu', 'gpu'], default='auto', help='MLX device for the end-to-end checks')
+
+    kernel = sub.add_parser('kernel', help='CUDA kernels: capture a golden, translate, verify',
+                            description='CUDA kernels: capture a golden on an NVIDIA machine, translate to Metal, verify on a Mac.')
+    ksub = kernel.add_subparsers(dest='kernel_command', metavar='SUBCOMMAND', parser_class=AgentArgumentParser, required=True)
+
+    def add_kernel(name: str) -> argparse.ArgumentParser:
+        meta = COMMANDS[f'kernel {name}']
+        p = ksub.add_parser(name, help=meta['summary'], description=meta['summary'],
+                            epilog='examples:\n  ' + '\n  '.join(meta['examples']),
+                            formatter_class=argparse.RawDescriptionHelpFormatter)
+        _common(p)
+        return p
+
+    p = add_kernel('capture')
+    p.add_argument('kernels', help='a folder of .cu files, or one .cu file. It is compiled and executed')
+    p.add_argument('--cases', required=True, help='cumlx.kernel-cases.v1 file: the launches to record')
+    p.add_argument('-o', '--output', required=True, help='golden directory to create')
+    p.add_argument('--header', help='source to put before each kernel; default: common_cuda.h beside the kernels')
+    p.add_argument('--arch', help='nvcc -arch value; default: native')
+    p.add_argument('--nvcc-flag', action='append', default=[], metavar='FLAG', help='extra nvcc flag, such as --nvcc-flag=-fmad=false. Repeatable')
+    p.add_argument('--repeats', type=int, default=3, help='launches per case. The output memory is filled differently before each one')
+    p.add_argument('--timeout', type=float, default=60.0, help='seconds allowed for each case to run')
+    p.add_argument('--jobs', type=int, default=4, help='parallel compiler processes')
+    p.add_argument('--require-idle-gpu', action='store_true', help='refuse to start, and stop, while another compute process is on the GPU. Use it on a shared machine')
+    p.add_argument('--overwrite', action='store_true')
+    p.add_argument('--dry-run', action='store_true', help='validate the cases and the sources; compile and run nothing')
+
+    p = add_kernel('verify')
+    p.add_argument('metal', help='a .metal file, or a folder of them. The file name selects the golden kernel')
+    p.add_argument('golden', help='directory written by `cumlx kernel capture`')
+    p.add_argument('-o', '--output', help='report directory to create (report.json, report.md)')
+    p.add_argument('--kernel', help='the golden kernel that this file translates, when its name differs')
+    p.add_argument('--case', action='append', default=[], metavar='ID', help='compare only this case. Repeatable. The verdict then covers only these')
+    p.add_argument('--header', help='Metal source to put before the kernel; default: NAME.header.metal, or common_metal.h beside it')
+    p.add_argument('--engine', choices=['auto', 'mlx', 'torch'], default='auto',
+                   help='auto = mx.fast.metal_kernel for a function body, torch.mps.compile_shader for a complete library')
+    p.add_argument('--repeats', type=int, default=3, help='runs per case. Each run is compared')
+    p.add_argument('--overwrite', action='store_true')
+
+    p = add_kernel('port')
+    p.add_argument('source', help='the .cu file to translate')
+    p.add_argument('-o', '--output', required=True, help='the file to write. It also writes NAME.port.json beside it')
+    p.add_argument('--translator', default='woof', help='woof, or python:MODULE:ATTRIBUTE for your own adapter, which runs that code')
+    p.add_argument('--preprocess-only', action='store_true', help='write the prepared CUDA source and stop. Needs no translator, and translates nothing')
+    p.add_argument('--instantiate', action='append', default=[], metavar='NAME<ARGS>', help='a concrete instance of a template kernel, such as vector_add<float>. Repeatable')
+    p.add_argument('--include-dir', action='append', default=[], metavar='DIR', help='where to look for local #include files. Repeatable')
+    p.add_argument('--header', help='for a function body: source that goes before it; default: common_cuda.h beside it')
+    p.add_argument('--cases', help='for a function body: a cases file that gives its launch constants. Use with --case')
+    p.add_argument('--case', help='the case in --cases. It wraps the body in a complete kernel with those constants')
+    p.add_argument('--demote-fp64', action='store_true', help='turn double into float. Changes what the kernel computes; `cumlx kernel verify` judges the result')
+    p.add_argument('--overwrite', action='store_true')
     return parser
 
 
@@ -309,10 +375,19 @@ def _detect_format(argv: Sequence[str]) -> str:
     return fmt
 
 
+def _subparsers(parser: argparse.ArgumentParser) -> dict[str, argparse.ArgumentParser]:
+    return next(a for a in parser._actions if isinstance(a, argparse._SubParsersAction)).choices
+
+
 def _describe_parser(parser: argparse.ArgumentParser) -> dict[str, dict]:
-    sub = next(a for a in parser._actions if isinstance(a, argparse._SubParsersAction))
+    parsers: dict[str, argparse.ArgumentParser] = {}
+    for name, p in _subparsers(parser).items():
+        if name == 'kernel':
+            parsers.update({f'kernel {child}': q for child, q in _subparsers(p).items()})
+        else:
+            parsers[name] = p
     out = {}
-    for name, p in sub.choices.items():
+    for name, p in parsers.items():
         args = []
         for act in p._actions:
             if isinstance(act, argparse._HelpAction):
@@ -360,7 +435,8 @@ def _dispatch(args, parser) -> Result:
     if args.command == 'describe':
         return _run_describe(args, parser)
     from . import commands
-    handler: Callable[[Any], Result] = getattr(commands, 'run_' + args.command)
+    name = f'kernel_{args.kernel_command}' if args.command == 'kernel' else args.command
+    handler: Callable[[Any], Result] = getattr(commands, 'run_' + name)
     return handler(args)
 
 
@@ -390,7 +466,12 @@ def _stdout_guard():
 
 
 def _command_name(argv: Sequence[str]) -> str:
-    return next((a for a in argv if a in COMMANDS), 'cumlx')
+    for i, a in enumerate(argv):
+        if a == 'kernel' and f"kernel {argv[i + 1] if i + 1 < len(argv) else ''}" in COMMANDS:
+            return f'kernel {argv[i + 1]}'
+        if a in COMMANDS:
+            return a
+    return 'cumlx'
 
 
 def main(argv: Sequence[str] | None = None) -> int:
