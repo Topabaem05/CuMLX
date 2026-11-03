@@ -14,6 +14,8 @@
 
 ### Added
 
+- `cumlx doctor --stack`: report each platform layer in this Python environment, and exit 3 with `E_DEP_MISSING` and an install hint unless all are ready. It installs nothing, uses no network and does not look for nvcc.
+- `docs/PLATFORM-REPORT.md` and `docs/UNVERIFIED.md`: the result of each platform gate and flagship task with its grade, the failures, and what was not verified. A test keeps the report in step with the roadmap's gates. The repository is private, so neither is published yet.
 - `spikes/m3_kernels.sh`: record the kernelport zoo and sam2's kernels on the V100, translate them with woof in their own environment, and compare. Prepared and tested on stubs only; `validation/kernel-m3.json` says that no third-party kernel has run yet.
 - `cumlx kernel verify --engine woof`: run a woof translation through woof's own launcher, which binds its scalars and threadgroup memory. Tested on a stub only.
 - `cumlx kernel port --allow-warp-level`: pass warp-level built-ins to the translator instead of refusing them, with `W_KERNEL_WARP_LEVEL_PASSED`. The default is still to refuse.

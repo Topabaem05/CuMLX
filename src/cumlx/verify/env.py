@@ -1,6 +1,7 @@
 """Environment inspection for ``cumlx doctor``. Imports nothing heavy unless probe=True."""
 from __future__ import annotations
 
+import importlib
 from importlib import metadata, util
 import platform
 import shutil
@@ -88,6 +89,123 @@ def inspect_environment(*, probe: bool = False) -> dict[str, Any]:
                                     'on one device (Apple M5 Pro, MLX 0.32.2, 2026-11-02); that is not a general '
                                     'certification, and speed was not measured'}
     return report
+
+
+# ---------------------------------------------------------------------- whole stack, `cumlx doctor --stack`
+STACK_SCOPE = ('This Python environment only. A part that a spike installed in its own environment reads as missing here. '
+               '"ok" means present, and for the layers with checked "device" that the device or variant answered. It does not '
+               'mean that results are right: see `cumlx selftest` and docs/UNVERIFIED.md.')
+STACK_NOT_CHECKED = [
+    'nvcc and any NVIDIA machine: not probed. `cumlx doctor --require "kernel capture"` looks for the programs on this machine.',
+    'Genesis, warp-metal and the translator: presence only. They were not imported, so no Metal device was opened through them.',
+    'A translator given as python:MODULE:ATTRIBUTE: only woof is looked for.',
+]
+_PIP_RENDER = "python -m pip install 'cumlx-lab[render]'"
+_PIP_DIFF = "python -m pip install 'cumlx-lab[diff]'"
+_PIP_CAPTURE = "python -m pip install 'cumlx-lab[capture]'"
+
+
+def _import(name: str) -> Any:
+    return importlib.import_module(name)
+
+
+def _stack_entry(status: str, checked: str, detail: str, needed_by: str, hint: str, version: str | None = None) -> dict[str, Any]:
+    return {'status': status, 'ok': status == 'ok', 'checked': checked, 'version': version, 'detail': detail,
+            'needed_by': needed_by, 'install_hint': None if status == 'ok' else hint}
+
+
+def _package(module: str, dist: str, needed_by: str, hint: str, other_dist: str | None = None) -> dict[str, Any]:
+    """A package counts as present when its module and its own distribution are both here. A module of that name from
+    another distribution is not this package: `warp` from warp-lang has no Metal backend."""
+    if util.find_spec(module) is None:
+        return _stack_entry('missing', 'presence', f'no module {module}', needed_by, hint)
+    version = _version(dist)
+    if version is None:
+        also = f', and it comes from {other_dist}, which is not this package' if other_dist and _version(other_dist) else ''
+        return _stack_entry('missing', 'presence', f'module {module} exists, but distribution {dist} is not installed{also}', needed_by, hint)
+    return _stack_entry('ok', 'presence', f'{dist} {version} is installed', needed_by, hint, version)
+
+
+def _torch_mps() -> dict[str, Any]:
+    needed_by = 'cumlx run'
+    if util.find_spec('torch') is None:
+        return _stack_entry('missing', 'device', 'no module torch', needed_by, _PIP_CAPTURE)
+    version = _version('torch')
+    try:
+        available = bool(_import('torch').backends.mps.is_available())
+    except Exception as exc:  # noqa: BLE001
+        return _stack_entry('broken', 'device', f'importing torch failed: {type(exc).__name__}: {exc}', needed_by, _PIP_CAPTURE, version)
+    if not available:
+        return _stack_entry('unavailable', 'device', 'torch is installed, and torch.backends.mps.is_available() is False', needed_by,
+                            'install a torch build with MPS on Apple Silicon', version)
+    return _stack_entry('ok', 'device', 'torch.backends.mps.is_available() is True', needed_by, _PIP_CAPTURE, version)
+
+
+def _metal_device() -> dict[str, Any]:
+    """Ask MLX, then torch. With neither here nothing can answer, so the state is unknown, which is not a pass."""
+    needed_by = 'every Metal layer'
+    hint = 'needs Apple Silicon, and MLX or torch to ask it: ' + _PIP_DIFF
+    problems: list[str] = []
+    if util.find_spec('mlx') is not None:
+        try:
+            mx = _import('mlx.core')
+            if mx.metal.is_available():
+                try:
+                    name = (getattr(mx, 'device_info', None) or mx.metal.device_info)().get('device_name')
+                except Exception:  # noqa: BLE001  # The name is only a detail.
+                    name = None
+                return _stack_entry('ok', 'device', f"MLX reports Metal: {name or 'name not reported'}", needed_by, hint)
+            problems.append('MLX reports no Metal device')
+        except Exception as exc:  # noqa: BLE001
+            problems.append(f'importing mlx.core failed: {type(exc).__name__}: {exc}')
+    if util.find_spec('torch') is not None:
+        try:
+            if _import('torch').backends.mps.is_available():
+                return _stack_entry('ok', 'device', 'torch reports MPS, which runs on Metal', needed_by, hint)
+            problems.append('torch reports no MPS')
+        except Exception as exc:  # noqa: BLE001
+            problems.append(f'importing torch failed: {type(exc).__name__}: {exc}')
+    if not problems:
+        return _stack_entry('unknown', 'device', 'neither MLX nor torch is here to ask', needed_by, hint)
+    return _stack_entry('unavailable', 'device', '; '.join(problems), needed_by, hint)
+
+
+def _mitsuba_metal() -> dict[str, Any]:
+    from ..render.sensors import DEFAULT_VARIANT
+    needed_by = 'cumlx.render'
+    if util.find_spec('mitsuba') is None:
+        return _stack_entry('missing', 'device', 'no module mitsuba', needed_by, _PIP_RENDER)
+    version = _version('mitsuba')
+    try:
+        variants = list(_import('mitsuba').variants())
+    except Exception as exc:  # noqa: BLE001
+        return _stack_entry('broken', 'device', f'importing mitsuba failed: {type(exc).__name__}: {exc}', needed_by, _PIP_RENDER, version)
+    if DEFAULT_VARIANT not in variants:
+        return _stack_entry('unavailable', 'device', f'Mitsuba has no variant {DEFAULT_VARIANT} on this machine: {variants}', needed_by,
+                            f'{DEFAULT_VARIANT} needs Apple Silicon', version)
+    return _stack_entry('ok', 'device', f'variant {DEFAULT_VARIANT} is listed. It was not set, and nothing was rendered', needed_by, _PIP_RENDER, version)
+
+
+def inspect_stack() -> dict[str, Any]:
+    """Report each platform layer. It reads metadata and imports only what can answer a device question: no install, no
+    network, and no subprocess. Only the status "ok" counts as ready."""
+    layers: dict[str, dict[str, Any]] = {
+        'mlx': _package('mlx', 'mlx', 'cumlx diff, conform, kernel verify', _PIP_DIFF),
+        'mlx_lm': _package('mlx_lm', 'mlx-lm', 'cumlx diff, weights, port', _PIP_DIFF),
+        'torch_mps': _torch_mps(),
+        'metal_device': _metal_device(),
+        'genesis': _package('genesis', 'genesis-world', 'physics in examples/physics-camera', 'python -m pip install genesis-world'),
+        'mitsuba_metal': _mitsuba_metal(),
+        'warp_metal': _package('warp', 'warp-metal', 'Warp physics on metal:0, in OrchardSim',
+                               'not on PyPI on 2026-11-03: the wheel is at https://github.com/innate-inc/warp-metal, and OrchardSim '
+                               'spikes/isaac_warp_metal_env.sh builds an environment with it', other_dist='warp-lang'),
+        'translator': _package('woof', 'metal-woof', 'cumlx kernel port, cumlx kernel verify --engine woof',
+                               'install it yourself if you accept its terms: python -m pip install metal-woof. '
+                               'spikes/m3_kernels.sh uses its own environment'),
+    }
+    not_ready = [name for name, layer in layers.items() if not layer['ok']]
+    return {'layers': layers, 'ready': [name for name in layers if name not in not_ready], 'not_ready': not_ready,
+            'scope': STACK_SCOPE, 'not_checked': STACK_NOT_CHECKED}
 
 
 def install_hint(modules: list[str]) -> str:

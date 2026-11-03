@@ -42,7 +42,12 @@ def _q(path: Any) -> str:
 
 # --------------------------------------------------------------------------- doctor
 def run_doctor(args) -> Result:
-    from ..verify.env import REQUIREMENTS, inspect_environment, install_hint
+    from ..verify.env import (
+        REQUIREMENTS,
+        inspect_environment,
+        inspect_stack,
+        install_hint,
+    )
     env = inspect_environment(probe=args.probe)
     required = [c.strip() for c in args.require.split(',') if c.strip()]
     unknown = [c for c in required if c not in REQUIREMENTS]
@@ -64,6 +69,16 @@ def run_doctor(args) -> Result:
                              'hint': install_hint(mods), 'details': {'command': c, 'missing': mods}})
     if not not_ready:
         r.suggest('cumlx selftest', 'prove that capture/diff/conform work in this environment')
+    if args.stack:
+        stack = inspect_stack()
+        env['stack'] = stack
+        r.summary += f"; stack: {len(stack['ready'])} of {len(stack['layers'])} layers ready" + \
+            (f", not ready: {', '.join(stack['not_ready'])}" if stack['not_ready'] else '')
+        for name in stack['not_ready']:  # A missing part of the stack is not a pass, the same as --require.
+            layer = stack['layers'][name]
+            r.exit_code = ExitCode.ENVIRONMENT
+            r.errors.append({'code': 'E_DEP_MISSING', 'message': f"stack layer {name} is {layer['status']}: {layer['detail']}",
+                             'hint': layer['install_hint'], 'details': {'layer': name, 'status': layer['status'], 'needed_by': layer['needed_by']}})
     return r
 
 

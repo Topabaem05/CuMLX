@@ -53,9 +53,9 @@ COMMANDS: dict[str, dict[str, Any]] = {
         requires=[], stage='stable',
         examples=['cumlx describe', 'cumlx describe --command diff']),
     'doctor': dict(
-        summary='Report installed dependencies and which commands are ready; with --require, fail when not ready.',
+        summary='Report installed dependencies and which commands are ready; with --require or --stack, fail when not ready.',
         requires=[], stage='stable',
-        examples=['cumlx doctor', 'cumlx doctor --probe --require capture,diff']),
+        examples=['cumlx doctor', 'cumlx doctor --probe --require capture,diff', 'cumlx doctor --stack']),
     'fixture': dict(
         summary='Create a tiny random HF model (safetensors) for offline end-to-end tests.',
         requires=['capture'], stage='beta',
@@ -178,6 +178,8 @@ def build_parser() -> AgentArgumentParser:
     p.add_argument('--probe', action='store_true', help='import backends and query devices (slower)')
     p.add_argument('--require', default='', metavar='CMD[,CMD]',
                    help='exit 3 unless these commands are ready, e.g. capture,diff')
+    p.add_argument('--stack', action='store_true',
+                   help='also report each platform layer, and exit 3 unless all are ready. No install, no network, and no NVIDIA probe')
 
     p = add('fixture')
     p.add_argument('kind', choices=['tiny-llama', 'tiny-moe'], help='fixture to create')
