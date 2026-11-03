@@ -21,7 +21,7 @@ def _curve(seed, scale=1.0, steps=400, noise=0.002, start=1.0):
 
 
 def _run(seed, values, target='mps', **extra):
-    return {'schema': 'cumlx.run-report.v1', 'file': f'{target}{seed}', 'target': target, 'machine': {}, 'seed': seed, 'module': None,
+    return {'schema': 'cumlx.run-report.v1', 'file': f'{target}{seed}', 'target': target, 'machine': {'torch': '2.14.1'}, 'seed': seed, 'module': None,
             'script_sha256': 'abc', 'script_args': [], 'script_exit_code': 0, 'timed_out': False,
             'loss_trace': {'values': values, 'processes_with_losses': 1}, **extra}
 
@@ -236,3 +236,14 @@ def test_target_cuda_redirects_nothing(tmp_path, e2e):
         refused = _cumlx(tmp_path, 'run', str(script), '--target', 'cuda', '--report', str(tmp_path / 'r.json'))
         assert refused['exit_code'] == 3
         assert refused['errors'][0]['code'] == 'E_BACKEND_UNAVAILABLE'
+
+
+@pytest.mark.e2e
+def test_rundiff_names_a_difference_of_torch_version(tmp_path, device):
+    report = _train(tmp_path, TRAINING, 'a', device, 0)
+    (tmp_path / 'b').mkdir()
+    (tmp_path / 'b' / 'seed0.json').write_text(json.dumps({**report, 'machine': {**report['machine'], 'torch': '2.0.0+cu126'}}))
+    doc = _cumlx(tmp_path, 'rundiff', 'a', 'b')
+    assert 'W_RUNDIFF_TORCH_DIFFERS' in {w['code'] for w in doc['warnings']}
+    same = _cumlx(tmp_path, 'rundiff', 'a', 'a')
+    assert 'W_RUNDIFF_TORCH_DIFFERS' not in {w['code'] for w in same['warnings']}

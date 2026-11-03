@@ -90,7 +90,7 @@ def _sha256(path: str | None) -> str | None:
 
 def run_script(script: str | None, module: str | None, script_args: list[str], *, target: str,
                substitutes: dict[str, str], allow_cpu_fallback: bool, timeout: float | None, stdout: Any,
-               trace_losses: bool = False, seed: int | None = None, device_name: str | None = None) -> dict[str, Any]:
+               trace_losses: bool = False, seed: int | None = None, device_name: str | None = None, torch_version: str = 'unknown') -> dict[str, Any]:
     with tempfile.TemporaryDirectory(prefix='cumlx-run-') as scratch:
         events = str(Path(scratch) / 'events.jsonl')
         env, env_changes = child_environment(target, events, substitutes, allow_cpu_fallback, trace_losses, seed)
@@ -106,7 +106,7 @@ def run_script(script: str | None, module: str | None, script_args: list[str], *
     report = {
         'schema': REPORT_SCHEMA, 'target': target, 'script': script, 'module': module, 'script_args': script_args,
         'script_sha256': _sha256(script), 'seed': seed, 'script_exit_code': code, 'timed_out': timed_out, 'seconds': elapsed,
-        'machine': {'platform': platform.platform(), 'arch': platform.machine(), 'device_name': device_name},
+        'machine': {'platform': platform.platform(), 'arch': platform.machine(), 'device_name': device_name, 'torch': torch_version},
         'policy': _policy(target, allow_cpu_fallback),
         'environment_changes': env_changes, 'substitutes': substitutes, 'processes': seen['processes'],
         'calls': seen['calls'], 'uncaught': seen['uncaught'],

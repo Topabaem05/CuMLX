@@ -389,8 +389,6 @@ def run_run(args) -> Result:
     from ..compat import runner
     if bool(args.script) == bool(args.module):
         raise CumlxError('E_USAGE', 'give a script or --module, not both and not neither', hint='cumlx run train.py -- --lr 1e-3')
-    if args.module and args.script_args:
-        raise CumlxError('E_USAGE', 'with --module, put the script arguments after --, and do not name a script')
     if args.script and not Path(args.script).is_file():
         raise CumlxError('E_INPUT_NOT_FOUND', f'{args.script} does not exist')
     report_path = Path(args.report)
@@ -420,7 +418,7 @@ def run_run(args) -> Result:
     stdout = sys.stderr if args.format == 'json' else None
     rep = runner.run_script(args.script, args.module, list(args.script_args), target=args.target, substitutes=substitutes,
                             allow_cpu_fallback=args.allow_cpu_fallback, timeout=args.timeout, stdout=stdout,
-                            trace_losses=args.trace_losses, seed=args.seed, device_name=device_name)
+                            trace_losses=args.trace_losses, seed=args.seed, device_name=device_name, torch_version=torch.__version__)
     report_path.write_text(json.dumps(rep, indent=1) + '\n')
     calls = rep['calls']
     by_kind: dict[str, int] = {}
@@ -583,6 +581,9 @@ def run_rundiff(args) -> Result:
     r.data = rep
     if rep['golden']['target'] != 'cuda':
         r.warn('W_RUNDIFF_GOLDEN_NOT_CUDA', f"The golden ran on {rep['golden']['target']}, so this result says nothing about CUDA.")
+    versions = {side: rep[side]['machine'].get('torch') for side in ('golden', 'candidate')}
+    if versions['golden'].partition('+')[0] != versions['candidate'].partition('+')[0]:
+        r.warn('W_RUNDIFF_TORCH_DIFFERS', f"The sides ran different PyTorch versions: {versions['golden']} and {versions['candidate']}. A difference can come from that.")
     if rep['grade'] == 'A':
         r.warn('W_RUNDIFF_FIRST_STEPS_ONLY', 'Grade A here covers the first steps of training only. Later steps can move apart through rounding.')
     if rep['statistical']:

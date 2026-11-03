@@ -339,3 +339,23 @@ def test_mcp_hides_run_unless_code_execution_is_allowed():
     tool = build_tools(allow_code=True)['cumlx_run']
     assert _argv(tool, {'script': 'a.py', 'script_args': ['--lr', '1'], 'target': 'cpu'}, ('--format', 'json')) == \
         ['run', 'a.py', '--target', 'cpu', '--format', 'json', '--', '--lr', '1']
+
+
+def test_arguments_after_the_separator_belong_to_the_script(tmp_path, target):
+    """Python 3.12.3 and 3.10 refused this mix of positionals and options. The V100 hit it. --help and --format stay the script's."""
+    doc, report, stderr = _run(tmp_path, """
+        import sys
+        print('ARGS', sys.argv[1:], file=sys.stderr)
+    """, target, script_args=('--help', '--format', 'text', '--', 'x'))
+    assert doc['exit_code'] == 0
+    assert "ARGS ['--help', '--format', 'text', '--', 'x']" in stderr
+    assert report['script_args'] == ['--help', '--format', 'text', '--', 'x']
+
+
+def test_a_module_takes_its_arguments_after_the_separator(tmp_path, target):
+    (tmp_path / 'mymod.py').write_text('import sys\nprint("ARGS", sys.argv[1:], file=sys.stderr)\n')
+    report_path = tmp_path / 'r.json'
+    done = subprocess.run([sys.executable, '-m', 'cumlx', 'run', '--module', 'mymod', '--target', target, '--report', str(report_path), '--format', 'json', '--', '--a=1', 'b'],
+                          capture_output=True, text=True, cwd=tmp_path, env={**os.environ, 'PYTHONPATH': f"{ROOT / 'src'}{os.pathsep}{tmp_path}"}, check=False)
+    assert json.loads(done.stdout)['exit_code'] == 0, done.stdout
+    assert "ARGS ['--a=1', 'b']" in done.stderr

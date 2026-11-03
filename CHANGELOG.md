@@ -15,6 +15,7 @@
 
 ### Fixed
 
+- `cumlx run script.py --target x -- args` failed with `E_USAGE` on Python 3.12.3 and 3.10, because argparse there handles this mix of positionals differently. `--help` and `--format` after `--` also went to CUMLX and not to the script. `--module` could not take arguments at all.
 - `examples/robot-policy` refused real rsl_rl 5 checkpoints: it expected `model_state_dict` and `actor.N`, but rsl_rl 5 writes `actor_state_dict` and `mlp.N`. Only random weights had been tried. It now also refuses an observation normalizer, which it would otherwise have left out with no error.
 - The README said that `pip install isaacsim` installs an empty package on a Mac. It fails.
 

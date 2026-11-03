@@ -182,7 +182,7 @@ cumlx run train.py --target mps --report run-report.json
 
 완료 조건:
 
-- [ ] 수정하지 않은 오픈소스 스크립트 5개 실행, `run-report.json` 생성. 재현 스크립트는 `spikes/m2_scripts.sh`이며, 아직 실행하지 않았습니다
+- [x] 수정하지 않은 오픈소스 스크립트 5개 실행, `run-report.json` 생성. nanoGPT 학습과 샘플링, minGPT, PyTorch-GAN, pytorch-tutorial CNN이 MPS에서 끝까지 돌았습니다(시드별 13회). 등급 C입니다. 측정값은 `validation/m2-scripts.json`입니다
 - [ ] 그중 3개 이상을 V100 CUDA golden과 비교해 등급 A 또는 B. 비교 도구 `cumlx rundiff`와 허용치는 준비했습니다(fixture만, CUDA 없음). 실제 비교는 아직 하지 않았습니다
 - [x] 지원하지 않는 호출이 오류로 끝나는 테스트 (조용한 CPU 폴백 없음)
 - [x] 호환 계층을 끄면 원래 동작과 같음을 테스트로 확인. `cumlx`를 import해도 torch가 바뀌지 않고, `uninstall()`이 모든 속성을 되돌립니다

@@ -1,0 +1,266 @@
+{
+ "schema": "cumlx.validation.m2-scripts.v1",
+ "date": "2026-11-03",
+ "machine": "Apple M5 Pro, 48 GB, target mps, torch 2.15.0",
+ "started_by": "the user, with spikes/m2_scripts.sh. No script was edited.",
+ "edited_scripts": 0,
+ "commits": {
+  "nanoGPT": "3adf61e154c3fe3fca428ad6bc3818b27a3b8291",
+  "minGPT": "37baab71b9abea1b76ab957409a1cc2fbfba8a26",
+  "PyTorch-GAN": "36d3c77e5ff20ebe0aeefd322326a134a279b93e",
+  "pytorch-tutorial": "0500d3df5a2a8080ccfccbc00aca0eacc21818db"
+ },
+ "grade": "C: each script ran to its end. This says nothing about its numbers. A CUDA comparison is a separate record.",
+ "other_jobs": "Other work ran on this Mac at the same time, so the seconds are not a benchmark.",
+ "results": [
+  {
+   "name": "nanogpt_train",
+   "seed": 0,
+   "status": "ok",
+   "exit_code": 0,
+   "seconds": 16.0,
+   "kinds": {
+    "mapped": 5,
+    "noop": 1,
+    "policy": 1
+   },
+   "progress": {
+    "first": 4.1925,
+    "last": 2.5984,
+    "samples": 21
+   },
+   "warnings": [
+    "W_RUN_NOT_VERIFIED"
+   ]
+  },
+  {
+   "name": "nanogpt_train",
+   "seed": 1,
+   "status": "ok",
+   "exit_code": 0,
+   "seconds": 4.7,
+   "kinds": {
+    "mapped": 5,
+    "noop": 1,
+    "policy": 1
+   },
+   "progress": {
+    "first": 4.2039,
+    "last": 2.4662,
+    "samples": 21
+   },
+   "warnings": [
+    "W_RUN_NOT_VERIFIED"
+   ]
+  },
+  {
+   "name": "nanogpt_train",
+   "seed": 2,
+   "status": "ok",
+   "exit_code": 0,
+   "seconds": 7.6,
+   "kinds": {
+    "mapped": 5,
+    "noop": 1,
+    "policy": 1
+   },
+   "progress": {
+    "first": 4.165,
+    "last": 2.5428,
+    "samples": 21
+   },
+   "warnings": [
+    "W_RUN_NOT_VERIFIED"
+   ]
+  },
+  {
+   "name": "nanogpt_sample",
+   "seed": null,
+   "status": "ok",
+   "exit_code": 0,
+   "seconds": 8.7,
+   "kinds": {
+    "mapped": 7,
+    "policy": 1
+   },
+   "progress": {},
+   "warnings": [
+    "W_RUN_NOT_VERIFIED"
+   ]
+  },
+  {
+   "name": "mingpt_adder",
+   "seed": 0,
+   "status": "ok",
+   "exit_code": 0,
+   "seconds": 7.5,
+   "kinds": {
+    "mapped": 2,
+    "policy": 1
+   },
+   "progress": {
+    "first": 2.31252,
+    "last": 1.85679,
+    "samples": 5
+   },
+   "warnings": [
+    "W_RUN_NOT_VERIFIED"
+   ]
+  },
+  {
+   "name": "mingpt_adder",
+   "seed": 1,
+   "status": "ok",
+   "exit_code": 0,
+   "seconds": 7.8,
+   "kinds": {
+    "mapped": 2,
+    "policy": 1
+   },
+   "progress": {
+    "first": 2.29325,
+    "last": 1.86304,
+    "samples": 5
+   },
+   "warnings": [
+    "W_RUN_NOT_VERIFIED"
+   ]
+  },
+  {
+   "name": "mingpt_adder",
+   "seed": 2,
+   "status": "ok",
+   "exit_code": 0,
+   "seconds": 5.2,
+   "kinds": {
+    "mapped": 2,
+    "policy": 1
+   },
+   "progress": {
+    "first": 2.29744,
+    "last": 1.83286,
+    "samples": 5
+   },
+   "warnings": [
+    "W_RUN_NOT_VERIFIED"
+   ]
+  },
+  {
+   "name": "gan_mnist",
+   "seed": 0,
+   "status": "ok",
+   "exit_code": 0,
+   "seconds": 28.4,
+   "kinds": {
+    "mapped": 4,
+    "policy": 1
+   },
+   "progress": {
+    "first": 0.703603,
+    "last": 0.325877,
+    "samples": 938
+   },
+   "warnings": [
+    "W_RUN_NOT_VERIFIED"
+   ]
+  },
+  {
+   "name": "gan_mnist",
+   "seed": 1,
+   "status": "ok",
+   "exit_code": 0,
+   "seconds": 18.3,
+   "kinds": {
+    "mapped": 4,
+    "policy": 1
+   },
+   "progress": {
+    "first": 0.715271,
+    "last": 0.330649,
+    "samples": 938
+   },
+   "warnings": [
+    "W_RUN_NOT_VERIFIED"
+   ]
+  },
+  {
+   "name": "gan_mnist",
+   "seed": 2,
+   "status": "ok",
+   "exit_code": 0,
+   "seconds": 16.5,
+   "kinds": {
+    "mapped": 4,
+    "policy": 1
+   },
+   "progress": {
+    "first": 0.707604,
+    "last": 0.511284,
+    "samples": 938
+   },
+   "warnings": [
+    "W_RUN_NOT_VERIFIED"
+   ]
+  },
+  {
+   "name": "cnn_mnist",
+   "seed": 0,
+   "status": "ok",
+   "exit_code": 0,
+   "seconds": 62.9,
+   "kinds": {
+    "mapped": 2,
+    "policy": 1
+   },
+   "progress": {
+    "first": 0.1133,
+    "last": 0.0209,
+    "samples": 30,
+    "final": 98.7
+   },
+   "warnings": [
+    "W_RUN_NOT_VERIFIED"
+   ]
+  },
+  {
+   "name": "cnn_mnist",
+   "seed": 1,
+   "status": "ok",
+   "exit_code": 0,
+   "seconds": 45.0,
+   "kinds": {
+    "mapped": 2,
+    "policy": 1
+   },
+   "progress": {
+    "first": 0.1133,
+    "last": 0.0067,
+    "samples": 30,
+    "final": 98.52
+   },
+   "warnings": [
+    "W_RUN_NOT_VERIFIED"
+   ]
+  },
+  {
+   "name": "cnn_mnist",
+   "seed": 2,
+   "status": "ok",
+   "exit_code": 0,
+   "seconds": 52.9,
+   "kinds": {
+    "mapped": 2,
+    "policy": 1
+   },
+   "progress": {
+    "first": 0.1394,
+    "last": 0.0517,
+    "samples": 30,
+    "final": 99.08
+   },
+   "warnings": [
+    "W_RUN_NOT_VERIFIED"
+   ]
+  }
+ ]
+}

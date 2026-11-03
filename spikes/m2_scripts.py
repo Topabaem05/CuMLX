@@ -24,7 +24,10 @@ import sys
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
-TORCH = ('torch==2.15.0', 'torchvision==0.29.2')
+# The newest PyTorch with a build for the V100 (sm_70): 2.15.0 has no such build, and its cuDNN refuses the device.
+# Both sides use this version, so that the comparison holds one variable.
+TORCH = ('torch==2.14.1', 'torchvision==0.29.1')
+CUDA_INDEX = 'https://download.pytorch.org/whl/cu126'
 REPOSITORIES = {
     'nanoGPT': ('https://github.com/karpathy/nanoGPT.git', '3adf61e154c3fe3fca428ad6bc3818b27a3b8291'),
     'minGPT': ('https://github.com/karpathy/minGPT.git', '37baab71b9abea1b76ab957409a1cc2fbfba8a26'),
@@ -124,7 +127,8 @@ def main(argv: list[str] | None = None) -> int:
         python = work / 'venv' / 'bin' / 'python'
         print('[setup] venv and packages', flush=True)
         subprocess.run(['uv', 'venv', '--clear', '-q', '--python', '3.12', str(work / 'venv')], check=True)
-        subprocess.run(['uv', 'pip', 'install', '-q', '--python', str(python), *TORCH, 'numpy', 'requests', 'tiktoken', '-e', str(ROOT)], check=True)
+        index = ['--index', CUDA_INDEX] if args.target == 'cuda' else []
+        subprocess.run(['uv', 'pip', 'install', '-q', '--python', str(python), *index, *TORCH, 'numpy', 'requests', 'tiktoken', '-e', str(ROOT)], check=True)
         for name, (url, commit) in REPOSITORIES.items():
             target = sources / name
             if not (target / '.git').exists():

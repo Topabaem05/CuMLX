@@ -395,6 +395,13 @@ def _command_name(argv: Sequence[str]) -> str:
 
 def main(argv: Sequence[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
+    original = list(argv)
+    # What follows -- belongs to the script. argparse handles this mix of positionals differently between
+    # Python versions (3.12.3 refuses what 3.13 accepts), and --help or --format there is not ours.
+    script_args: list[str] = []
+    if argv[:1] == ['run'] and '--' in argv:
+        split = argv.index('--')
+        argv, script_args = argv[:split], argv[split + 1:]
     fmt = _detect_format(argv)
     started = time.perf_counter()
     parser = build_parser()
@@ -408,7 +415,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     with _stdout_guard() as emit:
         try:
             args = parser.parse_args(argv)
-            args.argv = list(argv)
+            args.argv = original
+            if script_args:
+                args.script_args = [*args.script_args, *script_args]
             result = _dispatch(args, parser)
         except UsageError as exc:
             result = Result(name, ExitCode.USAGE, summary=f'invalid arguments: {exc}')
