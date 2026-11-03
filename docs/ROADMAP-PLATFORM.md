@@ -81,7 +81,7 @@
 | **커널 번역** | [woof fork](https://github.com/jacobbieker/woof) `backend/translate` ★1 | Apache-2.0 | **실행**: 전용 형식 커널은 정확, 외부 커널 17개는 그대로 실패 (M0) | 번역기 1순위. 전처리 계층을 직접 만들어야 함 |
 | 커널 증명 | [kernelport](https://github.com/PS12007/kernelport) ★0 | MIT | **실행**: Metal 포트 12개 PASS, 틀린 포트 FAIL. 원본 CUDA 검증은 미실행 | 연동 후보. 겹치는 부분이 큼 |
 | 커널 작성 | [Slang](https://github.com/shader-slang/slang) ★5.8k | Apache-2.0 WITH LLVM-exception | 문서: Metal, CUDA 동시 출력 | 새로 쓰는 커널 |
-| **PyTorch 대체** | [mps-bitsandbytes 등 mpsops](https://pypi.org/project/mpsops/) ★11 | **표기 없음** | 문서 | 사용자 직접 설치만. 포함 배포 불가 |
+| **PyTorch 대체** | [mps-bitsandbytes 등 mpsops](https://pypi.org/project/mpsops/) ★11 | PyPI 표기는 MIT. `mps-flash-attn`만 저장소에 라이선스 파일이 있습니다 (2026-11-03 확인) | 문서 | 사용자 직접 설치만. 파일이 없는 것은 포함 배포 불가 |
 | 3D | [mlx3D](https://github.com/amirhossein-razlighi/mlx3D) ★43 | MIT | 문서: PyTorch3D 스타일, 3DGS 커널 | PyTorch3D, nvdiffrast 대체 후보 |
 | 3DGS | [metalsplat](https://github.com/tchauffi/metalsplat) ★15, [msplat](https://github.com/rayanht/msplat) ★102 | MIT, Apache-2.0 | 문서 | gsplat 대체 |
 | **모델** | [mlx-lm](https://github.com/ml-explore/mlx-lm), [mlx-vlm](https://github.com/Blaizzy/mlx-vlm), [mflux](https://github.com/mflux-community/mflux) | MIT | mlx-lm **실행** | `cumlx port` 확장 |
@@ -168,7 +168,7 @@ Apple M5 Pro 한 대에서 직접 실행했습니다. 재현 방법은 [spikes/]
 cumlx run train.py --target mps --report run-report.json
 ```
 
-- 첫 작업: M0에서 실행하지 않은 `mps-*`, metalsplat, mlx3D를 실행해 레시피에 넣을지 결정
+- 첫 작업: M0에서 실행하지 않은 `mps-*`, metalsplat, msplat, mlx3D를 실행해 레시피에 넣을지 결정. 평가 스크립트는 `spikes/m2_substitutes.sh`이며, 아직 실행하지 않았습니다
 - `.cuda()`, `device="cuda"`, `torch.cuda.*`, `autocast("cuda")`를 MPS로 연결
 - `flash_attn`, `bitsandbytes`, `pytorch3d`, `gsplat` 등을 import 시점에 레시피의 대체품으로 연결. 지금은 `--substitute`로 직접 지정할 때만 연결합니다. 자동 연결은 `mps-*` 평가 후 결정합니다
 - 바꾼 호출을 모두 `run-report.json`에 기록

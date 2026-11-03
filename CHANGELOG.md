@@ -6,6 +6,7 @@
 
 - `cumlx run` (experimental): run an unmodified PyTorch script that assumes CUDA on MPS, and record each redirected call in `run-report.json`. A CUDA call with no equivalent, a second GPU, an operation that MPS lacks and float64 all end with an error. `PYTORCH_ENABLE_MPS_FALLBACK` is removed unless you pass `--allow-cpu-fallback`. Importing `cumlx` changes nothing in torch. MCP shows this command only with `--allow-code-execution`.
 - `spikes/m2_scripts.sh`: run 5 open-source scripts under `cumlx run`, once per seed for those that train. `--target cuda` records the golden.
+- `spikes/m2_substitutes.sh`: evaluate `mps-*`, metalsplat, msplat and mlx3D, each in its own venv at a pinned version, with checks against known numbers.
 - `cumlx rundiff` (experimental): compare the loss traces of `cumlx run` from CUDA and from the target, and give grade A (first two steps) or B (training curve over 3 or more seeds). `cumlx run` gains `--trace-losses`, `--seed` and `--target cuda`.
 - `validation/isaac-lab-go2.json`: Unitree Go2 flat velocity on a Mac CPU with Newton. With 4096 envs and 300 iterations, the policy in MLX measures +0.74 m/s at a +0.8 command and -0.87 m/s at -0.8, in simulation, with one seed.
 - `spikes/isaac_lab_mac.sh`: train Isaac Lab cartpole on a Mac CPU with Newton, without Isaac Sim. NVIDIA does not support this, and Isaac Lab's `uv sync` refuses macOS, so it builds the environment by hand.
