@@ -1,0 +1,90 @@
+{
+ "schema": "cumlx.validation.compat_base_install.v1",
+ "date": "2026-11-04",
+ "what": "scripts/compat_check.py on a fresh python -m venv that holds only the built wheel and NumPy, installed from PyPI. The run is on one Mac.",
+ "machine": {
+  "system": "Darwin",
+  "machine": "arm64"
+ },
+ "python": "3.15.0",
+ "numpy": "2.5.4",
+ "wheel": "cumlx_lab-0.5.0-py3-none-any.whl",
+ "checks": 14,
+ "failed": 0,
+ "results": [
+  {
+   "name": "describe",
+   "ok": true,
+   "exit_code": 0
+  },
+  {
+   "name": "doctor",
+   "ok": true,
+   "exit_code": 0
+  },
+  {
+   "name": "selftest core",
+   "ok": true,
+   "exit_code": 0
+  },
+  {
+   "name": "doctor names missing extras",
+   "ok": true,
+   "exit_code": 3
+  },
+  {
+   "name": "doctor --stack is not a pass",
+   "ok": true,
+   "exit_code": 3
+  },
+  {
+   "name": "capture without torch",
+   "ok": true,
+   "exit_code": 3
+  },
+  {
+   "name": "diff without mlx",
+   "ok": true,
+   "exit_code": 3
+  },
+  {
+   "name": "run without torch",
+   "ok": true,
+   "exit_code": 3
+  },
+  {
+   "name": "kernel capture without nvcc",
+   "ok": true,
+   "exit_code": 3
+  },
+  {
+   "name": "kernel verify without mlx",
+   "ok": true,
+   "exit_code": 3
+  },
+  {
+   "name": "kernel port needs no translator to prepare",
+   "ok": true,
+   "exit_code": 0
+  },
+  {
+   "name": "kernel port without a translator",
+   "ok": true,
+   "exit_code": 3
+  },
+  {
+   "name": "scan works without the extras",
+   "ok": true,
+   "exit_code": 0
+  },
+  {
+   "name": "recipe works without the extras",
+   "ok": true,
+   "exit_code": 0
+  }
+ ],
+ "not_shown": [
+  "Linux, Intel Mac and other Python versions: CI runs this checker there, see .github/workflows/ci.yml",
+  "Any command that needs MLX, torch or an NVIDIA GPU beyond its refusal"
+ ]
+}
