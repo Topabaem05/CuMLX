@@ -16,7 +16,7 @@
 | 세그멘테이션 | `semantic_segmentation` | 도형 번호. 의미 라벨은 없음 |
 | 모션 벡터 | `motion_vectors` | 없음 |
 | 렌즈 왜곡 | OpenCV 핀홀, 피시아이 모델 | 없음. 이상적인 핀홀뿐 |
-| 라이다 | RTX Lidar: 프로필, 스캔 속도, 재질 응답, 여러 프레임에 걸친 스캔 | 없음 |
+| 라이다 | RTX Lidar: 프로필, 스캔 속도, 재질 응답, 여러 프레임에 걸친 스캔 | `cumlx.render.lidar`: 고정 패턴의 레이캐스트, 기하만. 프로필, 재질 응답, 잡음, 스캔 중 움직임 없음 |
 | 레이더, 음향 | RTX Radar, RTX Acoustic | 없음 |
 | 장면 | USD | Python 사전으로 만든 Mitsuba 장면. USD를 읽지 않음 |
 | 여러 환경 | Isaac Lab과 연결 | 한 번에 장면 하나. 병렬 환경 렌더링은 없음 |

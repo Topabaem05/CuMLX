@@ -265,6 +265,81 @@ def test_range_comparison_right_and_wrong():
     assert not compare_ranges(nothing, expected, range_limit=1e-3, hit_mismatch_limit=1.0)['pass']  # No hit at all cannot pass.
 
 
+# ---------------------------------------------------------------- the camera's surface rule
+def _camera_stub(half=(0.5, 0.5, 0.5)):
+    from cumlx.render.sensors import Camera
+    from cumlx.sim import VisualLink
+    from cumlx.sim.camera import TaskCamera
+    stub = object.__new__(TaskCamera)
+    stub.check_camera = Camera(origin=(0.0, -5.0, 0.0), target=(0.0, 0.0, 0.0), width=64, height=64)
+    stub.links = {'box': VisualLink('box', half_extents=half)}
+    stub.indices = {'box': 1}
+    return stub
+
+
+def _box_image(stub, center):
+    """Depth and segmentation of the front face of a box at y = center_y - 0.5, by the ray and plane formula."""
+    rays = stub.check_camera.ray_grid()
+    t = (center[1] - 0.5 + 5.0) / rays[..., 1]
+    points = np.array(stub.check_camera.origin) + rays * t[..., None]
+    on_box = (np.abs(points[..., 0] - center[0]) <= 0.5) & (np.abs(points[..., 2] - center[2]) <= 0.5)
+    return np.where(on_box, t, 0.0), np.where(on_box, 1, 0)
+
+
+IDENTITY = (1.0, 0.0, 0.0, 0.0)
+
+
+def test_pixels_on_the_box_pass_and_a_stale_pose_fails():
+    stub = _camera_stub()
+    depth, segmentation = _box_image(stub, (0.0, 0.0, 0.0))
+    right = stub.surface_excess(depth, segmentation, 'box', (np.zeros(3), np.array(IDENTITY)))
+    assert right['ok'] and right['p99_m'] < 1e-6 and right['pixels'] > 20
+    wrong = stub.surface_excess(depth, segmentation, 'box', (np.array([1.0, 0.0, 0.0]), np.array(IDENTITY)))
+    assert not wrong['ok'] and wrong['p99_m'] > 0.1
+
+
+def test_a_link_with_too_few_pixels_is_not_a_pass():
+    stub = _camera_stub()
+    report = stub.surface_excess(np.zeros((64, 64)), np.zeros((64, 64), dtype=int), 'box', (np.zeros(3), np.array(IDENTITY)))
+    assert not report['ok'] and report['p99_m'] is None
+
+
+# ---------------------------------------------------------------- the record
+def _record_module():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('m4_sim_record', ROOT / 'spikes' / 'm4_sim_record.py')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_a_part_with_no_output_is_not_run_and_not_a_pass(tmp_path):
+    record = _record_module()
+    assert record.trajectory(tmp_path, 'go2_flat', ['fault_kp'])['verdict'] == 'not_run'
+    assert record.training(tmp_path, 'cartpole', 'mujoco')['verdict'] == 'not_run'
+
+
+def test_a_trajectory_passes_only_if_its_faults_fail(tmp_path):
+    record = _record_module()
+    folder = tmp_path / 'compare' / 'go2_flat'
+    folder.mkdir(parents=True)
+    zero = np.zeros((3, 4, 2))
+    for seed in (101, 102, 103):
+        for name in ('mujoco', 'mujoco_fine', 'genesis'):
+            np.savez(folder / f'{name}_{seed}.npz', values=zero)
+        np.savez(folder / f'fault_kp_{seed}.npz', values=zero + 1.0)
+    assert record.trajectory(tmp_path, 'go2_flat', ['fault_kp'])['verdict'] == 'pass'
+    np.savez(folder / 'fault_kp_102.npz', values=zero)  # A fault that goes unseen: the measure cannot be trusted.
+    assert record.trajectory(tmp_path, 'go2_flat', ['fault_kp'])['verdict'] == 'fail'
+
+
+def test_the_written_limits_of_each_measure_are_there():
+    limits = json.loads((ROOT / 'validation' / 'm4-sim-limits.json').read_text())
+    assert limits['trajectory']['cartpole']['median_limit'] == 0.02 and limits['trajectory']['cartpole']['p90_limit'] == 0.05
+    assert limits['training']['policy_in_mlx']['limit_rel_l2'] == 1e-4
+    assert json.loads((ROOT / 'validation' / 'm5-lidar-limits.json').read_text())['limits']['range_limit_m'] == 0.001
+
+
 # ---------------------------------------------------------------- doctor --stack --env
 def _fake_python(path: Path, statuses: dict[str, str]) -> str:
     """A program that answers as an environment does, and writes a mark that proves it ran."""

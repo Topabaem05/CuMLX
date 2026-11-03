@@ -1,0 +1,984 @@
+{
+ "schema": "cumlx.m4_sim.v1",
+ "date": "2026-11-04",
+ "limits": "validation/m4-sim-limits.json",
+ "code": "src/cumlx/sim, spikes/m4_sim.py, examples/physics-camera/sim_camera.py",
+ "environments": "Genesis 1.4.5, MuJoCo 3.17.0, torch 2.15.0, rsl-rl-lib 5.5.2, MLX 0.32.4, in existing environments. Nothing was installed.",
+ "machine": "Apple M5 Pro, 48 GB. Other jobs ran at the same time.",
+ "gates_of_m4_changed": "None. This builds the items above the gates.",
+ "trajectory": {
+  "cartpole_as_written": {
+   "verdict": "fail",
+   "limits": {
+    "median_limit": 0.02,
+    "p90_limit": 0.05
+   },
+   "seeds": {
+    "101": {
+     "genesis_vs_mujoco": {
+      "median": 0.0367891788482666,
+      "p90": 0.4215739369392395,
+      "max": 3.9922780990600586,
+      "pass": false
+     },
+     "time_step_control": {
+      "median": 0.10511231422424316,
+      "p90": 0.5825109481811523,
+      "max": 4.452476978302002,
+      "pass": false
+     },
+     "faults": {
+      "fault_gravity": {
+       "median": 0.32296180725097656,
+       "p90": 1.878594994544983,
+       "max": 17.872963905334473,
+       "pass": false
+      },
+      "fault_action": {
+       "median": 1.1801714897155762,
+       "p90": 6.49406886100769,
+       "max": 17.65014362335205,
+       "pass": false
+      }
+     }
+    },
+    "102": {
+     "genesis_vs_mujoco": {
+      "median": 0.04860055446624756,
+      "p90": 0.3957482576370239,
+      "max": 2.536102294921875,
+      "pass": false
+     },
+     "time_step_control": {
+      "median": 0.11388728022575378,
+      "p90": 0.5105985403060913,
+      "max": 2.4421117305755615,
+      "pass": false
+     },
+     "faults": {
+      "fault_gravity": {
+       "median": 0.358103483915329,
+       "p90": 1.613713026046753,
+       "max": 16.475141048431396,
+       "pass": false
+      },
+      "fault_action": {
+       "median": 1.223840370774269,
+       "p90": 5.473272323608398,
+       "max": 18.783340454101562,
+       "pass": false
+      }
+     }
+    },
+    "103": {
+     "genesis_vs_mujoco": {
+      "median": 0.041609764099121094,
+      "p90": 0.44666266441345215,
+      "max": 3.3090606331825256,
+      "pass": false
+     },
+     "time_step_control": {
+      "median": 0.1156466007232666,
+      "p90": 0.5748514719307423,
+      "max": 4.864248752593994,
+      "pass": false
+     },
+     "faults": {
+      "fault_gravity": {
+       "median": 0.3763163089752197,
+       "p90": 1.9270971417427063,
+       "max": 16.329079151153564,
+       "pass": false
+      },
+      "fault_action": {
+       "median": 1.1913485676050186,
+       "p90": 5.780955374240875,
+       "max": 20.88972282409668,
+       "pass": false
+      }
+     }
+    }
+   }
+  },
+  "cartpole_before_rail": {
+   "verdict": "pass",
+   "limits": {
+    "median_limit": 0.0001,
+    "p90_limit": 0.001
+   },
+   "seeds": {
+    "201": {
+     "genesis_vs_mujoco": {
+      "median": 4.76837158203125e-07,
+      "p90": 9.5367431640625e-07,
+      "max": 2.1457672119140625e-06,
+      "pass": true
+     },
+     "time_step_control": {
+      "median": 0.02663588523864746,
+      "p90": 0.03546488285064697,
+      "max": 0.044077157974243164,
+      "pass": false
+     },
+     "faults": {
+      "fault_gravity": {
+       "median": 0.06231236457824707,
+       "p90": 0.16805708408355713,
+       "max": 0.2780786156654358,
+       "pass": false
+      },
+      "fault_action": {
+       "median": 0.21547263860702515,
+       "p90": 0.371170898899436,
+       "max": 0.7712668180465698,
+       "pass": false
+      }
+     }
+    },
+    "202": {
+     "genesis_vs_mujoco": {
+      "median": 4.76837158203125e-07,
+      "p90": 9.5367431640625e-07,
+      "max": 1.7285346984863281e-06,
+      "pass": true
+     },
+     "time_step_control": {
+      "median": 0.026807665824890137,
+      "p90": 0.03528428077697754,
+      "max": 0.043671369552612305,
+      "pass": false
+     },
+     "faults": {
+      "fault_gravity": {
+       "median": 0.06347346305847168,
+       "p90": 0.15662693977355957,
+       "max": 0.27221786975860596,
+       "pass": false
+      },
+      "fault_action": {
+       "median": 0.2185056209564209,
+       "p90": 0.411060631275177,
+       "max": 0.716015487909317,
+       "pass": false
+      }
+     }
+    },
+    "203": {
+     "genesis_vs_mujoco": {
+      "median": 4.76837158203125e-07,
+      "p90": 9.5367431640625e-07,
+      "max": 1.9073486328125e-06,
+      "pass": true
+     },
+     "time_step_control": {
+      "median": 0.028383970260620117,
+      "p90": 0.03560912609100342,
+      "max": 0.04480886459350586,
+      "pass": false
+     },
+     "faults": {
+      "fault_gravity": {
+       "median": 0.06100118160247803,
+       "p90": 0.14294111728668213,
+       "max": 0.24723565578460693,
+       "pass": false
+      },
+      "fault_action": {
+       "median": 0.2271232008934021,
+       "p90": 0.41474801301956177,
+       "max": 0.653144359588623,
+       "pass": false
+      }
+     }
+    }
+   }
+  },
+  "go2_flat": {
+   "verdict": "pass",
+   "limits": {
+    "median_limit": 0.1,
+    "p90_limit": 0.2
+   },
+   "seeds": {
+    "101": {
+     "genesis_vs_mujoco": {
+      "median": 0.024270057678222656,
+      "p90": 0.037899816920980815,
+      "max": 0.08953869342803955,
+      "pass": true
+     },
+     "time_step_control": {
+      "median": 0.03400450944900513,
+      "p90": 0.04497114419937134,
+      "max": 0.08141553401947021,
+      "pass": true
+     },
+     "faults": {
+      "fault_kp": {
+       "median": 0.8878540396690369,
+       "p90": 1.0083084583282471,
+       "max": 1.1468350887298584,
+       "pass": false
+      }
+     }
+    },
+    "102": {
+     "genesis_vs_mujoco": {
+      "median": 0.023641228675842285,
+      "p90": 0.04608208239078523,
+      "max": 0.15466022491455078,
+      "pass": true
+     },
+     "time_step_control": {
+      "median": 0.03668403625488281,
+      "p90": 0.05137823820114136,
+      "max": 0.07416260242462158,
+      "pass": true
+     },
+     "faults": {
+      "fault_kp": {
+       "median": 0.8796674609184265,
+       "p90": 1.0238450050354004,
+       "max": 1.1018503904342651,
+       "pass": false
+      }
+     }
+    },
+    "103": {
+     "genesis_vs_mujoco": {
+      "median": 0.02389746904373169,
+      "p90": 0.0388857364654541,
+      "max": 0.07542604207992554,
+      "pass": true
+     },
+     "time_step_control": {
+      "median": 0.0385127067565918,
+      "p90": 0.049909710884094245,
+      "max": 0.07238292694091797,
+      "pass": true
+     },
+     "faults": {
+      "fault_kp": {
+       "median": 0.8776768445968628,
+       "p90": 1.0120697736740112,
+       "max": 1.0490524768829346,
+       "pass": false
+      }
+     }
+    }
+   }
+  },
+  "findings": [
+   "On cartpole, Genesis on Metal and MuJoCo agree to about 1e-6 until the carts reach the end of the rail, and then they part. The written test stays failed.",
+   "The time step control is far outside the limits at the same time: a 4 times smaller time step moves MuJoCo more than changing the engine does. So this agreement says that both use one integrator at one time step, not that either is accurate.",
+   "Go2 lands from 0.42 m and takes random small actions for 1 s. Each engine has its own contact model.",
+   "The Go2 bodies differ: Genesis totals 15.019 kg and MuJoCo 15.208 kg from one URDF, because Genesis leaves out two small links of each calf when it merges fixed joints. The cause in Genesis was read from the link masses, and the code was not read."
+  ]
+ },
+ "failed_runs": {
+  "cartpole_with_the_hinge_driven_too": {
+   "cause": "A bug of the task: the action also drove the hinge, so the pole spun. Fixed with `actuated`.",
+   "genesis_vs_mujoco_seed_101": {
+    "median": 0.6935614347457886,
+    "p90": 4.969043016433716,
+    "max": 42.011199951171875,
+    "pass": false
+   },
+   "time_step_control_seed_101": {
+    "median": 13.058799743652344,
+    "p90": 41.38501739501953,
+    "max": 77.29415893554688,
+    "pass": false
+   }
+  },
+  "policy_relative_rule_on_cartpole": {
+   "rule": "worst rel_l2 at most 1e-4 against rsl_rl",
+   "result": {
+    "verdict": "diverged",
+    "worst_rel_l2": 0.00012996040506642892,
+    "failed": 2,
+    "device": "gpu",
+    "batches": [
+     256,
+     256,
+     256,
+     256,
+     256,
+     256,
+     256,
+     256
+    ]
+   },
+   "finding": "The absolute error stays at 3e-7 to 1e-6. When the pole is balanced the action is near 8e-4, so rounding of float32 reaches this limit: torch in float32 is itself 8e-5 from torch in float64 on those batches."
+  },
+  "camera_centroid_rule": {
+   "rule": "The pixels of a link have a centroid within 3 px of its projected physics position",
+   "frames_ok": 1,
+   "frames": 21,
+   "worst_pixel_error": 5.14878845538847,
+   "finding": "The cart stays within 0.35 px. The pole breaks the limit, and the cart hides its base, which moves its centroid. Read from the geometry: this was not tested alone."
+  }
+ },
+ "training": {
+  "cartpole_mujoco": {
+   "train": {
+    "task": "cartpole",
+    "engine": "mujoco",
+    "physics": "cpu",
+    "learner": "cpu",
+    "envs": 64,
+    "iterations": 150,
+    "seed": 1,
+    "seconds": 3.71,
+    "env_steps_per_second": 62143
+   },
+   "usage": {
+    "command": [
+     "~/cumlx-isaaclab/genesis/venv/bin/python",
+     "spikes/m4_sim.py",
+     "train",
+     "--task",
+     "cartpole",
+     "--engine",
+     "mujoco",
+     "--envs",
+     "64",
+     "--iterations",
+     "150",
+     "--seed",
+     "1",
+     "--log-dir",
+     "~/cumlx-sim/train/cartpole_mujoco"
+    ],
+    "start_used_gb": 30.89,
+    "peak_used_gb": 31.18,
+    "peak_process_gb": 0.37,
+    "stopped_for": null,
+    "exit_code": 0
+   },
+   "eval": {
+    "early": {
+     "task": "cartpole",
+     "engine": "mujoco",
+     "controller": "mlx",
+     "checkpoint": "model_0.pt",
+     "envs": 256,
+     "steps": 600,
+     "seed": 8,
+     "reward_per_step": 0.3183975327014923,
+     "falls_per_world": 12.1171875,
+     "upright_fraction_last_100": 0.181484375,
+     "mlx_ms_per_step": 0.351,
+     "check_op_against_rsl_rl": {
+      "verdict": "ok",
+      "worst_rel_l2": 1.759970198484344e-07,
+      "failed": 0,
+      "device": "gpu",
+      "batches": [
+       256,
+       256,
+       256,
+       256,
+       256,
+       256,
+       256,
+       256
+      ]
+     },
+     "check_op_wrong_activation": {
+      "verdict": "diverged",
+      "worst_rel_l2": 0.8562739301242057,
+      "failed": 8,
+      "device": "gpu",
+      "batches": [
+       256,
+       256,
+       256,
+       256,
+       256,
+       256,
+       256,
+       256
+      ]
+     },
+     "absolute_error": {
+      "limit": 1e-05,
+      "right": 1.7881393432617188e-07,
+      "wrong_activation": 0.34145331382751465
+     }
+    },
+    "trained": {
+     "task": "cartpole",
+     "engine": "mujoco",
+     "controller": "mlx",
+     "checkpoint": "model_149.pt",
+     "envs": 256,
+     "steps": 600,
+     "seed": 8,
+     "reward_per_step": 0.985827502310276,
+     "falls_per_world": 0.015625,
+     "upright_fraction_last_100": 0.992734375,
+     "mlx_ms_per_step": 0.317,
+     "check_op_against_rsl_rl": {
+      "verdict": "diverged",
+      "worst_rel_l2": 0.00014103166739999628,
+      "failed": 2,
+      "device": "gpu",
+      "batches": [
+       256,
+       256,
+       256,
+       256,
+       256,
+       256,
+       256,
+       256
+      ]
+     },
+     "check_op_wrong_activation": {
+      "verdict": "diverged",
+      "worst_rel_l2": 170.26886669310704,
+      "failed": 8,
+      "device": "gpu",
+      "batches": [
+       256,
+       256,
+       256,
+       256,
+       256,
+       256,
+       256,
+       256
+      ]
+     },
+     "absolute_error": {
+      "limit": 1e-05,
+      "right": 9.5367431640625e-07,
+      "wrong_activation": 3.8383398056030273
+     }
+    },
+    "zero": {
+     "task": "cartpole",
+     "engine": "mujoco",
+     "controller": "zero",
+     "checkpoint": null,
+     "envs": 256,
+     "steps": 600,
+     "seed": 8,
+     "reward_per_step": 0.23962208157405257,
+     "falls_per_world": 16.109375,
+     "upright_fraction_last_100": 0.1601171875
+    }
+   },
+   "verdict": "pass",
+   "reasons": [],
+   "relative_rule": {
+    "limit": 0.0001,
+    "worst_rel_l2": 0.00014103166739999628,
+    "verdict": "fail"
+   },
+   "worst_absolute_error": 9.5367431640625e-07
+  },
+  "cartpole_genesis": {
+   "train": {
+    "task": "cartpole",
+    "engine": "genesis",
+    "physics": "metal",
+    "learner": "mps",
+    "envs": 256,
+    "iterations": 150,
+    "seed": 1,
+    "seconds": 39.72,
+    "env_steps_per_second": 23202
+   },
+   "usage": {
+    "command": [
+     "~/cumlx-isaaclab/genesis/venv/bin/python",
+     "spikes/m4_sim.py",
+     "train",
+     "--task",
+     "cartpole",
+     "--engine",
+     "genesis",
+     "--envs",
+     "256",
+     "--iterations",
+     "150",
+     "--seed",
+     "1",
+     "--log-dir",
+     "~/cumlx-sim/train/cartpole_genesis"
+    ],
+    "start_used_gb": 30.99,
+    "peak_used_gb": 31.72,
+    "peak_process_gb": 0.9,
+    "stopped_for": null,
+    "exit_code": 0
+   },
+   "eval": {
+    "early": {
+     "task": "cartpole",
+     "engine": "genesis",
+     "controller": "mlx",
+     "checkpoint": "model_0.pt",
+     "envs": 256,
+     "steps": 600,
+     "seed": 8,
+     "reward_per_step": 0.3235505781322718,
+     "falls_per_world": 14.34375,
+     "upright_fraction_last_100": 0.1755859375,
+     "mlx_ms_per_step": 0.198,
+     "check_op_against_rsl_rl": {
+      "verdict": "ok",
+      "worst_rel_l2": 1.1858744317401226e-07,
+      "failed": 0,
+      "device": "gpu",
+      "batches": [
+       256,
+       256,
+       256,
+       256,
+       256,
+       256,
+       256,
+       256
+      ]
+     },
+     "check_op_wrong_activation": {
+      "verdict": "diverged",
+      "worst_rel_l2": 0.4718787928020768,
+      "failed": 8,
+      "device": "gpu",
+      "batches": [
+       256,
+       256,
+       256,
+       256,
+       256,
+       256,
+       256,
+       256
+      ]
+     },
+     "absolute_error": {
+      "limit": 1e-05,
+      "right": 1.7881393432617188e-07,
+      "wrong_activation": 0.27000823616981506
+     }
+    },
+    "trained": {
+     "task": "cartpole",
+     "engine": "genesis",
+     "controller": "mlx",
+     "checkpoint": "model_149.pt",
+     "envs": 256,
+     "steps": 600,
+     "seed": 8,
+     "reward_per_step": 0.9841793555021286,
+     "falls_per_world": 0.0,
+     "upright_fraction_last_100": 0.99265625,
+     "mlx_ms_per_step": 0.247,
+     "check_op_against_rsl_rl": {
+      "verdict": "ok",
+      "worst_rel_l2": 3.207237308779836e-05,
+      "failed": 0,
+      "device": "gpu",
+      "batches": [
+       256,
+       256,
+       256,
+       256,
+       256,
+       256,
+       256,
+       256
+      ]
+     },
+     "check_op_wrong_activation": {
+      "verdict": "diverged",
+      "worst_rel_l2": 44.775461579964215,
+      "failed": 8,
+      "device": "gpu",
+      "batches": [
+       256,
+       256,
+       256,
+       256,
+       256,
+       256,
+       256,
+       256
+      ]
+     },
+     "absolute_error": {
+      "limit": 1e-05,
+      "right": 9.5367431640625e-07,
+      "wrong_activation": 3.9576659202575684
+     }
+    },
+    "zero": {
+     "task": "cartpole",
+     "engine": "genesis",
+     "controller": "zero",
+     "checkpoint": null,
+     "envs": 256,
+     "steps": 600,
+     "seed": 8,
+     "reward_per_step": 0.23962195729836822,
+     "falls_per_world": 16.109375,
+     "upright_fraction_last_100": 0.1601171875
+    }
+   },
+   "verdict": "pass",
+   "reasons": [],
+   "relative_rule": {
+    "limit": 0.0001,
+    "worst_rel_l2": 3.207237308779836e-05,
+    "verdict": "pass"
+   },
+   "worst_absolute_error": 9.5367431640625e-07
+  },
+  "go2_flat_genesis": {
+   "train": {
+    "task": "go2_flat",
+    "engine": "genesis",
+    "physics": "metal",
+    "learner": "mps",
+    "envs": 4096,
+    "iterations": 300,
+    "seed": 1,
+    "seconds": 306.72,
+    "env_steps_per_second": 96151
+   },
+   "usage": {
+    "command": [
+     "~/cumlx-isaaclab/genesis/venv/bin/python",
+     "spikes/m4_sim.py",
+     "train",
+     "--task",
+     "go2_flat",
+     "--engine",
+     "genesis",
+     "--envs",
+     "4096",
+     "--iterations",
+     "300",
+     "--seed",
+     "1",
+     "--log-dir",
+     "~/cumlx-sim/train/go2_flat_genesis"
+    ],
+    "start_used_gb": 30.52,
+    "peak_used_gb": 33.59,
+    "peak_process_gb": 1.82,
+    "stopped_for": null,
+    "exit_code": 0
+   },
+   "eval": {
+    "back": {
+     "task": "go2_flat",
+     "engine": "genesis",
+     "controller": "mlx",
+     "checkpoint": "model_299.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "reward_per_step": 0.01825560646149097,
+     "falls_per_world": 0.0,
+     "forward_command": -0.8,
+     "mean_forward_speed": -0.8644054352574878,
+     "mean_velocity_error": 0.09436037678581972,
+     "mlx_ms_per_step": 0.262,
+     "check_op_against_rsl_rl": {
+      "verdict": "ok",
+      "worst_rel_l2": 4.279477422722186e-07,
+      "failed": 0,
+      "device": "gpu",
+      "batches": [
+       128,
+       128,
+       128,
+       128,
+       128,
+       128,
+       128,
+       128
+      ]
+     },
+     "check_op_wrong_activation": {
+      "verdict": "diverged",
+      "worst_rel_l2": 0.9580600640394338,
+      "failed": 8,
+      "device": "gpu",
+      "batches": [
+       128,
+       128,
+       128,
+       128,
+       128,
+       128,
+       128,
+       128
+      ]
+     },
+     "absolute_error": {
+      "limit": 1e-05,
+      "right": 9.5367431640625e-07,
+      "wrong_activation": 2.8889341354370117
+     }
+    },
+    "early": {
+     "task": "go2_flat",
+     "engine": "genesis",
+     "controller": "mlx",
+     "checkpoint": "model_0.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "reward_per_step": 0.0006568683958424089,
+     "falls_per_world": 0.0,
+     "forward_command": 0.8,
+     "mean_forward_speed": 0.0017658518093735943,
+     "mean_velocity_error": 0.7982373130321503,
+     "mlx_ms_per_step": 0.256,
+     "check_op_against_rsl_rl": {
+      "verdict": "ok",
+      "worst_rel_l2": 6.055066433299436e-07,
+      "failed": 0,
+      "device": "gpu",
+      "batches": [
+       128,
+       128,
+       128,
+       128,
+       128,
+       128,
+       128,
+       128
+      ]
+     },
+     "check_op_wrong_activation": {
+      "verdict": "diverged",
+      "worst_rel_l2": 0.49236299028119285,
+      "failed": 8,
+      "device": "gpu",
+      "batches": [
+       128,
+       128,
+       128,
+       128,
+       128,
+       128,
+       128,
+       128
+      ]
+     },
+     "absolute_error": {
+      "limit": 1e-05,
+      "right": 1.043081283569336e-07,
+      "wrong_activation": 0.08811594545841217
+     }
+    },
+    "fwd": {
+     "task": "go2_flat",
+     "engine": "genesis",
+     "controller": "mlx",
+     "checkpoint": "model_299.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "reward_per_step": 0.017741297969652806,
+     "falls_per_world": 0.0,
+     "forward_command": 0.8,
+     "mean_forward_speed": 0.8103420344326231,
+     "mean_velocity_error": 0.07617016433841653,
+     "mlx_ms_per_step": 0.26,
+     "check_op_against_rsl_rl": {
+      "verdict": "ok",
+      "worst_rel_l2": 4.968663628349502e-07,
+      "failed": 0,
+      "device": "gpu",
+      "batches": [
+       128,
+       128,
+       128,
+       128,
+       128,
+       128,
+       128,
+       128
+      ]
+     },
+     "check_op_wrong_activation": {
+      "verdict": "diverged",
+      "worst_rel_l2": 0.8596933052035719,
+      "failed": 8,
+      "device": "gpu",
+      "batches": [
+       128,
+       128,
+       128,
+       128,
+       128,
+       128,
+       128,
+       128
+      ]
+     },
+     "absolute_error": {
+      "limit": 1e-05,
+      "right": 1.6689300537109375e-06,
+      "wrong_activation": 3.025235891342163
+     }
+    },
+    "stop": {
+     "task": "go2_flat",
+     "engine": "genesis",
+     "controller": "mlx",
+     "checkpoint": "model_299.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "reward_per_step": 0.02211538008521893,
+     "falls_per_world": 0.0,
+     "forward_command": 0.0,
+     "mean_forward_speed": 0.00013698142067242872,
+     "mean_velocity_error": 0.00016572422745816262,
+     "mlx_ms_per_step": 0.256,
+     "check_op_against_rsl_rl": {
+      "verdict": "ok",
+      "worst_rel_l2": 4.430973448127032e-07,
+      "failed": 0,
+      "device": "gpu",
+      "batches": [
+       128,
+       128,
+       128,
+       128,
+       128,
+       128,
+       128,
+       128
+      ]
+     },
+     "check_op_wrong_activation": {
+      "verdict": "diverged",
+      "worst_rel_l2": 0.9617118129390619,
+      "failed": 8,
+      "device": "gpu",
+      "batches": [
+       128,
+       128,
+       128,
+       128,
+       128,
+       128,
+       128,
+       128
+      ]
+     },
+     "absolute_error": {
+      "limit": 1e-05,
+      "right": 4.76837158203125e-07,
+      "wrong_activation": 1.3281891345977783
+     }
+    },
+    "zero": {
+     "task": "go2_flat",
+     "engine": "genesis",
+     "controller": "zero",
+     "checkpoint": null,
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "reward_per_step": 0.00029072092708503305,
+     "falls_per_world": 0.0,
+     "forward_command": 0.8,
+     "mean_forward_speed": 0.0011795688022729993,
+     "mean_velocity_error": 0.7988204419612884
+    }
+   },
+   "verdict": "pass",
+   "reasons": [],
+   "relative_rule": {
+    "limit": 0.0001,
+    "worst_rel_l2": 6.055066433299436e-07,
+    "verdict": "pass"
+   },
+   "worst_absolute_error": 1.6689300537109375e-06
+  }
+ },
+ "camera": {
+  "mujoco": {
+   "verdict": "pass",
+   "right": {
+    "frames_ok": 21,
+    "frames": 21,
+    "frames_centroid_ok": 8,
+    "worst_pixel_error": 4.070124880684861,
+    "worst_surface_p99_m": 0.008744868530811172
+   },
+   "stale_pose": {
+    "frames_ok": 2,
+    "frames": 21,
+    "frames_centroid_ok": 3,
+    "worst_pixel_error": 41.94373231178246,
+    "worst_surface_p99_m": 0.7995598574629693
+   },
+   "wrong_camera": {
+    "frames_ok": 9,
+    "frames": 21,
+    "frames_centroid_ok": 6,
+    "worst_pixel_error": 4.179539242491113,
+    "worst_surface_p99_m": 0.04371965237950208
+   }
+  },
+  "genesis": {
+   "verdict": "pass",
+   "right": {
+    "frames_ok": 21,
+    "frames": 21,
+    "frames_centroid_ok": 9,
+    "worst_pixel_error": 3.762158584857019,
+    "worst_surface_p99_m": 0.008762989712604972
+   },
+   "stale_pose": {
+    "frames_ok": 2,
+    "frames": 21,
+    "frames_centroid_ok": 3,
+    "worst_pixel_error": 42.67611254205631,
+    "worst_surface_p99_m": 0.8137813005269466
+   },
+   "wrong_camera": {
+    "frames_ok": 9,
+    "frames": 21,
+    "frames_centroid_ok": 10,
+    "worst_pixel_error": 4.100742727173057,
+    "worst_surface_p99_m": 0.04450765677215013
+   }
+  }
+ },
+ "camera_notes": [
+  "The right scenario's worst p99 is near its limit, at 8.8 mm against 10 mm. A pixel at this distance is about 19 mm wide, and the depth comes from one sample inside it, while the check uses the pixel centre. This reading was not tested alone.",
+  "The wrong camera case fails on 12 of 21 frames, not on all. A camera 0.3 m away is only weakly caught."
+ ],
+ "not_shown": [
+  "Isaac Lab, its assets, or PhysX",
+  "USD assets: no USD reader is in these environments",
+  "A real robot",
+  "MuJoCo training for Go2: MujocoBackend is a Python loop over worlds",
+  "Meshes in camera images: links are boxes",
+  "A flagship reproduction on a new Mac"
+ ],
+ "go2_rate_zero_actions": {
+  "task": "go2_flat",
+  "engine": "genesis",
+  "envs": 4096,
+  "steps": 300,
+  "env_steps_per_second": 321175,
+  "seconds": 3.826,
+  "actions": "zero, no learner, no policy",
+  "includes": "task code in cumlx.sim"
+ },
+ "go2_rate_note": "Standing still with zero actions, no policy and no learner, one run. This is not the M4 throughput measure. Training on 4096 envs ran at the rate in training.go2_flat_genesis.train."
+}

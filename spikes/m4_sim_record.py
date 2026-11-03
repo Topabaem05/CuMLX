@@ -139,7 +139,7 @@ def main() -> int:
             'go2_flat': trajectory(raw, 'go2_flat', ['fault_kp']),
             'findings': [
                 'On cartpole, Genesis on Metal and MuJoCo agree to about 1e-6 until the carts reach the end of the rail, and then they part. The written test stays failed.',
-                'The time step control is far outside the limits at the same time: halving the time step moves MuJoCo more than changing the engine does. So this agreement says that both use one integrator at one time step, not that either is accurate.',
+                'The time step control is far outside the limits at the same time: a 4 times smaller time step moves MuJoCo more than changing the engine does. So this agreement says that both use one integrator at one time step, not that either is accurate.',
                 'Go2 lands from 0.42 m and takes random small actions for 1 s. Each engine has its own contact model.',
                 'The Go2 bodies differ: Genesis totals 15.019 kg and MuJoCo 15.208 kg from one URDF, because Genesis leaves out two small links of each calf when it merges fixed joints. The cause in Genesis was read from the link masses, and the code was not read.',
             ],
@@ -151,13 +151,17 @@ def main() -> int:
                          'The wrong camera case fails on 12 of 21 frames, not on all. A camera 0.3 m away is only weakly caught.'],
         'not_shown': ['Isaac Lab, its assets, or PhysX', 'USD assets: no USD reader is in these environments', 'A real robot', 'MuJoCo training for Go2: MujocoBackend is a Python loop over worlds', 'Meshes in camera images: links are boxes', 'A flagship reproduction on a new Mac'],
     }
-    (ROOT / 'validation' / 'm4-sim.json').write_text(json.dumps(record, indent=1) + '\n')
+    rate_log = raw / 'train' / 'go2_flat_genesis' / 'rate.log'
+    if rate_log.exists():
+        record['go2_rate_zero_actions'] = next(json.loads(line) for line in rate_log.read_text().splitlines() if line.startswith('{"task"'))
+        record['go2_rate_note'] = 'Standing still with zero actions, no policy and no learner, one run. This is not the M4 throughput measure. Training on 4096 envs ran at the rate in training.go2_flat_genesis.train.'
+    (ROOT / 'validation' / 'm4-sim.json').write_text(json.dumps(record, indent=1).replace(str(Path.home()), '~') + '\n')
     lidar = load(raw / 'lidar' / 'result.json')
     if lidar is not None:
         limits = json.loads((ROOT / 'validation' / 'm5-lidar-limits.json').read_text())
         lidar = {'schema': 'cumlx.m5_lidar.v1', 'date': args.date, 'limits': 'validation/m5-lidar-limits.json', **lidar, 'usage': load(raw / 'lidar' / 'usage.json'), 'not_shown': limits['not_shown'],
                  'gpu_note': 'accumulatedGPUTime is sampled every few seconds and this run lasts under a second, so process_gpu_seconds is a low lower bound.'}
-        (ROOT / 'validation' / 'm5-lidar.json').write_text(json.dumps(lidar, indent=1) + '\n')
+        (ROOT / 'validation' / 'm5-lidar.json').write_text(json.dumps(lidar, indent=1).replace(str(Path.home()), '~') + '\n')
     print(json.dumps({'cartpole_as_written': record['trajectory']['cartpole_as_written']['verdict'], 'cartpole_before_rail': record['trajectory']['cartpole_before_rail']['verdict'],
                       'go2_flat': record['trajectory']['go2_flat']['verdict'], 'training': {k: v.get('verdict') for k, v in record['training'].items()},
                       'camera': {k: (v or {}).get('verdict') for k, v in record['camera'].items()}, 'lidar': lidar and lidar['verdict']}))

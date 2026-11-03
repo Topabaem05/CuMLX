@@ -1,0 +1,97 @@
+{
+ "schema": "cumlx.m5_lidar.v1",
+ "date": "2026-11-04",
+ "limits": "validation/m5-lidar-limits.json",
+ "variant": "metal_ad_rgb",
+ "mitsuba": "3.9.1",
+ "rays_per_scan": 16384,
+ "first_scan_seconds": 0.1588,
+ "scans_per_second": {
+  "min": 1326.1,
+  "max": 2116.6,
+  "repeats": 20
+ },
+ "right": {
+  "origin": {
+   "rays": 16384,
+   "hits": 11505,
+   "worst_range_error_m": 4.406445639482115e-06,
+   "p99_range_error_m": 3.1392827608556217e-06,
+   "hit_mismatch_fraction": 0.0,
+   "range_limit_m": 0.001,
+   "hit_mismatch_limit": 0.001,
+   "pass": true,
+   "reasons": []
+  },
+  "another_origin": {
+   "rays": 16384,
+   "hits": 12650,
+   "worst_range_error_m": 5.646829571048784e-06,
+   "p99_range_error_m": 3.404293235877998e-06,
+   "hit_mismatch_fraction": 0.0,
+   "range_limit_m": 0.001,
+   "hit_mismatch_limit": 0.001,
+   "pass": true,
+   "reasons": []
+  }
+ },
+ "faults": {
+  "origin_5_cm_off": {
+   "rays": 16384,
+   "hits": 11499,
+   "worst_range_error_m": 10.396049474690287,
+   "p99_range_error_m": 0.06821499977097419,
+   "hit_mismatch_fraction": 0.0006103515625,
+   "range_limit_m": 0.001,
+   "hit_mismatch_limit": 0.001,
+   "pass": false,
+   "reasons": [
+    "worst range error 10.4 m above 0.001"
+   ]
+  },
+  "elevation_0_5_degrees_off": {
+   "rays": 16384,
+   "hits": 11442,
+   "worst_range_error_m": 2.7978043157801054,
+   "p99_range_error_m": 1.5261398235799621,
+   "hit_mismatch_fraction": 0.00384521484375,
+   "range_limit_m": 0.001,
+   "hit_mismatch_limit": 0.001,
+   "pass": false,
+   "reasons": [
+    "worst range error 2.8 m above 0.001",
+    "hit or miss differs on 0.385% of rays, limit 0.100%"
+   ]
+  },
+  "box_5_cm_off": {
+   "rays": 16384,
+   "hits": 11504,
+   "worst_range_error_m": 9.730505498365977,
+   "p99_range_error_m": 0.05583032650486772,
+   "hit_mismatch_fraction": 6.103515625e-05,
+   "range_limit_m": 0.001,
+   "hit_mismatch_limit": 0.001,
+   "pass": false,
+   "reasons": [
+    "worst range error 9.73 m above 0.001"
+   ]
+  }
+ },
+ "process_gpu_seconds": 0.0141595,
+ "verdict": "pass",
+ "usage": {
+  "command": [
+   "~/cumlx-m5/venv/bin/python",
+   "spikes/m5_lidar.py",
+   "--out",
+   "~/cumlx-sim/lidar/result.json"
+  ],
+  "start_used_gb": 31.3,
+  "peak_used_gb": 31.3,
+  "peak_process_gb": 0.0,
+  "stopped_for": null,
+  "exit_code": 0
+ },
+ "not_shown": "A real sensor's beam width, reflectivity, noise, or motion during a sweep. Any comparison with an RTX LiDAR. Whether the Metal ray tracing circuit ran: no counter was read.",
+ "gpu_note": "accumulatedGPUTime is sampled every few seconds and this run lasts under a second, so process_gpu_seconds is a low lower bound."
+}

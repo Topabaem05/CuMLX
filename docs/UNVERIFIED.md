@@ -40,7 +40,9 @@
 
 ## 물리와 학습 (M4, OrchardSim)
 
-- `cumlx.sim`은 만들지 않았습니다.
+- `cumlx.sim`은 Isaac Lab이 아닙니다. 작업 2개가 그 형식을 따를 뿐이고, Isaac Lab 작업 정의를 그대로 읽지 못합니다. USD 자산은 돌려 보지 않았고, MuJoCo 쪽 Go2 학습도 없습니다. `validation/m4-sim.json`
+- Genesis와 MuJoCo의 관절 제한 처리: cartpole이 레일 끝에 닿으면 두 엔진이 갈라져 처음 쓴 허용치를 넘었습니다. 일치 시험은 한 시간 간격에서 두 엔진이 같은 적분을 한다는 뜻이고, 어느 쪽이 정확한지는 말해 주지 않습니다. 시간 간격 대조군이 그보다 크게 벗어납니다.
+- 작은 행동에서 MLX 정책: 균형을 잡은 cartpole의 행동은 약 8e-4라서 상대 오차가 1e-4를 넘습니다(MuJoCo 정책 1.41e-4). 절대 오차는 1e-6 이하입니다. float32 반올림으로 읽었습니다.
 - PhysX와의 비교, 실제 로봇. 어떤 결과도 sim-to-real 결과가 아닙니다.
 - 같은 cartpole USD가 1초 후 PhysX 3.31 rad, Genesis 1.97 rad로 다르며, 원인은 조사하지 않았습니다. `validation/isaac-sim.json`
 - 궤적 시험은 humanoid 모델입니다. Isaac Lab 작업과 Go2 모델은 다루지 않았고, 드문 world의 오차(0.3~1.3)는 허용치가 제한하지 않습니다. OrchardSim `validation/m4-trajectory.json`
@@ -69,7 +71,9 @@
 - **Mitsuba Metal과 V100 CUDA 비교는 아직 없습니다.** Mitsuba 3.9.1은 V100을 거부합니다(compute capability 7.5 이상 필요, V100은 7.0). 3.8.0 경로는 아직 돌리지 않았고, 돌아도 양쪽 버전이 다릅니다. 첫 실행이 70분간 멈춘 원인도 찾지 못했습니다. `validation/m5-render.json`
 - RTX와의 직접 비교. RTX 쪽은 문서만 읽었습니다. `docs/RENDER-SENSORS.md`
 - 하드웨어 레이트레이싱: Metal 레이트레이싱 API를 쓰는 것은 확인했지만, 전용 회로가 동작했음을 보여 주는 카운터는 읽지 않았습니다. 하드웨어 가속은 Apple 문서의 내용입니다.
-- 만들지 않은 것: LiDAR 등 레이캐스트 센서, USD 장면, 모션 벡터, 렌즈 왜곡, 시맨틱 레이블, 병렬 환경 렌더링, `cumlx.sim` 카메라 센서.
+- 만들지 않은 것: USD 장면, 모션 벡터, 렌즈 왜곡, 시맨틱 레이블, 병렬 환경 렌더링, 로봇 메시를 그리는 카메라. `cumlx.sim` 카메라의 링크는 상자입니다.
+- 레이캐스트 센서는 기하만 잽니다. 빔 폭, 반사율, 잡음, 회전 중 움직임이 없고, RTX LiDAR와 비교하지 않았습니다. `validation/m5-lidar.json`
+- `cumlx.sim` 카메라에서 0.3 m 틀린 카메라는 21개 중 12개 프레임에서만 잡힙니다. `validation/m4-sim.json`
 - 프레임 속도는 작은 장면입니다. 1, 4 spp 이미지는 디노이저 없이 쓸 수 없습니다.
 
 ## 통합 (M6)

@@ -25,6 +25,10 @@
 - `cumlx doctor --probe` reports memory in use, RAM and the limit for long runs, on any size of machine. `tests/test_m_series_generic.py` fails if code branches on one chip's name.
 - `scripts/compat_check.py`: checks the CLI contract on a base install, with no MLX, torch or NVIDIA tools. It refuses an environment that has them. Run on a fresh venv with the built wheel: 14 of 14, on one Mac with Python 3.15 ([record](validation/compat-base-install.json)).
 - `tests/test_launchers_portable.py`: every launcher parses in the shell that it names, and uses no flag or syntax of only one system. `shellcheck` runs where it is installed, and CI requires it.
+- `cumlx.sim`: cartpole and Go2 flat task definitions on Genesis and MuJoCo, an rsl_rl environment, a camera on a task, and a policy in MLX checked with `check_op`. It is not Isaac Lab. Results and failed runs are in `validation/m4-sim.json`.
+- `cumlx.render.lidar`: a raycast sensor on Mitsuba Metal, checked against exact distances. `validation/m5-lidar.json`.
+- `cumlx doctor --stack --env PYTHON`: a stack spread over several environments. A missing part or an environment that cannot answer is still exit 3.
+- `spikes/run_guarded.py`: run a command under start and stop limits on memory in use.
 - `cumlx doctor --stack`: report each platform layer in this Python environment, and exit 3 with `E_DEP_MISSING` and an install hint unless all are ready. It installs nothing, uses no network and does not look for nvcc.
 - `docs/PLATFORM-REPORT.md` and `docs/UNVERIFIED.md`: the result of each platform gate and flagship task with its grade, the failures, and what was not verified. A test keeps the report in step with the roadmap's gates. The repository is private, so neither is published yet.
 - `spikes/m3_kernels.sh`: record the kernelport zoo and sam2's kernels on the V100, translate them with woof in their own environment, and compare. Prepared and tested on stubs only; `validation/kernel-m3.json` says that no third-party kernel has run yet.
