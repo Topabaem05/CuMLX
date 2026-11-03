@@ -115,3 +115,89 @@ def compare(actual: np.ndarray, expected: np.ndarray, threshold: dict[str, Any])
     if not ok:
         out['reason'] = 'rel_l2_above_threshold'
     return out
+
+
+# ---------------------------------------------------------------------------- op-level goldens
+# `cumlx kernel verify` compares a Metal kernel with an op-level golden from a real CUDA run.
+# These limits were written on 2026-11-03, BEFORE any CUDA output of these kernels had been recorded or compared.
+# The reason is arithmetic, not a measurement: float32 unit roundoff is 6e-8, and these kernels are short reductions
+# with an explicit FMA order, so 1e-5 leaves about 170 roundoffs for libm differences and a different lane split.
+# The model-level limit of 1e-4 is ten times wider because it also holds the noise of a whole graph. `max_rel` is the
+# worst element divided by the largest golden element, so one wrong element cannot hide in a long output.
+# Integer outputs must match exactly. Do not raise these to clear a failure: find the cause first.
+KERNEL_THRESHOLDS: dict[str, float] = {'rel_l2': 1e-5, 'max_rel': 1e-5, 'zero_atol': 1e-6}
+_FLOAT32_TINY = float(np.finfo(np.float32).tiny)
+
+
+def _ulp_index(values: np.ndarray) -> np.ndarray:
+    """Map float32 values to integers in which neighbouring floats differ by one. -0 and +0 are the same point."""
+    bits = values.astype(np.float32).view(np.uint32).astype(np.int64)
+    magnitude = bits & 0x7fffffff
+    return np.where(bits >> 31 == 1, -magnitude, magnitude)
+
+
+def _first(mask: np.ndarray) -> tuple[int, ...]:
+    return tuple(int(i) for i in np.unravel_index(int(np.argmax(mask)), mask.shape)) if mask.shape else ()
+
+
+def compare_kernel_output(actual: np.ndarray, expected: np.ndarray,
+                          limits: dict[str, float] | None = None) -> dict[str, Any]:
+    """Compare one kernel output with its golden. Returns metrics, ``verdict`` and, on failure, ``reason``.
+
+    NaN and infinity must sit at the same elements with the same sign. Everything else is computed in float64.
+    """
+    limits = KERNEL_THRESHOLDS if limits is None else limits
+    a, e = np.asarray(actual), np.asarray(expected)
+    out: dict[str, Any] = {'shape': list(a.shape), 'expected_shape': list(e.shape), 'dtype': str(e.dtype),
+                           'rel_l2': None, 'max_rel': None, 'max_abs': None, 'max_ulp': None}
+    if a.shape != e.shape:
+        return {**out, 'verdict': 'fail', 'reason': 'shape_mismatch'}
+    if a.dtype != e.dtype:
+        return {**out, 'verdict': 'fail', 'reason': 'dtype_mismatch', 'actual_dtype': str(a.dtype)}
+    if not np.issubdtype(e.dtype, np.floating):
+        wrong = a != e
+        out['mismatched'] = int(wrong.sum())
+        if out['mismatched']:
+            at = _first(wrong)
+            return {**out, 'verdict': 'fail', 'reason': 'integer_mismatch', 'index': list(at),
+                    'golden': e[at].item(), 'port': a[at].item()}
+        return {**out, 'verdict': 'pass', 'basis': 'exact'}
+    a64, e64 = a.astype(np.float64), e.astype(np.float64)
+    a_nan, e_nan = np.isnan(a64), np.isnan(e64)
+    out['nan_in_golden'] = int(e_nan.sum())
+    if (a_nan != e_nan).any():
+        at = _first(a_nan != e_nan)
+        return {**out, 'verdict': 'fail', 'reason': 'nan_mismatch', 'mismatched': int((a_nan != e_nan).sum()),
+                'index': list(at), 'golden': float(e64[at]), 'port': float(a64[at])}
+    a_inf, e_inf = np.isinf(a64), np.isinf(e64)
+    wrong = (a_inf != e_inf) | (e_inf & (a64 != e64))
+    if wrong.any():
+        at = _first(wrong)
+        return {**out, 'verdict': 'fail', 'reason': 'infinity_mismatch', 'mismatched': int(wrong.sum()),
+                'index': list(at), 'golden': float(e64[at]), 'port': float(a64[at])}
+    finite = ~(e_nan | e_inf)
+    out['bitwise_identical'] = a.tobytes() == e.tobytes()
+    subnormal = finite & (np.abs(e64) > 0) & (np.abs(e64) < _FLOAT32_TINY)
+    out['subnormal_in_golden'] = int(subnormal.sum())
+    out['subnormal_flushed'] = int((subnormal & (a64 == 0)).sum())
+    if not finite.any():
+        return {**out, 'verdict': 'pass', 'basis': 'all_special_values'}
+    diff = np.where(finite, a64 - e64, 0.0)
+    worst = _first(np.abs(diff) == np.max(np.abs(diff)))
+    max_abs = float(np.abs(diff[worst]))
+    scale = float(np.max(np.abs(e64[finite])))
+    norm = float(np.linalg.norm(e64[finite]))
+    out.update(max_abs=max_abs, index=list(worst), golden=float(e64[worst]), port=float(a64[worst]))
+    if e.dtype == np.float32:
+        out['max_ulp'] = int(np.max(np.abs(_ulp_index(a[finite]) - _ulp_index(e[finite]))))
+    if norm == 0:
+        if max_abs <= limits['zero_atol']:
+            return {**out, 'verdict': 'pass', 'basis': 'zero_atol'}
+        return {**out, 'verdict': 'fail', 'reason': 'golden_is_zero_but_output_is_not'}
+    out['rel_l2'] = float(np.linalg.norm(diff) / norm)
+    out['max_rel'] = max_abs / scale
+    if out['rel_l2'] > limits['rel_l2']:
+        return {**out, 'verdict': 'fail', 'reason': 'rel_l2_above_limit'}
+    if out['max_rel'] > limits['max_rel']:
+        return {**out, 'verdict': 'fail', 'reason': 'max_rel_above_limit'}
+    return {**out, 'verdict': 'pass', 'basis': 'rel_l2+max_rel'}
