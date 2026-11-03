@@ -34,3 +34,13 @@ The `probe_` prefix stops a script from shadowing the package that it imports. D
 ## M3 kernels
 
 `m3_kernels.sh` works toward the M3 gates in [the platform roadmap](../docs/ROADMAP-PLATFORM.md). It installs metal-woof into `~/cumlx-m3/woof-venv` and runs it with your permissions. `sh spikes/m3_kernels.sh capture` compiles and runs third-party kernels on the V100, and it stops if the GPU is busy. `status` shows the state, and `tools` prints the programs that it would run. It takes the kernels at the commits in [sources.json](../validation/kernel-cases-m3/sources.json), and checks each hash. Delete `~/cumlx-m3` afterwards.
+
+## Settings on another machine
+
+| Setting | Meaning | Default |
+|---|---|---|
+| `CUMLX_GPU_HOST`, or the file `~/.config/cumlx/gpu-host` | The ssh host of an NVIDIA machine, for the launchers that use one | None: they end with exit 3 |
+| `CUMLX_MAX_USED_GB` | Long runs stop above this much memory in use | 73% of RAM |
+| `CUMLX_M2_ROOT`, `CUMLX_M2_GOLDEN`, `CUMLX_M2_SUBSTITUTES_ROOT`, `CUMLX_M3_ROOT`, `CUMLX_M5_GOLDEN` | Where results go | Folders named `cumlx-*` under your home |
+
+`uv` is required for the runs that make environments. Without it they end with exit 3 and the install link. See `tests/test_launchers_portable.py`, `tests/test_launcher_host.py` and `scripts/compat_check.py`.
