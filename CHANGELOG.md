@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- The kernel layer read `operator*=` as a global variable named `operator`, because of its `=`, and took the next declaration into it. It now reads a compound assignment operator as a function.
+- The recursion check knew one definition per name. A wrapper such as `make_float4(float3, float)` that calls the built-in of the same name read as recursion, and a recursive overload was missed when another definition of its name came later. Each definition is now its own node, and a call goes to each overload that accepts its number of arguments. Overloads with the same number of arguments are still refused, because this layer does not read types.
 - `is_complete_metal` and the signature reader did not see the `[[kernel]] void` form that woof writes, so a complete library read as a function body.
 
 ### Changed
