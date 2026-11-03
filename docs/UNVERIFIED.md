@@ -35,7 +35,7 @@
 - 번역 예측은 측정이 아닙니다.
 - case는 float32만 다룹니다. zoo의 float16, bfloat16과 가장 큰 실행은 포함하지 않았습니다.
 - 이 저장소의 커널 8개는 이식하기 쉽게 쓴 것이고 warp 단위 동작을 쓰지 않습니다. 비정상 수와 오버플로 영역은 인증하지 않았습니다. `validation/kernel-translation.json`
-- nvdiffrast의 거부 이유 일부(`operator`, `make_float4` 재귀)는 이 계층의 결함이고 고치지 않았습니다.
+- nvdiffrast의 `zero_value` 전체 특수화 3건은 이 계층이 처리하지 못해 거부됩니다. Metal에서 되는지는 시험하지 않았습니다.
 - 입력이 닿지 않는 결함은 잡을 수 없으므로, 통과는 case가 실행한 범위만 뜻합니다.
 
 ## 물리와 학습 (M4, OrchardSim)

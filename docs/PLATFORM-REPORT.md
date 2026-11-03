@@ -1,6 +1,6 @@
 # 플랫폼 결과 보고서
 
-기준: CuMLX `4580acf`, OrchardSim `e92054a`, 2026-11-03. 장비는 Apple M5 Pro 48 GB 한 대와 공유 V100 한 대입니다. 모든 수치는 표에 적은 기록 파일에서 읽었습니다. 확인하지 못한 항목은 [UNVERIFIED.md](UNVERIFIED.md)에 있습니다.
+기준: CuMLX `4580acf`와 그 뒤 M3 전처리 재실행, OrchardSim `e92054a`, 2026-11-03. 장비는 Apple M5 Pro 48 GB 한 대와 공유 V100 한 대입니다. 모든 수치는 표에 적은 기록 파일에서 읽었습니다. 확인하지 못한 항목은 [UNVERIFIED.md](UNVERIFIED.md)에 있습니다.
 
 **이 저장소는 비공개이므로 이 문서는 아직 공개된 보고서가 아닙니다.** M6의 공개 조건은 충족하지 않았습니다.
 
@@ -58,7 +58,7 @@
 | M3-1 | V100 원본으로 기록한 커널 golden 20개 이상 | 미달 | A (8개만) | `validation/kernel-m3.json`, `validation/kernel-translation.json` | **8개, case 29개.** 직접 쓴 Metal이 8개 모두 등급 A입니다. 외부 13개 파일의 case 71개는 준비만 했고, 하네스를 nvcc로 컴파일한 적이 없습니다 |
 | M3-2 | 번역 후 등급 A 70% 이상, 실패 분류 | 미달 | 미검증 | `validation/kernel-m3.json` | **미측정.** 실제 번역기가 돌지 않았습니다. 예측은 측정이 아닙니다 |
 | M3-3 | kernelport zoo 12개를 번역, 실행, V100과 비교 | 미달 | 미검증 | `validation/kernel-m3.json` | 비교 0개. 전처리만 11개 통과, `rmsnorm`은 `__shfl_xor_sync`로 거부 |
-| M3-4 | 실제 저장소 하나의 커널 전체 처리 | 미달 | 미검증 | `validation/kernel-m3.json` | sam2 커널 6개가 전처리를 통과했고 번역은 미실행입니다. nvdiffrast 4개는 10~26건으로 거부되며, 일부 이유(`operator`, `make_float4` 재귀)는 이 계층의 결함입니다 |
+| M3-4 | 실제 저장소 하나의 커널 전체 처리 | 미달 | 미검증 | `validation/kernel-m3.json` | sam2 커널 6개가 전처리를 통과했고 번역은 미실행입니다. nvdiffrast 4개는 8~24건으로 거부되며 모두 `__match_any_sync`를 씁니다. 이 계층의 결함이던 거부 이유 2종(`operator`, `make_float4` 재귀)은 고쳤습니다 |
 | M3-5 | 값이 틀린 번역을 넣으면 찾아냄 | 달성 | A | `validation/kernel-translation.json` | 틀린 9건 모두 diverged, 맞는 9건 모두 ok. 이 저장소의 커널이며, 입력이 닿지 않는 결함은 잡을 수 없습니다 |
 
 ### M4. 로봇 시뮬레이션
