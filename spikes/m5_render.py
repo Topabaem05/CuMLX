@@ -24,6 +24,7 @@ from typing import Any
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
+from cumlx import sysmem  # noqa: E402
 from cumlx.render.compare import compare_images  # noqa: E402
 from cumlx.render.sensors import (  # noqa: E402
     Camera,
@@ -38,7 +39,6 @@ SCENES = ('cornell_box', 'cornell_spheres')
 SPP = 4096  # 1024 was too noisy for the floor. See validation/m5-render-limits.json.
 PASS_SPP = 64  # All samples in passes, so that one wavefront stays near 4 million paths.
 RATE_SPP = (1, 4, 16, 64)
-MAX_SYSTEM_USED_GB = 38.0
 
 
 def stage(name: str, stall_seconds: float) -> None:
@@ -52,9 +52,9 @@ def stage(name: str, stall_seconds: float) -> None:
 
 
 def check_memory() -> None:
-    used = system_used_gb()
-    if used is not None and used > MAX_SYSTEM_USED_GB:
-        raise SystemExit(f'stopped: the system uses {used:.1f} GB, over the limit of {MAX_SYSTEM_USED_GB} GB')
+    used, limit = system_used_gb(), sysmem.limit_gb()  # Read on a Mac only, so that other people's jobs do not stop a run on a shared server.
+    if used is not None and limit is not None and used > limit:
+        raise SystemExit(f'stopped: the system uses {used:.1f} GB, over the limit of {limit:.1f} GB. Set {sysmem.LIMIT_VARIABLE} to change it')
 
 
 def nvidia_compute_apps() -> str | None:

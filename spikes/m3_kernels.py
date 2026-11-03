@@ -30,6 +30,9 @@ import zlib
 
 import numpy as np
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
+from cumlx import sysmem  # noqa: E402
+
 REPO = Path(__file__).resolve().parents[1]
 CASES_DIR = REPO / 'validation/kernel-cases-m3'
 LAB_CASES = REPO / 'validation/kernel-cases/cases.json'
@@ -39,7 +42,6 @@ EXTERNAL_GOLDEN = REPO / 'validation/kernel-golden-v100-m3'
 SEED = 20261103
 MAX_ELEMENTS = 20000  # per tensor, so that the goldens stay small enough for git
 STEP_TIMEOUT = 240  # a translated kernel that spins must not hold the GPU
-MAX_USED_GB = 38.0  # stop the run above this much system memory in use
 LAB = ('fp4_decode', 'fp4_gemv', 'fp4_small_m', 'fp4_tiled', 'fp4_w4a4', 'fp4_quantize', 'rms_norm', 'silu_mul')
 SAM2 = 'connected_components'
 GATE_GOLDENS, GATE_GRADE_A, GATE_ZOO = 20, 0.70, 12
@@ -409,23 +411,11 @@ def write_cases(root: Path, out: Path) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------- one step at a time
-def used_gb() -> float | None:
-    try:
-        text = subprocess.run(['vm_stat'], capture_output=True, text=True, timeout=20).stdout
-    except OSError:
-        return None
-    size = re.search(r'page size of (\d+)', text)
-    fields = {k: re.search(rf'{k}:\s+(\d+)', text) for k in ('Pages active', 'Pages wired down', 'Pages occupied by compressor')}
-    if not size or not all(fields.values()):
-        return None
-    return sum(int(m.group(1)) for m in fields.values() if m) * int(size.group(1)) / 1e9
-
-
 def cumlx_run(argv: list[str], cwd: Path, timeout: int = STEP_TIMEOUT) -> dict[str, Any]:
     """Run one cumlx command in its own process. A kernel that spins or a translator that crashes stops only this step."""
-    used = used_gb()
-    if used is not None and used > MAX_USED_GB:
-        return {'stage': 'not_run', 'reason': f'system memory in use is {used:.1f} GB, above {MAX_USED_GB}'}
+    reason = sysmem.over_limit()
+    if reason:
+        return {'stage': 'not_run', 'reason': reason}
     env = {**os.environ, 'PYTHONPATH': str(REPO / 'src'), 'WOOF_BACKEND': 'mlx'}
     try:
         done = subprocess.run([sys.executable, '-m', 'cumlx', *argv, '--format', 'json', '--max-items', '-1'], cwd=cwd, env=env,
