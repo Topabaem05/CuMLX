@@ -6,6 +6,7 @@ WORK="${1:?usage: run_all.sh WORK_DIR}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ISAAC=https://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/5.1/Isaac/IsaacLab/Robots/Classic/Cartpole
 KERNELS="$HERE/../src/cumlx/kernels"
+command -v uv >/dev/null || { echo "error: uv is not on PATH. Install it: https://docs.astral.sh/uv/getting-started/installation/" >&2; exit 3; }
 mkdir -p "$WORK/asset/Props" "$WORK/foreign" "$WORK/logs"
 
 for venv in venv woof kernelport; do uv venv -q --python 3.12 "$WORK/$venv"; done

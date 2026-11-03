@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- `spikes/run_all.sh` and `spikes/m3_kernels.sh` failed partway when `uv` was missing. They now end with exit 3 and the install link before they start.
 - `spikes/t4_action_example.sh` used `sed -i ''`, which only BSD sed reads, and it failed late without `.venv`. The edit is now `spikes/t4_edit_workflow.py`, which refuses a workflow without the expected lines, and a missing `.venv` is exit 3 with the fix.
 - `spikes/m2_golden_v100.sh`, `m5_render_v100.sh` and `m3_kernels.sh capture` defaulted to one person's ssh host. The host now comes from `CUMLX_GPU_HOST` or `~/.config/cumlx/gpu-host`, and with neither the launcher ends with exit 3 before it contacts anything.
 - The long-run memory limit was a fixed number for one 48 GB Mac. `cumlx.sysmem` reads memory on macOS and Linux, with the page size that `vm_stat` states, and the limit is now 73% of this machine's RAM or `CUMLX_MAX_USED_GB`. On a 48 GiB Mac that is 37.6 GB. `spikes/m3_kernels.py` and `spikes/m5_render.py` use it.
@@ -20,6 +21,7 @@
 
 ### Added
 
+- `tests/test_launchers_portable.py`: every launcher parses in the shell that it names, and uses no flag or syntax of only one system. `shellcheck` runs where it is installed, and CI requires it.
 - `cumlx doctor --stack`: report each platform layer in this Python environment, and exit 3 with `E_DEP_MISSING` and an install hint unless all are ready. It installs nothing, uses no network and does not look for nvcc.
 - `docs/PLATFORM-REPORT.md` and `docs/UNVERIFIED.md`: the result of each platform gate and flagship task with its grade, the failures, and what was not verified. A test keeps the report in step with the roadmap's gates. The repository is private, so neither is published yet.
 - `spikes/m3_kernels.sh`: record the kernelport zoo and sam2's kernels on the V100, translate them with woof in their own environment, and compare. Prepared and tested on stubs only; `validation/kernel-m3.json` says that no third-party kernel has run yet.

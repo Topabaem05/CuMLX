@@ -87,6 +87,10 @@ capture | start)
         echo "Starting the M3 capture on $HOST. It stops if the GPU has compute processes"
         MODE=--capture-work
     else
+        if ! command -v "$UV" >/dev/null; then
+            echo "error: uv is not on PATH. Install it: https://docs.astral.sh/uv/getting-started/installation/" >&2
+            exit 3
+        fi
         echo "Starting the M3 translation and comparison in $ROOT"
         MODE=--work
     fi
