@@ -100,8 +100,12 @@ jobs:
         run: |
           mkdir -p ci-results
           cumlx doctor --probe --require capture,diff,conform,weights --format json > ci-results/doctor.json
+      - name: transformers 4 in a separate directory (one module per MoE expert), for the capture subprocess only
+        run: python -m pip install --target "$RUNNER_TEMP/tf4" 'transformers>=4.57,<5' 'huggingface-hub<1.0'
       - name: End-to-end tests (skips are failures here)
-        run: python -m pytest -q -m e2e --require-e2e --junitxml=ci-results/e2e.xml
+        env:
+          CUMLX_TF4_SITE: ${{ runner.temp }}/tf4
+        run: python -m pytest -q -m e2e --require-e2e --require-tf4 --junitxml=ci-results/e2e.xml
       - name: Selftest (clean port passes, injected faults located)
         run: cumlx selftest --format json > ci-results/selftest.json
       - name: FP4 conformance of the installed MLX (findings are reported, not a CI failure)

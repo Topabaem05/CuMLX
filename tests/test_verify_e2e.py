@@ -775,3 +775,11 @@ def test_kernel_faults_cover_five_kinds_and_every_lab_kernel():
     for fault in KERNEL_FAULTS.values():
         source = (KERNEL_SOURCES / f'{fault.kernel}.metal').read_text()
         assert fault.apply(source) != source
+
+
+def test_missing_local_port_path_is_not_treated_as_a_hub_id(golden):
+    from cumlx.errors import CumlxError
+    from cumlx.verify.diff import run_diff
+    with pytest.raises(CumlxError) as e:
+        run_diff(str(golden), '/nonexistent/port-dir')
+    assert e.value.code == 'E_INPUT_NOT_FOUND' and 'Hugging Face id' in e.value.hint

@@ -210,7 +210,7 @@ cumlx kernel verify foo.metal kgolden/ -o report/                               
   - `chain` (medium): chain 모드이거나, isolated 모드에서 네이티브 dtype 출력이 NaN 또는 shape 불일치입니다.
 - 상태: `pass`, `fail`, `unverified`(파라미터가 있는데 비교 못 함 → exit 5), `skipped`(파라미터 없는 보조 모듈), `ignored`(사용자가 제외).
 - **decode 단계:** capture는 기본으로 KV cache 위의 생성 한 단계를 함께 기록합니다(`--decode-steps`). 다음 토큰은 golden logits에서 고르므로 양쪽 입력이 같습니다. diff는 모듈마다 새 KV cache를 만들어 prefill의 golden 입력으로 채운 뒤 다음 입력을 넣습니다. 모든 입력이 golden이라 실패하면 그 모듈의 캐시 처리(위치 오프셋, mask, 캐시 갱신)가 틀린 것입니다. `first_divergence.phase`가 `decode`로 나옵니다. KV cache가 없는 포팅본은 decode 기록이 `unverified`가 되고 `W_DECODE_NOT_RUN`이 나옵니다.
-- **MoE:** HF의 `mlp.experts`를 mlx-lm의 `mlp.switch_mlp`로 자동 매핑합니다. expert는 원본의 라우팅(top-k 인덱스, 가중치)으로 재생하므로 라우터 결함과 expert 결함을 구분합니다. chain 출력은 형태가 달라 비교할 수 없어서 `--mode chain`에서는 experts가 `unverified`입니다.
+- **MoE:** HF의 `mlp.experts`를 mlx-lm의 `mlp.switch_mlp`로 자동 매핑합니다. expert는 원본의 라우팅(top-k 인덱스, 가중치)으로 재생하므로 라우터 결함과 expert 결함을 구분합니다. chain 출력은 형태가 달라 비교할 수 없어서 `--mode chain`에서는 experts가 `unverified`입니다. transformers 4의 expert별 모듈(`experts.3`, `experts.3.up_proj`)은 포팅본의 `switch_mlp` 3번 expert로 매핑하고, 원본이 그 expert에 보낸 토큰만 재생합니다. 그래서 한 layer의 한 expert 결함도 그 projection을 지목합니다(`mlx_name`이 `switch_mlp[3].up_proj`).
 - **모듈 경계 차이:** 출력이 golden의 상수배이고 부모 모듈이 일치하면, 그 상수를 부모에서 적용하는 구현 차이입니다. 예를 들어 transformers는 Gemma 임베딩을 임베딩 안에서 스케일하고 mlx-lm은 모델 본체에서 스케일합니다. `boundary_scale`을 기록하고 `W_MODULE_BOUNDARY_DIFFERS`를 내며, 실패로 세지 않습니다. 진짜 scale 결함은 부모 출력도 바꾸므로 실패로 남습니다.
 - **mask:** 재생에는 포팅본이 자체 실행에서 그 모듈에 넘긴 mask를 그대로 씁니다. 하이브리드 모델의 합성곱 층은 causal mask를 받지 않기 때문입니다.
 - **일부만 기록:** `capture --layers 0,13,27`은 그 decoder layer와 스택 밖의 모듈만 기록해 큰 모델의 trace를 줄입니다. diff는 `W_PARTIAL_TRACE`를 내고, 판정은 기록된 모듈에 대한 것입니다. 기록하지 않은 layer의 결함은 그 layer를 포함하는 모듈의 실패로 나타납니다.
@@ -376,7 +376,8 @@ Qwen2.5-0.5B의 float32·float16·bf16·4bit·8bit 포팅 모두 290개 파라�
 ## 미완료와 한계
 
 - 패딩 입력은 기록하지 않으므로, 재생은 항상 causal mask를 가정합니다.
-- 학습된 실제 MoE 모델은 검증하지 않았습니다. 공개 tiny random 모델과 fixture만 실행했습니다. transformers 4 계열의 expert별 `ModuleList` 구조는 재생하지 못하고 `unverified`로 나옵니다.
+- 학습된 실제 MoE 모델은 검증하지 않았습니다. 공개 tiny random 모델과 fixture만 실행했습니다.
+- transformers 4로 기록한 expert별 `ModuleList` 구조(`mlp.experts.3.up_proj`, Mixtral의 `w1`/`w3`/`w2`)는 expert 하나씩 재생합니다. 2026-11-03 Linux CPU에서 transformers 4.57.6으로 기록한 tiny Qwen3-MoE와 tiny Mixtral만 확인했습니다. 학습된 transformers 4 체크포인트로는 실행하지 않았습니다.
 - bf16 MoE 포팅과 expert별 global scale을 쓰는 NVFP4 MoE 포팅은 CPU에서 실행되지 않습니다(MLX `gather_mm`과 `gather_qmm`의 CPU 구현 제한). `E_MODEL_RUN`으로 보고합니다.
 - `hidden` 재생은 `(x, mask, cache)` 형식을 대상으로 합니다. 형식이 다른 모듈은 재생 오류로 기록되고 chain으로 판정합니다.
 - 이름 매핑은 동일 경로와 JSON 규칙만 지원합니다. mlx-lm 외의 포팅은 `--loader python:pkg.mod:fn`이 필요합니다.

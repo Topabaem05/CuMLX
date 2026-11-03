@@ -9,6 +9,7 @@ def pytest_addoption(parser):
     parser.addoption('--require-gpu',action='store_true',default=False,help='Fail, do not skip, if the selected physical GPU is unavailable')
     parser.addoption('--backend',default=os.environ.get('CUMLX_TEST_BACKEND','metal'),choices=['metal','cuda'])
     parser.addoption('--require-e2e',action='store_true',default=False,help='Fail, do not skip, if torch/transformers/mlx/mlx-lm are missing')
+    parser.addoption('--require-tf4',action='store_true',default=False,help='Fail, do not skip, if CUMLX_TF4_SITE does not hold transformers 4')
 
 
 @pytest.fixture(scope='session')
@@ -40,3 +41,23 @@ def e2e(request):
         if request.config.getoption('--require-e2e'): pytest.fail(msg)
         pytest.skip(msg)
     return True
+
+
+@pytest.fixture(scope='session')
+def tf4_site(request, e2e):
+    """A directory that holds transformers 4 (one module per MoE expert), put first on PYTHONPATH for a subprocess.
+
+    Create it with: python -m pip install --target DIR 'transformers>=4.57,<5' 'huggingface-hub<1.0'
+    """
+    import json, subprocess, sys
+    site = os.environ.get('CUMLX_TF4_SITE')
+    version = None
+    if site and os.path.isdir(os.path.join(site, 'transformers')):
+        probe = subprocess.run([sys.executable, '-c', 'import transformers; print(transformers.__version__)'],
+                               capture_output=True, text=True, env={**os.environ, 'PYTHONPATH': site})
+        version = probe.stdout.strip() or None
+    if not version or not version.startswith('4.'):
+        msg = f'CUMLX_TF4_SITE must hold transformers 4 (found {version!r} at {site!r})'
+        if request.config.getoption('--require-tf4'): pytest.fail(msg)
+        pytest.skip(msg)
+    return site

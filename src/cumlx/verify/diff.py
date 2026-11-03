@@ -159,7 +159,8 @@ def _run(trace: Trace, port: str, mapper: NameMapper, execution: dict, *, mode, 
         rows = []
         for r in trace.manifest.samples[0].records if trace.manifest.samples else []:
             target = mapper.map(r.name)
-            found = target in mods or _tied_linear(r.name, ties, mapper, mods) is not None
+            found = (target in mods or _tied_linear(r.name, ties, mapper, mods) is not None
+                     or mlx_port.expert_target(target, mods) is not None)
             rows.append({'name': r.name, 'mlx_name': target, 'found': found,
                          'has_params': r.has_params, 'replayable': r.replayable})
         missing = [x for x in rows if not x['found'] and x['has_params'] and wanted(x['name'])]
@@ -371,7 +372,11 @@ def _compare_record(trace: Trace, sample, r: ModuleRecord, mapper: NameMapper, m
         e.update(status='ignored', note='excluded by --include/--exclude or mapping ignore')
         return e
     tied = _tied_linear(r.name, ties, mapper, mods) if target not in mods else None
-    if target not in mods and tied is None:
+    # transformers 4 keeps one module per expert; the port stacks them in one switch_mlp
+    expert = mlx_port.expert_target(target, mods) if target not in mods and tied is None else None
+    if expert is not None:
+        e['mlx_name'] = f'{expert[0]}[{expert[1]}]' + (f'.{expert[2]}' if expert[2] else '')
+    if target not in mods and tied is None and expert is None:
         if r.has_params:
             e.update(status='unverified', note='no module with this name in the MLX port; add a mapping rule')
         else:
@@ -379,7 +384,7 @@ def _compare_record(trace: Trace, sample, r: ModuleRecord, mapper: NameMapper, m
         return e
     golden = trace.tensor(sample, r.output.tensor) if r.output else None
     out = rec.outputs.get(f'{target}#{r.call}') if rec is not None else None
-    if r.replay_kind == 'experts':
+    if r.replay_kind == 'experts' or expert is not None:
         out = None  # the port returns each expert separately, so only the golden-routing replay is comparable
     if tied is not None:
         e['tied_to'] = ties[r.name]
@@ -392,7 +397,12 @@ def _compare_record(trace: Trace, sample, r: ModuleRecord, mapper: NameMapper, m
     if mode == 'isolated' and r.replayable and golden is not None:
         x = _golden_array(trace.tensor(sample, r.inputs[0].tensor), mx)
         try:
-            y = mlx_port.first_array(tied(x)) if tied is not None else _replay_record(trace, sample, r, mods[target], x, model, mx, rec, target)
+            if tied is not None:
+                y = mlx_port.first_array(tied(x))
+            elif expert is not None:
+                y = mlx_port.replay_one_expert(mods, expert, x)
+            else:
+                y = _replay_record(trace, sample, r, mods[target], x, model, mx, rec, target)
             if y is None:
                 raise TypeError('module returned no array')
             mx.eval(y)
@@ -400,7 +410,7 @@ def _compare_record(trace: Trace, sample, r: ModuleRecord, mapper: NameMapper, m
         except Exception as ex:  # noqa: BLE001
             e['isolated'] = {'verdict': 'error', 'reason': f'replay raised {type(ex).__name__}: {ex}'}
     if not e['chain'] and not e['isolated']:
-        note = 'MoE experts are compared only with --mode isolated' if r.replay_kind == 'experts' \
+        note = 'MoE experts are compared only with --mode isolated' if r.replay_kind == 'experts' or expert \
             else 'module was not called by the port or could not be replayed'
         e.update(status='unverified', note=note)
     return e

@@ -290,8 +290,11 @@ def _moe_names_to_torch(port_weights: dict[str, np.ndarray], state: dict) -> dic
             out[f'{block}.experts.gate_up_proj'] = np.concatenate([parts['gate_proj'], parts['up_proj']], axis=1)
             out[f'{block}.experts.down_proj'] = parts['down_proj']
         else:
+            # transformers 4 Mixtral names the projections w1 (gate), w3 (up), w2 (down)
+            names = ({'gate_proj': 'w1', 'up_proj': 'w3', 'down_proj': 'w2'}
+                     if f'{block}.experts.0.w1.weight' in state else {p: p for p in parts})
             for proj, arr in parts.items():
-                out.update({f'{block}.experts.{e}.{proj}.weight': arr[e] for e in range(arr.shape[0])})
+                out.update({f'{block}.experts.{e}.{names[proj]}.weight': arr[e] for e in range(arr.shape[0])})
     return out
 
 
