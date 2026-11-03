@@ -140,7 +140,12 @@ def cmd_eval(args: argparse.Namespace) -> int:
         import mlx.core as mx
         import mlx.nn as nn
 
-        from cumlx.sim.policy import load_actor_layers, mlx_policy, rsl_rl_actor, verify_policy
+        from cumlx.sim.policy import (
+            load_actor_layers,
+            mlx_policy,
+            rsl_rl_actor,
+            verify_policy,
+        )
         from cumlx.verify import mlx_port
         layers = load_actor_layers(args.checkpoint)
         mlx_port.configure_execution('auto', 'off')

@@ -93,10 +93,15 @@ def analytic_ranges(origin: Any, pattern: LidarPattern, shapes: list[Floor | Box
     """The exact distance on each ray, in float64. A miss, or a hit past `max_range`, is NaN. The origin must lie outside each shape."""
     directions = pattern.directions()
     o = np.asarray(origin, dtype=np.float64)
-    handlers = {Floor: _floor, Box: _box, Sphere: _sphere}
     nearest = np.full(directions.shape[:2], np.inf)
     for shape in shapes:
-        nearest = np.minimum(nearest, handlers[type(shape)](o, directions, shape))
+        if isinstance(shape, Floor):
+            hit = _floor(o, directions, shape)
+        elif isinstance(shape, Box):
+            hit = _box(o, directions, shape)
+        else:
+            hit = _sphere(o, directions, shape)
+        nearest = np.minimum(nearest, hit)
     nearest[nearest > pattern.max_range] = np.nan
     return nearest
 

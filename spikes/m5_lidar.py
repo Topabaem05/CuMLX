@@ -16,10 +16,16 @@ import sys
 import time
 from typing import Any
 
-import numpy as np
-
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
-from cumlx.render.lidar import Box, Floor, Lidar, LidarPattern, Sphere, analytic_ranges, compare_ranges  # noqa: E402
+from cumlx.render.lidar import (  # noqa: E402
+    Box,
+    Floor,
+    Lidar,
+    LidarPattern,
+    Sphere,
+    analytic_ranges,
+    compare_ranges,
+)
 from cumlx.render.sensors import load_mitsuba, process_gpu_seconds  # noqa: E402
 
 LIMITS = json.loads((Path(__file__).resolve().parent.parent / 'validation' / 'm5-lidar-limits.json').read_text())['limits']

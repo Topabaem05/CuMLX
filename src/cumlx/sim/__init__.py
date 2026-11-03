@@ -6,6 +6,16 @@ vectorized environment that rsl_rl's runner expects. These are not Isaac Lab's t
 Importing this package needs only NumPy. Genesis, MuJoCo, torch, tensordict, rsl_rl and MLX are read when they are used.
 """
 from .compare import compare_trajectories, worst_per_world
-from .task import Actuation, Asset, ResetState, State, StepContext, Task, VisualLink, available_tasks, get_task
+from .task import (
+    Actuation,
+    Asset,
+    ResetState,
+    State,
+    StepContext,
+    Task,
+    VisualLink,
+    available_tasks,
+    get_task,
+)
 
 __all__ = ['Actuation', 'Asset', 'ResetState', 'State', 'StepContext', 'Task', 'VisualLink', 'available_tasks', 'compare_trajectories', 'get_task', 'worst_per_world']

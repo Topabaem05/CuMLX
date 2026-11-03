@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import importlib
 from importlib import metadata, util
-import platform
 import json
 from pathlib import Path
+import platform
 import shutil
 import subprocess
 import sys
