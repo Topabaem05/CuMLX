@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- The Isaac Sim and Isaac Lab scripts moved to the private repository [OrchardSim](https://github.com/Topabaem05/OrchardSim). The `spikes/isaac_*` and `spikes/rsl_rl_golden.py` entries below describe files that are now there. The records stay in `validation/`, and the recipes name the new location.
+
 ### Added
 
 - `cumlx run` (experimental): run an unmodified PyTorch script that assumes CUDA on MPS, and record each redirected call in `run-report.json`. A CUDA call with no equivalent, a second GPU, an operation that MPS lacks and float64 all end with an error. `PYTORCH_ENABLE_MPS_FALLBACK` is removed unless you pass `--allow-cpu-fallback`. Importing `cumlx` changes nothing in torch. MCP shows this command only with `--allow-code-execution`.

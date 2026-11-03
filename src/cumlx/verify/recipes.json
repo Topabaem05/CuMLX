@@ -783,7 +783,7 @@
    "options": [
     {
      "name": "Isaac Sim in a Linux arm64 container, CPU PhysX",
-     "how": "OMNI_KIT_ACCEPT_EULA=YES bash spikes/isaac_sim_container.sh",
+     "how": "In the OrchardSim repository: OMNI_KIT_ACCEPT_EULA=YES bash spikes/isaac_sim_container_record.sh",
      "install": "Docker with a Linux arm64 VM, about 19 GB",
      "license": "NVIDIA proprietary; you accept its EULA",
      "evidence": "run",
@@ -846,7 +846,7 @@
    "options": [
     {
      "name": "Isaac Lab with Newton on the CPU, without Isaac Sim",
-     "how": "Build the environment with spikes/isaac_lab_mac.py in the CUMLX repository, then run isaaclab train with presets=newton_mjwarp",
+     "how": "Build the environment with spikes/isaac_lab_mac.py in the OrchardSim repository, then run isaaclab train with presets=newton_mjwarp",
      "install": "",
      "license": "BSD-3-Clause",
      "evidence": "run",

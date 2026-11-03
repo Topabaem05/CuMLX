@@ -10,7 +10,7 @@ validation/isaac-lab-mac/.
     python verify_policy.py --checkpoint model.pt --golden golden.npz   # against rsl_rl's own outputs
 
 Without --golden the reference is a torch version written in this file, so an error in reading the
-architecture would be in both sides. spikes/rsl_rl_golden.py records rsl_rl's own outputs.
+architecture would be in both sides. spikes/rsl_rl_golden.py in the OrchardSim repository records rsl_rl's own outputs.
 
 Exit status 0 means the policies match on every test observation.
 """
@@ -102,7 +102,7 @@ def golden_policy(golden):
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--checkpoint', help='rsl_rl checkpoint. It is read with weights_only=True, so it runs no code')
-    ap.add_argument('--golden', help="npz from spikes/rsl_rl_golden.py: rsl_rl's own outputs on recorded observations")
+    ap.add_argument('--golden', help="npz from OrchardSim's spikes/rsl_rl_golden.py: rsl_rl's own outputs on recorded observations")
     args = ap.parse_args()
     if args.golden and not args.checkpoint:
         ap.error('--golden needs --checkpoint')

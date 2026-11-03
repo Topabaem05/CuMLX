@@ -72,7 +72,7 @@
 |---|---|---|---|---|
 | **물리** | [Genesis](https://github.com/Genesis-Embodied-AI/genesis-world) ★30k | Apache-2.0 | **실행**: Metal에서 Go2 4096개, Isaac USD 불러오기 | 1순위 시뮬레이터 |
 | 물리 | [MuJoCo](https://github.com/google-deepmind/mujoco) ★16k | Apache-2.0 | **실행** (CPU 약 72만 step/s) | 등급 B의 기준 물리 |
-| 물리 | [Newton](https://github.com/newton-physics/newton), [Warp](https://github.com/NVIDIA/warp) | Apache-2.0 | **실행** (Mac은 CPU만) | 호환 대상, Metal 없음 |
+| 물리 | [Newton](https://github.com/newton-physics/newton), [Warp](https://github.com/NVIDIA/warp) | Apache-2.0 | **실행** (공식판은 Mac에서 CPU만. warp-metal 경로는 OrchardSim) | 호환 대상, Metal 없음 |
 | **GPU 언어** | [Quadrants](https://github.com/Genesis-Embodied-AI/quadrants) ★228 | Apache-2.0 | **실행**: Metal과 CPU 차이 7.0e-8 | Warp 스타일 커널의 이식 대상 |
 | **레이트레이싱** | [Mitsuba 3.9](https://github.com/mitsuba-renderer/mitsuba3), [Dr.Jit](https://github.com/mitsuba-renderer/drjit) | BSD 3조항 형식, BSD-3-Clause | **실행**: `metal_ad_rgb` 렌더링. 하드웨어 레이트레이싱 사용 여부는 문서로만 확인 | RTX 대체 1순위 |
 | 렌더링 | [LuisaRender](https://github.com/LuisaGroup/LuisaRender) ★629 | BSD-3-Clause | Mac 지원 미확인 | M5에서 평가 |
@@ -130,15 +130,15 @@ Apple M5 Pro 한 대에서 직접 실행했습니다. 재현 방법은 [spikes/]
 
 **M0 이후 Isaac Sim 시험 (2026-11-02):**
 
-- Linux arm64 컨테이너에서 Isaac Sim 6.2의 Kit과 CPU PhysX가 돌았습니다. RTX와 카메라는 실패했습니다. 재현 스크립트는 `spikes/isaac_sim_container.sh`이고, EULA 동의는 실행하는 사람이 직접 설정해야 합니다.
+- Linux arm64 컨테이너에서 Isaac Sim 6.2의 Kit과 CPU PhysX가 돌았습니다. RTX와 카메라는 실패했습니다. 재현 스크립트는 OrchardSim의 `spikes/isaac_sim_container_record.sh`이고, EULA 동의는 실행하는 사람이 직접 설정해야 합니다.
 - V100에서도 Kit과 CPU PhysX만 돕니다. RTX는 `Skipping unsupported non-RTX GPU`로 거부됩니다. 따라서 M5의 V100 비교는 Mitsuba CUDA로만 가능합니다.
 - Mac 컨테이너(arm64)와 V100 서버(x86_64)의 CPU PhysX 값이 출력된 모든 자릿수까지 같습니다. 작은 장면 2개의 결과입니다. 이 경로는 M4에서 Isaac 쪽 기준 물리로 쓸 수 있습니다.
 - 같은 cartpole USD의 막대 각도가 1초 후 PhysX 3.31 rad, Genesis 1.97 rad로 다릅니다. 원인은 조사하지 않았습니다. M4의 등급 B 비교에서 먼저 풀어야 합니다.
-- **Isaac Lab을 Isaac Sim 없이 Mac CPU에서 실행했습니다.** Newton으로 cartpole을 100회 학습하는 데 약 18초 걸렸고, 처리량은 환경 256개에서 약 4만 step/s입니다. 시드 3개 모두 보상이 올랐고, 마지막 에피소드 길이는 300, 293, 246입니다(최대 300). 수동 구성이며 NVIDIA가 지원하지 않습니다. `uv sync`는 macOS를 거부합니다. 측정값은 `validation/isaac-lab-mac.json`, 재현은 `spikes/isaac_lab_mac.sh`입니다.
+- **Isaac Lab을 Isaac Sim 없이 Mac CPU에서 실행했습니다.** Newton으로 cartpole을 100회 학습하는 데 약 18초 걸렸고, 처리량은 환경 256개에서 약 4만 step/s입니다. 시드 3개 모두 보상이 올랐고, 마지막 에피소드 길이는 300, 293, 246입니다(최대 300). 수동 구성이며 NVIDIA가 지원하지 않습니다. `uv sync`는 macOS를 거부합니다. 측정값은 `validation/isaac-lab-mac.json`, 재현은 OrchardSim의 `spikes/isaac_lab_mac.sh`입니다.
 - **같은 경로로 Unitree Go2 평지 보행을 학습했습니다.** CPU 물리라 약 3,700 step/s이고, 환경 4096개 × 300회에 약 2.2시간 걸렸습니다. MLX로 돌린 정책은 시뮬레이션에서 명령 +0.8 m/s에 +0.74, -0.8에 -0.87, 0에 0.00으로 따라가고, 넘어짐은 환경당 0.07회 이하입니다. 대조군은 모두 약 0 m/s입니다. 환경 1024개 × 300회 정책은 서기만 하고 걷지 못했습니다. 시드 1개, CPU 물리이며 실제 로봇이나 PhysX와는 비교하지 않았습니다. 측정값은 `validation/isaac-lab-go2.json`입니다.
 - 그 체크포인트의 MLX 정책이 rsl_rl 원본 출력과 7.9e-8까지 일치합니다. 이 정책이 Newton 환경을 직접 제어해 시드 3개에서 막대를 100% 세웠습니다. 힘을 주지 않는 대조군은 0%, 1회차 체크포인트는 5%입니다.
 
-**범위 결정 (2026-11-03):** Isaac Sim과 Isaac Lab의 macOS 작업이 커지면 별도 저장소로 분리합니다. CuMLX에는 검증기와 레시피에 필요한 결과만 남깁니다.
+**범위 결정 (2026-11-03):** Isaac Sim과 Isaac Lab의 macOS 작업을 비공개 저장소 [OrchardSim](https://github.com/Topabaem05/OrchardSim)으로 분리했습니다. CuMLX에는 검증기와 레시피에 필요한 결과만 남깁니다.
 
 **확인하지 못한 것:** 실제 CUDA에서의 kernelport 원본 검증, 복잡한 USD 자산(cartpole 하나만 시험), Mitsuba가 실제로 하드웨어 레이트레이싱을 쓰는지, 정책 추론을 포함한 처리량, `mps-*`, metalsplat, mlx3D 실행(M2 첫 작업으로 넘김).
 
@@ -232,7 +232,7 @@ Isaac Sim 대체가 아니라, **Isaac Lab 스타일 학습 작업을 Mac에서 
 
 완료 조건:
 
-- [ ] cartpole, 사족 보행 작업이 Mac GPU에서 학습 완료. cartpole과 Go2 모두 Newton으로 **CPU에서만** 학습했으므로 이 항목은 미달입니다
+- [ ] cartpole, 사족 보행 작업이 Mac GPU에서 학습 완료. Go2는 warp-metal로 물리를 Apple GPU에 올려 학습했지만(OrchardSim `validation/isaac-lab-metal.json`, 시드 1개), cartpole은 Metal에서 3회 스모크만 돌렸으므로 이 항목은 미달입니다
 - [ ] 기준 물리(MuJoCo)와의 궤적 오차를 사전에 정한 허용치로 등급 B 판정
 - [x] 실제 Isaac Lab 체크포인트 하나를 MLX에서 실행, 등급 A. cartpole 4-32-32-1, rsl_rl 출력과 최악 7.9e-8. Go2 사족 보행 정책도 MLX에서 최악 2.48e-7이지만, 기준은 rsl_rl 출력이 아니라 직접 만든 torch 구현입니다
 - [ ] 처리량(env-step/s)을 여러 번 측정해 범위로 공개. 목표: 4096 환경에서 10만 step/s 이상. M0의 Go2 임의 행동은 8.1만~13.3만이며, 정책 추론은 포함하지 않았습니다

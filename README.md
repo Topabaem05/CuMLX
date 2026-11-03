@@ -51,7 +51,7 @@ cumlx rundiff golden/ mps/        # CUDA와 MPS의 손실 기록을 비교해 �
 
 `cumlx recipe`는 선택지마다 근거를 표시합니다. `evidence: run`은 Apple Silicon에서 실행한 결과가 `validation/`에 있다는 뜻이고, `evidence: docs`는 문서만 읽었다는 뜻입니다. `--verified-only`를 주면 실행한 것만 남습니다.
 
-**Isaac Sim은 Mac에서 직접 실행할 수 없습니다.** `pip install isaacsim`은 macOS에서 실패합니다(`Didn't find wheel`). RTX 장비에서 실행하고 Mac에서 스트리밍하거나, [학습된 정책만 MLX로 옮겨](examples/robot-policy/) 쓰십시오. Isaac Sim 없는 Isaac Lab cartpole 학습은 Newton으로 Mac CPU에서 돌았습니다. Unitree Go2 평지 보행도 같은 경로로 학습했고, MLX로 돌린 정책이 시뮬레이션에서 명령 속도를 따라갑니다(시드 1개). NVIDIA가 지원하지 않는 구성입니다([cartpole](validation/isaac-lab-mac.json), [Go2](validation/isaac-lab-go2.json) 측정값). [검토 문서](docs/PORTING-CUDA-MODELS.md)를 보십시오.
+**Isaac Sim은 Mac에서 직접 실행할 수 없습니다.** `pip install isaacsim`은 macOS에서 실패합니다(`Didn't find wheel`). RTX 장비에서 실행하고 Mac에서 스트리밍하거나, [학습된 정책만 MLX로 옮겨](examples/robot-policy/) 쓰십시오. Isaac Sim 없는 Isaac Lab cartpole 학습은 Newton으로 Mac CPU에서 돌았습니다. Unitree Go2 평지 보행도 같은 경로로 학습했고, MLX로 돌린 정책이 시뮬레이션에서 명령 속도를 따라갑니다(시드 1개). NVIDIA가 지원하지 않는 구성입니다([cartpole](validation/isaac-lab-mac.json), [Go2](validation/isaac-lab-go2.json) 측정값). Apple GPU 물리(warp-metal)와 Isaac Sim 연결 작업은 비공개 저장소 [OrchardSim](https://github.com/Topabaem05/OrchardSim)으로 옮겼습니다. [검토 문서](docs/PORTING-CUDA-MODELS.md)를 보십시오.
 
 ### 모델을 MLX로 옮겼다
 

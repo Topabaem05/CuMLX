@@ -60,7 +60,7 @@ cumlx port Qwen/Qwen3-0.6B --q-bits 4 -o port4/  # 양자화. golden에 포팅�
 |---|---|---|
 | Isaac Sim을 Mac에서 실행 | **불가.** x86_64 RTX GPU와 DGX Spark만 지원합니다 | [공식 요구 사항](https://docs.isaacsim.omniverse.nvidia.com/6.0.0/installation/requirements.html) |
 | macOS에 `uv pip install isaacsim` | **실패합니다.** wheel은 Linux와 Windows용뿐이라 6.0.0.0 stub이 골라지고, `Didn't find wheel for isaacsim 6.0.0.0` 오류가 납니다 | 직접 실행 |
-| Mac의 Linux arm64 컨테이너, GPU 없음 | **일부 동작.** Kit 시작 약 30초, CPU PhysX 동작, Isaac Lab cartpole USD 시뮬레이션 동작. RTX(`No device could be created`)와 카메라는 실패. 로그에 오류 약 600줄이 있고 일부 확장은 로드되지 않습니다. NVIDIA 지원 구성이 아닙니다 | 직접 실행, [측정값](../validation/isaac-sim.json), `spikes/isaac_sim_container.sh` |
+| Mac의 Linux arm64 컨테이너, GPU 없음 | **일부 동작.** Kit 시작 약 30초, CPU PhysX 동작, Isaac Lab cartpole USD 시뮬레이션 동작. RTX(`No device could be created`)와 카메라는 실패. 로그에 오류 약 600줄이 있고 일부 확장은 로드되지 않습니다. NVIDIA 지원 구성이 아닙니다 | 직접 실행, [측정값](../validation/isaac-sim.json), OrchardSim의 `spikes/isaac_sim_container_record.sh` |
 | RTX 센서와 렌더링 | 불가. RT core가 필요합니다 | 공식 요구 사항 |
 | 소스 변환 | 불가. 저장소는 Apache 2.0이지만 Omniverse Kit SDK 등 다른 라이선스의 구성 요소가 필요하고, 파일 1141개가 Omniverse를 사용합니다 | 저장소 `LICENSE`, `cumlx scan` |
 | 보유한 Tesla V100에서 실행 | **물리만 동작.** Kit과 CPU PhysX는 돌지만, RTX는 `Skipping unsupported non-RTX GPU`로 거부되고 카메라는 값을 돌려주지 않습니다. 드라이버가 `VK_KHR_ray_tracing_pipeline`을 노출해도 마찬가지입니다 | 직접 실행, [측정값](../validation/isaac-sim.json) |
@@ -79,7 +79,7 @@ cumlx port Qwen/Qwen3-0.6B --q-bits 4 -o port4/  # 양자화. golden에 포팅�
 
 실제 체크포인트(`--checkpoint`, `--golden`)도 실행했습니다. D에서 학습한 cartpole 정책(4-32-32-1)을 rsl_rl 원본 코드의 출력과 비교한 최악 오차는 7.9e-8입니다. 다른 체크포인트, 틀린 활성화 함수, 가중치 하나의 1% 오차는 모두 실패로 판정됩니다. 관측 정규화 층이 있는 체크포인트는 거부합니다.
 
-**D. Isaac Sim 없이 Isaac Lab 실행.** [spikes/isaac_lab_mac.sh](../spikes/isaac_lab_mac.sh)가 환경을 만들고 cartpole을 학습합니다. Isaac Lab의 `uv sync`는 지원 환경에 macOS가 없어 실패하므로, 의존성을 직접 구성합니다. Mac wheel이 없는 패키지를 빼고 `usd-core`로 대체하며, Kit에 내장된 `OmniPBR.mdl`은 빈 파일로 둡니다. Isaac Lab 소스는 고치지 않았습니다.
+**D. Isaac Sim 없이 Isaac Lab 실행.** OrchardSim의 [spikes/isaac_lab_mac.sh](https://github.com/Topabaem05/OrchardSim/blob/main/spikes/isaac_lab_mac.sh)가 환경을 만들고 cartpole을 학습합니다. Isaac Lab의 `uv sync`는 지원 환경에 macOS가 없어 실패하므로, 의존성을 직접 구성합니다. Mac wheel이 없는 패키지를 빼고 `usd-core`로 대체하며, Kit에 내장된 `OmniPBR.mdl`은 빈 파일로 둡니다. Isaac Lab 소스는 고치지 않았습니다.
 
 | 측정 (M5 Pro, 물리는 CPU, 환경 256개) | 결과 |
 |---|---|
@@ -89,7 +89,7 @@ cumlx port Qwen/Qwen3-0.6B --q-bits 4 -o port4/  # 양자화. golden에 포팅�
 | 대조: 힘을 주지 않음 (시드 2개) | 직립 0%, 평균 각도 2.69 rad |
 | 대조: 1회차 체크포인트 | 직립 5%, 환경당 카트 이탈 6.8회 |
 
-cartpole 하나, CPU 물리의 결과입니다. Warp에 Metal 백엔드가 없어 물리는 GPU로 돌지 않습니다. PhysX와 같은 물리인지는 비교하지 않았고, NVIDIA가 지원하지 않으므로 이후 커밋에서 깨질 수 있습니다. [측정값](../validation/isaac-lab-mac.json)
+cartpole 하나, CPU 물리의 결과입니다. 공식 Warp에는 Metal 백엔드가 없어 이 경로의 물리는 CPU에서 돕니다. 제3자 패키지 warp-metal로 물리를 Apple GPU에서 돌린 결과는 [OrchardSim](https://github.com/Topabaem05/OrchardSim)에 있습니다. PhysX와 같은 물리인지는 비교하지 않았고, NVIDIA가 지원하지 않으므로 이후 커밋에서 깨질 수 있습니다. [측정값](../validation/isaac-lab-mac.json)
 
 사족 보행도 시험했습니다. Unitree Go2 평지 보행을 환경 4096개 × 300회(약 2.2시간) 학습한 정책은 MLX에서 명령 +0.8 m/s에 +0.74, -0.8에 -0.87로 따라갑니다. 시뮬레이션, 시드 1개의 결과이고, 환경 1024개 × 300회 정책은 걷지 못했습니다. [측정값](../validation/isaac-lab-go2.json)
 

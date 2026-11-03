@@ -1,4 +1,4 @@
-"""The Isaac Lab driver's pure parts, and the real checkpoint in validation/isaac-lab-mac."""
+"""The real Isaac Lab checkpoint in validation/isaac-lab-mac, read by examples/robot-policy and compared with check_op."""
 import importlib.util
 import json
 from pathlib import Path
@@ -15,31 +15,6 @@ def _load(path, name):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
-
-
-def _driver():
-    return _load(ROOT / 'spikes' / 'isaac_lab_mac.py', 'isaac_lab_mac')
-
-
-def test_plan_removes_packages_without_a_mac_wheel_and_adds_a_usd_provider():
-    driver = _driver()
-    pyproject = {
-        'project': {'dependencies': ['isaaclab', 'torch==2.11.0', 'usd-exchange==3.0.1', 'omniverseclient==2.74.0', 'Jinja2']},
-        'tool': {'uv': {'override-dependencies': ['numpy>=2', 'usd-optimize~=1.3.1', 'usd-exchange==3.0.1']}},
-    }
-    requirements, overrides = driver.plan_requirements(pyproject)
-    assert requirements == ['torch==2.11.0', 'Jinja2', driver.USD_PROVIDER]
-    assert overrides == ['numpy>=2']
-
-
-def test_training_log_is_parsed_and_missing_numbers_stay_missing():
-    driver = _driver()
-    log = ('\x1b[1m Learning iteration 0/5 \x1b[0m\n  Mean reward: -3.25\n Iteration time: 2.50s\n'
-           ' Learning iteration 4/5 \n  Mean reward: 7.00\n Iteration time: 2.00s\n')
-    parsed = driver.parse_training(log)
-    assert (parsed['reward_first'], parsed['reward_last'], parsed['last_iteration']) == (-3.25, 7.0, 4)
-    empty = driver.parse_training("ModuleNotFoundError: No module named 'omni'\n")
-    assert empty['reward_last'] is None and empty['iterations_seen'] == 0
 
 
 def test_recorded_run_shows_learning_and_its_controls_fail():
