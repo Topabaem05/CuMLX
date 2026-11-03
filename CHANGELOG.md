@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- The spikes stop at 38 GB of system memory in use, down from 43 GB, on the user's instruction.
 - `spikes/m5_render_v100.sh` installs Mitsuba 3.8.0, because Mitsuba 3.9 refuses a GPU under compute capability 7.5 and the V100 is 7.0. It also renders `scalar_rgb` as a control of the version difference.
 - `spikes/m5_render.py render` now prints each stage and ends with a traceback if one stage takes longer than `--stall-seconds` (default 900). A run on the V100 had sat at full CPU for 30 minutes with an empty log.
 - The kernel layer read `operator*=` as a global variable named `operator`, because of its `=`, and took the next declaration into it. It now reads a compound assignment operator as a function.

@@ -31,7 +31,7 @@
 
 - **제3자 커널은 V100에서도 Metal에서도 돌지 않았습니다.** `validation/kernel-m3.json`
 - 생성한 하네스를 nvcc로 컴파일한 적이 없습니다.
-- 실제 번역기가 `cumlx kernel port`를 거쳐 돈 적이 없습니다. 어댑터는 stub 패키지로만 시험했습니다.
+- woof가 번역한 외부 커널 12개는 컴파일만 확인했고 값은 비교하지 못했습니다. V100 기준값이 아직 없습니다.
 - 번역 예측은 측정이 아닙니다.
 - case는 float32만 다룹니다. zoo의 float16, bfloat16과 가장 큰 실행은 포함하지 않았습니다.
 - 이 저장소의 커널 8개는 이식하기 쉽게 쓴 것이고 warp 단위 동작을 쓰지 않습니다. 비정상 수와 오버플로 영역은 인증하지 않았습니다. `validation/kernel-translation.json`

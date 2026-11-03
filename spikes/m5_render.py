@@ -38,7 +38,7 @@ SCENES = ('cornell_box', 'cornell_spheres')
 SPP = 4096  # 1024 was too noisy for the floor. See validation/m5-render-limits.json.
 PASS_SPP = 64  # All samples in passes, so that one wavefront stays near 4 million paths.
 RATE_SPP = (1, 4, 16, 64)
-MAX_SYSTEM_USED_GB = 43.0
+MAX_SYSTEM_USED_GB = 38.0
 
 
 def stage(name: str, stall_seconds: float) -> None:

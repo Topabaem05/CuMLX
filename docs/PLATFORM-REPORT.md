@@ -56,9 +56,9 @@
 | ID | 조건 | 상태 | 등급 | 기록 | 결과와 한계 |
 |---|---|---|---|---|---|
 | M3-1 | V100 원본으로 기록한 커널 golden 20개 이상 | 미달 | A (8개만) | `validation/kernel-m3.json`, `validation/kernel-translation.json` | **8개, case 29개.** 직접 쓴 Metal이 8개 모두 등급 A입니다. 외부 13개 파일의 case 71개는 준비만 했고, 하네스를 nvcc로 컴파일한 적이 없습니다 |
-| M3-2 | 번역 후 등급 A 70% 이상, 실패 분류 | 미달 | 미검증 | `validation/kernel-m3.json` | **미측정.** 실제 번역기가 돌지 않았습니다. 예측은 측정이 아닙니다 |
-| M3-3 | kernelport zoo 12개를 번역, 실행, V100과 비교 | 미달 | 미검증 | `validation/kernel-m3.json` | 비교 0개. 전처리만 11개 통과, `rmsnorm`은 `__shfl_xor_sync`로 거부 |
-| M3-4 | 실제 저장소 하나의 커널 전체 처리 | 미달 | 미검증 | `validation/kernel-m3.json` | sam2 커널 6개가 전처리를 통과했고 번역은 미실행입니다. nvdiffrast 4개는 8~24건으로 거부되며 모두 `__match_any_sync`를 씁니다. 이 계층의 결함이던 거부 이유 2종(`operator`, `make_float4` 재귀)은 고쳤습니다 |
+| M3-2 | 번역 후 등급 A 70% 이상, 실패 분류 | 미달 | 미검증 | `validation/kernel-m3.json` | **부분 측정.** woof 1.1.5.2로 저장소 커널 8개 중 6개가 등급 A입니다. `fp4_gemv`와 `silu_mul`은 `__half` 케이스의 번역이 실패합니다(woof에 이 타입이 없음). 외부 13개는 기준값이 없어 비교하지 못했습니다 |
+| M3-3 | kernelport zoo 12개를 번역, 실행, V100과 비교 | 미달 | 미검증 | `validation/kernel-m3.json` | 비교 0개. 11개는 번역과 Metal 컴파일을 통과했고 실행은 안 했습니다. `rmsnorm`은 `__shfl_xor_sync`로 거부 |
+| M3-4 | 실제 저장소 하나의 커널 전체 처리 | 미달 | 미검증 | `validation/kernel-m3.json` | sam2 커널 6개가 번역과 Metal 컴파일을 통과했고 값 비교는 아직입니다. nvdiffrast 4개는 8~24건으로 거부되며 모두 `__match_any_sync`를 씁니다. 이 계층의 결함이던 거부 이유 2종(`operator`, `make_float4` 재귀)은 고쳤습니다 |
 | M3-5 | 값이 틀린 번역을 넣으면 찾아냄 | 달성 | A | `validation/kernel-translation.json` | 틀린 9건 모두 diverged, 맞는 9건 모두 ok. 이 저장소의 커널이며, 입력이 닿지 않는 결함은 잡을 수 없습니다 |
 
 ### M4. 로봇 시뮬레이션
