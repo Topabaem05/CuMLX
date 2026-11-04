@@ -1,0 +1,30 @@
+{
+ "schema": "cumlx.validation.t4-action-example.v1",
+ "date": "2026-11-04",
+ "gate": "T4: the GitHub Action on an example repository fails an injected-fault pull request and passes a clean one",
+ "verdict": "open. The verdicts are right on GitHub, but only through manual runs. Pull request events start no run",
+ "repository": "private, Topabaem05/CuMLX-port-ci-example. It copies the action and the wheel into .cumlx-action, because Actions access on CuMLX is none, so it does not test uses: Topabaem05/CuMLX@<sha>",
+ "runs_workflow_dispatch": {
+  "main": {
+   "run": 41754864804,
+   "result": "success, verdict ok"
+  },
+  "clean-change": {
+   "run": 41755215032,
+   "result": "success, verdict ok"
+  },
+  "injected-fault": {
+   "run": 41755218013,
+   "result": "failure, diverged: first divergence at model.layers.1.self_attn (isolated, high)"
+  }
+ },
+ "pull_request_events": "None started a run, on 3 pull requests, on opening, on reopening and on new commits. A push to main started none either. No github-actions check suite appears on those commits, and it does appear on CuMLX. The workflow is active, Actions is enabled, and each pull request is MERGEABLE and CLEAN.",
+ "tried": [
+  "close and reopen",
+  "disable and enable the workflow",
+  "add workflow_dispatch",
+  "new commits on the branches",
+  "a new pull request"
+ ],
+ "cause": "not found"
+}
