@@ -127,14 +127,18 @@
 
 ## OrchardSim 달성 현황
 
-31/35입니다(O7의 7개 포함). 열린 조건은 네 개입니다.
+달성한 O7 항목: Isaac Lab 앱 화면(cartpole, Go2, `metal:0`), 버튼 3개와 백엔드, 부분별 Mac GPU 시간(Go2 64개 60초에 23.4초, CPU 대조군 0초), warp-metal의 MSL 커널 771개, 직접 쓴 MSL 커널 위의 정책 시험, Isaac Sim의 낙하 시험(창 없는 Kit, CPU PhysX). 기록은 OrchardSim `validation/app-metal-o7.json`, `validation/isaac-sim-window-o7.json`입니다.
+
+33/39입니다(O7의 11개 포함). 열린 조건은 여섯 개입니다.
 
 | 조건 | 상태 |
 |---|---|
 | O4 PPO 업데이트 | 넷째 측정은 통과, 검토 결과 미달. 위 표 참고 |
 | O5 V100에서 Isaac Sim 연결 | 미실행 |
 | O6 새 Mac에서 한 명령으로 재현 | 미실행 |
-| O7 직접 쓴 MSL cartpole 커널 | 실패: 최악 world 0.177, 허용 5e-2 |
+| O7 직접 쓴 MSL cartpole 커널 | 실패: 최악 world 0.177, 허용 5e-2. FMA 결합을 꺼도 0.162입니다 |
+| O7 Mac에서 Isaac Sim 창 보기 | 실패: 검은 화면. Kit가 GPU 장치를 만들지 못합니다(`Failed to create any GPU devices`) |
+| O7 Isaac Sim의 Play와 Stop | 시험 불가: 창과 버튼이 없습니다 |
 
 ## Isaac Sim EULA 값에 대한 기록
 

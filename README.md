@@ -2,7 +2,7 @@
 
 **MLX 포팅본이 원본 모델과 같은 계산을 하는지 모듈 단위로 증명하고, 다르면 처음 달라진 모듈을 찾습니다.**
 
-지금의 CUMLX는 mlx-lm이든 직접 작성한 코드든, 어떻게 만든 포팅본이든 그 뒤에 붙여 쓰는 검증 도구입니다. 다음 목표는 RTX·CUDA에서 돌던 것을 Apple Silicon에서 돌게 만드는 것까지 넓히는 것입니다. [플랫폼 로드맵](docs/ROADMAP-PLATFORM.md)에 있으며 아직 구현하지 않았습니다. 포팅이 성공했다는 메시지나 그럴듯한 생성 결과는 증거가 아닙니다. 가중치 전치, RoPE 오프셋, 잘못된 양자화 scale은 오류 없이 조용히 틀린 값을 냅니다.
+지금의 CUMLX는 mlx-lm이든 직접 작성한 코드든, 어떻게 만든 포팅본이든 그 뒤에 붙여 쓰는 검증 도구입니다. 중심은 이 검증 도구이고, RTX·CUDA에서 돌던 것을 Apple Silicon에서 돌리는 기능을 일부 더했습니다. 달성 조건 25개 중 14개를 채웠고 기함 작업 5개 중 처음부터 재현된 것은 없습니다. [결과 보고서](docs/PLATFORM-REPORT.md)에 등급과 함께 적었습니다. 포팅이 성공했다는 메시지나 그럴듯한 생성 결과는 증거가 아닙니다. 가중치 전치, RoPE 오프셋, 잘못된 양자화 scale은 오류 없이 조용히 틀린 값을 냅니다.
 
 ```text
 $ cumlx diff golden/ ./my-port
@@ -141,6 +141,21 @@ CLI는 stdout에 JSON 문서 하나만 내보내고, 오류마다 해결 명령�
 
 **미검증:** V100 외의 NVIDIA 장비, M5 외의 Apple GPU 세대, 패딩 입력, 음성·이미지 모델. 임계값은 위 범위의 측정값입니다.
 
+## Apple Silicon 실행 기능
+
+아래는 도구가 있다는 뜻이지, 원본과 같은 값을 낸다는 증명이 아닙니다. 각 기능의 등급과 한계는 [결과 보고서](docs/PLATFORM-REPORT.md)를 읽으십시오.
+
+| 기능 | 내용 | 상태 |
+|---|---|---|
+| `cumlx recipe` | CUDA 라이브러리의 대체 경로와 근거 | 실행한 것과 문서만 읽은 것을 구분합니다 |
+| `cumlx run`, `rundiff` | CUDA를 가정한 PyTorch 스크립트를 MPS에서 실행하고 비교 | V100 비교 전입니다 |
+| `cumlx kernel` | CUDA 커널 전처리, 번역기 연결, 값 비교 | 외부 커널은 번역과 컴파일까지입니다 |
+| `cumlx.sim` | Genesis, MuJoCo로 Isaac Lab 스타일 작업 학습 | cartpole, Go2 평지. Isaac Lab 작업을 읽지는 않습니다 |
+| `cumlx.render` | Mitsuba Metal RGB, 깊이, 세그멘테이션, 레이캐스트 | USD 장면은 아직입니다 |
+| `cumlx doctor --stack --env PYTHON` | 여러 환경에 걸친 스택 점검 | 부품이 한 프로세스에서 함께 로드되는지는 보지 않습니다 |
+
+Isaac Sim과 Isaac Lab의 Mac 작업은 비공개 저장소 OrchardSim에 있습니다. **Isaac Sim은 Mac GPU를 쓰지 못합니다.** Linux 컨테이너에서 CPU PhysX만 돌고, 창은 검은 화면에서 멈춥니다. Isaac Lab은 warp-metal로 물리를 Metal에서 돌리고 Newton 뷰어와 버튼도 동작합니다.
+
 ## 문서
 
 | 문서 | 내용 |
@@ -151,6 +166,9 @@ CLI는 stdout에 JSON 문서 하나만 내보내고, 오류마다 해결 명령�
 | [Trace 형식](docs/TRACE-FORMAT.md) | golden trace 공개 명세 |
 | [CUDA golden 측정](docs/CUDA-GOLDEN.md) | V100 측정 결과와 다른 NVIDIA 장비에서 실행할 절차 |
 | [CUDA 프로젝트 포팅 검토](docs/PORTING-CUDA-MODELS.md) | 변환 가능 범위, Isaac Sim 검토, `scan`과 `port` |
+| [플랫폼 결과 보고서](docs/PLATFORM-REPORT.md) | 조건과 기함 작업별 상태, 등급, 실패 |
+| [미검증 목록](docs/UNVERIFIED.md) | 확인하지 못한 범위 |
+| [렌더링과 센서](docs/RENDER-SENSORS.md) | `cumlx.render`, RTX 센서와 다른 점 |
 | [플랫폼 로드맵](docs/ROADMAP-PLATFORM.md) | 다음 계획: Apple Silicon 실행, 오픈소스 통합, 마일스톤 |
 | [1개월 로드맵](docs/ROADMAP-1MONTH.md) | 검증기 마일스톤 진행 상태 |
 | [FP4 커널 lab](docs/FP4-KERNEL-LAB.md) | 실험용 NVFP4/MXFP4 Metal·CUDA 커널 |
