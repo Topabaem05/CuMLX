@@ -10,7 +10,7 @@
 
 - 장비는 Apple M5 Pro 48 GB 한 대와 V100 한 대입니다. 다른 Apple Silicon과 다른 NVIDIA 세대는 측정하지 않았습니다.
 - 대부분의 측정은 다른 작업이 함께 도는 Mac에서 했습니다. 시간과 처리량은 벤치마크가 아닙니다.
-- 새 Mac이나 VM에서 처음부터 재현한 적이 없습니다. `spikes/m6_vm_reproduce.sh`는 스텁으로만 시험했습니다. VM은 같은 Mac 위의 준가상화 GPU이므로, 돌아가도 다른 Mac에서의 재현과 같지 않습니다.
+- 다른 Mac에서 처음부터 재현한 적이 없습니다. macOS 27.2 VM에서는 공개 저장소 설치와 GPU 없는 부분만 통과했습니다([기록](../validation/m6-vm-run.json)). VM의 `Apple Paravirtual device`는 `apple5`와 `mac2`까지만 지원해 PyTorch MPS, Genesis Metal, Mitsuba Metal이 거부하므로, F3, F4, F5는 VM에서 검증할 수 없습니다. Tart는 돌리지 않았고, 같은 프레임워크라 같은 제약이 예상될 뿐 측정하지는 않았습니다.
 - `cumlx doctor --stack`은 패키지와 장치가 있는지만 봅니다. nvcc와 NVIDIA 장비는 찾지 않고, Genesis, warp-metal, 번역기는 import하지 않습니다.
 
 ## 모델 검증기

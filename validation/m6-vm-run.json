@@ -1,0 +1,97 @@
+{
+ "schema": "cumlx.m6_vm_run.v1",
+ "date": "2026-11-04",
+ "rules": "validation/m6-vm-limits.json, committed before any run and not changed",
+ "cumlx_commit": "4e388a55f8da377d1d83592b5abd61f6e7b9ade9",
+ "tool": {
+  "name": "terminal-mac",
+  "url": "https://github.com/govijr/terminal-mac",
+  "commit": "7009117f9e910c3dd4b4bd863e8bc331bd3c9d96",
+  "licence": "MIT"
+ },
+ "guest": {
+  "macos": "27.2",
+  "build": "26B123",
+  "restore_image": "from Apple, through Virtualization.framework",
+  "cpu_brand": "Apple M5 Pro (Virtual)",
+  "cpus": 8,
+  "memory_gib": 4,
+  "disk_gib": 80,
+  "account": "made by a person in macOS setup"
+ },
+ "host": {
+  "macos": "27.0.1",
+  "chip": "M5 Pro, the same Mac",
+  "memory_in_use_peak_gb_during_the_run": 31.9
+ },
+ "versions": {
+  "mlx": "0.32.4",
+  "mlx-metal": "0.32.4",
+  "torch": "2.15.0",
+  "genesis-world": "1.4.5",
+  "mitsuba": "3.9.1",
+  "numpy": "2.5.4"
+ },
+ "verdict": "fail",
+ "parts": {
+  "base": {
+   "state": "pass",
+   "reasons": []
+  },
+  "f3": {
+   "state": "fail",
+   "reasons": [
+    "exit 1, {'failed': 8, 'passed': 22}"
+   ]
+  },
+  "f4": {
+   "state": "not_run",
+   "reasons": [
+    "train exit 1"
+   ]
+  },
+  "f5": {
+   "state": "fail",
+   "reasons": [
+    "exit 1, status failed"
+   ]
+  }
+ },
+ "measured": {
+  "pytest_not_gpu": "786 passed, 47 skipped, 76 deselected, 1 warning in 179.53s (0:02:59)",
+  "tests_test_kernel_gpu": "8 failed, 22 passed, 1 warning in 5.73s",
+  "selftest": "11 passed, 0 failed, 0 skipped"
+ },
+ "cause_of_the_failures": {
+  "summary": "The GPU in the guest does not have what these libraries need. No part reached a wrong result: each one refused the device.",
+  "device": "Apple Paravirtual device",
+  "gpu_families_read_in_the_guest": {
+   "apple1": true,
+   "apple5": true,
+   "apple6": false,
+   "apple7": false,
+   "apple8": false,
+   "apple9": false,
+   "mac2": true,
+   "metal3": false
+  },
+  "mlx": "Runs on the device: default device gpu, and a 1000x1000 matmul finished. Whether its results are right on this device was not compared.",
+  "f3": "cumlx kernel verify runs through PyTorch MPS. torch says: Skipping device Apple Paravirtual device that does not support Metal 2.0. The command gave exit 3 with: PyTorch has no MPS device or no compile_shader, so the kernel cannot run. So the kernels were not graded here.",
+  "f4": "Genesis says: Backend gs.metal not available on this machine. So training did not start. Memory was not the cause.",
+  "f5": "Mitsuba says: skipping device Apple Paravirtual device because it does not support Metal 3."
+ },
+ "network": {
+  "finding": "The guest reached its gateway and DNS, and no address beyond them. The host reached the internet. The cause was not found: Tailscale runs on the host and is a suspect, and it was not switched off to test that.",
+  "what_was_done": "CUMLX_VM_PROXY=1: a web proxy on the host loopback, for ports 80 and 443 only, over ssh -R. No setting on the host changed."
+ },
+ "earlier_runs_not_counted": [
+  "No internet: the guest ended at the command line tools with a misleading verdict, setup_error_no_command_line_tools_label.",
+  "A verdict that the first run left in the guest was read as this run's. That was a bug in the script, now fixed."
+ ],
+ "what_this_shows": "The public repository installs from nothing in a fresh macOS 27.2 VM, and the base passes there: doctor, self test, and the tests without a GPU.",
+ "what_this_does_not_show": [
+  "F3, F4 and F5 on another machine. This VM cannot run them, so this route cannot answer that.",
+  "That another macOS VM tool differs. Tart uses the same Virtualization framework and was not run; the same limit is likely, and it is not measured.",
+  "F1 and F2. They have no reproduced run on any machine."
+ ]
+}

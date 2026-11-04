@@ -4,12 +4,14 @@
 
 ### Changed
 
+- M6-1 ran in a real macOS 27.2 VM from `terminal-mac`, and the verdict is fail: `validation/m6-vm-run.json`. The public repository installs and its base passes, and the VM's paravirtual GPU cannot run F3, F4 or F5. So a VM cannot close M6-1. `CUMLX_VM_MEMORY_GIB`, `CUMLX_VM_USER`, `CUMLX_VM_PASSWORD` and `CUMLX_VM_PROXY` choose how it runs.
 - The separate repository OrchardSim is deleted, as of 2026-11-04: its Isaac Sim work could not easily be published under that licence. The records that the reports cite are in `validation/archive-orchardsim/`, and they cannot be measured again from here.
 - The repository is public as of 2026-11-04. `validation/m4-throughput.json` is a copy from the private repository OrchardSim, so that the M4 range can be read here.
 - The history of `main` after `645450b` was rewritten on 2026-11-04, before the repository went public, to remove a local machine identity, a private ssh alias and a user name. Commit hashes after that point changed, and the references in the documents and records now use the new hashes. `tests/test_no_private_strings.py` keeps these strings out, by hash.
 
 ### Fixed
 
+- `spikes/m6_vm_reproduce.sh` no longer reads a verdict that an earlier run left in the guest, and ends its proxy tunnel with the run. `spikes/m6_terminal_mac.sh` holds its limits during the install, and survives a failed first boot.
 - `spikes/run_all.sh` and `spikes/m3_kernels.sh` failed partway when `uv` was missing. They now end with exit 3 and the install link before they start.
 - `spikes/t4_action_example.sh` used `sed -i ''`, which only BSD sed reads, and it failed late without `.venv`. The edit is now `spikes/t4_edit_workflow.py`, which refuses a workflow without the expected lines, and a missing `.venv` is exit 3 with the fix.
 - `spikes/m2_golden_v100.sh`, `m5_render_v100.sh` and `m3_kernels.sh capture` defaulted to one person's ssh host. The host now comes from `CUMLX_GPU_HOST` or `~/.config/cumlx/gpu-host`, and with neither the launcher ends with exit 3 before it contacts anything.
@@ -70,6 +72,7 @@
 
 ### Fixed
 
+- `spikes/m6_vm_reproduce.sh` no longer reads a verdict that an earlier run left in the guest, and ends its proxy tunnel with the run. `spikes/m6_terminal_mac.sh` holds its limits during the install, and survives a failed first boot.
 - `cumlx run script.py --target x -- args` failed with `E_USAGE` on Python 3.12.3 and 3.10, because argparse there handles this mix of positionals differently. `--help` and `--format` after `--` also went to CUMLX and not to the script. `--module` could not take arguments at all.
 - `examples/robot-policy` refused real rsl_rl 5 checkpoints: it expected `model_state_dict` and `actor.N`, but rsl_rl 5 writes `actor_state_dict` and `mlp.N`. Only random weights had been tried. It now also refuses an observation normalizer, which it would otherwise have left out with no error.
 - The README said that `pip install isaacsim` installs an empty package on a Mac. It fails.
@@ -96,6 +99,7 @@
 
 ### Fixed
 
+- `spikes/m6_vm_reproduce.sh` no longer reads a verdict that an earlier run left in the guest, and ends its proxy tunnel with the run. `spikes/m6_terminal_mac.sh` holds its limits during the install, and survives a failed first boot.
 Each came from running recent models, and each has a test.
 
 - Replay now uses the mask that the port itself passed. A causal mask broke the LFM2 convolution.
