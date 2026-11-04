@@ -11,8 +11,6 @@ import subprocess
 import sys
 from typing import Any
 
-from .. import sysmem
-
 DEPENDENCIES = {
     # module: (distribution, extra)
     'numpy': ('numpy', None),
@@ -99,6 +97,9 @@ def inspect_environment(*, probe: bool = False) -> dict[str, Any]:
 
 def _memory() -> dict[str, Any]:
     """Memory on this machine, whatever its size. An unknown reading is None."""
+    # Here, because `doctor --env` loads this file alone in another Python, with no cumlx package.
+    from .. import sysmem
+
     out: dict[str, Any] = {'used_gb': sysmem.used_gb(), 'total_gb': sysmem.total_gb(), 'limit_gb': None}
     try:
         out['limit_gb'] = sysmem.limit_gb()
