@@ -1,0 +1,97 @@
+{
+ "schema": "cumlx.validation.m2-rundiff.v1",
+ "date": "2026-11-04",
+ "gate": "M2: at least 3 of the open-source scripts compared with a V100 CUDA golden, grade A or B",
+ "verdict": "met: 4 of 5 scripts. 2 at grade A, 2 at grade B",
+ "golden": {
+  "machine": "Tesla V100-SXM2-16GB, Linux x86_64, torch 2.14.1+cu126",
+  "runs": "13 of 13 ran to the end",
+  "edited_scripts": 0
+ },
+ "candidate": {
+  "machine": "Apple M5 Pro, macOS, MPS, torch 2.14.1",
+  "same_script_commits": true
+ },
+ "limits": "validation/run-compare-limits.json, set before any open-source script was measured. Not changed.",
+ "scripts": {
+  "cnn_mnist": {
+   "grade": "A",
+   "exit": 0,
+   "numeric_pass": true,
+   "worst_first_two_step_rel": 0.0,
+   "statistical": "pass",
+   "worst_window_difference_over_allowed": 0.38,
+   "golden_seed_fields_shifted": {
+    "exit": 0,
+    "grade": "B",
+    "numeric_pass": false
+   },
+   "golden_losses_times_1_2": {
+    "exit": 1,
+    "verdict": "diverged"
+   }
+  },
+  "gan_mnist": {
+   "grade": "A",
+   "exit": 0,
+   "numeric_pass": true,
+   "worst_first_two_step_rel": 8.423446663788656e-08,
+   "statistical": "pass",
+   "worst_window_difference_over_allowed": 0.515,
+   "golden_seed_fields_shifted": {
+    "exit": 0,
+    "grade": "B",
+    "numeric_pass": false
+   },
+   "golden_losses_times_1_2": {
+    "exit": 1,
+    "verdict": "diverged"
+   }
+  },
+  "mingpt_adder": {
+   "grade": "B",
+   "exit": 0,
+   "numeric_pass": false,
+   "worst_first_two_step_rel": 0.0034449257187891885,
+   "statistical": "pass",
+   "worst_window_difference_over_allowed": 0.121,
+   "golden_seed_fields_shifted": {
+    "exit": 0,
+    "grade": "B",
+    "numeric_pass": false
+   },
+   "golden_losses_times_1_2": {
+    "exit": 1,
+    "verdict": "diverged"
+   }
+  },
+  "nanogpt_train": {
+   "grade": "B",
+   "exit": 0,
+   "numeric_pass": false,
+   "worst_first_two_step_rel": 0.0001739500117948527,
+   "statistical": "pass",
+   "worst_window_difference_over_allowed": 0.004,
+   "golden_seed_fields_shifted": {
+    "exit": 0,
+    "grade": "B",
+    "numeric_pass": false
+   },
+   "golden_losses_times_1_2": {
+    "exit": 1,
+    "verdict": "diverged"
+   }
+  }
+ },
+ "not_compared": {
+  "nanogpt_sample": "E_RUN_NOT_COMPARABLE, exit 4: it samples and has no loss trace"
+ },
+ "controls": "Shifting the seed field of the golden reports drops every grade A to B, so grade A is specific to a seed. Multiplying golden losses by 1.2 gives diverged, exit 1, on all 4. A first control only renamed the files: rundiff pairs by the seed field inside each report, so it passed, and it was a wrong control.",
+ "not_shown": [
+  "Grade A covers the first two steps only. Later steps move apart through rounding",
+  "Grade B cannot see a difference smaller than max(3 SE, 1 percent of the mean). 3 seeds",
+  "Losses only: not saved models or samples",
+  "All losses of a run form one stream, including the GAN two optimizers",
+  "The first attempt, on 2026-11-04, stopped at once on a build error from the PyTorch index, fixed in 80f9dac"
+ ]
+}

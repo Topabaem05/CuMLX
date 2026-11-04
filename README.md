@@ -2,7 +2,7 @@
 
 **MLX 포팅본이 원본 모델과 같은 계산을 하는지 모듈 단위로 증명하고, 다르면 처음 달라진 모듈을 찾습니다.**
 
-지금의 CUMLX는 mlx-lm이든 직접 작성한 코드든, 어떻게 만든 포팅본이든 그 뒤에 붙여 쓰는 검증 도구입니다. 중심은 이 검증 도구이고, RTX·CUDA에서 돌던 것을 Apple Silicon에서 돌리는 기능을 일부 더했습니다. 달성 조건 25개 중 14개를 채웠고 기함 작업 5개 중 처음부터 재현된 것은 없습니다. [결과 보고서](docs/PLATFORM-REPORT.md)에 등급과 함께 적었습니다. 포팅이 성공했다는 메시지나 그럴듯한 생성 결과는 증거가 아닙니다. 가중치 전치, RoPE 오프셋, 잘못된 양자화 scale은 오류 없이 조용히 틀린 값을 냅니다.
+지금의 CUMLX는 mlx-lm이든 직접 작성한 코드든, 어떻게 만든 포팅본이든 그 뒤에 붙여 쓰는 검증 도구입니다. 중심은 이 검증 도구이고, RTX·CUDA에서 돌던 것을 Apple Silicon에서 돌리는 기능을 일부 더했습니다. 달성 조건 25개 중 15개를 채웠고 기함 작업 5개 중 처음부터 재현된 것은 없습니다. [결과 보고서](docs/PLATFORM-REPORT.md)에 등급과 함께 적었습니다. 포팅이 성공했다는 메시지나 그럴듯한 생성 결과는 증거가 아닙니다. 가중치 전치, RoPE 오프셋, 잘못된 양자화 scale은 오류 없이 조용히 틀린 값을 냅니다.
 
 ```text
 $ cumlx diff golden/ ./my-port
@@ -148,7 +148,7 @@ CLI는 stdout에 JSON 문서 하나만 내보내고, 오류마다 해결 명령�
 | 기능 | 내용 | 상태 |
 |---|---|---|
 | `cumlx recipe` | CUDA 라이브러리의 대체 경로와 근거 | 실행한 것과 문서만 읽은 것을 구분합니다 |
-| `cumlx run`, `rundiff` | CUDA를 가정한 PyTorch 스크립트를 MPS에서 실행하고 비교 | V100 비교 전입니다 |
+| `cumlx run`, `rundiff` | CUDA를 가정한 PyTorch 스크립트를 MPS에서 실행하고 비교 | 오픈소스 스크립트 4개가 V100 기준으로 등급 A 또는 B입니다 |
 | `cumlx kernel` | CUDA 커널 전처리, 번역기 연결, 값 비교 | 외부 커널은 번역과 컴파일까지입니다 |
 | `cumlx.sim` | Genesis, MuJoCo로 Isaac Lab 스타일 작업 학습 | cartpole, Go2 평지. Isaac Lab 작업을 읽지는 않습니다 |
 | `cumlx.render` | Mitsuba Metal RGB, 깊이, 세그멘테이션, 레이캐스트 | USD 장면은 아직입니다 |

@@ -22,7 +22,7 @@
 ## PyTorch 호환 실행 (M2)
 
 - **스크립트 5개 중 어느 것도 V100 CUDA와 비교하지 않았습니다.** 등급 C입니다. `validation/m2-scripts.json`
-- `cumlx rundiff`의 허용치 근거는 fixture의 CPU와 MPS입니다. CUDA가 참여하지 않았습니다. `validation/run-compare-limits.json`
+- `cumlx rundiff`의 허용치는 fixture의 CPU와 MPS에서 정했습니다. 오픈소스 스크립트 4개는 그 허용치로 V100과 비교해 통과했고, 값 자체를 CUDA로 다시 정하지는 않았습니다. `validation/run-compare-limits.json`, `validation/m2-rundiff.json`
 - 대체 패키지의 기준은 CPU의 torch 또는 손 계산입니다. 어느 것도 원래 패키지 이름으로 그대로 대체되지 않습니다. `validation/m2-substitutes.json`
 - mps-deform-conv, correlation, carafe, conv3d, mps-bitsandbytes의 실패 원인: C++ ABI 불일치가 유력하지만 증명되지 않았습니다. torch 2.9.1 실행으로 시험할 수 있습니다.
 - mlx3D는 GPU 사용을 확인하지 못해 시험을 끝내지 못했습니다.

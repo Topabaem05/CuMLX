@@ -183,7 +183,7 @@ cumlx run train.py --target mps --report run-report.json
 완료 조건:
 
 - [x] 수정하지 않은 오픈소스 스크립트 5개 실행, `run-report.json` 생성. nanoGPT 학습과 샘플링, minGPT, PyTorch-GAN, pytorch-tutorial CNN이 MPS에서 끝까지 돌았습니다(시드별 13회). 등급 C입니다. 측정값은 `validation/m2-scripts.json`입니다
-- [ ] 그중 3개 이상을 V100 CUDA golden과 비교해 등급 A 또는 B. 비교 도구 `cumlx rundiff`와 허용치는 준비했습니다(fixture만, CUDA 없음). 실제 비교는 아직 하지 않았습니다
+- [x] 그중 3개 이상을 V100 CUDA golden과 비교해 등급 A 또는 B. 5개 중 4개가 통과했습니다. `cnn_mnist`와 `gan_mnist`는 등급 A(첫 두 스텝, 최악 8.4e-8), `mingpt_adder`와 `nanogpt_train`은 등급 B(시드 3개, 4구간)입니다. 시드 값을 어긋나게 하면 등급 A가 B로 떨어지고, 기준 손실에 1.2를 곱하면 diverged입니다. `nanogpt_sample`은 손실 기록이 없어 비교하지 못했습니다. 등급 A는 처음 두 스텝만, 등급 B는 허용치(표준오차 3배와 평균 1% 중 큰 값)보다 큰 차이만 봅니다. 손실만 비교하고 저장한 모델은 비교하지 않았습니다. [기록](../validation/m2-rundiff.json)
 - [x] 지원하지 않는 호출이 오류로 끝나는 테스트 (조용한 CPU 폴백 없음)
 - [x] 호환 계층을 끄면 원래 동작과 같음을 테스트로 확인. `cumlx`를 import해도 torch가 바뀌지 않고, `uninstall()`이 모든 속성을 되돌립니다
 
