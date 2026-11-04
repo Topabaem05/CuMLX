@@ -3,7 +3,7 @@
 
     python spikes/run_guarded.py --stop-gb 38 --start-gb 33 --process-gb 16 --output usage.json -- COMMAND ARGS...
 
-Memory in use is active + wired + compressor pages from vm_stat. It stops only the process group that it started. The exit code is the
+Memory in use comes from cumlx.sysmem, on macOS and Linux, and the default stop limit is a fraction of this machine's RAM. It stops only the process group that it started. The exit code is the
 command's, 75 when the start limit refused to start it, and 76 when a limit stopped it. No NVIDIA machine is involved.
 """
 from __future__ import annotations
@@ -12,23 +12,24 @@ import argparse
 import json
 import os
 from pathlib import Path
-import re
 import shutil
 import signal
 import subprocess
 import sys
 import time
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'src'))
+from cumlx import sysmem  # noqa: E402
+
 REFUSED, STOPPED = 75, 76
 
 
 def system_used_gb() -> float:
-    text = subprocess.run(['vm_stat'], capture_output=True, text=True, check=True, timeout=20).stdout
-    size = re.search(r'page size of (\d+)', text)
-    values = [re.search(rf'{label}:\s+(\d+)', text) for label in ('Pages active', 'Pages wired down', 'Pages occupied by compressor')]
-    if size is None or not all(values):
-        raise RuntimeError('vm_stat printed a form that this script cannot read')
-    return sum(int(v.group(1)) for v in values if v) * int(size.group(1)) / 1e9
+    used = sysmem.used_gb()
+    if used is None:
+        print('error: this machine gives no reading of memory in use, so the limits cannot hold.', file=sys.stderr)
+        raise SystemExit(REFUSED)
+    return used
 
 
 def process_group_gb(group: int) -> float:
@@ -38,8 +39,8 @@ def process_group_gb(group: int) -> float:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--stop-gb', type=float, default=38.0)
-    parser.add_argument('--start-gb', type=float, default=33.0)
+    parser.add_argument('--stop-gb', type=float, help='default: the limit of cumlx.sysmem for this machine')
+    parser.add_argument('--start-gb', type=float, help='default: 7/8 of the stop limit')
     parser.add_argument('--process-gb', type=float, default=16.0)
     parser.add_argument('--disk-gb', type=float, default=15.0, help='stop when the free disk falls under this')
     parser.add_argument('--interval', type=float, default=1.0)
@@ -49,6 +50,13 @@ def main() -> int:
     command = args.command[1:] if args.command[:1] == ['--'] else args.command
     if not command:
         parser.error('no command')
+    if args.stop_gb is None:
+        args.stop_gb = sysmem.limit_gb()
+    if args.stop_gb is None:
+        print('error: no stop limit: this machine does not report its memory. Pass --stop-gb.', file=sys.stderr)
+        return REFUSED
+    if args.start_gb is None:
+        args.start_gb = args.stop_gb * 7 / 8
     used = system_used_gb()
     record = {'command': command, 'start_used_gb': round(used, 2), 'peak_used_gb': round(used, 2), 'peak_process_gb': 0.0, 'stopped_for': None}
 

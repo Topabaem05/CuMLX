@@ -1,6 +1,7 @@
 """cumlx.sim, cumlx.render.lidar and `cumlx doctor --stack --env`. Engines are stubbed or skipped here: real runs are in validation/m4-sim.json."""
 from __future__ import annotations
 
+import importlib.util
 import json
 import math
 from pathlib import Path
@@ -430,6 +431,21 @@ def test_guard_refuses_to_start_over_its_start_limit(tmp_path):
     done = subprocess.run([sys.executable, str(GUARD), '--start-gb', '0', '--', sys.executable, '-c', f'open({str(mark)!r}, "w")'],
                           capture_output=True, text=True, timeout=60, check=False)
     assert done.returncode == 75 and not mark.exists()
+
+
+def test_guard_refuses_when_memory_cannot_be_read(tmp_path, monkeypatch):
+    spec = importlib.util.spec_from_file_location('run_guarded_under_test', GUARD)
+    guard = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(guard)
+    monkeypatch.setattr(guard.sysmem, 'used_gb', lambda: None)
+    monkeypatch.setattr(guard.sysmem, 'limit_gb', lambda: None)
+    mark = tmp_path / 'ran'
+    monkeypatch.setattr(sys, 'argv', ['run_guarded', '--', sys.executable, '-c', f'open({str(mark)!r}, "w")'])
+    assert guard.main() == guard.REFUSED and not mark.exists()  # No limit known.
+    monkeypatch.setattr(sys, 'argv', ['run_guarded', '--stop-gb', '38', '--', sys.executable, '-c', f'open({str(mark)!r}, "w")'])
+    with pytest.raises(SystemExit) as stopped:
+        guard.main()
+    assert stopped.value.code == guard.REFUSED and not mark.exists()  # A limit, but no reading.
 
 
 def test_guard_stops_a_command_over_its_stop_limit_and_only_that_command(tmp_path):
