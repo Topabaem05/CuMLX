@@ -1,8 +1,8 @@
 # 미검증 영역
 
-기준: CuMLX `a2845d6`, OrchardSim `e92054a`, 2026-11-03. 기록의 `not_shown`, `not_verified`, 로드맵의 내용을 플랫폼 층별로 모았습니다. 결과 전체는 [PLATFORM-REPORT.md](PLATFORM-REPORT.md)에 있습니다.
+기준: CuMLX `a2845d6`, 당시의 OrchardSim `e92054a`, 2026-11-03. 기록의 `not_shown`, `not_verified`, 로드맵의 내용을 플랫폼 층별로 모았습니다. 결과 전체는 [PLATFORM-REPORT.md](PLATFORM-REPORT.md)에 있습니다.
 
-이 목록은 2026-11-04에 저장소와 함께 공개했습니다. `OrchardSim` 표시가 있는 기록은 별도의 비공개 저장소에 있어 외부에서 열 수 없습니다.
+이 목록은 2026-11-04에 저장소와 함께 공개했습니다. `validation/archive-orchardsim/`의 기록은 2026-11-04에 삭제한 저장소 OrchardSim의 측정값입니다. 스크립트가 공개되어 있지 않아 외부에서 다시 측정할 수 없습니다.
 
 여기에 없다고 해서 검증되었다는 뜻은 아닙니다. 기록이 다루는 범위 밖은 모두 미검증입니다.
 
@@ -10,7 +10,7 @@
 
 - 장비는 Apple M5 Pro 48 GB 한 대와 V100 한 대입니다. 다른 Apple Silicon과 다른 NVIDIA 세대는 측정하지 않았습니다.
 - 대부분의 측정은 다른 작업이 함께 도는 Mac에서 했습니다. 시간과 처리량은 벤치마크가 아닙니다.
-- 새 Mac에서 처음부터 재현한 적이 없습니다. OrchardSim `spikes/reproduce_go2_metal.sh`는 거부 동작만 시험했습니다.
+- 새 Mac이나 VM에서 처음부터 재현한 적이 없습니다. `spikes/m6_vm_reproduce.sh`는 스텁으로만 시험했습니다. VM은 같은 Mac 위의 준가상화 GPU이므로, 돌아가도 다른 Mac에서의 재현과 같지 않습니다.
 - `cumlx doctor --stack`은 패키지와 장치가 있는지만 봅니다. nvcc와 NVIDIA 장비는 찾지 않고, Genesis, warp-metal, 번역기는 import하지 않습니다.
 
 ## 모델 검증기
@@ -37,32 +37,32 @@
 - nvdiffrast의 `zero_value` 전체 특수화 3건은 이 계층이 처리하지 못해 거부됩니다. Metal에서 되는지는 시험하지 않았습니다.
 - 입력이 닿지 않는 결함은 잡을 수 없으므로, 통과는 case가 실행한 범위만 뜻합니다.
 
-## 물리와 학습 (M4, OrchardSim)
+## 물리와 학습 (M4, 보관 기록)
 
 - `cumlx.sim`은 Isaac Lab이 아닙니다. 작업 2개가 그 형식을 따를 뿐이고, Isaac Lab 작업 정의를 그대로 읽지 못합니다. USD 자산은 돌려 보지 않았고, MuJoCo 쪽 Go2 학습도 없습니다. `validation/m4-sim.json`
 - Genesis와 MuJoCo의 관절 제한 처리: cartpole이 레일 끝에 닿으면 두 엔진이 갈라져 처음 쓴 허용치를 넘었습니다. 일치 시험은 한 시간 간격에서 두 엔진이 같은 적분을 한다는 뜻이고, 어느 쪽이 정확한지는 말해 주지 않습니다. 시간 간격 대조군이 그보다 크게 벗어납니다.
 - 작은 행동에서 MLX 정책: 균형을 잡은 cartpole의 행동은 약 8e-4라서 상대 오차가 1e-4를 넘습니다(MuJoCo 정책 1.41e-4). 절대 오차는 1e-6 이하입니다. float32 반올림으로 읽었습니다.
 - PhysX와의 비교, 실제 로봇. 어떤 결과도 sim-to-real 결과가 아닙니다.
 - 같은 cartpole USD가 1초 후 PhysX 3.31 rad, Genesis 1.97 rad로 다르며, 원인은 조사하지 않았습니다. `validation/isaac-sim.json`
-- 궤적 시험은 humanoid 모델입니다. Isaac Lab 작업과 Go2 모델은 다루지 않았고, 드문 world의 오차(0.3~1.3)는 허용치가 제한하지 않습니다. OrchardSim `validation/m4-trajectory.json`
-- 다른 cartpole 작업, 좌우와 회전 명령, +0.8, -0.8, 0 외의 속도. OrchardSim `validation/m4-cartpole-metal.json`, `m4-go2-seeds.json`
+- 궤적 시험은 humanoid 모델입니다. Isaac Lab 작업과 Go2 모델은 다루지 않았고, 드문 world의 오차(0.3~1.3)는 허용치가 제한하지 않습니다. `validation/archive-orchardsim/m4-trajectory.json`
+- 다른 cartpole 작업, 좌우와 회전 명령, +0.8, -0.8, 0 외의 속도. `validation/archive-orchardsim/m4-cartpole-metal.json`, `m4-go2-seeds.json`
 - 보행 품질(발 미끄러짐, 토크, 에너지, 접촉 시점), 방향 드리프트, 긴 실행. `validation/isaac-lab-go2.json`
-- Newton 접촉으로 한 전체 학습과 그 접촉의 4096 환경 처리량. 패치의 슬롯 충돌이 불가능하다는 증명도 없습니다. OrchardSim `validation/warp-metal-o2.json`
+- Newton 접촉으로 한 전체 학습과 그 접촉의 4096 환경 처리량. 패치의 슬롯 충돌이 불가능하다는 증명도 없습니다. `validation/archive-orchardsim/warp-metal-o2.json`
 - warp-metal의 모든 커널이 옳은지. 일치 실패가 커널 오류 없이 설명된다는 것만 보였고, 시험은 humanoid 60 step입니다.
 - Metal 반복 불일치의 전체 원인. 접촉 순서를 고정해도 반복이 일치하지 않습니다.
-- 스모크 행렬은 작업이 돈다는 것만 보입니다. 학습 여부나 CPU와의 일치는 보이지 않으며, 등록된 146개 중 23개만 시험했습니다. OrchardSim `validation/isaac-lab-o1.json`, `isaac-lab-metal.json`
-- MLX PPO 업데이트의 일치는 CPU의 float64에서 확인했습니다. Mac GPU의 float32에서 시드별로 같다는 뜻이 아닙니다. 학습 곡선 비교는 판정할 수 없었고, 비교 데이터는 합성입니다. OrchardSim `validation/mlx-ppo-o4.json`
-- 폐루프 등급 A의 허용치 1e-4는 가중치 하나의 1% 변경을 잡지 못합니다. OrchardSim `validation/mlx-closed-loop-o4.json`
+- 스모크 행렬은 작업이 돈다는 것만 보입니다. 학습 여부나 CPU와의 일치는 보이지 않으며, 등록된 146개 중 23개만 시험했습니다. `validation/archive-orchardsim/isaac-lab-o1.json`, `isaac-lab-metal.json`
+- MLX PPO 업데이트의 일치는 CPU의 float64에서 확인했습니다. Mac GPU의 float32에서 시드별로 같다는 뜻이 아닙니다. 학습 곡선 비교는 판정할 수 없었고, 비교 데이터는 합성입니다. `validation/archive-orchardsim/mlx-ppo-o4.json`
+- 폐루프 등급 A의 허용치 1e-4는 가중치 하나의 1% 변경을 잡지 못합니다. `validation/archive-orchardsim/mlx-closed-loop-o4.json`
 - Genesis 처리량이 첫 반복에서 약 2배인 원인. 학습기를 포함한 처리량은 다른 기록에 있습니다. `validation/m4-throughput.json`
-- Genesis와 Newton의 일치. OrchardSim `validation/genesis-o6.json`
+- Genesis와 Newton의 일치. `validation/archive-orchardsim/genesis-o6.json`
 - 지원: NVIDIA는 macOS를 지원 대상으로 올리지 않았고, 이후의 Isaac Lab 커밋이 이 경로를 깨뜨릴 수 있습니다.
 
-## Isaac Sim (OrchardSim O5)
+## Isaac Sim (보관 기록)
 
 - V100 연결은 세션 3개, 에피소드 8개씩, 시드 1개이고, 지연은 ssh 터널 하나의 값입니다. 일반적인 네트워크 수치가 아닙니다.
 - 컨테이너 실행의 EULA 값은 서브에이전트가 넣었고, 사용자가 2026-11-04에 검토해 결과를 인정했습니다. [보고서](PLATFORM-REPORT.md#isaac-sim-eula-값에-대한-기록)를 보십시오.
 - 사족 보행, RTX, 카메라, GPU PhysX. 컨테이너와 V100 모두 RTX를 쓰지 못합니다.
-- 컨테이너 연결은 세션 3개, 에피소드 8개씩, 시드 1개입니다. 지연은 한 장비의 Docker 포트를 거친 값이고 네트워크 수치가 아닙니다. OrchardSim `validation/isaac-sim-o5.json`
+- 컨테이너 연결은 세션 3개, 에피소드 8개씩, 시드 1개입니다. 지연은 한 장비의 Docker 포트를 거친 값이고 네트워크 수치가 아닙니다. `validation/archive-orchardsim/isaac-sim-o5.json`
 - 자유 낙하에서 정확한 값과의 0.10 m 차이는 원인을 조사하지 않았습니다.
 
 ## 렌더링과 센서 (M5)

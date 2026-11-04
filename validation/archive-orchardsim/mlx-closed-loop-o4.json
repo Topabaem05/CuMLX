@@ -1,0 +1,116 @@
+{
+ "schema": "orchardsim.validation.mlx_closed_loop_o4.v1",
+ "date": "2026-11-03",
+ "gate": "O4: policy in MLX on the GPU in the closed loop, grade A against rsl_rl",
+ "verdict": "pass",
+ "grade": "A",
+ "limit": 0.0001,
+ "limit_written": "commit 1501f1c, before the first run",
+ "worst_rel_l2": 2.697101388555867e-07,
+ "protocol": "Go2 flat, the policy trained on Metal (seed 42, model_299.pt), physics on metal:0, 128 envs, 1000 steps, seed 7. The MLX policy on the GPU drives the simulation. At each step rsl_rl's own MLPModel, built with a strict load of the same weights, computes the actions for the observations of that step. spikes/isaac_lab_mlx_loop.py --compare-rsl-rl.",
+ "wrong_case_note": "Two wrong MLX policies run on the same observations and never drive the simulation. The wrong activation is caught at every step. One weight changed by 1 percent gives 8.4e-6 to 6.7e-5: that is 30 to 250 times the error of the right policy, but it stays under the 1e-4 limit. So at this limit a 1 percent change of one weight of this network is not caught. The limit did not change.",
+ "runs": {
+  "fwd": {
+   "controller": "mlx",
+   "checkpoint": "model_299.pt",
+   "envs": 128,
+   "steps": 1000,
+   "seed": 7,
+   "device": "cpu",
+   "reward_per_env_step": 0.03356897910323459,
+   "terminated_per_env": 0.0234375,
+   "timed_out_per_env": 0.9765625,
+   "seconds": 70.07,
+   "warp_device": "metal:0",
+   "read_sync": true,
+   "task": "Isaac-Velocity-Flat-UnitreeGo2",
+   "forward_command": 0.8,
+   "mean_forward_speed": 0.8737063609394762,
+   "mean_velocity_error": 0.160890075614055,
+   "mean_base_height": 0.3516966076691945,
+   "window": "after step 100",
+   "mlx_vs_torch_worst_rel_l2": 2.697101422199921e-07,
+   "mlx_inference_ms_per_step": 0.3811,
+   "mlx_device": "gpu",
+   "mlx_vs_rsl_rl_closed_loop": {
+    "limit": 0.0001,
+    "steps_compared": 1000,
+    "worst_rel_l2": 2.697101388555867e-07,
+    "within_limit": true,
+    "wrong_policies_on_the_same_observations": {
+     "wrong_activation_relu": {
+      "smallest_rel_l2": 0.8392361122121211,
+      "largest_rel_l2": 0.9262644998954455,
+      "caught_at_every_step": true
+     },
+     "one_weight_1_percent": {
+      "smallest_rel_l2": 8.42173265885524e-06,
+      "largest_rel_l2": 6.650034721732685e-05,
+      "caught_at_every_step": false
+     }
+    }
+   },
+   "measured": {
+    "wall_seconds": 83.12,
+    "exit_code": 0,
+    "process_gpu_seconds": 22.59,
+    "peak_footprint_gb": 0.84,
+    "system_used_gb_peak": 28.71,
+    "competing_during": null,
+    "stopped_for_memory": false,
+    "stopped_for_system_memory": false
+   }
+  },
+  "back": {
+   "controller": "mlx",
+   "checkpoint": "model_299.pt",
+   "envs": 128,
+   "steps": 1000,
+   "seed": 7,
+   "device": "cpu",
+   "reward_per_env_step": 0.03851098112831824,
+   "terminated_per_env": 0.0078125,
+   "timed_out_per_env": 0.9921875,
+   "seconds": 53.68,
+   "warp_device": "metal:0",
+   "read_sync": true,
+   "task": "Isaac-Velocity-Flat-UnitreeGo2",
+   "forward_command": -0.8,
+   "mean_forward_speed": -0.8841418219937218,
+   "mean_velocity_error": 0.1088111817671193,
+   "mean_base_height": 0.37202626685301465,
+   "window": "after step 100",
+   "mlx_vs_torch_worst_rel_l2": 2.587794654118625e-07,
+   "mlx_inference_ms_per_step": 0.3494,
+   "mlx_device": "gpu",
+   "mlx_vs_rsl_rl_closed_loop": {
+    "limit": 0.0001,
+    "steps_compared": 1000,
+    "worst_rel_l2": 2.5877947152492504e-07,
+    "within_limit": true,
+    "wrong_policies_on_the_same_observations": {
+     "wrong_activation_relu": {
+      "smallest_rel_l2": 0.7858409664160939,
+      "largest_rel_l2": 0.8723583501618563,
+      "caught_at_every_step": true
+     },
+     "one_weight_1_percent": {
+      "smallest_rel_l2": 1.68568933491417e-05,
+      "largest_rel_l2": 4.0201738228284055e-05,
+      "caught_at_every_step": false
+     }
+    }
+   },
+   "measured": {
+    "wall_seconds": 61.0,
+    "exit_code": 0,
+    "process_gpu_seconds": 19.19,
+    "peak_footprint_gb": 0.79,
+    "system_used_gb_peak": 28.53,
+    "competing_during": null,
+    "stopped_for_memory": false,
+    "stopped_for_system_memory": false
+   }
+  }
+ }
+}

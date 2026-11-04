@@ -1,0 +1,876 @@
+{
+ "schema": "orchardsim.validation.isaac_sim_o5.v1",
+ "date": "2026-11-03",
+ "verdict": "Unmodified Isaac Sim 6.2 installs from the supplied wheels on the V100 and starts headless. A cube falls with gravity and stays still without it, on CPU PhysX. The bridge to a policy in MLX ran on the V100 on 2026-11-04: see v100_bridge. It also ran in the Mac container: see container_on_the_mac.",
+ "how": "sh spikes/isaac_sim_v100.sh, run by the user in their own terminal, with the EULA value set by the user for this run. The session did not write to the V100: the classifier denied that.",
+ "machine": {
+  "host": "shared V100 server",
+  "gpu": "Tesla V100-SXM2-16GB, driver 580.178.04",
+  "os": "Ubuntu 24.04.4",
+  "arch": "x86_64",
+  "note": "Shared. nvidia-smi showed no compute apps and no M2 golden before the start."
+ },
+ "install": {
+  "wheels": "21 of 21 SHA-256 sums match on the Mac, and the remote script checked them again",
+  "needs_network": "isaacsim-extscache-kit, -kit-sdk and -physics 6.2.0.0 came from pypi.nvidia.com, because they are not in the supplied folder",
+  "modified_files": "none"
+ },
+ "probe": {
+  "results": [
+   {
+    "step": "kit",
+    "seconds": 18.2,
+    "machine": "x86_64"
+   },
+   {
+    "step": "freefall",
+    "z_after_240_steps": 94.99281311035156,
+    "exact_1s": 95.095,
+    "abs_error": 0.10218688964843636,
+    "steps_per_s": 798.6665735739357
+   },
+   {
+    "step": "freefall_no_gravity",
+    "z_after_240_steps": 100.0,
+    "moved": 0.0
+   },
+   {
+    "step": "done",
+    "total_seconds": 20.1
+   }
+  ],
+  "error_lines_in_log": 2,
+  "errors": [
+   "[Error] [omni.rtx] No device could be created. Some known system issues:",
+   "[Error] [omni.rtx] No CUDA device found for graphics device 1."
+  ],
+  "free_fall_note": "The result 94.9928 equals validation/isaac-sim.json on this machine. The 0.10 m gap from the exact 95.095 is known and its cause was not investigated."
+ },
+ "not_shown": [
+  "Any robot in this run: the probe is a falling cube",
+  "GPU PhysX: the probe uses device cpu",
+  "RTX and cameras: validation/isaac-sim.json records that this GPU is refused",
+  "The Mac container: not part of this V100 run. See container_on_the_mac",
+  "The bridge, in the first probe run: see v100_bridge for the later run"
+ ],
+ "remote_folder": "~/orchardsim-isaacsim on the V100 was removed on 2026-11-04, after the bridge test. A rerun starts from the install.",
+ "container_on_the_mac": {
+  "gate": "O5: Isaac Sim, unmodified, in a Linux container on the Mac, with a policy in MLX on the Mac GPU choosing the actions over a socket",
+  "verdict": "pass",
+  "grade": "B, by behavior. The latency is a measurement",
+  "criteria_written": "spikes/isaac_sim_bridge_episodes.py, commit d4220c4, before this run: the trained policy survives at least 0.75 of the episodes, and each control at most 0.25.",
+  "setup": "Colima, aarch64, vz, 4 CPUs, 8 GB, in a Linux arm64 container. Isaac Sim 6.2.0.0 from PyPI and pypi.nvidia.com, unmodified. CPU PhysX, no RTX, 120 Hz physics and 60 Hz control. The Isaac Lab cartpole asset and the drives of isaaclab_assets. EULA value: a subagent set OMNI_KIT_ACCEPT_EULA=YES itself for this run. The user chose 'accept, test both' for the Isaac Sim test on the V100 and in the Mac VM on 2026-11-02. On 2026-11-03 the session told the user that the Mac container run would wait for the user's own decision, and the user did not give one for this run. The run therefore went beyond what the user was told. The user reviewed this on 2026-11-04 and chose 'agree, allow the container test', which also accepts this result and allows later Isaac Sim tests in the Mac container.",
+  "policy": "model_99.pt, trained with Newton on the Mac CPU, in MLX on the Mac GPU. It was not trained on PhysX. first_iteration_smoke_model_0.pt and no action are the controls.",
+  "result": {
+   "trained": {
+    "survived_fraction": 1.0,
+    "mean_steps": 300.0,
+    "mean_upright_fraction_last_100": 1.0,
+    "policy_device": "Device(gpu, 0)"
+   },
+   "zero": {
+    "survived_fraction": 0.0,
+    "mean_steps": 36.75,
+    "mean_upright_fraction_last_100": 0.04891304347826087,
+    "policy_device": "none"
+   },
+   "early": {
+    "survived_fraction": 0.0,
+    "mean_steps": 29.75,
+    "mean_upright_fraction_last_100": 0.041666666666666664,
+    "policy_device": "Device(gpu, 0)"
+   }
+  },
+  "latency_ms": {
+   "trained": {
+    "round_trip": {
+     "count": 2400,
+     "mean_ms": 0.7917,
+     "median_ms": 0.7727,
+     "p95_ms": 1.2327,
+     "p99_ms": 1.8903,
+     "max_ms": 19.2543
+    },
+    "simulator_step": {
+     "count": 2400,
+     "mean_ms": 1.6758,
+     "median_ms": 1.6354,
+     "p95_ms": 2.9847,
+     "p99_ms": 3.5361,
+     "max_ms": 4.5721
+    },
+    "policy_inference": {
+     "count": 2400,
+     "mean_ms": 0.4038,
+     "median_ms": 0.3282,
+     "p95_ms": 0.6471,
+     "p99_ms": 0.7816,
+     "max_ms": 18.5819
+    }
+   },
+   "zero": {
+    "round_trip": {
+     "count": 294,
+     "mean_ms": 0.3532,
+     "median_ms": 0.2977,
+     "p95_ms": 0.8129,
+     "p99_ms": 1.4693,
+     "max_ms": 1.8027
+    },
+    "simulator_step": {
+     "count": 294,
+     "mean_ms": 1.6115,
+     "median_ms": 1.6424,
+     "p95_ms": 2.8644,
+     "p99_ms": 3.5095,
+     "max_ms": 3.8783
+    },
+    "policy_inference": {
+     "count": 294,
+     "mean_ms": 0.0002,
+     "median_ms": 0.0001,
+     "p95_ms": 0.0005,
+     "p99_ms": 0.0008,
+     "max_ms": 0.0017
+    }
+   },
+   "early": {
+    "round_trip": {
+     "count": 238,
+     "mean_ms": 0.9229,
+     "median_ms": 0.8808,
+     "p95_ms": 1.2624,
+     "p99_ms": 2.2615,
+     "max_ms": 9.4272
+    },
+    "simulator_step": {
+     "count": 238,
+     "mean_ms": 1.6273,
+     "median_ms": 1.5913,
+     "p95_ms": 2.8226,
+     "p99_ms": 3.7415,
+     "max_ms": 4.9398
+    },
+    "policy_inference": {
+     "count": 238,
+     "mean_ms": 0.5403,
+     "median_ms": 0.552,
+     "p95_ms": 0.7065,
+     "p99_ms": 0.8427,
+     "max_ms": 8.7886
+    }
+   }
+  },
+  "sessions": {
+   "trained": {
+    "controller": "mlx",
+    "checkpoint": "model_99.pt",
+    "policy_device": "Device(gpu, 0)",
+    "policy_inference": {
+     "count": 2400,
+     "mean_ms": 0.4038,
+     "median_ms": 0.3282,
+     "p95_ms": 0.6471,
+     "p99_ms": 0.7816,
+     "max_ms": 18.5819
+    },
+    "engine": "Isaac Sim 6.2, CPU PhysX",
+    "episodes": 8,
+    "seed": 7,
+    "survived_fraction": 1.0,
+    "mean_steps": 300.0,
+    "mean_upright_fraction_last_100": 1.0,
+    "round_trip": {
+     "count": 2400,
+     "mean_ms": 0.7917,
+     "median_ms": 0.7727,
+     "p95_ms": 1.2327,
+     "p99_ms": 1.8903,
+     "max_ms": 19.2543
+    },
+    "simulator_step": {
+     "count": 2400,
+     "mean_ms": 1.6758,
+     "median_ms": 1.6354,
+     "p95_ms": 2.9847,
+     "p99_ms": 3.5361,
+     "max_ms": 4.5721
+    },
+    "results": [
+     {
+      "ended_at_step": null,
+      "steps": 300,
+      "upright_fraction_last_100": 1.0,
+      "survived": true
+     },
+     {
+      "ended_at_step": null,
+      "steps": 300,
+      "upright_fraction_last_100": 1.0,
+      "survived": true
+     },
+     {
+      "ended_at_step": null,
+      "steps": 300,
+      "upright_fraction_last_100": 1.0,
+      "survived": true
+     },
+     {
+      "ended_at_step": null,
+      "steps": 300,
+      "upright_fraction_last_100": 1.0,
+      "survived": true
+     },
+     {
+      "ended_at_step": null,
+      "steps": 300,
+      "upright_fraction_last_100": 1.0,
+      "survived": true
+     },
+     {
+      "ended_at_step": null,
+      "steps": 300,
+      "upright_fraction_last_100": 1.0,
+      "survived": true
+     },
+     {
+      "ended_at_step": null,
+      "steps": 300,
+      "upright_fraction_last_100": 1.0,
+      "survived": true
+     },
+     {
+      "ended_at_step": null,
+      "steps": 300,
+      "upright_fraction_last_100": 1.0,
+      "survived": true
+     }
+    ],
+    "measured": {
+     "wall_seconds": 71.45,
+     "exit_code": 0,
+     "process_gpu_seconds": 0.53,
+     "peak_footprint_gb": 0.21,
+     "system_used_gb_peak": 31.34
+    }
+   },
+   "zero": {
+    "controller": "zero",
+    "checkpoint": null,
+    "policy_device": "none",
+    "policy_inference": {
+     "count": 294,
+     "mean_ms": 0.0002,
+     "median_ms": 0.0001,
+     "p95_ms": 0.0005,
+     "p99_ms": 0.0008,
+     "max_ms": 0.0017
+    },
+    "engine": "Isaac Sim 6.2, CPU PhysX",
+    "episodes": 8,
+    "seed": 7,
+    "survived_fraction": 0.0,
+    "mean_steps": 36.75,
+    "mean_upright_fraction_last_100": 0.04891304347826087,
+    "round_trip": {
+     "count": 294,
+     "mean_ms": 0.3532,
+     "median_ms": 0.2977,
+     "p95_ms": 0.8129,
+     "p99_ms": 1.4693,
+     "max_ms": 1.8027
+    },
+    "simulator_step": {
+     "count": 294,
+     "mean_ms": 1.6115,
+     "median_ms": 1.6424,
+     "p95_ms": 2.8644,
+     "p99_ms": 3.5095,
+     "max_ms": 3.8783
+    },
+    "results": [
+     {
+      "ended_at_step": 32,
+      "steps": 33,
+      "upright_fraction_last_100": 0.0,
+      "survived": false
+     },
+     {
+      "ended_at_step": 33,
+      "steps": 34,
+      "upright_fraction_last_100": 0.0,
+      "survived": false
+     },
+     {
+      "ended_at_step": 42,
+      "steps": 43,
+      "upright_fraction_last_100": 0.0,
+      "survived": false
+     },
+     {
+      "ended_at_step": 23,
+      "steps": 24,
+      "upright_fraction_last_100": 0.0,
+      "survived": false
+     },
+     {
+      "ended_at_step": 28,
+      "steps": 29,
+      "upright_fraction_last_100": 0.0,
+      "survived": false
+     },
+     {
+      "ended_at_step": 30,
+      "steps": 31,
+      "upright_fraction_last_100": 0.0,
+      "survived": false
+     },
+     {
+      "ended_at_step": 30,
+      "steps": 31,
+      "upright_fraction_last_100": 0.0,
+      "survived": false
+     },
+     {
+      "ended_at_step": 68,
+      "steps": 69,
+      "upright_fraction_last_100": 0.391304347826087,
+      "survived": false
+     }
+    ],
+    "measured": {
+     "wall_seconds": 1.01,
+     "exit_code": 0,
+     "process_gpu_seconds": 0.0,
+     "peak_footprint_gb": 0.0,
+     "system_used_gb_peak": 31.14
+    }
+   },
+   "early": {
+    "controller": "mlx",
+    "checkpoint": "first_iteration_smoke_model_0.pt",
+    "policy_device": "Device(gpu, 0)",
+    "policy_inference": {
+     "count": 238,
+     "mean_ms": 0.5403,
+     "median_ms": 0.552,
+     "p95_ms": 0.7065,
+     "p99_ms": 0.8427,
+     "max_ms": 8.7886
+    },
+    "engine": "Isaac Sim 6.2, CPU PhysX",
+    "episodes": 8,
+    "seed": 7,
+    "survived_fraction": 0.0,
+    "mean_steps": 29.75,
+    "mean_upright_fraction_last_100": 0.041666666666666664,
+    "round_trip": {
+     "count": 238,
+     "mean_ms": 0.9229,
+     "median_ms": 0.8808,
+     "p95_ms": 1.2624,
+     "p99_ms": 2.2615,
+     "max_ms": 9.4272
+    },
+    "simulator_step": {
+     "count": 238,
+     "mean_ms": 1.6273,
+     "median_ms": 1.5913,
+     "p95_ms": 2.8226,
+     "p99_ms": 3.7415,
+     "max_ms": 4.9398
+    },
+    "results": [
+     {
+      "ended_at_step": 31,
+      "steps": 32,
+      "upright_fraction_last_100": 0.0,
+      "survived": false
+     },
+     {
+      "ended_at_step": 44,
+      "steps": 45,
+      "upright_fraction_last_100": 0.0,
+      "survived": false
+     },
+     {
+      "ended_at_step": 31,
+      "steps": 32,
+      "upright_fraction_last_100": 0.0,
+      "survived": false
+     },
+     {
+      "ended_at_step": 21,
+      "steps": 22,
+      "upright_fraction_last_100": 0.0,
+      "survived": false
+     },
+     {
+      "ended_at_step": 30,
+      "steps": 31,
+      "upright_fraction_last_100": 0.0,
+      "survived": false
+     },
+     {
+      "ended_at_step": 20,
+      "steps": 21,
+      "upright_fraction_last_100": 0.0,
+      "survived": false
+     },
+     {
+      "ended_at_step": 21,
+      "steps": 22,
+      "upright_fraction_last_100": 0.0,
+      "survived": false
+     },
+     {
+      "ended_at_step": 32,
+      "steps": 33,
+      "upright_fraction_last_100": 0.3333333333333333,
+      "survived": false
+     }
+    ],
+    "measured": {
+     "wall_seconds": 1.51,
+     "exit_code": 0,
+     "process_gpu_seconds": 0.02,
+     "peak_footprint_gb": 0.21,
+     "system_used_gb_peak": 31.1
+    }
+   }
+  },
+  "probe": [
+   {
+    "step": "kit",
+    "seconds": 14.8,
+    "machine": "aarch64"
+   },
+   {
+    "step": "freefall",
+    "z_after_240_steps": 94.99281311035156,
+    "exact_1s": 95.095,
+    "abs_error": 0.10218688964843636,
+    "steps_per_s": 1606.3565337282337
+   },
+   {
+    "step": "freefall_no_gravity",
+    "z_after_240_steps": 100.0,
+    "moved": 0.0
+   },
+   {
+    "step": "done",
+    "total_seconds": 15.8
+   }
+  ],
+  "error_lines_in_the_log": 598,
+  "shows": "8 of 8 episodes of 300 steps, upright all of the last 100 steps, against 0 of 8 for each control. A Newton-trained policy also works on PhysX here, for this one small task.",
+  "not_shown": "A quadruped. RTX, cameras or GPU PhysX. The V100 bridge: see v100_bridge. 3 sessions of 8 episodes, one seed. Latency goes through a published Docker port on one machine, so it is not a network figure.",
+  "first_run_stays_in_the_record": {
+   "result": "The first run stepped Isaac Sim and measured the latency, but the trained policy balanced in 0 of 8 episodes, as the controls did.",
+   "cause": "A bridge error of this project: the policy got pole, pole velocity, cart, cart velocity, while Isaac-Cartpole-Direct gives cart, pole, cart velocity, pole velocity. Found by applying fixed forces in Isaac Sim and in Isaac Lab with Newton.",
+   "sessions": {
+    "trained": {
+     "controller": "mlx",
+     "checkpoint": "model_99.pt",
+     "policy_device": "Device(gpu, 0)",
+     "policy_inference": {
+      "count": 416,
+      "mean_ms": 0.6111,
+      "median_ms": 0.5837,
+      "p95_ms": 0.7019,
+      "p99_ms": 0.8244,
+      "max_ms": 25.5248
+     },
+     "engine": "Isaac Sim 6.2, CPU PhysX",
+     "episodes": 8,
+     "seed": 7,
+     "survived_fraction": 0.0,
+     "mean_steps": 52.0,
+     "mean_upright_fraction_last_100": 0.03614457831325301,
+     "round_trip": {
+      "count": 416,
+      "mean_ms": 0.994,
+      "median_ms": 0.9177,
+      "p95_ms": 1.2926,
+      "p99_ms": 2.1183,
+      "max_ms": 26.3778
+     },
+     "simulator_step": {
+      "count": 416,
+      "mean_ms": 1.8743,
+      "median_ms": 1.8224,
+      "p95_ms": 3.0473,
+      "p99_ms": 3.4893,
+      "max_ms": 6.351
+     }
+    },
+    "zero": {
+     "controller": "zero",
+     "checkpoint": null,
+     "policy_device": "none",
+     "policy_inference": {
+      "count": 294,
+      "mean_ms": 0.0002,
+      "median_ms": 0.0002,
+      "p95_ms": 0.0005,
+      "p99_ms": 0.0009,
+      "max_ms": 0.0012
+     },
+     "engine": "Isaac Sim 6.2, CPU PhysX",
+     "episodes": 8,
+     "seed": 7,
+     "survived_fraction": 0.0,
+     "mean_steps": 36.75,
+     "mean_upright_fraction_last_100": 0.04891304347826087,
+     "round_trip": {
+      "count": 294,
+      "mean_ms": 0.4142,
+      "median_ms": 0.3224,
+      "p95_ms": 1.1154,
+      "p99_ms": 1.9676,
+      "max_ms": 2.6694
+     },
+     "simulator_step": {
+      "count": 294,
+      "mean_ms": 1.994,
+      "median_ms": 1.8729,
+      "p95_ms": 3.6416,
+      "p99_ms": 4.6939,
+      "max_ms": 6.6171
+     }
+    },
+    "early": {
+     "controller": "mlx",
+     "checkpoint": "first_iteration_smoke_model_0.pt",
+     "policy_device": "Device(gpu, 0)",
+     "policy_inference": {
+      "count": 359,
+      "mean_ms": 0.5923,
+      "median_ms": 0.5837,
+      "p95_ms": 0.7335,
+      "p99_ms": 0.8782,
+      "max_ms": 9.3897
+     },
+     "engine": "Isaac Sim 6.2, CPU PhysX",
+     "episodes": 8,
+     "seed": 7,
+     "survived_fraction": 0.0,
+     "mean_steps": 44.875,
+     "mean_upright_fraction_last_100": 0.028225806451612902,
+     "round_trip": {
+      "count": 359,
+      "mean_ms": 1.0417,
+      "median_ms": 0.9565,
+      "p95_ms": 1.4622,
+      "p99_ms": 2.2638,
+      "max_ms": 10.1122
+     },
+     "simulator_step": {
+      "count": 359,
+      "mean_ms": 2.0353,
+      "median_ms": 2.0174,
+      "p95_ms": 3.6026,
+      "p99_ms": 4.0324,
+      "max_ms": 4.6793
+     }
+    }
+   },
+   "force_response": {
+    "isaac_sim_physx_step_1_5_10_30_as_pole_pole_v_cart_cart_v": {
+     "force_plus_100": [
+      [
+       0.02389131300151348,
+       1.831996202468872,
+       0.015475431457161903,
+       1.18645441532135
+      ],
+      [
+       0.371642142534256,
+       7.107302188873291,
+       0.23942138254642487,
+       4.554018974304199
+      ],
+      [
+       1.0235284566879272,
+       7.756845474243164,
+       0.7016152739524841,
+       5.853979587554932
+      ],
+      [
+       3.4895877838134766,
+       5.50206184387207,
+       3.049691677093506,
+       8.552323341369629
+      ]
+     ],
+     "force_plus_10": [
+      [
+       0.0023892137687653303,
+       0.1832088977098465,
+       0.0015475794207304716,
+       0.11864949017763138
+      ],
+      [
+       0.03777465224266052,
+       0.7382311820983887,
+       0.024235760793089867,
+       0.46888041496276855
+      ],
+      [
+       0.1253582090139389,
+       1.2343655824661255,
+       0.07797755300998688,
+       0.7315692901611328
+      ],
+      [
+       0.930119514465332,
+       3.7774455547332764,
+       0.40816089510917664,
+       1.010816216468811
+      ]
+     ],
+     "no_force_pole_0_1": [
+      [
+       0.10048217326402664,
+       0.03802883252501488,
+       0.00010883976210607216,
+       0.008347786962985992
+      ],
+      [
+       0.1084943637251854,
+       0.18071924149990082,
+       0.0017211759695783257,
+       0.03362049162387848
+      ],
+      [
+       0.13196343183517456,
+       0.36308854818344116,
+       0.005710637662559748,
+       0.05606440454721451
+      ],
+      [
+       0.44936296343803406,
+       1.75201416015625,
+       0.04218161478638649,
+       0.16226288676261902
+      ]
+     ]
+    },
+    "isaac_lab_newton_on_cpu_as_cart_pole_cart_v_pole_v": {
+     "force_plus_100": [
+      [
+       0.015,
+       0.023,
+       1.19,
+       1.838
+      ],
+      [
+       0.234,
+       0.363,
+       4.601,
+       7.182
+      ],
+      [
+       0.699,
+       1.103,
+       5.983,
+       9.738
+      ],
+      [
+       2.996,
+       4.277,
+       9.557,
+       5.49
+      ]
+     ],
+     "force_plus_10": [
+      [
+       0.002,
+       0.002,
+       0.119,
+       0.184
+      ],
+      [
+       0.024,
+       0.037,
+       0.474,
+       0.745
+      ],
+      [
+       0.076,
+       0.123,
+       0.743,
+       1.252
+      ],
+      [
+       0.404,
+       0.924,
+       1.035,
+       3.803
+      ]
+     ],
+     "no_force_pole_0_1": [
+      [
+       0.0,
+       0.1,
+       0.008,
+       0.038
+      ],
+      [
+       0.002,
+       0.108,
+       0.034,
+       0.181
+      ],
+      [
+       0.006,
+       0.132,
+       0.057,
+       0.365
+      ],
+      [
+       0.042,
+       0.449,
+       0.166,
+       1.761
+      ]
+     ]
+    },
+    "note": "Rounded by hand from one run each, after 1, 5, 10 and 30 control steps. The Newton run has no limit written for it, so this is a reading and not a grade."
+   }
+  }
+ },
+ "v100_bridge": {
+  "gate": "O5: Isaac Sim on Linux steps a robot, while a policy in MLX on the Mac GPU chooses the actions over a socket. The latency is measured",
+  "date": "2026-11-04",
+  "verdict": "pass",
+  "grade": "B, by behavior. The latency is a measurement",
+  "criteria_written": "spikes/isaac_sim_bridge_episodes.py, commit d4220c4, before this run: the trained policy survives at least 0.75 of the episodes, and each control at most 0.25. The limits did not change.",
+  "eula": "The user chose to accept the NVIDIA EULA for this V100 bridge test on 2026-11-04, in answer to a direct question. The command set OMNI_KIT_ACCEPT_EULA=YES on that decision.",
+  "setup": "Unmodified Isaac Sim 6.2.0.0 on a shared Tesla V100-SXM2-16GB, driver 580.178.04, Linux x86_64, 4 CPU threads. CPU PhysX, no RTX. The GPU was idle at the start. The server binds to the machine's loopback, and an ssh tunnel carries the socket to the Mac. The policy runs in MLX on an Apple M5 Pro.",
+  "result": {
+   "trained_survived": "8 of 8",
+   "zero_action_survived": "0 of 8",
+   "first_iteration_policy_survived": "0 of 8"
+  },
+  "latency_ms": {
+   "round_trip_median": 6.0919,
+   "round_trip_p99": 7.698,
+   "simulator_step_median": 3.6815,
+   "policy_inference_median": 0.6801
+  },
+  "sessions": {
+   "trained": {
+    "controller": "mlx",
+    "policy_device": "Device(gpu, 0)",
+    "episodes": 8,
+    "seed": 7,
+    "survived_fraction": 1.0,
+    "mean_steps": 300.0,
+    "mean_upright_fraction_last_100": 1.0,
+    "round_trip_ms": {
+     "count": 2400,
+     "mean_ms": 6.1508,
+     "median_ms": 6.0919,
+     "p95_ms": 7.1568,
+     "p99_ms": 7.698,
+     "max_ms": 26.4839
+    },
+    "simulator_step_ms": {
+     "count": 2400,
+     "mean_ms": 3.8319,
+     "median_ms": 3.6815,
+     "p95_ms": 4.7807,
+     "p99_ms": 5.49,
+     "max_ms": 6.1009
+    },
+    "policy_inference_ms": {
+     "count": 2400,
+     "mean_ms": 0.7691,
+     "median_ms": 0.6801,
+     "p95_ms": 1.2351,
+     "p99_ms": 1.4074,
+     "max_ms": 16.5408
+    },
+    "mac_process_gpu_seconds": 1.33,
+    "mac_wall_seconds": 44.34,
+    "mac_system_used_gb_peak": 31.74
+   },
+   "zero": {
+    "controller": "zero",
+    "policy_device": "none",
+    "episodes": 8,
+    "seed": 7,
+    "survived_fraction": 0.0,
+    "mean_steps": 36.75,
+    "mean_upright_fraction_last_100": 0.04891304347826087,
+    "round_trip_ms": {
+     "count": 294,
+     "mean_ms": 5.3968,
+     "median_ms": 5.3594,
+     "p95_ms": 6.1881,
+     "p99_ms": 7.3368,
+     "max_ms": 9.7618
+    },
+    "simulator_step_ms": {
+     "count": 294,
+     "mean_ms": 3.7696,
+     "median_ms": 3.6219,
+     "p95_ms": 4.5252,
+     "p99_ms": 5.9317,
+     "max_ms": 7.7989
+    },
+    "policy_inference_ms": {
+     "count": 294,
+     "mean_ms": 0.0005,
+     "median_ms": 0.0002,
+     "p95_ms": 0.0017,
+     "p99_ms": 0.0042,
+     "max_ms": 0.0105
+    },
+    "mac_process_gpu_seconds": 0.0,
+    "mac_wall_seconds": 3.03,
+    "mac_system_used_gb_peak": 31.61
+   },
+   "early": {
+    "controller": "mlx",
+    "policy_device": "Device(gpu, 0)",
+    "episodes": 8,
+    "seed": 7,
+    "survived_fraction": 0.0,
+    "mean_steps": 29.75,
+    "mean_upright_fraction_last_100": 0.041666666666666664,
+    "round_trip_ms": {
+     "count": 238,
+     "mean_ms": 6.3027,
+     "median_ms": 6.2284,
+     "p95_ms": 7.2567,
+     "p99_ms": 7.8094,
+     "max_ms": 18.1337
+    },
+    "simulator_step_ms": {
+     "count": 238,
+     "mean_ms": 3.9051,
+     "median_ms": 3.6949,
+     "p95_ms": 5.0468,
+     "p99_ms": 5.9265,
+     "max_ms": 7.3955
+    },
+    "policy_inference_ms": {
+     "count": 238,
+     "mean_ms": 0.8807,
+     "median_ms": 0.8267,
+     "p95_ms": 1.2585,
+     "p99_ms": 1.4207,
+     "max_ms": 8.6015
+    },
+    "mac_process_gpu_seconds": 0.01,
+    "mac_wall_seconds": 3.03,
+    "mac_system_used_gb_peak": 31.75
+   }
+  },
+  "error_lines_in_the_log": "2 of 407 lines, both from omni.rtx: \"No device could be created\" and \"No CUDA device found for graphics device 1\". RTX is not used here, and the earlier V100 record shows the same refusal.",
+  "shows": "A policy in MLX on the Mac GPU balances the Isaac Lab cartpole in unmodified Isaac Sim on another machine, over a socket, and both controls fail.",
+  "not_shown": "A quadruped. RTX, cameras or GPU PhysX: the V100 is refused for RTX, and physics is on the CPU. A network figure in general: this is one ssh tunnel between two machines, at one time. 3 sessions of 8 episodes, one seed. Mac GPU share: the policy process used 1.33 s of GPU time in 44.34 s of wall time, which includes waiting for the server to start."
+ }
+}

@@ -1,0 +1,3370 @@
+{
+ "schema": "orchardsim.validation.mlx_ppo_o4.v1",
+ "date": "2026-11-03",
+ "verdict": "MET on 2026-11-04 by the fifth measure, in float64 on the CPU: see fifth_measure_float64_2026_11_04. Each earlier failure stays. The MLX PPO update FAILED its written limit on the GPU in 2 of 3 seeds: actor weight error 0.0186 and 0.0214 against 0.01. All other measures passed in those seeds. The reference fails the same limit against itself with another thread count in 2 of 3 seeds (0.0102, 0.0110), so the limit sits at the noise floor. MLX's error is about twice that, so a small port difference is not ruled out. All 5 injected faults were caught in all seeds. With MLX's default TF32 on this M5, the update is plainly wrong: actor error 0.40 to 0.43 and surrogate loss error 0.67 to 0.73.",
+ "limits_written_before_the_run": {
+  "weight_error_vs_change": 0.01,
+  "loss_relative": 0.001,
+  "learning_rate": 1e-06,
+  "grade": "B"
+ },
+ "protocol": {
+  "reference": "rsl_rl 5.5.1 PPO.update() on the CPU",
+  "data": "synthetic rollout through rsl_rl's own act, process_env_step and compute_returns",
+  "shape": {
+   "envs": 4096,
+   "steps": 24,
+   "epochs": 5,
+   "mini_batches": 4,
+   "obs": 48,
+   "actions": 12,
+   "hidden": [
+    512,
+    256,
+    128
+   ]
+  },
+  "mlx": "spikes/mlx_ppo_update.py: the same start weights, rollout and shuffled indices. MLX 0.32.4"
+ },
+ "tf32_off": {
+  "limits": {
+   "weight_error_vs_change": 0.01,
+   "loss_relative": 0.001,
+   "learning_rate": 1e-06,
+   "grade": "B"
+  },
+  "shape": {
+   "envs": 4096,
+   "steps": 24,
+   "epochs": 5,
+   "mini_batches": 4,
+   "obs": 48,
+   "actions": 12,
+   "hidden": [
+    512,
+    256,
+    128
+   ]
+  },
+  "data": "synthetic rollout through rsl_rl's own act, process_env_step and compute_returns",
+  "tf32": "off",
+  "seeds": {
+   "1": {
+    "torch_cpu_seconds": 2.119,
+    "torch_losses": {
+     "value": 432.7457214355469,
+     "surrogate": -0.00516616451786831,
+     "entropy": 16.95300989151001
+    },
+    "torch_learning_rate": 0.0006666666666666666,
+    "clean": [
+     {
+      "device": "DeviceType.gpu",
+      "seconds": 1.254,
+      "weight_error_vs_change": {
+       "actor": 0.009328492917120457,
+       "critic": 0.00011024734703823924,
+       "std": 0.0006131370319053531
+      },
+      "loss_relative_error": {
+       "surrogate": 0.000252114183983787,
+       "value": 6.699476796636718e-08,
+       "entropy": 7.313017688142459e-08
+      },
+      "learning_rate": 0.0006666666666666666,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": true
+     },
+     {
+      "device": "DeviceType.cpu",
+      "seconds": 3.554,
+      "weight_error_vs_change": {
+       "actor": 0.0009073750698007643,
+       "critic": 1.6733006305003073e-06,
+       "std": 5.568928099819459e-05
+      },
+      "loss_relative_error": {
+       "surrogate": 6.453791406876354e-06,
+       "value": 1.657238998099782e-07,
+       "entropy": 1.2679647584243889e-05
+      },
+      "learning_rate": 0.0006666666666666666,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": true
+     }
+    ],
+    "faults": {
+     "entropy_coef_doubled": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.796,
+      "weight_error_vs_change": {
+       "actor": 0.03974563628435135,
+       "critic": 0.00011024734703823924,
+       "std": 0.17593702673912048
+      },
+      "loss_relative_error": {
+       "surrogate": 0.040235527624589935,
+       "value": 6.699476796636718e-08,
+       "entropy": 0.0005023930640910533
+      },
+      "learning_rate": 0.0006666666666666666,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "clip_param_0_25": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.774,
+      "weight_error_vs_change": {
+       "actor": 0.3381684720516205,
+       "critic": 0.3283216655254364,
+       "std": 0.2453596144914627
+      },
+      "loss_relative_error": {
+       "surrogate": 0.37305216550356873,
+       "value": 0.003786808741460406,
+       "entropy": 0.0010038691882724615
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.33333333333333337,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "gradient_clip_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.773,
+      "weight_error_vs_change": {
+       "actor": 0.009328492917120457,
+       "critic": 0.6853225827217102,
+       "std": 0.0006131370319053531
+      },
+      "loss_relative_error": {
+       "surrogate": 0.000252114183983787,
+       "value": 0.00010239268781579517,
+       "entropy": 7.313017688142459e-08
+      },
+      "learning_rate": 0.0006666666666666666,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": false,
+      "within_limits": false
+     },
+     "value_clipping_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.773,
+      "weight_error_vs_change": {
+       "actor": 0.009328492917120457,
+       "critic": 3.3798649311065674,
+       "std": 0.0006131370319053531
+      },
+      "loss_relative_error": {
+       "surrogate": 0.000252114183983787,
+       "value": 0.23424244798656677,
+       "entropy": 7.313017688142459e-08
+      },
+      "learning_rate": 0.0006666666666666666,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "adaptive_schedule_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.676,
+      "weight_error_vs_change": {
+       "actor": 0.44925403594970703,
+       "critic": 0.4283730685710907,
+       "std": 0.3108679950237274
+      },
+      "loss_relative_error": {
+       "surrogate": 0.018083377049470124,
+       "value": 2.1272601866109637e-05,
+       "entropy": 0.0016177407688579813
+      },
+      "learning_rate": 0.001,
+      "learning_rate_error": 0.5000000000000001,
+      "learning_rates_seen": [
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     }
+    },
+    "clean_ok": true,
+    "faults_caught": {
+     "entropy_coef_doubled": true,
+     "clip_param_0_25": true,
+     "gradient_clip_removed": true,
+     "value_clipping_removed": true,
+     "adaptive_schedule_removed": true
+    }
+   },
+   "2": {
+    "torch_cpu_seconds": 2.18,
+    "torch_losses": {
+     "value": 435.6415985107422,
+     "surrogate": -0.004632797072190442,
+     "entropy": 16.970154190063475
+    },
+    "torch_learning_rate": 0.0004444444444444444,
+    "clean": [
+     {
+      "device": "DeviceType.gpu",
+      "seconds": 0.807,
+      "weight_error_vs_change": {
+       "actor": 0.018624208867549896,
+       "critic": 0.0012659355998039246,
+       "std": 0.000855317572131753
+      },
+      "loss_relative_error": {
+       "surrogate": 0.000592698565716176,
+       "value": 6.304682660646197e-08,
+       "entropy": 2.191688887714279e-07
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     {
+      "device": "DeviceType.cpu",
+      "seconds": 3.56,
+      "weight_error_vs_change": {
+       "actor": 0.01862385869026184,
+       "critic": 0.0012638717889785767,
+       "std": 0.0008626577910035849
+      },
+      "loss_relative_error": {
+       "surrogate": 0.0005951706621418696,
+       "value": 4.2031217694147286e-08,
+       "entropy": 1.935429878207934e-05
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     }
+    ],
+    "faults": {
+     "entropy_coef_doubled": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.785,
+      "weight_error_vs_change": {
+       "actor": 0.02977001667022705,
+       "critic": 0.0012659355998039246,
+       "std": 0.12056034058332443
+      },
+      "loss_relative_error": {
+       "surrogate": 0.031148342384098554,
+       "value": 6.304682660646197e-08,
+       "entropy": 0.00030062665892584636
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "clip_param_0_25": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.762,
+      "weight_error_vs_change": {
+       "actor": 0.3092458248138428,
+       "critic": 0.3102908730506897,
+       "std": 0.2418120801448822
+      },
+      "loss_relative_error": {
+       "surrogate": 0.4202469885508684,
+       "value": 0.0037468799088740522,
+       "entropy": 0.0006435360542151806
+      },
+      "learning_rate": 0.0002962962962962963,
+      "learning_rate_error": 0.3333333333333333,
+      "learning_rates_seen": [
+       0.000296296,
+       0.000444444,
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "gradient_clip_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.765,
+      "weight_error_vs_change": {
+       "actor": 0.018624208867549896,
+       "critic": 0.635675311088562,
+       "std": 0.000855317572131753
+      },
+      "loss_relative_error": {
+       "surrogate": 0.000592698565716176,
+       "value": 6.268605862824069e-05,
+       "entropy": 2.191688887714279e-07
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": false,
+      "within_limits": false
+     },
+     "value_clipping_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.764,
+      "weight_error_vs_change": {
+       "actor": 0.018624208867549896,
+       "critic": 2.8929548263549805,
+       "std": 0.000855317572131753
+      },
+      "loss_relative_error": {
+       "surrogate": 0.000592698565716176,
+       "value": 0.1346516854423736,
+       "entropy": 2.191688887714279e-07
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "adaptive_schedule_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.662,
+      "weight_error_vs_change": {
+       "actor": 0.8817760944366455,
+       "critic": 0.7390463948249817,
+       "std": 0.7868146896362305
+      },
+      "loss_relative_error": {
+       "surrogate": 0.0700337979540577,
+       "value": 2.2847469432455236e-05,
+       "entropy": 0.002738880545110566
+      },
+      "learning_rate": 0.001,
+      "learning_rate_error": 1.2500000000000004,
+      "learning_rates_seen": [
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     }
+    },
+    "clean_ok": false,
+    "faults_caught": {
+     "entropy_coef_doubled": true,
+     "clip_param_0_25": true,
+     "gradient_clip_removed": true,
+     "value_clipping_removed": true,
+     "adaptive_schedule_removed": true
+    }
+   },
+   "3": {
+    "torch_cpu_seconds": 2.033,
+    "torch_losses": {
+     "value": 425.79056243896486,
+     "surrogate": -0.005150586241506971,
+     "entropy": 16.952781105041502
+    },
+    "torch_learning_rate": 0.0006666666666666666,
+    "clean": [
+     {
+      "device": "DeviceType.gpu",
+      "seconds": 0.781,
+      "weight_error_vs_change": {
+       "actor": 0.021432623267173767,
+       "critic": 9.32041002670303e-05,
+       "std": 0.0019003369379788637
+      },
+      "loss_relative_error": {
+       "surrogate": 0.00033329698932930404,
+       "value": 3.942000930809723e-08,
+       "entropy": 1.7270205597271916e-06
+      },
+      "learning_rate": 0.0006666666666666666,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     {
+      "device": "DeviceType.cpu",
+      "seconds": 3.397,
+      "weight_error_vs_change": {
+       "actor": 0.011035485193133354,
+       "critic": 1.169769348052796e-06,
+       "std": 0.0006923783221282065
+      },
+      "loss_relative_error": {
+       "surrogate": 0.0002885042291277199,
+       "value": 1.1467639092078422e-07,
+       "entropy": 6.5649283169446715e-06
+      },
+      "learning_rate": 0.0006666666666666666,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     }
+    ],
+    "faults": {
+     "entropy_coef_doubled": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.778,
+      "weight_error_vs_change": {
+       "actor": 0.03830818831920624,
+       "critic": 9.32041002670303e-05,
+       "std": 0.14729037880897522
+      },
+      "loss_relative_error": {
+       "surrogate": 0.03982453954079675,
+       "value": 3.942000930809723e-08,
+       "entropy": 0.0004760951270828349
+      },
+      "learning_rate": 0.0006666666666666666,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "clip_param_0_25": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.752,
+      "weight_error_vs_change": {
+       "actor": 0.33534887433052063,
+       "critic": 0.3247133493423462,
+       "std": 0.2547232210636139
+      },
+      "loss_relative_error": {
+       "surrogate": 0.36316239479512286,
+       "value": 0.003815036255854879,
+       "entropy": 0.001026559022244117
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.33333333333333337,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "gradient_clip_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.755,
+      "weight_error_vs_change": {
+       "actor": 0.021432623267173767,
+       "critic": 0.7187415957450867,
+       "std": 0.0019003369379788637
+      },
+      "loss_relative_error": {
+       "surrogate": 0.00033329698932930404,
+       "value": 0.00010624409257560049,
+       "entropy": 1.7270205597271916e-06
+      },
+      "learning_rate": 0.0006666666666666666,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": false,
+      "within_limits": false
+     },
+     "value_clipping_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.752,
+      "weight_error_vs_change": {
+       "actor": 0.021432623267173767,
+       "critic": 3.4668731689453125,
+       "std": 0.0019003369379788637
+      },
+      "loss_relative_error": {
+       "surrogate": 0.00033329698932930404,
+       "value": 0.22373555240081608,
+       "entropy": 1.7270205597271916e-06
+      },
+      "learning_rate": 0.0006666666666666666,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "adaptive_schedule_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.661,
+      "weight_error_vs_change": {
+       "actor": 0.4398420751094818,
+       "critic": 0.4739796817302704,
+       "std": 0.33177801966667175
+      },
+      "loss_relative_error": {
+       "surrogate": 0.043109013844889035,
+       "value": 1.9656250135842248e-05,
+       "entropy": 0.0016500640735878625
+      },
+      "learning_rate": 0.001,
+      "learning_rate_error": 0.5000000000000001,
+      "learning_rates_seen": [
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     }
+    },
+    "clean_ok": false,
+    "faults_caught": {
+     "entropy_coef_doubled": true,
+     "clip_param_0_25": true,
+     "gradient_clip_removed": true,
+     "value_clipping_removed": true,
+     "adaptive_schedule_removed": true
+    }
+   }
+  },
+  "verdict": "fail"
+ },
+ "tf32_default_on": {
+  "limits": {
+   "weight_error_vs_change": 0.01,
+   "loss_relative": 0.001,
+   "learning_rate": 1e-06,
+   "grade": "B"
+  },
+  "shape": {
+   "envs": 4096,
+   "steps": 24,
+   "epochs": 5,
+   "mini_batches": 4,
+   "obs": 48,
+   "actions": 12,
+   "hidden": [
+    512,
+    256,
+    128
+   ]
+  },
+  "data": "synthetic rollout through rsl_rl's own act, process_env_step and compute_returns",
+  "seeds": {
+   "1": {
+    "torch_cpu_seconds": 2.287,
+    "torch_losses": {
+     "value": 432.7457214355469,
+     "surrogate": -0.00516616451786831,
+     "entropy": 16.95300989151001
+    },
+    "torch_learning_rate": 0.0006666666666666666,
+    "clean": [
+     {
+      "device": "DeviceType.gpu",
+      "seconds": 1.783,
+      "weight_error_vs_change": {
+       "actor": 0.4116261303424835,
+       "critic": 0.289703369140625,
+       "std": 0.19616244733333588
+      },
+      "loss_relative_error": {
+       "surrogate": 0.7054724930712049,
+       "value": 3.192476998130011e-05,
+       "entropy": 0.0005272685750128823
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.33333333333333337,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001,
+       0.0015
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     {
+      "device": "DeviceType.cpu",
+      "seconds": 4.063,
+      "weight_error_vs_change": {
+       "actor": 0.0009073750698007643,
+       "critic": 1.6733006305003073e-06,
+       "std": 5.568928099819459e-05
+      },
+      "loss_relative_error": {
+       "surrogate": 6.453791406876354e-06,
+       "value": 1.657238998099782e-07,
+       "entropy": 1.2679647584243889e-05
+      },
+      "learning_rate": 0.0006666666666666666,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": true
+     }
+    ],
+    "faults": {
+     "entropy_coef_doubled": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.643,
+      "weight_error_vs_change": {
+       "actor": 0.41224905848503113,
+       "critic": 0.289703369140625,
+       "std": 0.35053643584251404
+      },
+      "loss_relative_error": {
+       "surrogate": 0.7682611586937889,
+       "value": 3.192476998130011e-05,
+       "entropy": 0.0012313602922255284
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.33333333333333337,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001,
+       0.0015
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "clip_param_0_25": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.638,
+      "weight_error_vs_change": {
+       "actor": 0.3972339630126953,
+       "critic": 0.2516292631626129,
+       "std": 0.16722744703292847
+      },
+      "loss_relative_error": {
+       "surrogate": 0.12034926332686449,
+       "value": 0.0039044621322229817,
+       "entropy": 0.0003970856094421558
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.33333333333333337,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001,
+       0.0015
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "gradient_clip_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.639,
+      "weight_error_vs_change": {
+       "actor": 0.4116261303424835,
+       "critic": 0.7004324197769165,
+       "std": 0.19616244733333588
+      },
+      "loss_relative_error": {
+       "surrogate": 0.7054724930712049,
+       "value": 3.8747658197831355e-05,
+       "entropy": 0.0005272685750128823
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.33333333333333337,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001,
+       0.0015
+      ],
+      "gradient_was_clipped": false,
+      "within_limits": false
+     },
+     "value_clipping_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.637,
+      "weight_error_vs_change": {
+       "actor": 0.4116261303424835,
+       "critic": 2.5619046688079834,
+       "std": 0.19616244733333588
+      },
+      "loss_relative_error": {
+       "surrogate": 0.7054724930712049,
+       "value": 0.18092739277702466,
+       "entropy": 0.0005272685750128823
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.33333333333333337,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001,
+       0.0015
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "adaptive_schedule_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.558,
+      "weight_error_vs_change": {
+       "actor": 0.44946375489234924,
+       "critic": 0.4379788637161255,
+       "std": 0.3102562129497528
+      },
+      "loss_relative_error": {
+       "surrogate": 0.021115653422505064,
+       "value": 2.134664871502518e-05,
+       "entropy": 0.0016210428776121542
+      },
+      "learning_rate": 0.001,
+      "learning_rate_error": 0.5000000000000001,
+      "learning_rates_seen": [
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     }
+    },
+    "clean_ok": false,
+    "faults_caught": {
+     "entropy_coef_doubled": true,
+     "clip_param_0_25": true,
+     "gradient_clip_removed": true,
+     "value_clipping_removed": true,
+     "adaptive_schedule_removed": true
+    }
+   },
+   "2": {
+    "torch_cpu_seconds": 2.425,
+    "torch_losses": {
+     "value": 435.6415985107422,
+     "surrogate": -0.004632797072190442,
+     "entropy": 16.970154190063475
+    },
+    "torch_learning_rate": 0.0004444444444444444,
+    "clean": [
+     {
+      "device": "DeviceType.gpu",
+      "seconds": 0.66,
+      "weight_error_vs_change": {
+       "actor": 0.4261789619922638,
+       "critic": 0.39666610956192017,
+       "std": 0.08938240259885788
+      },
+      "loss_relative_error": {
+       "surrogate": 0.7325621773506955,
+       "value": 3.723965890010982e-05,
+       "entropy": 0.0005448538571734186
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001,
+       0.0015
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     {
+      "device": "DeviceType.cpu",
+      "seconds": 4.02,
+      "weight_error_vs_change": {
+       "actor": 0.01862385869026184,
+       "critic": 0.0012638717889785767,
+       "std": 0.0008626577910035849
+      },
+      "loss_relative_error": {
+       "surrogate": 0.0005951706621418696,
+       "value": 4.2031217694147286e-08,
+       "entropy": 1.935429878207934e-05
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     }
+    ],
+    "faults": {
+     "entropy_coef_doubled": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.653,
+      "weight_error_vs_change": {
+       "actor": 0.4267894923686981,
+       "critic": 0.39666610956192017,
+       "std": 0.13759145140647888
+      },
+      "loss_relative_error": {
+       "surrogate": 0.8026623429387909,
+       "value": 3.723965890010982e-05,
+       "entropy": 0.00013030995358771408
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001,
+       0.0015
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "clip_param_0_25": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.645,
+      "weight_error_vs_change": {
+       "actor": 0.40620744228363037,
+       "critic": 0.2856166958808899,
+       "std": 0.12015699595212936
+      },
+      "loss_relative_error": {
+       "surrogate": 0.09555251426767283,
+       "value": 0.0038964620075374982,
+       "entropy": 5.955774056056005e-05
+      },
+      "learning_rate": 0.0002962962962962963,
+      "learning_rate_error": 0.3333333333333333,
+      "learning_rates_seen": [
+       0.000296296,
+       0.000444444,
+       0.000666667,
+       0.001,
+       0.0015
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "gradient_clip_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.669,
+      "weight_error_vs_change": {
+       "actor": 0.4261789619922638,
+       "critic": 0.8108676671981812,
+       "std": 0.08938240259885788
+      },
+      "loss_relative_error": {
+       "surrogate": 0.7325621773506955,
+       "value": 1.8125962641855098e-05,
+       "entropy": 0.0005448538571734186
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001,
+       0.0015
+      ],
+      "gradient_was_clipped": false,
+      "within_limits": false
+     },
+     "value_clipping_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.653,
+      "weight_error_vs_change": {
+       "actor": 0.4261789619922638,
+       "critic": 3.124539852142334,
+       "std": 0.08938240259885788
+      },
+      "loss_relative_error": {
+       "surrogate": 0.7325621773506955,
+       "value": 0.16584056526551802,
+       "entropy": 0.0005448538571734186
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001,
+       0.0015
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "adaptive_schedule_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.565,
+      "weight_error_vs_change": {
+       "actor": 0.8816758990287781,
+       "critic": 0.7339056134223938,
+       "std": 0.7824751734733582
+      },
+      "loss_relative_error": {
+       "surrogate": 0.07501967901558247,
+       "value": 2.430805424820761e-05,
+       "entropy": 0.0027317772252322785
+      },
+      "learning_rate": 0.001,
+      "learning_rate_error": 1.2500000000000004,
+      "learning_rates_seen": [
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     }
+    },
+    "clean_ok": false,
+    "faults_caught": {
+     "entropy_coef_doubled": true,
+     "clip_param_0_25": true,
+     "gradient_clip_removed": true,
+     "value_clipping_removed": true,
+     "adaptive_schedule_removed": true
+    }
+   },
+   "3": {
+    "torch_cpu_seconds": 2.421,
+    "torch_losses": {
+     "value": 425.79056243896486,
+     "surrogate": -0.005150586241506971,
+     "entropy": 16.952781105041502
+    },
+    "torch_learning_rate": 0.0006666666666666666,
+    "clean": [
+     {
+      "device": "DeviceType.gpu",
+      "seconds": 0.665,
+      "weight_error_vs_change": {
+       "actor": 0.40279483795166016,
+       "critic": 0.3376777470111847,
+       "std": 0.20488493144512177
+      },
+      "loss_relative_error": {
+       "surrogate": 0.6742113847388354,
+       "value": 2.3297225548478278e-05,
+       "entropy": 0.0005628961930021746
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.33333333333333337,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001,
+       0.0015
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     {
+      "device": "DeviceType.cpu",
+      "seconds": 4.228,
+      "weight_error_vs_change": {
+       "actor": 0.011035485193133354,
+       "critic": 1.169769348052796e-06,
+       "std": 0.0006923783221282065
+      },
+      "loss_relative_error": {
+       "surrogate": 0.0002885042291277199,
+       "value": 1.1467639092078422e-07,
+       "entropy": 6.5649283169446715e-06
+      },
+      "learning_rate": 0.0006666666666666666,
+      "learning_rate_error": 0.0,
+      "learning_rates_seen": [
+       0.000666667,
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     }
+    ],
+    "faults": {
+     "entropy_coef_doubled": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.659,
+      "weight_error_vs_change": {
+       "actor": 0.4040051996707916,
+       "critic": 0.3376777470111847,
+       "std": 0.34261080622673035
+      },
+      "loss_relative_error": {
+       "surrogate": 0.7413738895915515,
+       "value": 2.3297225548478278e-05,
+       "entropy": 0.0012644096941905629
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.33333333333333337,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001,
+       0.0015
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "clip_param_0_25": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.639,
+      "weight_error_vs_change": {
+       "actor": 0.3934803903102875,
+       "critic": 0.25503844022750854,
+       "std": 0.183112233877182
+      },
+      "loss_relative_error": {
+       "surrogate": 0.12021463081853763,
+       "value": 0.003937385214084113,
+       "entropy": 0.00045590530040840523
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.33333333333333337,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001,
+       0.0015
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "gradient_clip_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.634,
+      "weight_error_vs_change": {
+       "actor": 0.40279483795166016,
+       "critic": 0.730026364326477,
+       "std": 0.20488493144512177
+      },
+      "loss_relative_error": {
+       "surrogate": 0.6742113847388354,
+       "value": 4.2523439218133956e-05,
+       "entropy": 0.0005628961930021746
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.33333333333333337,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001,
+       0.0015
+      ],
+      "gradient_was_clipped": false,
+      "within_limits": false
+     },
+     "value_clipping_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.636,
+      "weight_error_vs_change": {
+       "actor": 0.40279483795166016,
+       "critic": 2.645781993865967,
+       "std": 0.20488493144512177
+      },
+      "loss_relative_error": {
+       "surrogate": 0.6742113847388354,
+       "value": 0.1744080081276032,
+       "entropy": 0.0005628961930021746
+      },
+      "learning_rate": 0.0004444444444444444,
+      "learning_rate_error": 0.33333333333333337,
+      "learning_rates_seen": [
+       0.000444444,
+       0.000666667,
+       0.001,
+       0.0015
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "adaptive_schedule_removed": {
+      "device": "DeviceType.gpu",
+      "seconds": 0.562,
+      "weight_error_vs_change": {
+       "actor": 0.4402793347835541,
+       "critic": 0.4675482511520386,
+       "std": 0.3347436785697937
+      },
+      "loss_relative_error": {
+       "surrogate": 0.04352471728512117,
+       "value": 2.103595046442917e-05,
+       "entropy": 0.001651504194966567
+      },
+      "learning_rate": 0.001,
+      "learning_rate_error": 0.5000000000000001,
+      "learning_rates_seen": [
+       0.001
+      ],
+      "gradient_was_clipped": true,
+      "within_limits": false
+     }
+    },
+    "clean_ok": false,
+    "faults_caught": {
+     "entropy_coef_doubled": true,
+     "clip_param_0_25": true,
+     "gradient_clip_removed": true,
+     "value_clipping_removed": true,
+     "adaptive_schedule_removed": true
+    }
+   }
+  },
+  "verdict": "fail"
+ },
+ "reference_against_itself": {
+  "control": "spikes/mlx_ppo_self_control.py. rsl_rl with 8 threads against 1 thread, the same seed and the same rollout",
+  "results": {
+   "1": {
+    "weight_error_vs_change": {
+     "actor": 2.720216434681788e-05,
+     "critic": 0.0
+    },
+    "lr": [
+     0.0006666666666666666,
+     0.0006666666666666666
+    ],
+    "same_rollout": true,
+    "loss_rel": {
+     "value": 0.0,
+     "surrogate": 3.3568054004627574e-05,
+     "entropy": 0.0
+    }
+   },
+   "2": {
+    "weight_error_vs_change": {
+     "actor": 0.010160638019442558,
+     "critic": 0.0
+    },
+    "lr": [
+     0.0004444444444444444,
+     0.0004444444444444444
+    ],
+    "same_rollout": true,
+    "loss_rel": {
+     "value": 0.0,
+     "surrogate": 0.00023164620550603635,
+     "entropy": 5.6197150934825e-08
+    }
+   },
+   "3": {
+    "weight_error_vs_change": {
+     "actor": 0.011008614674210548,
+     "critic": 0.0
+    },
+    "lr": [
+     0.0006666666666666666,
+     0.0006666666666666666
+    ],
+    "same_rollout": true,
+    "loss_rel": {
+     "value": 0.0,
+     "surrogate": 0.000347163505574236,
+     "entropy": 3.825322412937017e-07
+    }
+   }
+  },
+  "note": "The actor differs and the critic does not. The reason for that split was not found."
+ },
+ "timing_note": "One update of 20 mini-batches, with other jobs running: torch CPU 2.03 to 2.18 s, MLX GPU 0.78 to 1.25 s, MLX CPU 3.40 to 3.56 s. The port is not compiled with mx.compile, so this is not a tuned number.",
+ "not_shown": [
+  "A training run with this update in the loop",
+  "A real rollout: the data is synthetic",
+  "cumlx rundiff: its input is a trace of cumlx run, so this equal measure was used instead"
+ ],
+ "after_the_first_failure": {
+  "first_verdict_stands": "The first test failed its limit, and the second and third measures below do not change that.",
+  "cause": "The surrogate max(-A r, -A clip(r)) has a gradient that jumps where a sample's ratio crosses 1 +/- clip_param. Rounding moves a few samples across, each one moves the mean gradient by up to about 1 percent, and Adam carries it on. Evidence: on seeds 1 to 3 the KL schedule takes the same branches in every run, so it is not the cause. With clip_param 1000, seed 1 with a fixed schedule falls from 3.3e-2 to 2.2e-5. The step-by-step trace shows the gradient error jump from 2.6e-6 to 7.3e-3 at one mini-batch. The counts of samples that cross were not recorded, so a single crossing is inferred from the size of the jump, not counted.",
+  "diagnosis_seeds_1_to_3": {
+   "1": {
+    "adaptive": {
+     "rsl_rl_8_vs_1_thread_actor_error": 2.720216434681788e-05,
+     "rsl_rl_first_branch_difference": null,
+     "mlx_free_errors": {
+      "actor": 0.009328599087893963,
+      "critic": 0.00011024734703823924,
+      "std": 0.0006130393594503403
+     },
+     "mlx_free_first_branch_difference": null,
+     "mlx_replayed_learning_rates_errors": {
+      "actor": 0.009328599087893963,
+      "critic": 0.00011024734703823924,
+      "std": 0.0006130393594503403
+     }
+    },
+    "fixed": {
+     "rsl_rl_8_vs_1_thread_actor_error": 2.0431949451449327e-05,
+     "rsl_rl_first_branch_difference": null,
+     "mlx_free_errors": {
+      "actor": 0.03341115266084671,
+      "critic": 8.229476952692494e-05,
+      "std": 0.004043827299028635
+     },
+     "mlx_free_first_branch_difference": null,
+     "mlx_replayed_learning_rates_errors": {
+      "actor": 0.03341115266084671,
+      "critic": 8.229476952692494e-05,
+      "std": 0.004043827299028635
+     }
+    }
+   },
+   "2": {
+    "adaptive": {
+     "rsl_rl_8_vs_1_thread_actor_error": 0.010160638019442558,
+     "rsl_rl_first_branch_difference": null,
+     "mlx_free_errors": {
+      "actor": 0.018624208867549896,
+      "critic": 0.0012659355998039246,
+      "std": 0.0008560023852623999
+     },
+     "mlx_free_first_branch_difference": null,
+     "mlx_replayed_learning_rates_errors": {
+      "actor": 0.018624208867549896,
+      "critic": 0.0012659355998039246,
+      "std": 0.0008560023852623999
+     }
+    },
+    "fixed": {
+     "rsl_rl_8_vs_1_thread_actor_error": 1.8012604414252564e-05,
+     "rsl_rl_first_branch_difference": null,
+     "mlx_free_errors": {
+      "actor": 0.011577727273106575,
+      "critic": 0.0001796544820535928,
+      "std": 0.0017311138799414039
+     },
+     "mlx_free_first_branch_difference": null,
+     "mlx_replayed_learning_rates_errors": {
+      "actor": 0.011577727273106575,
+      "critic": 0.0001796544820535928,
+      "std": 0.0017311138799414039
+     }
+    }
+   },
+   "3": {
+    "adaptive": {
+     "rsl_rl_8_vs_1_thread_actor_error": 0.011008614674210548,
+     "rsl_rl_first_branch_difference": null,
+     "mlx_free_errors": {
+      "actor": 0.021432604640722275,
+      "critic": 9.320355457020923e-05,
+      "std": 0.0019003369379788637
+     },
+     "mlx_free_first_branch_difference": null,
+     "mlx_replayed_learning_rates_errors": {
+      "actor": 0.021432604640722275,
+      "critic": 9.320355457020923e-05,
+      "std": 0.0019003369379788637
+     }
+    },
+    "fixed": {
+     "rsl_rl_8_vs_1_thread_actor_error": 5.4422864195657894e-05,
+     "rsl_rl_first_branch_difference": null,
+     "mlx_free_errors": {
+      "actor": 0.00010305788600817323,
+      "critic": 6.825487071182579e-05,
+      "std": 1.4865067896607798e-06
+     },
+     "mlx_free_first_branch_difference": null,
+     "mlx_replayed_learning_rates_errors": {
+      "actor": 0.00010305788600817323,
+      "critic": 6.825487071182579e-05,
+      "std": 1.4865067896607798e-06
+     }
+    }
+   }
+  },
+  "second_measure": {
+   "verdict": "fail",
+   "note": "Limits written in commit b420bfd before the run on seeds 11 to 20. One seed was run first to see the time, and it is the first of the ten. Passes: no_kink and lockstep, with all faults caught. Fails: free_running, against a control of relative noise in each gradient, which turned out to be the wrong size, and the surrogate loss over 1e-3 on 3 of 10 seeds.",
+   "limits": {
+    "no_kink": {
+     "weight": 0.01,
+     "loss": 0.001,
+     "learning_rate": 1e-06,
+     "note": "the first test's limits"
+    },
+    "lockstep": {
+     "worst_gradient_error": 0.01,
+     "median_gradient_error": 0.0001
+    },
+    "free_running": {
+     "median_factor": 3.0,
+     "worst_factor": 3.0,
+     "control_gradient_noise": 3e-06
+    }
+   },
+   "summary": {
+    "no_kink_clean_pass": true,
+    "no_kink_faults_caught": {
+     "entropy_coef_doubled": true,
+     "gradient_clip_removed": true,
+     "adaptive_schedule_removed": true
+    },
+    "lockstep_clean_pass": true,
+    "lockstep_faults_caught": {
+     "clip_param_0_25": true,
+     "value_clipping_removed": true,
+     "entropy_coef_doubled": true
+    },
+    "free_running_clean": {
+     "actor_median": 0.02074583526700735,
+     "actor_worst": 0.03480713814496994,
+     "median_limit": 1.6429352172053768e-05,
+     "worst_limit": 0.03337762411683798,
+     "others_within_first_limits": false,
+     "pass": false
+    },
+    "free_running_faults_caught": {
+     "entropy_coef_doubled": true,
+     "clip_param_0_25": true,
+     "gradient_clip_removed": true,
+     "value_clipping_removed": true,
+     "adaptive_schedule_removed": true
+    }
+   },
+   "no_kink_actor_error": [
+    0.00013573608885053545,
+    3.1837535061640665e-05,
+    0.0001693838567007333,
+    9.83403151622042e-05,
+    3.9113849197747186e-05,
+    6.507708894787356e-05,
+    0.0001322422467637807,
+    9.171748388325796e-05,
+    5.5922806495800614e-05,
+    8.748637628741562e-05
+   ],
+   "lockstep_worst_gradient_error": [
+    0.0006320696556940675,
+    0.0010674071963876486,
+    0.00013194566417951137,
+    0.00016330802463926375,
+    2.08406345336698e-06,
+    0.0006568195531144738,
+    0.008153080940246582,
+    0.0021769420709460974,
+    0.0010895340237766504,
+    0.0035358585882931948
+   ],
+   "lockstep_median_gradient_error": [
+    1.8888292174779053e-06,
+    1.8106753145730181e-06,
+    1.807709679724212e-06,
+    1.7982514464165433e-06,
+    1.903018585380778e-06,
+    1.8154426015826175e-06,
+    1.8740897758107167e-06,
+    1.9443824612608296e-06,
+    1.919482087942015e-06,
+    1.8397819872006949e-06
+   ],
+   "free_running_actor_error": [
+    0.03326469659805298,
+    0.033073607832193375,
+    0.020926034078001976,
+    0.02919113077223301,
+    0.000760838040150702,
+    0.0020825047977268696,
+    0.03480713814496994,
+    0.014835254289209843,
+    0.020565636456012726,
+    0.001158183324150741
+   ],
+   "free_running_surrogate_relative_error": [
+    0.0008971780880281766,
+    0.0012519623734997254,
+    0.0009816225037437103,
+    0.0017963194761883344,
+    2.4307831636423036e-05,
+    2.5128093454040646e-05,
+    0.00398688341616554,
+    0.0006284302212421132,
+    0.00027043037383943033,
+    1.0914210252697577e-05
+   ],
+   "control_actor_error": [
+    5.5236287153093144e-06,
+    5.542457984120119e-06,
+    5.503566171682905e-06,
+    5.44933527635294e-06,
+    5.43506894246093e-06,
+    5.439854703581659e-06,
+    5.4429656302090734e-06,
+    5.426021743915044e-06,
+    0.0007589535089209676,
+    0.0007589542074128985,
+    5.61247134100995e-06,
+    0.00207876181229949,
+    0.01112587470561266,
+    5.561940270126797e-06,
+    4.945417913404526e-06,
+    4.992225967725972e-06,
+    5.414476163423387e-06,
+    5.42296766070649e-06,
+    0.0011537193786352873,
+    5.448081992653897e-06
+   ],
+   "measured": {
+    "wall_seconds": 382.12,
+    "exit_code": 1,
+    "process_gpu_seconds": 89.7,
+    "peak_footprint_gb": 3.54,
+    "system_used_gb_peak": 29.51,
+    "other_processes_cpu_percent": {
+     "samples": 132,
+     "mean": 484.4,
+     "median": 358.7,
+     "p95": 805.5999999999999,
+     "max": 853.1
+    },
+    "competing_during_max_cpu_percent": {
+     "python": 495.4,
+     "com.apple.WebKit.WebContent": 130.4,
+     "Claude Helper": 110.4,
+     "MTLCompilerService": 93.4,
+     "Claude Helper (Renderer)": 87.8,
+     "top": 86.7,
+     "xcodebuild": 66.5,
+     "com.apple.WebKit.GPU": 64.0
+    },
+    "stopped_for_memory": false,
+    "stopped_for_system_memory": false
+   }
+  },
+  "third_measure": {
+   "verdict": "fail",
+   "note": "Limits written in commits 902e3bd and 4ff77e8 before any run on seeds 21 to 30. The control is rsl_rl's own update on MPS against rsl_rl's own on the CPU, and it is valid: it agrees where nothing crosses. MLX's worst actor error is inside 3 times the control's worst, but its median is not inside 3 times the control's median: 9.8e-3 against 2.2e-4. MLX has a large error on 7 of 10 seeds, and the control on 4 of 10. Ten seeds cannot say whether that difference is real.",
+   "control_valid": true,
+   "judged": {
+    "actor": {
+     "median": 0.009804137982428074,
+     "worst": 0.022729897871613503,
+     "median_limit": 0.00021622435451718047,
+     "worst_limit": 0.09251409955322742
+    },
+    "surrogate": {
+     "median": 8.271328878793454e-05,
+     "worst": 0.0007109871365169573,
+     "median_limit": 1.9032517718449727e-06,
+     "worst_limit": 0.0021135783042612417
+    },
+    "others_within_first_limits": true,
+    "pass": false
+   },
+   "faults_caught": {
+    "entropy_coef_doubled": true,
+    "clip_param_0_25": true,
+    "gradient_clip_removed": true,
+    "value_clipping_removed": true,
+    "adaptive_schedule_removed": true
+   },
+   "mlx_actor_error": [
+    0.022729897871613503,
+    0.003075518412515521,
+    2.2636630092165433e-05,
+    0.015161384828388691,
+    6.020415457896888e-05,
+    0.0056091854348778725,
+    0.017192736268043518,
+    5.851778405485675e-05,
+    0.013999090529978275,
+    0.022239964455366135
+   ],
+   "mps_control_actor_error": [
+    6.94720511091873e-05,
+    5.244744897936471e-05,
+    2.715981645451393e-05,
+    7.467751856893301e-05,
+    3.4128108381992206e-05,
+    0.03083803318440914,
+    3.2970765460049734e-05,
+    0.002594290766865015,
+    0.01399859320372343,
+    0.001679577981121838
+   ],
+   "mps_no_kink_actor_error": [
+    7.145417475840077e-05,
+    5.448566298582591e-05,
+    2.731266249611508e-05,
+    7.86275340942666e-05,
+    3.518022276693955e-05,
+    4.0807695768307894e-05,
+    3.382486829650588e-05,
+    9.468413918511942e-05,
+    7.326177728828043e-05,
+    8.099166007013991e-05
+   ],
+   "mlx_surrogate_relative_error": [
+    7.172953458705795e-05,
+    4.405349095205769e-05,
+    8.298552946592354e-07,
+    0.00029366712772515256,
+    1.288958397833462e-06,
+    9.369704298881114e-05,
+    0.00026192281078141715,
+    1.7522714123296333e-07,
+    0.0004902346369271404,
+    0.0007109871365169573
+   ],
+   "mps_control_surrogate_relative_error": [
+    6.709466448274758e-07,
+    1.0277660839775e-07,
+    5.978878697358394e-07,
+    2.4397441822177394e-07,
+    8.935408816727104e-08,
+    0.0007045261014204139,
+    1.737513083613697e-08,
+    1.089575031603197e-05,
+    0.000489841284075802,
+    1.46602880703424e-05
+   ],
+   "measured": {
+    "wall_seconds": 390.91,
+    "exit_code": 1,
+    "process_gpu_seconds": 38.15,
+    "peak_footprint_gb": 3.95,
+    "system_used_gb_peak": 31.77,
+    "other_processes_cpu_percent": {
+     "samples": 69,
+     "mean": 386.7,
+     "median": 383.8,
+     "p95": 471.1,
+     "max": 493.3
+    },
+    "competing_during_max_cpu_percent": {
+     "RobloxPlayer": 101.9,
+     "(top)": 91.9,
+     "MTLCompilerService": 91.3,
+     "python": 91.2,
+     "top": 83.8,
+     "(python3.13)": 71.2,
+     "tccd": 54.3,
+     "WindowServer": 52.8
+    },
+    "stopped_for_memory": false,
+    "stopped_for_system_memory": false
+   }
+  },
+  "gate": "Open. What this does show: with nothing able to cross the clip, MLX matches rsl_rl to 1.7e-4 at worst against the first limit of 1e-2 on 10 new seeds, and the clipped gradient matches on rsl_rl's own weights to 8.2e-3 at worst. Each injected fault was caught. No free-running measure passed."
+ },
+ "after_the_fixes_2026_11_04": {
+  "summary": "The per-op comparison found real defects of the port, and they are fixed. The first and third tests still fail when run again, and those failures stay. A fourth measure, written first on 120 new seeds, passes: MLX lands as far from rsl_rl on the CPU as rsl_rl on MPS does. It does not show that one seed gives the same weights.",
+  "defects_found": {
+   "elu": "mx.expm1 on this GPU is biased on negative inputs: mean -11 ulp, max 35 ulp. torch writes exp(x) - 1, and the port now does.",
+   "log_2pi": "mx.log(2 pi) on this GPU is 1 ulp off, 12 times per sample. The constant is now a Python double as in torch.distributions.Normal. Entropy was off by 1.9e-6 on the GPU.",
+   "power": "x**2 in MLX is not correctly rounded (exact on 65 percent on the GPU, 84 percent on the CPU). torch's is, on both of its devices. The port now multiplies.",
+   "sum_order": "mx.sum adds from left to right. torch adds four lanes and then the lanes, on its CPU and on MPS (equal on 2^18 rows of 12 elements). Half of the log probabilities differed by an ulp.",
+   "gradient_at_a_tie": "At a ratio exactly on a clip bound, mx.maximum and mx.clip gave a zero gradient, and torch 2.11 gives the full one. It starts a divergence: on seed 21 at step 3, the first such tie in the run. Torch 2.15's clamp gives 0 at a bound, so this depends on the torch version."
+  },
+  "tests_that_fail_before_the_fix": "tests/test_mlx_ppo_ops.py",
+  "not_defects": "The formula, the KL branches, Adam's epsilon and the order of the gradient clip match rsl_rl 5.5.1. Rounding order in the KL, the norm and Adam now follows torch too.",
+  "op_comparison_seed_1_first_mini_batch_against_torch_cpu": {
+   "before": {
+    "elu_0": {
+     "mean": -2.1711104230494347e-07,
+     "std": 3.636963664051526e-07,
+     "max_abs": 1.3113021850585938e-06,
+     "fraction_not_equal": 0.8224016030629476
+    },
+    "log_prob": {
+     "mean": -8.473483224709829e-07,
+     "std": 1.3534995616418465e-06,
+     "max_abs": 5.7220458984375e-06,
+     "fraction_not_equal": 0.6180419921875
+    }
+   },
+   "after": {
+    "elu_0": {
+     "mean": 1.7451887356258849e-09,
+     "std": 5.538779326111588e-08,
+     "max_abs": 7.152557373046875e-07,
+     "fraction_not_equal": 0.7287999788920084
+    },
+    "log_prob": {
+     "mean": 2.9879932602246604e-09,
+     "std": 7.139807261894362e-07,
+     "max_abs": 5.7220458984375e-06,
+     "fraction_not_equal": 0.17378743489583334
+    }
+   },
+   "torch_mps_control": {
+    "elu_0": {
+     "mean": 1.7451887356258849e-09,
+     "std": 5.538779326111588e-08,
+     "max_abs": 7.152557373046875e-07,
+     "fraction_not_equal": 0.7287999788920084
+    },
+    "log_prob": {
+     "mean": 2.9879932602246604e-09,
+     "std": 7.139807261894362e-07,
+     "max_abs": 5.7220458984375e-06,
+     "fraction_not_equal": 0.17378743489583334
+    }
+   },
+   "reading": "After the fixes the forward path on the GPU has the same statistics as rsl_rl on MPS, on the first mini-batch."
+  },
+  "gpu_math_in_ulp": {
+   "expm1_negative": {
+    "mlx_gpu": {
+     "mean_ulp": -11.019100895203861,
+     "std_ulp": 10.4861219758147,
+     "max_ulp": 34.64675690419972,
+     "fraction_correctly_rounded": 0.27892494201660156
+    },
+    "mlx_cpu": {
+     "mean_ulp": -0.006704082764896313,
+     "std_ulp": 0.39635714865148564,
+     "max_ulp": 1.3509014192968607,
+     "fraction_correctly_rounded": 0.8075456619262695
+    },
+    "torch_mps": {
+     "mean_ulp": -1.9758059885876502,
+     "std_ulp": 149.1956086109441,
+     "max_ulp": 62661.82270464301,
+     "fraction_correctly_rounded": 0.5433120727539062
+    },
+    "torch_cpu": {
+     "mean_ulp": -0.001332989014896313,
+     "std_ulp": 0.28851461337378753,
+     "max_ulp": 0.5108838677406311,
+     "fraction_correctly_rounded": 0.9981298446655273
+    }
+   },
+   "power_2": {
+    "mlx_gpu": {
+     "mean_ulp": 0.27915448911551266,
+     "std_ulp": 0.43924782200886486,
+     "max_ulp": 1.4807491898536682,
+     "fraction_correctly_rounded": 0.6473884582519531
+    },
+    "mlx_cpu": {
+     "mean_ulp": 0.12816304929617672,
+     "std_ulp": 0.367797272844165,
+     "max_ulp": 1.2745568752288818,
+     "fraction_correctly_rounded": 0.8441429138183594
+    },
+    "torch_mps": {
+     "mean_ulp": 0.00015897519949703565,
+     "std_ulp": 0.2887355114492948,
+     "max_ulp": 0.5,
+     "fraction_correctly_rounded": 1.0
+    },
+    "torch_cpu": {
+     "mean_ulp": 0.00015897519949703565,
+     "std_ulp": 0.2887355114492948,
+     "max_ulp": 0.5,
+     "fraction_correctly_rounded": 1.0
+    }
+   },
+   "log_2pi": {
+    "mlx_gpu": {
+     "mean_ulp": 0.5042677521705627,
+     "std_ulp": 0.0,
+     "max_ulp": 0.5042677521705627,
+     "fraction_correctly_rounded": 0.0
+    },
+    "mlx_cpu": {
+     "mean_ulp": -0.49573224782943726,
+     "std_ulp": 0.0,
+     "max_ulp": 0.49573224782943726,
+     "fraction_correctly_rounded": 1.0
+    },
+    "torch_mps": {
+     "mean_ulp": 0.5042677521705627,
+     "std_ulp": 0.0,
+     "max_ulp": 0.5042677521705627,
+     "fraction_correctly_rounded": 0.0
+    },
+    "torch_cpu": {
+     "mean_ulp": -0.49573224782943726,
+     "std_ulp": 0.0,
+     "max_ulp": 0.49573224782943726,
+     "fraction_correctly_rounded": 1.0
+    }
+   }
+  },
+  "first_test_run_again": {
+   "verdict": "fail",
+   "limit": 0.01,
+   "seeds": {
+    "1": [
+     {
+      "device": "DeviceType.gpu",
+      "actor": 0.0009062581229954958,
+      "within_limits": true
+     },
+     {
+      "device": "DeviceType.cpu",
+      "actor": 0.0009049854124896228,
+      "within_limits": true
+     }
+    ],
+    "2": [
+     {
+      "device": "DeviceType.gpu",
+      "actor": 7.149711746023968e-05,
+      "within_limits": true
+     },
+     {
+      "device": "DeviceType.cpu",
+      "actor": 4.5001539547229186e-05,
+      "within_limits": true
+     }
+    ],
+    "3": [
+     {
+      "device": "DeviceType.gpu",
+      "actor": 0.011023744940757751,
+      "within_limits": false
+     },
+     {
+      "device": "DeviceType.cpu",
+      "actor": 0.009591745212674141,
+      "within_limits": true
+     }
+    ]
+   },
+   "note": "Before the fixes 2 of 3 seeds failed on the GPU, at 0.0186 and 0.0214. Now seed 3 fails on the GPU, at 0.0110, the same value as rsl_rl against itself with 1 thread. The failure stands."
+  },
+  "third_measure_run_again": {
+   "verdict": "fail",
+   "judged": {
+    "actor": {
+     "median": 0.000940487312618643,
+     "worst": 0.030838191509246826,
+     "median_limit": 0.00021622435451718047,
+     "worst_limit": 0.09251409955322742
+    },
+    "surrogate": {
+     "median": 6.063728552185974e-06,
+     "worst": 0.0007042819295043687,
+     "median_limit": 1.9032517718449727e-06,
+     "worst_limit": 0.0021135783042612417
+    },
+    "others_within_first_limits": true,
+    "pass": false
+   },
+   "seeds": [
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30
+   ],
+   "mlx_actor_error": [
+    0.0117,
+    5.01e-05,
+    2.82e-05,
+    7.72e-05,
+    0.0194,
+    0.0308,
+    0.000201,
+    7.61e-05,
+    0.0135,
+    0.00168
+   ],
+   "mps_control_actor_error": [
+    6.95e-05,
+    5.24e-05,
+    2.72e-05,
+    7.47e-05,
+    3.41e-05,
+    0.0308,
+    3.3e-05,
+    0.00259,
+    0.014,
+    0.00168
+   ],
+   "note": "The median fell from 9.8e-3 to 9.4e-4, against the limit 2.2e-4. The failure stands. MLX is large on 5 of 10 seeds, and the control on 4 of 10."
+  },
+  "fourth_measure": {
+   "limits_written": "spikes/mlx_ppo_fourth.py, commit 0e53119, before any run on seeds 201 to 320",
+   "why_another_measure": "A run lands near 1e-4 with no sample changing side of the clip, or near 1e-2 with one. rsl_rl on MPS does the same. A median of ten seeds of such a split reads one coin.",
+   "verdict": "pass",
+   "judged": {
+    "seeds": 120,
+    "large_rate": 0.5416666666666666,
+    "control_large_rate": 0.525,
+    "rate_allowed": 0.7181913990494055,
+    "worst": 0.03717203438282013,
+    "worst_limit": 0.11151591315865517,
+    "both_small": 42,
+    "median_when_small": 5.688109558832366e-05,
+    "median_limit": 0.00019482402421999723,
+    "checks": {
+     "rate": true,
+     "worst": true,
+     "median_when_small": true,
+     "others": true
+    },
+    "pass": true
+   },
+   "old_port_as_a_fault": {
+    "seeds": 120,
+    "large_rate": 0.6916666666666667,
+    "control_large_rate": 0.525,
+    "rate_allowed": 0.7112737680583787,
+    "worst": 0.039136383682489395,
+    "worst_limit": 0.11151591315865517,
+    "both_small": 26,
+    "median_when_small": 8.605895345681347e-05,
+    "median_limit": 0.0001979097542061936,
+    "checks": {
+     "rate": true,
+     "worst": true,
+     "median_when_small": true,
+     "others": false
+    },
+    "pass": false
+   },
+   "faults_caught": {
+    "entropy_coef_doubled": true,
+    "clip_param_0_25": true,
+    "gradient_clip_removed": true,
+    "value_clipping_removed": true,
+    "adaptive_schedule_removed": true
+   },
+   "fault_checks": {
+    "entropy_coef_doubled": {
+     "rate": false,
+     "worst": false,
+     "median_when_small": false,
+     "others": false
+    },
+    "clip_param_0_25": {
+     "rate": false,
+     "worst": false,
+     "median_when_small": false,
+     "others": false
+    },
+    "gradient_clip_removed": {
+     "rate": true,
+     "worst": true,
+     "median_when_small": true,
+     "others": false
+    },
+    "value_clipping_removed": {
+     "rate": true,
+     "worst": true,
+     "median_when_small": true,
+     "others": false
+    },
+    "adaptive_schedule_removed": {
+     "rate": false,
+     "worst": false,
+     "median_when_small": false,
+     "others": false
+    }
+   },
+   "control_valid": true,
+   "mlx_with_nothing_able_to_cross_inside_first_limits": true,
+   "pairs": {
+    "both_large": 50,
+    "mlx_only": 15,
+    "mps_only": 13,
+    "neither": 42,
+    "both_large_within_25_percent": 0.8
+   },
+   "surrogate_above_first_limit_seeds": {
+    "mlx": 8,
+    "mps_control": 8
+   },
+   "weak_point": "The rate rule alone does not see the old port: 0.69 against 0.71 allowed. The old port fails only on the critic, above 1e-2 on 15 of 120 seeds. With 120 seeds the rate rule allows 0.19 above the control.",
+   "not_shown": [
+    "That one seed gives the same weights as rsl_rl on the CPU: 54 percent of the runs differ by more than 1e-3, as do 52 percent of rsl_rl on MPS",
+    "A training run with this update in the loop",
+    "A real rollout: the data is synthetic",
+    "cumlx rundiff: its input is a trace of cumlx run"
+   ],
+   "mlx_actor_error": [
+    0.000399,
+    0.00582,
+    5.04e-05,
+    4.51e-05,
+    4.15e-05,
+    0.0252,
+    4.82e-05,
+    0.00961,
+    0.0233,
+    0.00756,
+    0.0158,
+    0.0153,
+    0.014,
+    4.91e-05,
+    0.0247,
+    4.74e-05,
+    0.0154,
+    0.000526,
+    0.0238,
+    0.00129,
+    0.0222,
+    0.00265,
+    2.97e-05,
+    0.000197,
+    0.027,
+    0.00954,
+    4.75e-05,
+    3.8e-05,
+    2.56e-05,
+    0.0215,
+    0.0234,
+    0.0258,
+    0.0137,
+    0.000106,
+    0.0211,
+    0.0211,
+    6.19e-05,
+    9.43e-05,
+    5.52e-05,
+    0.00562,
+    0.0282,
+    6.01e-05,
+    0.0275,
+    0.0236,
+    0.0245,
+    0.00313,
+    0.0358,
+    9.5e-05,
+    0.0241,
+    4.01e-05,
+    0.00735,
+    5.07e-05,
+    0.0245,
+    0.00957,
+    0.0241,
+    0.0277,
+    0.0246,
+    5.68e-05,
+    4.83e-05,
+    0.0193,
+    0.000233,
+    5.16e-05,
+    6.12e-05,
+    7.61e-05,
+    0.000106,
+    0.0184,
+    0.00868,
+    3.67e-05,
+    6.33e-05,
+    4.91e-05,
+    5.31e-05,
+    0.00967,
+    4.3e-05,
+    7.72e-05,
+    0.0237,
+    0.00418,
+    2.81e-05,
+    0.0185,
+    0.017,
+    6.67e-05,
+    0.0135,
+    8.68e-05,
+    0.00205,
+    0.0128,
+    5.66e-05,
+    0.0108,
+    0.00317,
+    0.0156,
+    0.00852,
+    0.0208,
+    0.00759,
+    3.35e-05,
+    0.000109,
+    0.0105,
+    8.85e-05,
+    0.00617,
+    0.0268,
+    4.57e-05,
+    0.0116,
+    7.91e-05,
+    3.42e-05,
+    7.03e-05,
+    8.52e-05,
+    0.00843,
+    0.0153,
+    0.0135,
+    8.26e-05,
+    6.5e-05,
+    7.58e-05,
+    0.00395,
+    0.00818,
+    9.19e-05,
+    8.33e-05,
+    0.0208,
+    8.07e-05,
+    5.23e-05,
+    5.7e-05,
+    0.00213,
+    0.0372,
+    5.56e-05
+   ],
+   "mps_control_actor_error": [
+    0.0004,
+    0.00582,
+    0.00012,
+    0.0232,
+    8.35e-05,
+    0.0252,
+    0.00072,
+    0.00962,
+    0.000172,
+    0.000444,
+    0.0158,
+    0.0112,
+    5.37e-05,
+    5.17e-05,
+    0.0247,
+    5.07e-05,
+    5.12e-05,
+    0.000527,
+    0.0074,
+    0.00129,
+    0.0191,
+    6.68e-05,
+    3.16e-05,
+    0.00187,
+    0.027,
+    0.00954,
+    9.96e-05,
+    5.27e-05,
+    0.00521,
+    0.0215,
+    0.0231,
+    0.0258,
+    0.0137,
+    0.000107,
+    0.021,
+    0.0211,
+    5e-05,
+    8.74e-05,
+    6.69e-05,
+    0.0107,
+    5.99e-05,
+    6.42e-05,
+    5.35e-05,
+    0.0236,
+    0.0245,
+    0.0223,
+    0.0293,
+    0.000134,
+    0.0209,
+    5.39e-05,
+    0.00477,
+    5.6e-05,
+    0.0245,
+    0.00957,
+    0.0241,
+    0.0277,
+    0.0246,
+    6.56e-05,
+    3.81e-05,
+    0.000123,
+    0.000232,
+    6.29e-05,
+    0.0178,
+    8.65e-05,
+    0.0201,
+    0.0109,
+    0.00856,
+    4.42e-05,
+    5.94e-05,
+    5.99e-05,
+    5.87e-05,
+    4.22e-05,
+    2.91e-05,
+    7.26e-05,
+    0.0236,
+    0.00411,
+    3.88e-05,
+    0.0185,
+    0.017,
+    0.000631,
+    0.0135,
+    0.000464,
+    0.00205,
+    0.0128,
+    0.00262,
+    0.0108,
+    0.00854,
+    6.5e-05,
+    0.0188,
+    7.26e-05,
+    0.00759,
+    4.22e-05,
+    0.0238,
+    0.0059,
+    6.06e-05,
+    5.15e-05,
+    6.42e-05,
+    0.0317,
+    5e-05,
+    0.0127,
+    5.67e-05,
+    0.00148,
+    0.00577,
+    0.00843,
+    0.0226,
+    0.0135,
+    8.86e-05,
+    6.86e-05,
+    8.63e-05,
+    0.00395,
+    4.91e-05,
+    0.000104,
+    5.14e-05,
+    0.0208,
+    7.95e-05,
+    0.00325,
+    4.82e-05,
+    0.00213,
+    0.0372,
+    0.00469
+   ],
+   "measured": {
+    "wall_seconds": 565.44,
+    "exit_code": 0,
+    "stopped_for_memory": false,
+    "stopped_for_system_memory": false,
+    "system_used_gb_peak": 32.1,
+    "peak_footprint_gb": 4.44
+   }
+  },
+  "gate_after_review": "Open. The session reviewed the fourth measure and did not tick the gate. It passes its written rules, and the port before the fixes fails it. But rules 1 to 3, which judge the actor, pass for the port before the fixes and for the faults gradient_clip_removed and value_clipping_removed: only the critic rule catches those. The first and third tests still fail. No training ran with this update. The user decides whether this measure is enough, or whether a training comparison comes first. On the same day a training comparison, written first, also failed: see training_comparison_2026_11_04."
+ },
+ "training_comparison_2026_11_04": {
+  "gate": "Open. The measure failed as written, before and after the fix.",
+  "limits_written": "spikes/mlx_ppo_training.py, commit bc2cd68, before any run on seeds 401 to 468",
+  "protocol": "Isaac-Cartpole-Direct, 256 envs, 150 iterations, physics on metal:0, real rollouts. rsl_rl keeps its act() and runner. The update is rsl_rl's on the CPU (reference), rsl_rl's on MPS (control), or the MLX port on the GPU. 8 seeds per side, each side with its own.",
+  "first_run_seeds_401_to_468": {
+   "verdict": "fail",
+   "reasons_in_order": [
+    "a run failed: mlx seed 413: exit 1, 65 iterations",
+    "a run failed: entropy_coef_doubled seed 431: exit 1, 90 iterations",
+    "rule 1: rsl_rl on MPS against the CPU is inconclusive on mean_reward",
+    "rule 1: rsl_rl on MPS against the CPU is inconclusive on entropy",
+    "rule 1: rsl_rl on MPS against the CPU is inconclusive on value",
+    "rule 2: MLX against rsl_rl is inconclusive on mean_reward",
+    "rule 2: MLX against rsl_rl is inconclusive on entropy",
+    "rule 2: MLX against rsl_rl is inconclusive on value",
+    "rule 3: a policy trained with MLX failed: ['training failed']",
+    "rule 4: the fault clip_param_0_25 is not caught on an actor-side metric: {'mean_reward': 'inconclusive', 'entropy': 'inconclusive', 'value': 'inconclusive'}",
+    "rule 4: the fault gradient_clip_removed is not caught on an actor-side metric: {'mean_reward': 'inconclusive', 'entropy': 'inconclusive', 'value': 'inconclusive'}",
+    "rule 4: the fault old_port is not caught on an actor-side metric: {'mean_reward': 'inconclusive', 'entropy': 'inconclusive', 'value': 'inconclusive'}"
+   ],
+   "seeds_per_side": 8,
+   "runs_finished": {
+    "rsl_cpu": 8,
+    "mlx": 7,
+    "rsl_mps": 8,
+    "entropy_coef_doubled": 7,
+    "clip_param_0_25": 8,
+    "gradient_clip_removed": 8,
+    "old_port": 8
+   },
+   "control_rsl_mps_vs_cpu": {
+    "mean_reward": "inconclusive",
+    "entropy": "inconclusive",
+    "value": "inconclusive",
+    "surrogate": "inconclusive",
+    "action_std": "inconclusive",
+    "mean_episode_length": "inconclusive",
+    "learning_rate": "inconclusive"
+   },
+   "mlx_vs_rsl_cpu": {
+    "mean_reward": "inconclusive",
+    "entropy": "inconclusive",
+    "value": "inconclusive",
+    "surrogate": "inconclusive",
+    "action_std": "inconclusive",
+    "mean_episode_length": "inconclusive",
+    "learning_rate": "inconclusive"
+   },
+   "faults": {
+    "entropy_coef_doubled": {
+     "mean_reward": "inconclusive",
+     "entropy": "fail",
+     "value": "inconclusive",
+     "surrogate": "fail",
+     "action_std": "fail",
+     "mean_episode_length": "inconclusive",
+     "learning_rate": "inconclusive"
+    },
+    "clip_param_0_25": {
+     "mean_reward": "inconclusive",
+     "entropy": "inconclusive",
+     "value": "inconclusive",
+     "surrogate": "fail",
+     "action_std": "inconclusive",
+     "mean_episode_length": "inconclusive",
+     "learning_rate": "fail"
+    },
+    "gradient_clip_removed": {
+     "mean_reward": "inconclusive",
+     "entropy": "inconclusive",
+     "value": "inconclusive",
+     "surrogate": "inconclusive",
+     "action_std": "inconclusive",
+     "mean_episode_length": "inconclusive",
+     "learning_rate": "inconclusive"
+    },
+    "old_port": {
+     "mean_reward": "inconclusive",
+     "entropy": "inconclusive",
+     "value": "inconclusive",
+     "surrogate": "inconclusive",
+     "action_std": "inconclusive",
+     "mean_episode_length": "inconclusive",
+     "learning_rate": "inconclusive"
+    }
+   },
+   "reward_windows_mlx_vs_rsl_cpu": [
+    {
+     "window": 1,
+     "golden_mean": 0.7306277474906943,
+     "candidate_mean": 0.16827229242945366,
+     "difference": 0.5623554550612406,
+     "allowed": 1.330195821996726,
+     "result": "inconclusive"
+    },
+    {
+     "window": 2,
+     "golden_mean": 4.389861285736368,
+     "candidate_mean": 4.304094313738825,
+     "difference": 0.08576697199754246,
+     "allowed": 0.8702256125014365,
+     "result": "inconclusive"
+    },
+    {
+     "window": 3,
+     "golden_mean": 4.878954083065729,
+     "candidate_mean": 4.921303837366085,
+     "difference": 0.042349754300356146,
+     "allowed": 0.08953711975607581,
+     "result": "pass"
+    },
+    {
+     "window": 4,
+     "golden_mean": 4.9151066136909165,
+     "candidate_mean": 4.937069442755074,
+     "difference": 0.02196282906415714,
+     "allowed": 0.049605493031990064,
+     "result": "pass"
+    }
+   ],
+   "entropy_windows_mlx_vs_rsl_cpu": [
+    {
+     "window": 1,
+     "golden_mean": 1.0931381476438933,
+     "candidate_mean": 1.107762399764595,
+     "difference": 0.01462425212070162,
+     "allowed": 0.16483889586887104,
+     "result": "inconclusive"
+    },
+    {
+     "window": 2,
+     "golden_mean": 0.28080049826714554,
+     "candidate_mean": 0.31322883209563734,
+     "difference": 0.03242833382849181,
+     "allowed": 0.2634829174485887,
+     "result": "inconclusive"
+    },
+    {
+     "window": 3,
+     "golden_mean": -0.7230763051004425,
+     "candidate_mean": -0.8556785430687274,
+     "difference": 0.13260223796828485,
+     "allowed": 0.44387001586182373,
+     "result": "inconclusive"
+    },
+    {
+     "window": 4,
+     "golden_mean": -1.406159192755034,
+     "candidate_mean": -1.5612957584006446,
+     "difference": 0.1551365656456105,
+     "allowed": 0.6030995390884895,
+     "result": "inconclusive"
+    }
+   ],
+   "reward_windows_control": [
+    {
+     "window": 1,
+     "golden_mean": 0.7306277474906943,
+     "candidate_mean": 0.1919749841602998,
+     "difference": 0.5386527633303945,
+     "allowed": 1.7805978195841379,
+     "result": "inconclusive"
+    },
+    {
+     "window": 2,
+     "golden_mean": 4.389861285736368,
+     "candidate_mean": 3.9436784965794924,
+     "difference": 0.44618278915687526,
+     "allowed": 1.3783127756090732,
+     "result": "inconclusive"
+    },
+    {
+     "window": 3,
+     "golden_mean": 4.878954083065729,
+     "candidate_mean": 4.878119259471627,
+     "difference": 0.0008348235941015858,
+     "allowed": 0.11280854429246895,
+     "result": "pass"
+    },
+    {
+     "window": 4,
+     "golden_mean": 4.9151066136909165,
+     "candidate_mean": 4.918575543339463,
+     "difference": 0.0034689296485463927,
+     "allowed": 0.0562837231834608,
+     "result": "pass"
+    }
+   ],
+   "policies_passing": "7 of 8",
+   "mlx_vs_rsl_rl_closed_loop_worst": 3.7431132988526734e-05,
+   "system_used_gb_peak": 30.49
+  },
+  "defect_found_by_the_first_run": {
+   "what": "2 of 40 runs with the MLX update ended in NaN, and 0 of 16 with rsl_rl's. On seeds outside the measure, 2 of 72 more.",
+   "cause": "A physics spike put observations near 100 in the rollout. An activation above about 88 made exp(x) inf in the branch of where() that is not taken, and its gradient is 0 * inf = NaN. Value results were right. Both the old port and the fixed one had it.",
+   "proof": "spikes/mlx_ppo_nan_replay.py on two dumps of the state before the update. Before the fix the MLX update gives NaN on its GPU and CPU, at step [2, 0]. rsl_rl's own update on the same state stays finite on the CPU and MPS. After the fix all four stay finite.",
+   "losses_after_the_fix": {
+    "dump_9106.npz": {
+     "mlx_gpu": {
+      "surrogate": -0.002868121024221182,
+      "value": 0.0010881955036893486,
+      "entropy": -0.08193888664245605
+     },
+     "rsl_cpu": {
+      "value": 0.001088195572810946,
+      "surrogate": -0.002868150593712926,
+      "entropy": -0.08193886876106263
+     }
+    },
+    "dump_9171.npz": {
+     "mlx_gpu": {
+      "surrogate": -0.0009839056991040706,
+      "value": 0.006318015060969628,
+      "entropy": 0.0943938672542572
+     },
+     "rsl_cpu": {
+      "value": 0.0063180150144035,
+      "surrogate": -0.0009838753845542668,
+      "entropy": 0.09439384341239929
+     }
+    }
+   },
+   "capture_runs": 72,
+   "capture_runs_with_nan": 2,
+   "fix": "exp(min(x, 0)) - 1 for the branch. tests/test_mlx_ppo_ops.py. The value below zero stays bit-equal."
+  },
+  "second_run_after_the_fix_seeds_501_to_568": {
+   "verdict": "fail",
+   "reasons_in_order": [
+    "rule 1: rsl_rl on MPS against the CPU is inconclusive on mean_reward",
+    "rule 1: rsl_rl on MPS against the CPU is inconclusive on entropy",
+    "rule 1: rsl_rl on MPS against the CPU is inconclusive on value",
+    "rule 2: MLX against rsl_rl is inconclusive on mean_reward",
+    "rule 2: MLX against rsl_rl is inconclusive on entropy",
+    "rule 2: MLX against rsl_rl is inconclusive on value",
+    "rule 4: the fault entropy_coef_doubled is not caught on an actor-side metric: {'mean_reward': 'inconclusive', 'entropy': 'inconclusive', 'value': 'inconclusive'}",
+    "rule 4: the fault clip_param_0_25 is not caught on an actor-side metric: {'mean_reward': 'inconclusive', 'entropy': 'inconclusive', 'value': 'inconclusive'}",
+    "rule 4: the fault gradient_clip_removed is not caught on an actor-side metric: {'mean_reward': 'inconclusive', 'entropy': 'inconclusive', 'value': 'inconclusive'}",
+    "rule 4: the fault old_port is not caught on an actor-side metric: {'mean_reward': 'inconclusive', 'entropy': 'inconclusive', 'value': 'inconclusive'}"
+   ],
+   "seeds_per_side": 8,
+   "runs_finished": {
+    "rsl_cpu": 8,
+    "mlx": 8,
+    "rsl_mps": 8,
+    "entropy_coef_doubled": 8,
+    "clip_param_0_25": 8,
+    "gradient_clip_removed": 8,
+    "old_port": 8
+   },
+   "control_rsl_mps_vs_cpu": {
+    "mean_reward": "inconclusive",
+    "entropy": "inconclusive",
+    "value": "inconclusive",
+    "surrogate": "inconclusive",
+    "action_std": "inconclusive",
+    "mean_episode_length": "inconclusive",
+    "learning_rate": "inconclusive"
+   },
+   "mlx_vs_rsl_cpu": {
+    "mean_reward": "inconclusive",
+    "entropy": "inconclusive",
+    "value": "inconclusive",
+    "surrogate": "inconclusive",
+    "action_std": "inconclusive",
+    "mean_episode_length": "inconclusive",
+    "learning_rate": "inconclusive"
+   },
+   "faults": {
+    "entropy_coef_doubled": {
+     "mean_reward": "inconclusive",
+     "entropy": "inconclusive",
+     "value": "inconclusive",
+     "surrogate": "inconclusive",
+     "action_std": "inconclusive",
+     "mean_episode_length": "inconclusive",
+     "learning_rate": "inconclusive"
+    },
+    "clip_param_0_25": {
+     "mean_reward": "inconclusive",
+     "entropy": "inconclusive",
+     "value": "inconclusive",
+     "surrogate": "inconclusive",
+     "action_std": "inconclusive",
+     "mean_episode_length": "inconclusive",
+     "learning_rate": "fail"
+    },
+    "gradient_clip_removed": {
+     "mean_reward": "inconclusive",
+     "entropy": "inconclusive",
+     "value": "inconclusive",
+     "surrogate": "inconclusive",
+     "action_std": "inconclusive",
+     "mean_episode_length": "inconclusive",
+     "learning_rate": "inconclusive"
+    },
+    "old_port": {
+     "mean_reward": "inconclusive",
+     "entropy": "inconclusive",
+     "value": "inconclusive",
+     "surrogate": "inconclusive",
+     "action_std": "inconclusive",
+     "mean_episode_length": "inconclusive",
+     "learning_rate": "inconclusive"
+    }
+   },
+   "reward_windows_mlx_vs_rsl_cpu": [
+    {
+     "window": 1,
+     "golden_mean": 0.1302352908920424,
+     "candidate_mean": 0.6613601181055094,
+     "difference": 0.531124827213467,
+     "allowed": 1.9706511421072324,
+     "result": "inconclusive"
+    },
+    {
+     "window": 2,
+     "golden_mean": 3.982733729545603,
+     "candidate_mean": 4.327489833260127,
+     "difference": 0.3447561037145235,
+     "allowed": 1.3542835343579007,
+     "result": "inconclusive"
+    },
+    {
+     "window": 3,
+     "golden_mean": 4.689415807893525,
+     "candidate_mean": 4.582524435040541,
+     "difference": 0.10689137285298411,
+     "allowed": 0.9158809852046558,
+     "result": "inconclusive"
+    },
+    {
+     "window": 4,
+     "golden_mean": 4.8752915689108995,
+     "candidate_mean": 4.87417631286417,
+     "difference": 0.0011152560467291295,
+     "allowed": 0.186419780703281,
+     "result": "pass"
+    }
+   ],
+   "entropy_windows_mlx_vs_rsl_cpu": [
+    {
+     "window": 1,
+     "golden_mean": 1.0685808226919256,
+     "candidate_mean": 1.1627150491182063,
+     "difference": 0.09413422642628078,
+     "allowed": 0.14563849564957243,
+     "result": "inconclusive"
+    },
+    {
+     "window": 2,
+     "golden_mean": 0.39777455343129603,
+     "candidate_mean": 0.23207633159074345,
+     "difference": 0.16569822184055258,
+     "allowed": 0.38730817816480323,
+     "result": "inconclusive"
+    },
+    {
+     "window": 3,
+     "golden_mean": -0.39838968029094707,
+     "candidate_mean": -0.8020294122498584,
+     "difference": 0.4036397319589113,
+     "allowed": 0.8218427246055116,
+     "result": "inconclusive"
+    },
+    {
+     "window": 4,
+     "golden_mean": -1.0511737138523083,
+     "candidate_mean": -1.3904426371580676,
+     "difference": 0.3392689233057593,
+     "allowed": 0.9646301166553286,
+     "result": "inconclusive"
+    }
+   ],
+   "reward_windows_control": [
+    {
+     "window": 1,
+     "golden_mean": 0.1302352908920424,
+     "candidate_mean": 0.09836792687582041,
+     "difference": 0.03186736401622198,
+     "allowed": 1.4052504835234274,
+     "result": "inconclusive"
+    },
+    {
+     "window": 2,
+     "golden_mean": 3.982733729545603,
+     "candidate_mean": 4.081918415425247,
+     "difference": 0.09918468587964391,
+     "allowed": 1.0816950079641037,
+     "result": "inconclusive"
+    },
+    {
+     "window": 3,
+     "golden_mean": 4.689415807893525,
+     "candidate_mean": 4.838537189796617,
+     "difference": 0.14912138190309232,
+     "allowed": 0.43687539702476597,
+     "result": "pass"
+    },
+    {
+     "window": 4,
+     "golden_mean": 4.8752915689108995,
+     "candidate_mean": 4.930224763392226,
+     "difference": 0.054933194481326275,
+     "allowed": 0.14109570038016678,
+     "result": "pass"
+    }
+   ],
+   "policies_passing": "8 of 8",
+   "mlx_vs_rsl_rl_closed_loop_worst": 6.153918636633646e-05,
+   "system_used_gb_peak": 29.54
+  },
+  "reading": "All 40 MLX runs of the second run finish, and every policy trained with MLX passes the M4 criteria. But rule 1 is inconclusive: rsl_rl on MPS against rsl_rl on the CPU cannot pass either, because the curves are too noisy for an allowed difference under 10 percent of the mean with 8 seeds, and the entropy curve crosses zero. Rule 4 fails: the faults are not caught on the reward or the entropy, so this measure cannot grade the update.",
+  "not_run": "Go2 flat: the rules run it only if cartpole passes.",
+  "not_shown": [
+   "That the old port's float32 biases change training: no measure here sees them",
+   "Any task other than cartpole",
+   "A rule with more seeds: this one was not changed after its result"
+  ]
+ },
+ "fifth_measure_float64_2026_11_04": {
+  "gate": "O4: PPO update in MLX, compared with rsl_rl by an equal measure",
+  "verdict": "pass, grade A in float64 on the CPU. It compares the logic of the update. It does not compare float32 on the Mac GPU",
+  "why": "In float32 a run lands within noise of about 1e-2, so the actor rules of the earlier measures could not see some faults. In float64 the same port and rsl_rl agree to about 1e-13, so a defect in the logic has nowhere to hide. The first four measures and the training comparison stay as they were recorded.",
+  "script": "spikes/mlx_ppo_fifth.py, written before any counted seed, commits 38760c7 and 54e511c",
+  "rule_changed_after_development_seed_1": "No limit changed, and no counted seed had run. As first written, rule 6 held the two clip faults on the actor at max_grad_norm 1.0. That could not pass, because the actor gradient norm stays under 1.0 on this data, so at that setting the clip touches only the critic. Rules 6 and 8 now add max_grad_norm 0.01, where the clip touches the actor. The epsilon fault moved to that setting too, because its critic error at 1.0 was 5.4e-8, under the margin of rule 5.",
+  "development_seed_1_does_not_count": {
+   "weight_error_vs_change": {
+    "actor": 4.5388724964554377e-14,
+    "critic": 5.03188432980189e-15,
+    "std": 4.809073293298651e-14
+   },
+   "loss_relative_error": {
+    "surrogate": 8.289283353964228e-15,
+    "value": 1.3244866554237573e-16,
+    "entropy": 6.308176737195223e-14
+   },
+   "learning_rate_error": 0.0,
+   "gradient_was_clipped": true,
+   "within_limits": true
+  },
+  "limits": {
+   "weight_error_vs_change": 1e-08,
+   "loss_relative": 1e-09,
+   "learning_rate": 1e-12,
+   "margin": 10.0,
+   "small_clip": 0.01,
+   "grade": "A, in float64 on the CPU"
+  },
+  "mlx": "0.32.4",
+  "seeds_counted": [
+   "1001",
+   "1002",
+   "1003",
+   "1004",
+   "1005",
+   "1006",
+   "1007",
+   "1008",
+   "1009",
+   "1010"
+  ],
+  "checks": {
+   "rules_1_to_3_clean": true,
+   "rule_8_small_clip": true,
+   "rule_4_ruler": true,
+   "rule_5_faults": true,
+   "rule_6_actor": true,
+   "rule_7_clip_active": true
+  },
+  "worst_clean": {
+   "weight_error_vs_change": 1.348752062295194e-13,
+   "loss_relative": 1.6681299360461115e-13,
+   "learning_rate": 0.0
+  },
+  "seeds": {
+   "1001": {
+    "clean": {
+     "weight_error_vs_change": {
+      "actor": 9.876469600386594e-14,
+      "critic": 3.574239707742626e-15,
+      "std": 5.980246824233967e-14
+     },
+     "loss_relative_error": {
+      "surrogate": 1.042545431187844e-14,
+      "value": 0.0,
+      "entropy": 3.772018397403295e-15
+     },
+     "learning_rate_error": 0.0,
+     "gradient_was_clipped": true,
+     "within_limits": true
+    },
+    "torch_cpu_seconds": 4.64,
+    "itself": {
+     "weight_error_vs_change": {
+      "actor": 8.058565623157524e-14,
+      "critic": 0.0,
+      "std": 2.6455054407313966e-15
+     },
+     "loss_relative_error": {
+      "surrogate": 5.759636234595138e-14,
+      "value": 0.0,
+      "entropy": 0.0
+     },
+     "learning_rate_error": 0.0,
+     "gradient_was_clipped": null,
+     "within_limits": true
+    },
+    "faults": {
+     "entropy_coef_doubled": {
+      "weight_error_vs_change": {
+       "actor": 0.039201606376835715,
+       "critic": 3.574239707742626e-15,
+       "std": 0.17399861554594925
+      },
+      "loss_relative_error": {
+       "surrogate": 0.04543814402808784,
+       "value": 0.0,
+       "entropy": 0.0005434818516248759
+      },
+      "learning_rate_error": 0.0,
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "clip_param_0_25": {
+      "weight_error_vs_change": {
+       "actor": 0.33530032074230204,
+       "critic": 0.3207633455277121,
+       "std": 0.252646706724205
+      },
+      "loss_relative_error": {
+       "surrogate": 0.41628090927852834,
+       "value": 0.003786816631743901,
+       "entropy": 0.0010083506531048485
+      },
+      "learning_rate_error": 0.33333333333333337,
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "gradient_clip_removed": {
+      "weight_error_vs_change": {
+       "actor": 9.876469600386594e-14,
+       "critic": 0.6996162169985942,
+       "std": 5.980246824233967e-14
+      },
+      "loss_relative_error": {
+       "surrogate": 1.042545431187844e-14,
+       "value": 9.765798415072518e-05,
+       "entropy": 3.772018397403295e-15
+      },
+      "learning_rate_error": 0.0,
+      "gradient_was_clipped": false,
+      "within_limits": false
+     },
+     "value_clipping_removed": {
+      "weight_error_vs_change": {
+       "actor": 9.876469600386594e-14,
+       "critic": 3.3238230622506246,
+       "std": 5.980246824233967e-14
+      },
+      "loss_relative_error": {
+       "surrogate": 1.042545431187844e-14,
+       "value": 0.21509739579575798,
+       "entropy": 3.772018397403295e-15
+      },
+      "learning_rate_error": 0.0,
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "adaptive_schedule_removed": {
+      "weight_error_vs_change": {
+       "actor": 0.45889354237980556,
+       "critic": 0.46313781707713214,
+       "std": 0.31498585399751433
+      },
+      "loss_relative_error": {
+       "surrogate": 0.019593284817252588,
+       "value": 2.0122342476753227e-05,
+       "entropy": 0.0015670056167597247
+      },
+      "learning_rate_error": 0.5000000000000001,
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "adam_eps_doubled": {
+      "weight_error_vs_change": {
+       "actor": 0.027022348047836896,
+       "critic": 0.06452801546970328,
+       "std": 0.0017975744388948674
+      },
+      "loss_relative_error": {
+       "surrogate": 0.0011464076958912243,
+       "value": 1.4139246006824735e-06,
+       "entropy": 1.0429203086309226e-06
+      },
+      "learning_rate_error": 0.0,
+      "gradient_was_clipped": true,
+      "within_limits": false
+     }
+    },
+    "small_clip": {
+     "clean": {
+      "weight_error_vs_change": {
+       "actor": 5.52824139574291e-14,
+       "critic": 3.262400128169482e-15,
+       "std": 5.709028841857742e-14
+      },
+      "loss_relative_error": {
+       "surrogate": 3.889323465723458e-15,
+       "value": 0.0,
+       "entropy": 1.1680539701971516e-13
+      },
+      "learning_rate_error": 0.0,
+      "gradient_was_clipped": true,
+      "within_limits": true
+     },
+     "faults": {
+      "gradient_clip_removed": {
+       "weight_error_vs_change": {
+        "actor": 0.3620877897283401,
+        "critic": 1.6151368107479898,
+        "std": 0.3463421535928155
+       },
+       "loss_relative_error": {
+        "surrogate": 0.19772001907828307,
+        "value": 0.00011894040018884854,
+        "entropy": 0.0010875780754588658
+       },
+       "learning_rate_error": 0.5000000000000001,
+       "gradient_was_clipped": false,
+       "within_limits": false
+      },
+      "gradient_clip_epsilon_removed": {
+       "weight_error_vs_change": {
+        "actor": 2.170826459279241e-06,
+        "critic": 6.095823576684925e-06,
+        "std": 7.342313576765329e-08
+       },
+       "loss_relative_error": {
+        "surrogate": 1.302446718285597e-07,
+        "value": 3.1471434918750725e-10,
+        "entropy": 2.806971847304961e-10
+       },
+       "learning_rate_error": 0.0,
+       "gradient_was_clipped": true,
+       "within_limits": false
+      }
+     }
+    },
+    "legacy_ops_report": {
+     "weight_error_vs_change": {
+      "actor": 9.138105290243671e-10,
+      "critic": 2.2573340687386773e-15,
+      "std": 2.0367258109147077e-08
+     },
+     "loss_relative_error": {
+      "surrogate": 1.1809706108501464e-07,
+      "value": 0.0,
+      "entropy": 1.1121200475393404e-08
+     },
+     "learning_rate_error": 0.0,
+     "gradient_was_clipped": true,
+     "within_limits": false
+    }
+   },
+   "1002": {
+    "clean": {
+     "weight_error_vs_change": {
+      "actor": 8.526401503246969e-14,
+      "critic": 5.64731595725502e-15,
+      "std": 5.776906804724611e-14
+     },
+     "loss_relative_error": {
+      "surrogate": 9.17387227039515e-15,
+      "value": 6.633452976664615e-16,
+      "entropy": 9.78675699933355e-14
+     },
+     "learning_rate_error": 0.0,
+     "gradient_was_clipped": true,
+     "within_limits": true
+    },
+    "torch_cpu_seconds": 4.62,
+    "itself": {
+     "weight_error_vs_change": {
+      "actor": 8.019055569907282e-14,
+      "critic": 0.0,
+      "std": 0.0
+     },
+     "loss_relative_error": {
+      "surrogate": 1.1369585961342185e-13,
+      "value": 0.0,
+      "entropy": 0.0
+     },
+     "learning_rate_error": 0.0,
+     "gradient_was_clipped": null,
+     "within_limits": true
+    },
+    "faults": {
+     "entropy_coef_doubled": {
+      "weight_error_vs_change": {
+       "actor": 0.05761607055420225,
+       "critic": 5.64731595725502e-15,
+       "std": 0.18701687120619792
+      },
+      "loss_relative_error": {
+       "surrogate": 0.04421636738702169,
+       "value": 6.633452976664615e-16,
+       "entropy": 0.0006339473350481644
+      },
+      "learning_rate_error": 0.0,
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "clip_param_0_25": {
+      "weight_error_vs_change": {
+       "actor": 0.3320299641759042,
+       "critic": 0.2832216435258369,
+       "std": 0.25273545147729254
+      },
+      "loss_relative_error": {
+       "surrogate": 0.35676660070623184,
+       "value": 0.003816951737720701,
+       "entropy": 0.0010285251202174024
+      },
+      "learning_rate_error": 0.33333333333333337,
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "gradient_clip_removed": {
+      "weight_error_vs_change": {
+       "actor": 8.526401503246969e-14,
+       "critic": 0.6439607966301505,
+       "std": 5.776906804724611e-14
+      },
+      "loss_relative_error": {
+       "surrogate": 9.17387227039515e-15,
+       "value": 8.607905309806937e-05,
+       "entropy": 9.78675699933355e-14
+      },
+      "learning_rate_error": 0.0,
+      "gradient_was_clipped": false,
+      "within_limits": false
+     },
+     "value_clipping_removed": {
+      "weight_error_vs_change": {
+       "actor": 8.526401503246969e-14,
+       "critic": 3.275905979621894,
+       "std": 5.776906804724611e-14
+      },
+      "loss_relative_error": {
+       "surrogate": 9.17387227039515e-15,
+       "value": 0.2240765507902681,
+       "entropy": 9.78675699933355e-14
+      },
+      "learning_rate_error": 0.0,
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "adaptive_schedule_removed": {
+      "weight_error_vs_change": {
+       "actor": 0.4485327778797447,
+       "critic": 0.4362967178435439,
+       "std": 0.30995833302200454
+      },
+      "loss_relative_error": {
+       "surrogate": 0.001735654606131199,
+       "value": 1.4381100001517063e-05,
+       "entropy": 0.0016008800587937945
+      },
+      "learning_rate_error": 0.5000000000000001,
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "adam_eps_doubled": {
+      "weight_error_vs_change": {
+       "actor": 0.028873401736020515,
+       "critic": 0.026837401878426904,
+       "std": 0.0017415142066606708
+      },
+      "loss_relative_error": {
+       "surrogate": 7.116030282408729e-05,
+       "value": 5.157169476800542e-07,
+       "entropy": 5.399788632596919e-07
+      },
+      "learning_rate_error": 0.0,
+      "gradient_was_clipped": true,
+      "within_limits": false
+     }
+    },
+    "small_clip": {
+     "clean": {
+      "weight_error_vs_change": {
+       "actor": 5.556036014162926e-14,
+       "critic": 2.454199700465016e-15,
+       "std": 3.933002911182945e-14
+      },
+      "loss_relative_error": {
+       "surrogate": 2.641320637108887e-15,
+       "value": 1.0613749417885147e-15,
+       "entropy": 5.170703372171363e-14
+      },
+      "learning_rate_error": 0.0,
+      "gradient_was_clipped": true,
+      "within_limits": true
+     },
+     "faults": {
+      "gradient_clip_removed": {
+       "weight_error_vs_change": {
+        "actor": 0.3483875525750168,
+        "critic": 1.5415182871210058,
+        "std": 0.34014889635304396
+       },
+       "loss_relative_error": {
+        "surrogate": 0.17086550524284821,
+        "value": 0.00010724775670002023,
+        "entropy": 0.0010799126035304723
+       },
+       "learning_rate_error": 0.5000000000000001,
+       "gradient_was_clipped": false,
+       "within_limits": false
+      },
+      "gradient_clip_epsilon_removed": {
+       "weight_error_vs_change": {
+        "actor": 2.3809373417784883e-06,
+        "critic": 6.477723891957941e-06,
+        "std": 9.395221362140984e-08
+       },
+       "loss_relative_error": {
+        "surrogate": 7.445435929340545e-08,
+        "value": 4.1787154023793707e-10,
+        "entropy": 2.2135278719743615e-10
+       },
+       "learning_rate_error": 0.0,
+       "gradient_was_clipped": true,
+       "within_limits": false
+      }
+     }
+    },
+    "legacy_ops_report": {
+     "weight_error_vs_change": {
+      "actor": 8.425298556359473e-10,
+      "critic": 1.9486894830848838e-15,
+      "std": 2.0203838451331144e-08
+     },
+     "loss_relative_error": {
+      "surrogate": 6.586470161995444e-08,
+      "value": 6.633452976664615e-16,
+      "entropy": 1.1118429078940597e-08
+     },
+     "learning_rate_error": 0.0,
+     "gradient_was_clipped": true,
+     "within_limits": false
+    }
+   },
+   "1003": {
+    "clean": {
+     "weight_error_vs_change": {
+      "actor": 9.891923709331936e-14,
+      "critic": 2.1502834708700755e-14,
+      "std": 5.506316688346522e-14
+     },
+     "loss_relative_error": {
+      "surrogate": 1.1519646263916663e-14,
+      "value": 5.227673274663725e-16,
+      "entropy": 9.849057837924909e-14
+     },
+     "learning_rate_error": 0.0,
+     "gradient_was_clipped": true,
+     "within_limits": true
+    },
+    "torch_cpu_seconds": 4.65,
+    "itself": {
+     "weight_error_vs_change": {
+      "actor": 1.1904110054504106e-13,
+      "critic": 0.0,
+      "std": 2.646166929022092e-15
+     },
+     "loss_relative_error": {
+      "surrogate": 6.94334843304566e-15,
+      "value": 0.0,
+      "entropy": 0.0
+     },
+     "learning_rate_error": 0.0,
+     "gradient_was_clipped": null,
+     "within_limits": true
+    },
+    "faults": {
+     "entropy_coef_doubled": {
+      "weight_error_vs_change": {
+       "actor": 0.06180913245255989,
+       "critic": 2.1502834708700755e-14,
+       "std": 0.17927937571498012
+      },
+      "loss_relative_error": {
+       "surrogate": 0.048078050937816315,
+       "value": 5.227673274663725e-16,
+       "entropy": 0.0006304352841696129
+      },
+      "learning_rate_error": 0.0,
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "clip_param_0_25": {
+      "weight_error_vs_change": {
+       "actor": 0.3322963441266179,
+       "critic": 0.28793686993016077,
+       "std": 0.2541715960352477
+      },
+      "loss_relative_error": {
+       "surrogate": 0.3316538593766047,
+       "value": 0.0037945949310617738,
+       "entropy": 0.0010142204985990502
+      },
+      "learning_rate_error": 0.33333333333333337,
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "gradient_clip_removed": {
+      "weight_error_vs_change": {
+       "actor": 9.891923709331936e-14,
+       "critic": 0.7312091298278077,
+       "std": 5.506316688346522e-14
+      },
+      "loss_relative_error": {
+       "surrogate": 1.1519646263916663e-14,
+       "value": 9.522614115728966e-05,
+       "entropy": 9.849057837924909e-14
+      },
+      "learning_rate_error": 0.0,
+      "gradient_was_clipped": false,
+      "within_limits": false
+     },
+     "value_clipping_removed": {
+      "weight_error_vs_change": {
+       "actor": 9.891923709331936e-14,
+       "critic": 3.3931442836169934,
+       "std": 5.506316688346522e-14
+      },
+      "loss_relative_error": {
+       "surrogate": 1.1519646263916663e-14,
+       "value": 0.21472184384259338,
+       "entropy": 9.849057837924909e-14
+      },
+      "learning_rate_error": 0.0,
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "adaptive_schedule_removed": {
+      "weight_error_vs_change": {
+       "actor": 0.4403265287585497,
+       "critic": 0.46134528122139606,
+       "std": 0.32096978628181877
+      },
+      "loss_relative_error": {
+       "surrogate": 0.01621806704067941,
+       "value": 1.7942728370133588e-05,
+       "entropy": 0.0015783190212438367
+      },
+      "learning_rate_error": 0.5000000000000001,
+      "gradient_was_clipped": true,
+      "within_limits": false
+     },
+     "adam_eps_doubled": {
+      "weight_error_vs_change": {
+       "actor": 0.029627439029581586,
+       "critic": 0.04282799461723214,
+       "std": 0.002134564212079864
+      },
+      "loss_relative_error": {
+       "surrogate": 0.0013823726198140542,
+       "value": 3.0078889043930303e-07,
+       "entropy": 2.592854649825762e-06
+      },
+      "learning_rate_error": 0.0,
+      "gradient_was_clipped": true,
+      "within_limits": false
+     }
+    },
+    "small_clip": {
+     "clean": {
+      "weight_error_vs_change": {
+       "actor": 5.45574507441801e-14,
+       "critic": 2.464943600195776e-15,
+       "std": 3.041556328732504e-14
+      },
+      "loss_relative_error": {
+       "surrogate": 1.6470492300707073e-15,
+       "value": 7.841634235349103e-16,
+       "entropy": 2.3445075287902664e-14
+      },
+      "learning_rate_error": 0.0,
+      "gradient_was_clipped": true,
+      "within_limits": true
+     },
+     "faults": {
+      "gradient_clip_removed": {
+       "weight_error_vs_change": {
+        "actor": 0.3525067744815048,
+        "critic": 1.6047628908817653,
+        "std": 0.34555379511782264
+       },
+       "loss_relative_error": {
+        "surrogate": 0.15970568926406356,
+        "value": 0.0001110821680886833,
+        "entropy": 0.0010660368079719337
+       },
+       "learning_rate_error": 0.5000000000000001,
+       "gradient_was_clipped": false,
+       "within_limits": false
+      },
+      "gradient_clip_epsilon_removed": {
+       "weight_error_vs_change": {
+        "actor": 1.4416374820838644e-06,
+        "critic": 7.289996794552128e-06,
+        "std": 8.220654437822258e-08
+       },
+       "loss_relative_error": {
+        "surrogate": 6.303023101577345e-08,
+        "value": 1.1608726569351947e-09,
+        "entropy": 9.030708071253135e-11
+       },
+       "learning_rate_error": 0.0,
+       "gradient_was_clipped": true,
+       "within_limits": false
+      }
+     }
+    },
+    "legacy_ops_report": {
+     "weight_error_vs_change": {
+      "actor": 9.163881709293764e-10,
+      "critic": 1.714991086029361e-14,
+      "std": 1.9157478798007052e-08
+     },
+     "loss_relative_error": {
+      "surrogate": 6.20742192268556e-08,
+      "value": 5.227673274663725e-16,
+      "entropy": 1.1120449034572939e-08
+     },
+     "learning_rate_error": 0.0,
+     "gradient_was_clipped": true,
+     "within_limits": false
+    }
+   },
+   "1004": {
+    "clean": {
+     "weight_error_vs_change": {
+      "actor": 1.0560580148255182e-13,
+      "critic": 9.953320839969494e-15,
+      "std": 6.644444916557353e-14
+     },
+     "loss_relative_error": {
+      "surrogate": 9.117320698338512e-15,
+      "value": 4.0023569007816306e-16,
+      "entropy": 7.082795925645438e-14
+     },
+     "learning_rate_error": 0.0,
+     "gradient_was_clipped": true,
+     "within_limits": true
+    },
+    "torch_cpu_seconds": 4.68
+   },
+   "1005": {
+    "clean": {
+     "weight_error_vs_change": {
+      "actor": 9.692221053340663e-14,
+      "critic": 4.508419243285678e-15,
+      "std": 8.259576720436026e-14
+     },
+     "loss_relative_error": {
+      "surrogate": 1.4337956040460872e-14,
+      "value": 4.0053526900350046e-16,
+      "entropy": 6.160334971306693e-14
+     },
+     "learning_rate_error": 0.0,
+     "gradient_was_clipped": true,
+     "within_limits": true
+    },
+    "torch_cpu_seconds": 4.65
+   },
+   "1006": {
+    "clean": {
+     "weight_error_vs_change": {
+      "actor": 8.406812932369451e-14,
+      "critic": 4.238827648337104e-15,
+      "std": 5.944794987497805e-14
+     },
+     "loss_relative_error": {
+      "surrogate": 1.068376506772781e-14,
+      "value": 0.0,
+      "entropy": 3.3493100610262757e-15
+     },
+     "learning_rate_error": 0.0,
+     "gradient_was_clipped": true,
+     "within_limits": true
+    },
+    "torch_cpu_seconds": 4.69
+   },
+   "1007": {
+    "clean": {
+     "weight_error_vs_change": {
+      "actor": 6.13453105561467e-14,
+      "critic": 2.1304219004863174e-15,
+      "std": 6.150537465355851e-14
+     },
+     "loss_relative_error": {
+      "surrogate": 8.895259967352569e-15,
+      "value": 1.055076794274376e-15,
+      "entropy": 5.867741435929497e-14
+     },
+     "learning_rate_error": 0.0,
+     "gradient_was_clipped": true,
+     "within_limits": true
+    },
+    "torch_cpu_seconds": 4.71
+   },
+   "1008": {
+    "clean": {
+     "weight_error_vs_change": {
+      "actor": 1.348752062295194e-13,
+      "critic": 6.199936754126741e-15,
+      "std": 6.24285655967177e-14
+     },
+     "loss_relative_error": {
+      "surrogate": 1.1596538506413287e-14,
+      "value": 1.3076653059658162e-16,
+      "entropy": 6.663848396863783e-14
+     },
+     "learning_rate_error": 0.0,
+     "gradient_was_clipped": true,
+     "within_limits": true
+    },
+    "torch_cpu_seconds": 4.71
+   },
+   "1009": {
+    "clean": {
+     "weight_error_vs_change": {
+      "actor": 1.2211603424100078e-13,
+      "critic": 9.331651871499696e-15,
+      "std": 4.9078241209947194e-14
+     },
+     "loss_relative_error": {
+      "surrogate": 8.792271209514367e-15,
+      "value": 5.370127355418306e-16,
+      "entropy": 1.6681299360461115e-13
+     },
+     "learning_rate_error": 0.0,
+     "gradient_was_clipped": true,
+     "within_limits": true
+    },
+    "torch_cpu_seconds": 4.73
+   },
+   "1010": {
+    "clean": {
+     "weight_error_vs_change": {
+      "actor": 1.0996727898204569e-13,
+      "critic": 6.344738173387051e-15,
+      "std": 9.062835105981001e-14
+     },
+     "loss_relative_error": {
+      "surrogate": 1.0730473732164663e-14,
+      "value": 7.958517279011873e-16,
+      "entropy": 2.996550057141122e-14
+     },
+     "learning_rate_error": 0.0,
+     "gradient_was_clipped": true,
+     "within_limits": true
+    },
+    "torch_cpu_seconds": 4.7
+   }
+  },
+  "mlx_float64_findings": "On MLX 0.32.4 on the CPU: mx.array(numpy float64) gives float32 unless dtype is passed. mx.exp in float64 has the accuracy of float32, 3.7e-6 relative at worst, and mx.power(e, x) reaches 2.4e-15.",
+  "run": {
+   "wall_seconds": 462.62,
+   "exit_code": 0,
+   "stopped_for_system_memory": false,
+   "system_used_gb_peak": 32.31,
+   "peak_footprint_gb": 4.3
+  },
+  "legacy_ops_report": "The port before the fixes fails the limits in float64 too (std 2.0e-8, loss up to 1.2e-7), through its rounded log(2 pi). The actor alone stays under the limit, at 9.2e-10. No rule reads this, because its other defects are float32 and GPU math: tests/test_mlx_ppo_ops.py is their test.",
+  "not_shown": "Float32 on the Mac GPU, against rsl_rl seed by seed: that free run still differs, as rsl_rl on MPS does, see fourth_measure. rsl_rl on the GPU. A training run with the update compared on its curves: that comparison stays inconclusive. The rollout is synthetic."
+ }
+}

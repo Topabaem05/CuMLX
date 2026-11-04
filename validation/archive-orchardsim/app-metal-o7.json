@@ -1,0 +1,1002 @@
+{
+ "schema": "orchardsim.validation.app_metal_o7.v1",
+ "gates": "docs/MILESTONES.md, section O7, written before any run",
+ "date": "2026-11-04",
+ "machine": "Apple M5 Pro, 48 GB, one 1920 x 1080 display, shared with other jobs",
+ "app_screen_and_controls": {
+  "viewer": "Newton's ViewerGL through Isaac Lab's newton_gl visualizer. Isaac Lab's own buttons. Not Isaac Sim.",
+  "tasks": {
+   "cartpole": {
+    "result": {
+     "event_route": "CGEventPost at the HID level, hit tested by the window server",
+     "window": {
+      "number": 2281,
+      "x": 234,
+      "y": 58,
+      "width": 1686,
+      "height": 1022,
+      "pixel_ratio": 1.0,
+      "key": true
+     },
+     "task": "Isaac-Cartpole-Direct",
+     "warp_device": "metal:0",
+     "screen": {
+      "std": 29.506,
+      "changed_fraction": 0.03249,
+      "nearest_root_fraction": 0.00022216927313897862,
+      "checks": {
+       "not_blank": true,
+       "changes": true,
+       "moving_pixels_near_a_root": true
+      },
+      "pass": true
+     },
+     "controls": [
+      {
+       "control": "no_event",
+       "physics_steps": 756,
+       "frames": 108,
+       "pass": true
+      },
+      {
+       "control": "empty_pixel",
+       "physics_steps": 554,
+       "frames": 81,
+       "pass": true
+      },
+      {
+       "control": "Pause Simulation",
+       "physics_steps": 0,
+       "frames": 92,
+       "pass": true
+      },
+      {
+       "control": "Resume Simulation",
+       "physics_steps": 510,
+       "frames": 80,
+       "pass": true
+      },
+      {
+       "control": "Pause Rendering",
+       "physics_steps": 588,
+       "frames": 0,
+       "pass": true,
+       "pixels_changed_while_paused": 0.0
+      },
+      {
+       "control": "Resume Rendering",
+       "physics_steps": 570,
+       "frames": 78,
+       "pass": true
+      },
+      {
+       "control": "Reset Episode",
+       "lowest_episode_max_after_click": 0,
+       "lowest_episode_max_without_click": 220,
+       "pass": true
+      }
+     ],
+     "reset_episode_before_click": 2647,
+     "ignored_presses": 0,
+     "pass": true
+    },
+    "measured": {
+     "wall_seconds": 42.82,
+     "exit_code": 0,
+     "process_gpu_seconds": 9.78,
+     "peak_footprint_gb": 1.16,
+     "system_used_gb_peak": 29.83,
+     "stopped_for_memory": false,
+     "stopped_for_system_memory": false
+    }
+   },
+   "go2": {
+    "result": {
+     "event_route": "CGEventPost at the HID level, hit tested by the window server",
+     "window": {
+      "number": 2313,
+      "x": 234,
+      "y": 58,
+      "width": 1686,
+      "height": 1022,
+      "pixel_ratio": 1.0,
+      "key": true
+     },
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "warp_device": "metal:0",
+     "screen": {
+      "std": 37.362,
+      "changed_fraction": 0.096205,
+      "nearest_root_fraction": 0.0011374461859830107,
+      "checks": {
+       "not_blank": true,
+       "changes": true,
+       "moving_pixels_near_a_root": true
+      },
+      "pass": true
+     },
+     "controls": [
+      {
+       "control": "no_event",
+       "physics_steps": 70,
+       "frames": 70,
+       "pass": true
+      },
+      {
+       "control": "empty_pixel",
+       "physics_steps": 52,
+       "frames": 52,
+       "pass": true
+      },
+      {
+       "control": "Pause Simulation",
+       "physics_steps": 0,
+       "frames": 90,
+       "pass": true
+      },
+      {
+       "control": "Resume Simulation",
+       "physics_steps": 52,
+       "frames": 52,
+       "pass": true
+      },
+      {
+       "control": "Pause Rendering",
+       "physics_steps": 61,
+       "frames": 0,
+       "pass": true,
+       "pixels_changed_while_paused": 0.0
+      },
+      {
+       "control": "Resume Rendering",
+       "physics_steps": 59,
+       "frames": 59,
+       "pass": true
+      },
+      {
+       "control": "Reset Episode",
+       "lowest_episode_max_after_click": 0,
+       "lowest_episode_max_without_click": 44,
+       "pass": true
+      }
+     ],
+     "reset_episode_before_click": 526,
+     "ignored_presses": 0,
+     "pass": true
+    },
+    "measured": {
+     "wall_seconds": 45.85,
+     "exit_code": 0,
+     "process_gpu_seconds": 13.8,
+     "peak_footprint_gb": 1.51,
+     "system_used_gb_peak": 30.35,
+     "stopped_for_memory": false,
+     "stopped_for_system_memory": false
+    }
+   }
+  },
+  "person_read_the_pictures": "The session read validation/app-screen/cartpole.png and go2.png on 2026-11-04. 16 cartpoles and 16 Go2 robots with their command arrows are in view.",
+  "fixtures_that_must_fail": {
+   "cartpole_unwired_pause": {
+    "pass": false,
+    "status": "refused",
+    "reason": "no button 'Resume Simulation' within 10.0 s",
+    "ignored_presses": null,
+    "failed": [
+     "Pause Simulation"
+    ]
+   },
+   "cartpole_unwired_reset": {
+    "pass": false,
+    "status": null,
+    "reason": null,
+    "ignored_presses": 1,
+    "failed": [
+     "Reset Episode"
+    ]
+   },
+   "cartpole_unwired_rendering": {
+    "pass": false,
+    "status": "refused",
+    "reason": "no button 'Resume Rendering' within 10.0 s",
+    "ignored_presses": null,
+    "failed": [
+     "Pause Rendering"
+    ]
+   }
+  },
+  "first_failures_stay": {
+   "events_to_the_process": "CGEventPostToPid did not reach the viewer, in the background or brought to the front: the counters did not change, and no button changed its label. So the test sends a real click at the HID level. It refuses unless the viewer is the frontmost window at that point, and it puts the pointer back.",
+   "reset_first_run": {
+    "event_route": "CGEventPost at the HID level, hit tested by the window server",
+    "window": {
+     "number": 2264,
+     "x": 234,
+     "y": 58,
+     "width": 1686,
+     "height": 1022,
+     "pixel_ratio": 1.0,
+     "key": true
+    },
+    "task": "Isaac-Cartpole-Direct",
+    "warp_device": "metal:0",
+    "screen": {
+     "std": 29.595,
+     "changed_fraction": 0.034633,
+     "nearest_root_fraction": 0.001012713852498815,
+     "checks": {
+      "not_blank": true,
+      "changes": true,
+      "moving_pixels_near_a_root": true
+     },
+     "pass": true
+    },
+    "controls": [
+     {
+      "control": "no_event",
+      "physics_steps": 728,
+      "frames": 105,
+      "pass": true
+     },
+     {
+      "control": "empty_pixel",
+      "physics_steps": 568,
+      "frames": 78,
+      "pass": true
+     },
+     {
+      "control": "Pause Simulation",
+      "physics_steps": 0,
+      "frames": 90,
+      "pass": true
+     },
+     {
+      "control": "Resume Simulation",
+      "physics_steps": 568,
+      "frames": 77,
+      "pass": true
+     },
+     {
+      "control": "Pause Rendering",
+      "physics_steps": 604,
+      "frames": 0,
+      "pass": true,
+      "pixels_changed_while_paused": 0.0
+     },
+     {
+      "control": "Resume Rendering",
+      "physics_steps": 542,
+      "frames": 79,
+      "pass": true
+     },
+     {
+      "control": "Reset Episode",
+      "lowest_episode_max_after_click": 24,
+      "lowest_episode_max_without_click": 194,
+      "pass": false
+     }
+    ],
+    "ignored_presses": 0,
+    "pass": false
+   },
+   "reset_first_run_note": "Reset Episode failed in the first run of this test, with a lowest value of 24 against the limit of 2. The test began to watch after the click had ended, while the reset came during the click. Its watch now starts before the click. The limit did not change."
+  },
+  "not_shown": [
+   "A window on another Mac, a Retina display or a second display. pixel_ratio was 1.0 here, and only the arithmetic is tested at other scales",
+   "Reset restoring the same pose: the rule reads episode length",
+   "Every other control of the viewer: its sliders, checkboxes and camera keys were not operated",
+   "Isaac Sim"
+  ]
+ },
+ "msl_cartpole": {
+  "verdict": "The float32 kernel: FAIL at the written limit on 1 of 3 starts, and the failure stays. The two-float kernel: PASS, see twofloat_2026_11_04.",
+  "limits": {
+   "one_step_relative": 1e-05,
+   "median_worst_abs": 0.001,
+   "worst_abs": 0.05,
+   "steps": 240,
+   "written": "docs/MILESTONES.md, commit 621e82c, before any run"
+  },
+  "envs": 4096,
+  "mlx": "0.32.4",
+  "mlx_device": "Device(gpu, 0)",
+  "right": [
+   {
+    "one_step_relative_worst": 3.8285729136090554e-07,
+    "steps": 240,
+    "median_worst_abs": 5.610624006502363e-06,
+    "worst_abs": 0.014981087903526813,
+    "checks": {
+     "one_step": true,
+     "median_worst": true,
+     "worst": true
+    },
+    "pass": true
+   },
+   {
+    "one_step_relative_worst": 1.443330190109817e-06,
+    "steps": 240,
+    "median_worst_abs": 5.303285844471262e-06,
+    "worst_abs": 0.03975374878257831,
+    "checks": {
+     "one_step": true,
+     "median_worst": true,
+     "worst": true
+    },
+    "pass": true
+   },
+   {
+    "one_step_relative_worst": 3.979363931085263e-07,
+    "steps": 240,
+    "median_worst_abs": 5.322139938757076e-06,
+    "worst_abs": 0.1766662230541085,
+    "checks": {
+     "one_step": true,
+     "median_worst": true,
+     "worst": false
+    },
+    "pass": false
+   }
+  ],
+  "wrong_gravity_sign": [
+   {
+    "one_step_relative_worst": 0.7211928986006725,
+    "steps": 240,
+    "median_worst_abs": 5.987417482873311,
+    "worst_abs": 33.04446883207978,
+    "checks": {
+     "one_step": false,
+     "median_worst": false,
+     "worst": false
+    },
+    "pass": false
+   },
+   {
+    "one_step_relative_worst": 0.7098782791657274,
+    "steps": 240,
+    "median_worst_abs": 5.954350832917205,
+    "worst_abs": 32.39122393572115,
+    "checks": {
+     "one_step": false,
+     "median_worst": false,
+     "worst": false
+    },
+    "pass": false
+   },
+   {
+    "one_step_relative_worst": 0.6749034011987316,
+    "steps": 240,
+    "median_worst_abs": 5.978764781609035,
+    "worst_abs": 32.27000244091586,
+    "checks": {
+     "one_step": false,
+     "median_worst": false,
+     "worst": false
+    },
+    "pass": false
+   }
+  ],
+  "wrong_sign_caught": true,
+  "env_steps_per_second": {
+   "min": 29188254,
+   "max": 31206367,
+   "repeats": [
+    {
+     "env_steps": 35631,
+     "seconds": 5.0,
+     "env_steps_per_second": 29188254
+    },
+    {
+     "env_steps": 37477,
+     "seconds": 5.0,
+     "env_steps_per_second": 30700525
+    },
+    {
+     "env_steps": 38094,
+     "seconds": 5.0,
+     "env_steps_per_second": 31206367
+    }
+   ],
+   "note": "An env step is 2 substeps, evaluated on the GPU, with no policy and no transfer to the CPU. Other jobs ran."
+  },
+  "process_gpu_seconds": 10.38,
+  "wall_seconds": 16.13,
+  "system_used_gb_peak": 30.08,
+  "diagnosis": [
+   {
+    "seed": 101,
+    "msl_vs_float64": {
+     "median": 5.610624006502363e-06,
+     "p99": 0.0009777422350999664,
+     "worst": 0.014981087903526813
+    },
+    "numpy_float32_vs_float64": {
+     "median": 5.319261583980328e-06,
+     "p99": 0.0009137939164268311,
+     "worst": 0.01701908991768697
+    },
+    "msl_vs_numpy_float32": {
+     "median": 3.337860107421875e-06,
+     "p99": 0.0006152689456939716,
+     "worst": 0.00506591796875
+    },
+    "worst_env": {
+     "pole_angle_at_end_rad": 3.675584833199807,
+     "largest_pole_speed_rad_s": 11.81530899007812
+    }
+   },
+   {
+    "seed": 102,
+    "msl_vs_float64": {
+     "median": 5.303285844471262e-06,
+     "p99": 0.0008637781071072966,
+     "worst": 0.03975374878257831
+    },
+    "numpy_float32_vs_float64": {
+     "median": 5.241303680958431e-06,
+     "p99": 0.0007830640469477691,
+     "worst": 0.03975374878257831
+    },
+    "msl_vs_numpy_float32": {
+     "median": 2.86102294921875e-06,
+     "p99": 0.0005065798759460482,
+     "worst": 0.010847091674804688
+    },
+    "worst_env": {
+     "pole_angle_at_end_rad": -13.211795018307265,
+     "largest_pole_speed_rad_s": 10.8705152470989
+    }
+   },
+   {
+    "seed": 103,
+    "msl_vs_float64": {
+     "median": 5.322139938757076e-06,
+     "p99": 0.0008205478600894999,
+     "worst": 0.1766662230541085
+    },
+    "numpy_float32_vs_float64": {
+     "median": 5.389238339592595e-06,
+     "p99": 0.0009607206985722266,
+     "worst": 0.06852861547964562
+    },
+    "msl_vs_numpy_float32": {
+     "median": 3.337860107421875e-06,
+     "p99": 0.0006193518638610881,
+     "worst": 0.10813760757446289
+    },
+    "worst_env": {
+     "pole_angle_at_end_rad": -6.370483838563142,
+     "largest_pole_speed_rad_s": 11.497455730066399
+    }
+   }
+  ],
+  "diagnosis_reading": "One step is inside its limit on all 3 starts, and so is the median. The worst world of seed 103 reaches 0.177 against 0.05. float32 NumPy against float64 reaches 0.0685 on the same seed, so float32 alone fails this limit there: a pole that swings past the top amplifies rounding. MSL against float32 NumPy is 0.108 on that seed, so MSL and NumPy float32 also differ in rare worlds. This does not show that the kernel is free of errors. It shows that this failure needs none.",
+  "not_shown": "A comparison with Isaac Lab physics. The kernel has no limits on joint velocity, and no contact.",
+  "rerun_fp_contract_off_2026_11_04": {
+   "why": "The O2 work found that Metal's compiler fuses a*b+c inside one expression. This run compiles the same kernel with `#pragma clang fp contract(off)`. The limits did not change.",
+   "verdict": "FAIL at the written limit on the same start: worst world 0.162 against 5e-2, down from 0.177. Fusion is not the cause of this failure.",
+   "written_starts_101_103": {
+    "pass": false,
+    "right": [
+     {
+      "one_step_relative_worst": 4.54234745986731e-07,
+      "median_worst_abs": 5.667621681748614e-06,
+      "worst_abs": 0.017082270841148883,
+      "pass": true
+     },
+     {
+      "one_step_relative_worst": 1.3714209184990426e-06,
+      "median_worst_abs": 5.445507604617816e-06,
+      "worst_abs": 0.020986539048879704,
+      "pass": true
+     },
+     {
+      "one_step_relative_worst": 4.1533536499650015e-07,
+      "median_worst_abs": 5.446041465573259e-06,
+      "worst_abs": 0.16202493811148155,
+      "pass": false
+     }
+    ],
+    "wrong_sign_passes": [
+     false,
+     false,
+     false
+    ],
+    "env_steps_per_second": [
+     27132597,
+     27255363,
+     27070253
+    ]
+   },
+   "new_starts_201_203_contract_off": {
+    "pass": true,
+    "right": [
+     {
+      "one_step_relative_worst": 3.8413318116773697e-07,
+      "median_worst_abs": 5.33271602431995e-06,
+      "worst_abs": 0.026212681537444382,
+      "pass": true
+     },
+     {
+      "one_step_relative_worst": 5.099326231972357e-07,
+      "median_worst_abs": 5.237085443754452e-06,
+      "worst_abs": 0.03741527837076397,
+      "pass": true
+     },
+     {
+      "one_step_relative_worst": 4.774247599327777e-07,
+      "median_worst_abs": 5.1857418807976785e-06,
+      "worst_abs": 0.014091423852016671,
+      "pass": true
+     }
+    ],
+    "wrong_sign_passes": [
+     false,
+     false,
+     false
+    ],
+    "env_steps_per_second": [
+     27042779,
+     27056995,
+     27059999
+    ]
+   },
+   "new_starts_201_203_stock_control": {
+    "pass": true,
+    "right": [
+     {
+      "one_step_relative_worst": 5.210838458620984e-07,
+      "median_worst_abs": 5.223343383597978e-06,
+      "worst_abs": 0.022821415668303757,
+      "pass": true
+     },
+     {
+      "one_step_relative_worst": 6.999475838036705e-07,
+      "median_worst_abs": 5.350715021501529e-06,
+      "worst_abs": 0.04788090031900616,
+      "pass": true
+     },
+     {
+      "one_step_relative_worst": 4.615050506991448e-07,
+      "median_worst_abs": 5.143844347799131e-06,
+      "worst_abs": 0.01306431661324714,
+      "pass": true
+     }
+    ],
+    "wrong_sign_passes": [
+     false,
+     false,
+     false
+    ],
+    "env_steps_per_second": [
+     28369897,
+     31389402,
+     30994363
+    ]
+   },
+   "diagnosis_same_trajectory": [
+    {
+     "seed": 101,
+     "msl_vs_float64": {
+      "median": 5.667621681748614e-06,
+      "p99": 0.0010514327965009287,
+      "worst": 0.017082270841148883
+     },
+     "numpy_float32_vs_float64": {
+      "median": 5.319261583980328e-06,
+      "p99": 0.0009137939164268311,
+      "worst": 0.01701908991768697
+     },
+     "msl_vs_numpy_float32": {
+      "median": 2.86102294921875e-06,
+      "p99": 0.0006250536069273955,
+      "worst": 0.014120101928710938
+     },
+     "worst_env": {
+      "pole_angle_at_end_rad": 3.675584833199807,
+      "largest_pole_speed_rad_s": 11.81530899007812
+     }
+    },
+    {
+     "seed": 102,
+     "msl_vs_float64": {
+      "median": 5.445507604617816e-06,
+      "p99": 0.0007733892510493534,
+      "worst": 0.020986539048879704
+     },
+     "numpy_float32_vs_float64": {
+      "median": 5.241303680958431e-06,
+      "p99": 0.0007830640469477691,
+      "worst": 0.03975374878257831
+     },
+     "msl_vs_numpy_float32": {
+      "median": 2.86102294921875e-06,
+      "p99": 0.0004325568675994884,
+      "worst": 0.041512489318847656
+     },
+     "worst_env": {
+      "pole_angle_at_end_rad": 0.9798435152342624,
+      "largest_pole_speed_rad_s": 11.87760902193114
+     }
+    },
+    {
+     "seed": 103,
+     "msl_vs_float64": {
+      "median": 5.446041465573259e-06,
+      "p99": 0.0009608899384142567,
+      "worst": 0.16202493811148155
+     },
+     "numpy_float32_vs_float64": {
+      "median": 5.389238339592595e-06,
+      "p99": 0.0009607206985722266,
+      "worst": 0.06852861547964562
+     },
+     "msl_vs_numpy_float32": {
+      "median": 2.86102294921875e-06,
+      "p99": 0.0006710529327392583,
+      "worst": 0.09349632263183594
+     },
+     "worst_env": {
+      "pole_angle_at_end_rad": -6.370483838563142,
+      "largest_pole_speed_rad_s": 11.497455730066399
+     }
+    }
+   ],
+   "reading": "The pragma has an effect, because the numbers move, and it costs about 10 percent of the rate. On the failing start float32 NumPy alone reaches 0.0685 and differs from MSL by 0.0935. On starts 201 to 203, with no change to the limit, the stock kernel and this one both pass. So this looks like float32 in a rare fast-spinning world, which this run does not prove. The gate stays failed.",
+   "not_shown": "Whether sin and cos in MSL add to it. They differ from NumPy's. The same limit on more starts."
+  },
+  "twofloat_2026_11_04": {
+   "why": "The float32 kernel failed because float32 rounding is amplified when a pole swings past the top: float32 NumPy fails the same limit on the same start. MSL has no float64, so this kernel holds every value as two floats. The equations, starts, actions and limits did not change.",
+   "verdict": "PASS at the written limits, on the start that failed and on 5 others. The float32 kernel still fails, and that failure stays.",
+   "kernel": "spikes/msl_cartpole_twofloat.py, hand-written MSL through mx.fast.metal_kernel, no new package",
+   "limits": {
+    "one_step_relative": 1e-05,
+    "median_worst_abs": 0.001,
+    "worst_abs": 0.05,
+    "steps": 240
+   },
+   "primitives_against_float64": {
+    "sum_relative_worst": 0.0,
+    "product_relative_worst": 0.0,
+    "plain_float32_sum_relative_worst": 5.948710810264976e-08,
+    "lo_parts_nonzero": 7876,
+    "pass": true
+   },
+   "math_against_float64": {
+    "sin_abs_worst": 5.706546346573305e-14,
+    "cos_abs_worst": 7.915890165577366e-14,
+    "divide_rel_worst": 6.8833827526759706e-15,
+    "multiply_rel_worst": 1.1546319456101628e-14,
+    "pass": true
+   },
+   "right": {
+    "101": {
+     "one_step_relative_worst": 1.4384680491426294e-14,
+     "steps": 240,
+     "median_worst_abs": 2.2382096176443156e-13,
+     "worst_abs": 3.936311276930837e-09,
+     "checks": {
+      "one_step": true,
+      "median_worst": true,
+      "worst": true
+     },
+     "pass": true
+    },
+    "102": {
+     "one_step_relative_worst": 1.26843528752713e-14,
+     "steps": 240,
+     "median_worst_abs": 2.149391775674303e-13,
+     "worst_abs": 7.310863026077641e-10,
+     "checks": {
+      "one_step": true,
+      "median_worst": true,
+      "worst": true
+     },
+     "pass": true
+    },
+    "103": {
+     "one_step_relative_worst": 2.4754464282916043e-14,
+     "steps": 240,
+     "median_worst_abs": 2.1260770921571748e-13,
+     "worst_abs": 2.548016020398336e-09,
+     "checks": {
+      "one_step": true,
+      "median_worst": true,
+      "worst": true
+     },
+     "pass": true
+    },
+    "201": {
+     "one_step_relative_worst": 2.368622606346637e-14,
+     "steps": 240,
+     "median_worst_abs": 2.149391775674303e-13,
+     "worst_abs": 9.20557852168713e-10,
+     "checks": {
+      "one_step": true,
+      "median_worst": true,
+      "worst": true
+     },
+     "pass": true
+    },
+    "202": {
+     "one_step_relative_worst": 1.8829673240750607e-14,
+     "steps": 240,
+     "median_worst_abs": 2.1016521856154213e-13,
+     "worst_abs": 8.442331278502024e-10,
+     "checks": {
+      "one_step": true,
+      "median_worst": true,
+      "worst": true
+     },
+     "pass": true
+    },
+    "203": {
+     "one_step_relative_worst": 2.9056686427960154e-14,
+     "steps": 240,
+     "median_worst_abs": 2.184918912462308e-13,
+     "worst_abs": 1.7109513805735332e-09,
+     "checks": {
+      "one_step": true,
+      "median_worst": true,
+      "worst": true
+     },
+     "pass": true
+    }
+   },
+   "wrong_gravity_sign": {
+    "101": {
+     "one_step_relative_worst": 0.7211931353450975,
+     "steps": 240,
+     "median_worst_abs": 5.987417190007514,
+     "worst_abs": 33.044469204809054,
+     "checks": {
+      "one_step": false,
+      "median_worst": false,
+      "worst": false
+     },
+     "pass": false
+    },
+    "102": {
+     "one_step_relative_worst": 0.7098782394798223,
+     "steps": 240,
+     "median_worst_abs": 5.954350694665129,
+     "worst_abs": 32.39122428702415,
+     "checks": {
+      "one_step": false,
+      "median_worst": false,
+      "worst": false
+     },
+     "pass": false
+    },
+    "103": {
+     "one_step_relative_worst": 0.6749034341920908,
+     "steps": 240,
+     "median_worst_abs": 5.978763752361029,
+     "worst_abs": 32.26999720564949,
+     "checks": {
+      "one_step": false,
+      "median_worst": false,
+      "worst": false
+     },
+     "pass": false
+    },
+    "201": {
+     "one_step_relative_worst": 0.6721625419907915,
+     "steps": 240,
+     "median_worst_abs": 5.978799649927584,
+     "worst_abs": 42.52615581417936,
+     "checks": {
+      "one_step": false,
+      "median_worst": false,
+      "worst": false
+     },
+     "pass": false
+    },
+    "202": {
+     "one_step_relative_worst": 0.69459839378746,
+     "steps": 240,
+     "median_worst_abs": 5.946637130184781,
+     "worst_abs": 36.40180806729913,
+     "checks": {
+      "one_step": false,
+      "median_worst": false,
+      "worst": false
+     },
+     "pass": false
+    },
+    "203": {
+     "one_step_relative_worst": 0.7045189439692685,
+     "steps": 240,
+     "median_worst_abs": 5.985723078807749,
+     "worst_abs": 40.17993985132217,
+     "checks": {
+      "one_step": false,
+      "median_worst": false,
+      "worst": false
+     },
+     "pass": false
+    }
+   },
+   "wrong_sign_caught": true,
+   "env_steps_per_second": [
+    25884623,
+    26288580,
+    26022590
+   ],
+   "process_gpu_seconds": 11.61,
+   "wall_seconds": 16.63,
+   "system_used_gb_peak": 30.93,
+   "not_shown": "A comparison with Isaac Lab physics: the kernel has no limits on joint velocity, and no contact. The reference is the same equations in float64, so it cannot catch an error in the equations themselves. The closed-loop test in msl_closed_loop ran on the float32 kernel. The rate is close to the float32 rate, which suggests that the dispatch overhead sets it. That reading was not measured."
+  }
+ },
+ "msl_closed_loop": {
+  "verdict": "pass",
+  "limits": "trained at least 0.95, controls at most 0.20, written in docs/MILESTONES.md before the run",
+  "runs": {
+   "trained": {
+    "steps": 900,
+    "envs": 4096,
+    "seed": 101,
+    "upright_fraction_last_100": 0.9993310546875,
+    "resets": 12293,
+    "seconds": 0.503
+   },
+   "first_iteration": {
+    "steps": 900,
+    "envs": 4096,
+    "seed": 101,
+    "upright_fraction_last_100": 0.01585693359375,
+    "resets": 21013,
+    "seconds": 0.414
+   },
+   "zero": {
+    "steps": 900,
+    "envs": 4096,
+    "seed": 101,
+    "upright_fraction_last_100": 0.0,
+    "resets": 12288,
+    "seconds": 0.145
+   }
+  },
+  "checks": {
+   "trained": true,
+   "first_iteration": true,
+   "zero": true
+  },
+  "process_gpu_seconds": 0.21,
+  "note": "The trained policy learned on Newton with warp-metal, seed 1, and it had not seen this hand-written model. One seed. A cartpole only. This is not Isaac Lab physics. GPU time is a low bound for a run of 2 s, because the sampling is every 2 s to 5 s."
+ },
+ "gpu_per_part": {
+  "protocol": "Go2 flat, 64 envs, 60 s, 2 repeats of each, other jobs running. Each run is its own process.",
+  "sampling_note": "accumulatedGPUTime is sampled by the operating system every 2 s to 5 s, so each value is a lower bound, and a small difference between runs means little.",
+  "runs": {
+   "physics_metal": [
+    {
+     "process_gpu_seconds": 23.36,
+     "wall_seconds": 65.33,
+     "exit_code": 0,
+     "peak_footprint_gb": 0.75,
+     "system_used_gb_peak": 29.54,
+     "env_steps": 1713,
+     "frames": 0,
+     "gpu_ms_per_env_step": 13.636894337419731
+    },
+    {
+     "process_gpu_seconds": 23.46,
+     "wall_seconds": 65.42,
+     "exit_code": 0,
+     "peak_footprint_gb": 0.75,
+     "system_used_gb_peak": 29.56,
+     "env_steps": 1705,
+     "frames": 0,
+     "gpu_ms_per_env_step": 13.759530791788858
+    }
+   ],
+   "physics_cpu": [
+    {
+     "process_gpu_seconds": 0.0,
+     "wall_seconds": 64.83,
+     "exit_code": 0,
+     "peak_footprint_gb": 0.59,
+     "system_used_gb_peak": 29.44,
+     "env_steps": 2470,
+     "frames": 0,
+     "gpu_ms_per_env_step": 0.0
+    },
+    {
+     "process_gpu_seconds": 0.0,
+     "wall_seconds": 64.89,
+     "exit_code": 0,
+     "peak_footprint_gb": 0.57,
+     "system_used_gb_peak": 29.27,
+     "env_steps": 2536,
+     "frames": 0,
+     "gpu_ms_per_env_step": 0.0
+    }
+   ],
+   "policy": [
+    {
+     "process_gpu_seconds": 24.94,
+     "wall_seconds": 65.44,
+     "exit_code": 0,
+     "peak_footprint_gb": 0.76,
+     "system_used_gb_peak": 29.58,
+     "env_steps": 1399,
+     "frames": 0,
+     "gpu_ms_per_env_step": 17.827019299499643
+    },
+    {
+     "process_gpu_seconds": 25.18,
+     "wall_seconds": 65.36,
+     "exit_code": 0,
+     "peak_footprint_gb": 0.76,
+     "system_used_gb_peak": 29.44,
+     "env_steps": 1398,
+     "frames": 0,
+     "gpu_ms_per_env_step": 18.011444921316166
+    }
+   ],
+   "viewer": [
+    {
+     "process_gpu_seconds": 33.3,
+     "wall_seconds": 66.86,
+     "exit_code": 0,
+     "peak_footprint_gb": 1.56,
+     "system_used_gb_peak": 30.23,
+     "env_steps": 1292,
+     "frames": 1292,
+     "gpu_ms_per_env_step": 25.773993808049532
+    },
+    {
+     "process_gpu_seconds": 33.31,
+     "wall_seconds": 66.89,
+     "exit_code": 0,
+     "peak_footprint_gb": 1.56,
+     "system_used_gb_peak": 30.2,
+     "env_steps": 1300,
+     "frames": 1300,
+     "gpu_ms_per_env_step": 25.623076923076926
+    }
+   ]
+  },
+  "physics_gpu_ms_per_env_step": 13.698212564604294,
+  "policy_difference_gpu_ms_per_env_step": 4.22101954580361,
+  "viewer_difference_gpu_ms_per_env_step": 12.000322800958937,
+  "checks": {
+   "physics_on_metal_above_0": true,
+   "cpu_control_is_0": true
+  },
+  "pass": true,
+  "reading": "At 64 envs the Mac CPU physics takes more env steps than Metal: 2470 to 2536 against 1705 to 1713 in 60 s. Metal's gain is at large env counts: see validation/warp-metal-o2.json. GPU time in the viewer runs includes OpenGL, which macOS carries out on the GPU. Both differences are between separate runs, per env step, and the sampling note applies."
+ },
+ "warp_msl": {
+  "protocol": "One Go2 run on metal:0 with WARP_CACHE_PATH on an empty folder. These are the source files that warp-metal wrote in that run.",
+  "metal_source_files": 63,
+  "kernel_functions": 771,
+  "example": {
+   "unit": "wp__efc_contact_init__locals__kernel_c4657f1c_c4657f1",
+   "kernel": "_efc_contact_init__locals__kernel_c5b4a6a3_metal_forward",
+   "first_lines": [
+    "",
+    "",
+    "",
+    "kernel void _efc_contact_init__locals__kernel_c5b4a6a3_metal_forward(",
+    "    constant wp::launch_bounds_t<1>& dim [[buffer(0)]],",
+    "    constant wp_args__efc_contact_init__locals__kernel_c5b4a6a3* _wp_args [[buffer(1)]],",
+    "    threadgroup char* _wp_arena [[threadgroup(0)]],",
+    "    uint task_index [[thread_position_in_grid]])",
+    "{",
+    "    if (task_index >= dim.size)",
+    "        return;",
+    "    wp::tile_shared_storage_t::init(_wp_arena);  // shared-tile arena (see tile.h)",
+    "    _efc_contact_init__locals__kernel_c5b4a6a3_cpu_kernel_forward(_wp_arena, dim, task_index, _wp_args);",
+    "}"
+   ]
+  },
+  "checks": {
+   "has_metal_files": true,
+   "has_a_kernel_with_a_buffer_attribute": true
+  },
+  "pass": true
+ }
+}

@@ -1,0 +1,194 @@
+{
+ "schema": "orchardsim.validation.m4_trajectory.v1",
+ "date": "2026-11-03",
+ "gate": "CuMLX M4: trajectory error against reference MuJoCo, grade B, with a limit written first",
+ "limits_written": "commit 9da5a34, before the first run",
+ "protocol": "The same start and the same actions, new random controls every 20 steps, one list per world. 256 worlds, 200 steps, 3 starts. MuJoCo Warp on metal:0 against MuJoCo C in float64, with MuJoCo Warp on the CPU as the control. 2 Metal repeats per start. spikes/m4_trajectory_mujoco.py.",
+ "not_shown": "A task from Isaac Lab, and the Go2 model. Rare worlds are far from the reference on both float32 runs: max error 0.3 to 1.3 at the worst world, on Metal and on the CPU control. The limits cover the median and the 90th percentile, so they do not bound these worlds.",
+ "grade": "B",
+ "reference": "MuJoCo C, float64, CPU",
+ "model": "humanoid.xml",
+ "worlds": 256,
+ "steps": 200,
+ "action_hold": 20,
+ "limits": {
+  "median_absolute": 0.01,
+  "p90_absolute": 0.05,
+  "control_factor": 3.0,
+  "control_floor": 0.0001
+ },
+ "starts": {
+  "21": {
+   "cpu_control": {
+    "median": 9.201532240921129e-05,
+    "p90": 0.025474713093267487,
+    "max": 0.4904878550663141,
+    "finite": true
+   },
+   "metal": [
+    {
+     "median": 9.595339412826753e-05,
+     "p90": 0.031512128632431996,
+     "max": 0.4904846662178186,
+     "finite": true,
+     "pass": true,
+     "reasons": []
+    },
+    {
+     "median": 8.709142122118041e-05,
+     "p90": 0.029727367640987296,
+     "max": 0.49048794447328126,
+     "finite": true,
+     "pass": true,
+     "reasons": []
+    }
+   ],
+   "faults": {
+    "gravity_plus_2_percent": {
+     "median": 0.5365100690359763,
+     "p90": 1.3029161969019496,
+     "max": 2.5328009886931326,
+     "finite": true,
+     "pass": false,
+     "reasons": [
+      "median 0.5365100690359763 above 0.01",
+      "p90 1.3029161969019496 above 0.05",
+      "median 0.5365100690359763 above 0.00027604596722763386, from the control",
+      "p90 1.3029161969019496 above 0.07642413927980246, from the control"
+     ]
+    },
+    "actions_times_1_02": {
+     "median": 0.5182160998432419,
+     "p90": 1.4780064371926098,
+     "max": 2.3738247559306633,
+     "finite": true,
+     "pass": false,
+     "reasons": [
+      "median 0.5182160998432419 above 0.01",
+      "p90 1.4780064371926098 above 0.05",
+      "median 0.5182160998432419 above 0.00027604596722763386, from the control",
+      "p90 1.4780064371926098 above 0.07642413927980246, from the control"
+     ]
+    }
+   }
+  },
+  "22": {
+   "cpu_control": {
+    "median": 9.809903794921748e-05,
+    "p90": 0.03606023241824374,
+    "max": 0.35520487591526906,
+    "finite": true
+   },
+   "metal": [
+    {
+     "median": 9.177620624940819e-05,
+     "p90": 0.039275270473589335,
+     "max": 0.358424369593417,
+     "finite": true,
+     "pass": true,
+     "reasons": []
+    },
+    {
+     "median": 0.00010346309364132888,
+     "p90": 0.03611863751954303,
+     "max": 0.35203981948331164,
+     "finite": true,
+     "pass": true,
+     "reasons": []
+    }
+   ],
+   "faults": {
+    "gravity_plus_2_percent": {
+     "median": 0.5187575833129358,
+     "p90": 1.2175152857811538,
+     "max": 2.5594498645655523,
+     "finite": true,
+     "pass": false,
+     "reasons": [
+      "median 0.5187575833129358 above 0.01",
+      "p90 1.2175152857811538 above 0.05",
+      "median 0.5187575833129358 above 0.00029429711384765245, from the control",
+      "p90 1.2175152857811538 above 0.10818069725473123, from the control"
+     ]
+    },
+    "actions_times_1_02": {
+     "median": 0.4927431630848225,
+     "p90": 1.300559252971928,
+     "max": 2.6564303076498312,
+     "finite": true,
+     "pass": false,
+     "reasons": [
+      "median 0.4927431630848225 above 0.01",
+      "p90 1.300559252971928 above 0.05",
+      "median 0.4927431630848225 above 0.00029429711384765245, from the control",
+      "p90 1.300559252971928 above 0.10818069725473123, from the control"
+     ]
+    }
+   }
+  },
+  "23": {
+   "cpu_control": {
+    "median": 7.711902538096171e-05,
+    "p90": 0.008327239556700144,
+    "max": 0.3121068443950205,
+    "finite": true
+   },
+   "metal": [
+    {
+     "median": 7.706606608459676e-05,
+     "p90": 0.007905212575817583,
+     "max": 0.2959147014382167,
+     "finite": true,
+     "pass": true,
+     "reasons": []
+    },
+    {
+     "median": 8.236907994180198e-05,
+     "p90": 0.009330077440922839,
+     "max": 1.310297772599708,
+     "finite": true,
+     "pass": true,
+     "reasons": []
+    }
+   ],
+   "faults": {
+    "gravity_plus_2_percent": {
+     "median": 0.48889459541491304,
+     "p90": 1.2711097945100915,
+     "max": 2.4913604976674972,
+     "finite": true,
+     "pass": false,
+     "reasons": [
+      "median 0.48889459541491304 above 0.01",
+      "p90 1.2711097945100915 above 0.05",
+      "median 0.48889459541491304 above 0.00023135707614288514, from the control",
+      "p90 1.2711097945100915 above 0.024981718670100433, from the control"
+     ]
+    },
+    "actions_times_1_02": {
+     "median": 0.4728914821357113,
+     "p90": 1.195521260874417,
+     "max": 2.5761883918945427,
+     "finite": true,
+     "pass": false,
+     "reasons": [
+      "median 0.4728914821357113 above 0.01",
+      "p90 1.195521260874417 above 0.05",
+      "median 0.4728914821357113 above 0.00023135707614288514, from the control",
+      "p90 1.195521260874417 above 0.024981718670100433, from the control"
+     ]
+    }
+   }
+  }
+ },
+ "verdict": "pass",
+ "measured": {
+  "wall_seconds": 158.14,
+  "exit_code": 0,
+  "process_gpu_seconds": 12.1,
+  "peak_footprint_gb": 0.37,
+  "system_used_gb_peak": 29.82,
+  "stopped_for_memory": false,
+  "stopped_for_system_memory": false
+ }
+}

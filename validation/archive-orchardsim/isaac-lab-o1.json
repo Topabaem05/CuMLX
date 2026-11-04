@@ -1,0 +1,1431 @@
+{
+ "schema": "orchardsim.validation.isaac_lab_o1.v1",
+ "date": "2026-11-03",
+ "verdict": "Today Isaac Lab physics uses no GPU. MPS gave no gain overall: the PPO update is 3.6 times faster (0.29 s against 1.04 s per iteration), but it is about 3.5% of an iteration, and physics takes 28 to 30 s. Whole-iteration throughput was 3254 steps/s on MPS and 3377 on CPU, and that difference is inside the spread of 2 repeats on a shared Mac. The policy alone is faster on the GPU only at large batches: at 128 envs torch on the CPU is faster than MLX on the GPU, and at 4096 envs MLX on the GPU is 6.4 times faster than torch on the CPU.",
+ "machine": "Apple M5 Pro, 15 cores, 48 GB, macOS 27.0.1. Shared with other jobs: each number has its load beside it.",
+ "isaac_lab_commit": "c498443e0b833515e1976db9eb3edcd8dabb4cb7",
+ "physics": "newton_mjwarp on the CPU",
+ "gpu_measure": "accumulatedGPUTime of the process tree, sampled about every 5 s, so a lower bound. spikes/isaac_measure.py. Harness check: an MLX load gave 9.16 s and a CPU load 0.0 s.",
+ "smoke_matrix": {
+  "protocol": "Shipped config, presets=newton_mjwarp, --device cpu, 32 envs, 3 iterations, one process per task. Pass: exit 0, iterations printed, a checkpoint written, no non-finite reward.",
+  "shows": "The tasks run. It does not show that they learn: 3 iterations is too few, and the reward fell in many.",
+  "steps_note": "32 envs on a shared Mac. Compare these only as an order of magnitude.",
+  "passed": 23,
+  "total": 23,
+  "not_tried": "Every other registered task, including camera, soft-body and most contrib tasks. 146 tasks are registered.",
+  "tasks": [
+   {
+    "task": "Isaac-Cartpole-Direct",
+    "family": "cartpole",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     411,
+     5131,
+     6635
+    ],
+    "wall_seconds": 7.06,
+    "cores_busy": 0.89,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": 0.15,
+    "reward_last": -0.81,
+    "competing_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 101.2,
+     "WindowServer": 38.6
+    },
+    "uptime": "9:52  up 5 days, 20:31, 5 users, load averages: 6.03 4.88 4.08"
+   },
+   {
+    "task": "Isaac-Cartpole",
+    "family": "cartpole",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     2340,
+     6838,
+     6557
+    ],
+    "wall_seconds": 6.55,
+    "cores_busy": 0.93,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": 0.15,
+    "reward_last": -0.81,
+    "competing_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 100.7,
+     "Autodesk Fusion": 99.0,
+     "WindowServer": 44.3
+    },
+    "uptime": "9:52  up 5 days, 20:31, 5 users, load averages: 6.00 4.93 4.11"
+   },
+   {
+    "task": "Isaac-Velocity-Flat-UnitreeGo2",
+    "family": "quadruped",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     728,
+     920,
+     895
+    ],
+    "wall_seconds": 11.09,
+    "cores_busy": 0.86,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -0.31,
+    "reward_last": -1.86,
+    "competing_max_cpu_percent": {
+     "bfs": 452.7,
+     "com.apple.WebKit.WebContent": 99.9,
+     "Autodesk Fusion": 98.4,
+     "WindowServer": 40.8
+    },
+    "uptime": "9:53  up 5 days, 20:31, 5 users, load averages: 5.76 4.92 4.11"
+   },
+   {
+    "task": "Isaac-Velocity-Rough-UnitreeGo2",
+    "family": "quadruped",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     152,
+     686,
+     627
+    ],
+    "wall_seconds": 29.73,
+    "cores_busy": 0.88,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -0.88,
+    "reward_last": -2.48,
+    "competing_max_cpu_percent": {
+     "bfs": 673.6,
+     "Autodesk Fusion": 109.6,
+     "com.apple.WebKit.WebContent": 100.6,
+     "QtWebEngineProcess": 53.8,
+     "WindowServer": 48.2
+    },
+    "uptime": "9:53  up 5 days, 20:32, 5 users, load averages: 6.20 5.05 4.18"
+   },
+   {
+    "task": "Isaac-Velocity-Flat-AnymalD",
+    "family": "quadruped",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     157,
+     232,
+     215
+    ],
+    "wall_seconds": 18.16,
+    "cores_busy": 0.97,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -4.28,
+    "reward_last": -4.28,
+    "competing_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 140.0,
+     "Autodesk Fusion": 75.8,
+     "WindowServer": 52.2,
+     "com.apple.WebKit.GPU": 22.7
+    },
+    "uptime": "9:54  up 5 days, 20:33, 5 users, load averages: 6.68 5.44 4.37"
+   },
+   {
+    "task": "IsaacContrib-Velocity-Flat-UnitreeA1",
+    "family": "quadruped",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     1285,
+     1345,
+     1521
+    ],
+    "wall_seconds": 9.07,
+    "cores_busy": 0.88,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -1.23,
+    "reward_last": -3.24,
+    "competing_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 129.6,
+     "WindowServer": 44.5,
+     "Safari": 31.4,
+     "com.apple.WebKit.Networking": 21.6
+    },
+    "uptime": "9:54  up 5 days, 20:33, 5 users, load averages: 5.35 5.23 4.33"
+   },
+   {
+    "task": "IsaacContrib-Velocity-Flat-UnitreeGo1",
+    "family": "quadruped",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     1162,
+     1453,
+     1359
+    ],
+    "wall_seconds": 7.56,
+    "cores_busy": 0.95,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -1.14,
+    "reward_last": -2.87,
+    "competing_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 101.2,
+     "WindowServer": 45.0,
+     "storagekitd": 30.8
+    },
+    "uptime": "9:54  up 5 days, 20:33, 5 users, load averages: 5.84 5.37 4.40"
+   },
+   {
+    "task": "IsaacContrib-Velocity-Flat-AnymalC",
+    "family": "quadruped",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     237,
+     332,
+     325
+    ],
+    "wall_seconds": 13.61,
+    "cores_busy": 1.0,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -3.6,
+    "reward_last": -7.02,
+    "competing_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 101.0,
+     "WindowServer": 53.6
+    },
+    "uptime": "9:55  up 5 days, 20:34, 5 users, load averages: 4.66 5.12 4.34"
+   },
+   {
+    "task": "IsaacContrib-Velocity-Flat-Spot",
+    "family": "quadruped",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     238,
+     448,
+     465
+    ],
+    "wall_seconds": 19.16,
+    "cores_busy": 0.99,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": 0.54,
+    "reward_last": 0.53,
+    "competing_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 101.2,
+     "WindowServer": 52.7
+    },
+    "uptime": "9:55  up 5 days, 20:34, 5 users, load averages: 4.53 5.06 4.34"
+   },
+   {
+    "task": "Isaac-Humanoid",
+    "family": "biped_humanoid",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     585,
+     1646,
+     1545
+    ],
+    "wall_seconds": 9.58,
+    "cores_busy": 0.97,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -0.73,
+    "reward_last": -0.7,
+    "competing_max_cpu_percent": {
+     "Autodesk Fusion": 384.2,
+     "com.apple.WebKit.WebContent": 101.2,
+     "XprotectService": 81.0,
+     "WindowServer": 52.1
+    },
+    "uptime": "9:56  up 5 days, 20:35, 5 users, load averages: 4.03 4.90 4.30"
+   },
+   {
+    "task": "Isaac-Humanoid-Direct",
+    "family": "biped_humanoid",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     1393,
+     1712,
+     1668
+    ],
+    "wall_seconds": 7.07,
+    "cores_busy": 1.01,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -0.64,
+    "reward_last": -0.66,
+    "competing_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 100.6,
+     "Autodesk Fusion": 89.5,
+     "WindowServer": 54.1,
+     "python": 22.3
+    },
+    "uptime": "9:56  up 5 days, 20:35, 5 users, load averages: 6.66 5.41 4.49"
+   },
+   {
+    "task": "Isaac-Velocity-Flat-H1",
+    "family": "biped_humanoid",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     226,
+     1132,
+     1113
+    ],
+    "wall_seconds": 11.59,
+    "cores_busy": 0.98,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -5.22,
+    "reward_last": -5.34,
+    "competing_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 100.6,
+     "python": 100.0,
+     "PerfPowerServices": 59.2,
+     "MTLCompilerService": 56.5,
+     "WindowServer": 50.7,
+     "runningboardd": 32.7
+    },
+    "uptime": "9:56  up 5 days, 20:35, 5 users, load averages: 6.43 5.42 4.51"
+   },
+   {
+    "task": "Isaac-Velocity-Flat-G1",
+    "family": "biped_humanoid",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     233,
+     693,
+     655
+    ],
+    "wall_seconds": 13.1,
+    "cores_busy": 0.94,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -5.95,
+    "reward_last": -5.97,
+    "competing_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 101.3,
+     "python": 99.6,
+     "MTLCompilerService": 96.3,
+     "WindowServer": 46.7,
+     "Claude Helper (Renderer)": 22.1
+    },
+    "uptime": "9:56  up 5 days, 20:35, 5 users, load averages: 5.95 5.38 4.52"
+   },
+   {
+    "task": "Isaac-Velocity-Flat-Cassie",
+    "family": "biped_humanoid",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     459,
+     1322,
+     1308
+    ],
+    "wall_seconds": 9.09,
+    "cores_busy": 0.92,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -6.46,
+    "reward_last": -8.77,
+    "competing_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 101.2,
+     "python": 96.9,
+     "WindowServer": 45.7
+    },
+    "uptime": "9:57  up 5 days, 20:36, 5 users, load averages: 5.53 5.32 4.51"
+   },
+   {
+    "task": "Isaac-Ant",
+    "family": "classic",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     714,
+     3528,
+     3559
+    ],
+    "wall_seconds": 9.08,
+    "cores_busy": 0.92,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -0.9,
+    "reward_last": -0.9,
+    "competing_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 100.6,
+     "python": 100.5,
+     "WindowServer": 47.2,
+     "Claude Helper (Renderer)": 21.4
+    },
+    "uptime": "9:57  up 5 days, 20:36, 5 users, load averages: 5.34 5.30 4.52"
+   },
+   {
+    "task": "Isaac-Ant-Direct",
+    "family": "classic",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     2792,
+     4139,
+     4196
+    ],
+    "wall_seconds": 6.06,
+    "cores_busy": 1.0,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": 0.05,
+    "reward_last": -0.27,
+    "competing_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 101.3,
+     "WindowServer": 44.2
+    },
+    "uptime": "9:57  up 5 days, 20:36, 5 users, load averages: 5.21 5.27 4.52"
+   },
+   {
+    "task": "Isaac-Reach-Franka",
+    "family": "manipulation",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     193,
+     1193,
+     1206
+    ],
+    "wall_seconds": 11.6,
+    "cores_busy": 0.98,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -0.1,
+    "reward_last": -0.2,
+    "competing_max_cpu_percent": {
+     "Autodesk Fusion": 114.1,
+     "com.apple.WebKit.WebContent": 101.2,
+     "python": 98.6,
+     "WindowServer": 29.9
+    },
+    "uptime": "9:58  up 5 days, 20:37, 5 users, load averages: 5.17 5.25 4.53"
+   },
+   {
+    "task": "Isaac-Reach-UR10",
+    "family": "manipulation",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     290,
+     1443,
+     1386
+    ],
+    "wall_seconds": 9.59,
+    "cores_busy": 0.96,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -0.08,
+    "reward_last": -0.4,
+    "competing_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 100.6,
+     "WindowServer": 32.0,
+     "Google Chrome Helper (Aperitif Renderer)": 26.2
+    },
+    "uptime": "9:58  up 5 days, 20:37, 5 users, load averages: 5.43 5.29 4.57"
+   },
+   {
+    "task": "Isaac-Lift-Franka",
+    "family": "manipulation",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     257,
+     317,
+     316
+    ],
+    "wall_seconds": 40.36,
+    "cores_busy": 1.0,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": 0.02,
+    "reward_last": -0.08,
+    "competing_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 101.2,
+     "WindowServer": 33.8,
+     "Claude Helper (Renderer)": 20.8
+    },
+    "uptime": "9:58  up 5 days, 20:37, 5 users, load averages: 5.15 5.24 4.56"
+   },
+   {
+    "task": "Isaac-Open-Drawer-Franka",
+    "family": "manipulation",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     409,
+     769,
+     734
+    ],
+    "wall_seconds": 21.69,
+    "cores_busy": 1.01,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -25.78,
+    "reward_last": -104.36,
+    "competing_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 101.2,
+     "storagekitd": 34.3,
+     "WindowServer": 30.0
+    },
+    "uptime": "9:59  up 5 days, 20:38, 5 users, load averages: 4.61 5.10 4.55"
+   },
+   {
+    "task": "Isaac-Reorient-Cube-Allegro",
+    "family": "manipulation",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     65,
+     83,
+     83
+    ],
+    "wall_seconds": 36.32,
+    "cores_busy": 0.99,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -0.34,
+    "reward_last": -0.3,
+    "competing_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 101.2,
+     "WindowServer": 32.0
+    },
+    "uptime": "10:00  up 5 days, 20:39, 5 users, load averages: 4.30 4.99 4.53"
+   },
+   {
+    "task": "Isaac-Reorient-Cube-Shadow",
+    "family": "manipulation",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     46,
+     70,
+     84
+    ],
+    "wall_seconds": 31.24,
+    "cores_busy": 0.99,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -0.14,
+    "reward_last": 0.17,
+    "competing_max_cpu_percent": {
+     "Autodesk Fusion": 620.5,
+     "com.apple.WebKit.WebContent": 100.2,
+     "WindowServer": 25.6
+    },
+    "uptime": "10:00  up 5 days, 20:39, 5 users, load averages: 5.30 5.08 4.58"
+   },
+   {
+    "task": "Isaac-Lift-KukaAllegro",
+    "family": "manipulation",
+    "status": "trained",
+    "exit_code": 0,
+    "envs": 32,
+    "iterations": 3,
+    "physics_from_log": "newton_mjwarp",
+    "steps_per_second_each_iteration": [
+     112,
+     131,
+     130
+    ],
+    "wall_seconds": 78.13,
+    "cores_busy": 0.99,
+    "process_gpu_seconds": 0.0,
+    "checkpoints": 2,
+    "reward_first": -0.5,
+    "reward_last": -1.07,
+    "competing_max_cpu_percent": {
+     "Autodesk Fusion": 556.0,
+     "com.apple.WebKit.WebContent": 101.4,
+     "python": 100.0,
+     "WindowServer": 29.9,
+     "Claude Helper (Renderer)": 20.1
+    },
+    "uptime": "10:01  up 5 days, 20:40, 5 users, load averages: 6.33 5.45 4.75"
+   }
+  ]
+ },
+ "gpu_use_by_part": {
+  "physics_alone": {
+   "result": "No GPU use: 0.0 process GPU seconds, about one CPU core.",
+   "runs": [
+    {
+     "envs": 4096,
+     "steps": 200,
+     "step_seconds": 222.45,
+     "env_steps_per_second": 3683,
+     "measured": {
+      "wall_seconds": 233.34,
+      "exit_code": 0,
+      "cores_busy": 0.98,
+      "cpu_user_seconds": 223.48,
+      "cpu_system_seconds": 4.45,
+      "process_gpu_seconds": 0.0,
+      "process_gpu_share_of_wall": 0.0,
+      "gpu_device_utilization_percent_before": {
+       "samples": 8,
+       "mean": 4.5,
+       "median": 0,
+       "p95": 15,
+       "max": 15
+      },
+      "gpu_device_utilization_percent_during": {
+       "samples": 225,
+       "mean": 5.2,
+       "median": 0,
+       "p95": 19,
+       "max": 62
+      },
+      "other_processes_cpu_percent": {
+       "samples": 45,
+       "mean": 305.4,
+       "median": 290.3,
+       "p95": 438.0,
+       "max": 762.4
+      },
+      "competing_during_max_cpu_percent": {
+       "com.apple.WebKit.WebContent": 101.2,
+       "python": 100.0,
+       "UsageTrackingAgent": 92.4,
+       "WindowServer": 79.3,
+       "deleted": 74.2,
+       "cloudd": 50.4,
+       "Autodesk Fusion": 46.4,
+       "MTLCompilerService": 44.9
+      },
+      "uptime_before": "10:10  up 5 days, 20:49, 5 users, load averages: 3.51 4.52 4.74",
+      "uptime_after": "10:14  up 5 days, 20:53, 5 users, load averages: 6.00 5.27 5.02",
+      "argv": [
+       "~/cumlx-isaaclab/go2/venv/bin/python",
+       "~/code/CuMLX/spikes/isaac_lab_mlx_loop.py",
+       "--controller",
+       "zero",
+       "--forward",
+       "0.8",
+       "--output",
+       "physics_4096.out.json",
+       "--num_envs",
+       "4096",
+       "--steps",
+       "200",
+       "--task",
+       "Isaac-Velocity-Flat-UnitreeGo2",
+       "--device",
+       "cpu",
+       "presets=newton_mjwarp"
+      ]
+     }
+    },
+    {
+     "envs": 1024,
+     "steps": 400,
+     "step_seconds": 115.98,
+     "env_steps_per_second": 3532,
+     "measured": {
+      "wall_seconds": 124.48,
+      "exit_code": 0,
+      "cores_busy": 0.98,
+      "cpu_user_seconds": 119.62,
+      "cpu_system_seconds": 2.53,
+      "process_gpu_seconds": 0.0,
+      "process_gpu_share_of_wall": 0.0,
+      "gpu_device_utilization_percent_before": {
+       "samples": 8,
+       "mean": 16.0,
+       "median": 13,
+       "p95": 38,
+       "max": 38
+      },
+      "gpu_device_utilization_percent_during": {
+       "samples": 120,
+       "mean": 5.6,
+       "median": 0,
+       "p95": 21,
+       "max": 33
+      },
+      "other_processes_cpu_percent": {
+       "samples": 24,
+       "mean": 329.3,
+       "median": 319.0,
+       "p95": 464.09999999999997,
+       "max": 464.8
+      },
+      "competing_during_max_cpu_percent": {
+       "com.apple.WebKit.WebContent": 101.4,
+       "python": 98.8,
+       "mobileassetd": 94.6,
+       "replayd": 83.4,
+       "System Settings": 76.6,
+       "Safari": 71.4,
+       "du": 61.5,
+       "WindowServer": 53.6
+      },
+      "uptime_before": "10:14  up 5 days, 20:53, 5 users, load averages: 5.70 5.23 5.00",
+      "uptime_after": "10:17  up 5 days, 20:55, 5 users, load averages: 6.32 6.16 5.45",
+      "argv": [
+       "~/cumlx-isaaclab/go2/venv/bin/python",
+       "~/code/CuMLX/spikes/isaac_lab_mlx_loop.py",
+       "--controller",
+       "zero",
+       "--forward",
+       "0.8",
+       "--output",
+       "physics_1024.out.json",
+       "--num_envs",
+       "1024",
+       "--steps",
+       "400",
+       "--task",
+       "Isaac-Velocity-Flat-UnitreeGo2",
+       "--device",
+       "cpu",
+       "presets=newton_mjwarp"
+      ]
+     }
+    }
+   ]
+  },
+  "learner": {
+   "protocol": "Go2 flat, 4096 envs, 12 iterations, physics on the CPU, 2 repeats of each device, alternating. spikes/isaac_lab_train_device.py overrides the learner device at run time; Isaac Lab's source is not edited.",
+   "comparison": {
+    "learning_seconds_per_iteration": {
+     "cpu": 1.044,
+     "mps": 0.2915
+    },
+    "collection_seconds_per_iteration": {
+     "cpu": 28.2905,
+     "mps": 29.9685
+    },
+    "steps_per_second": {
+     "cpu": 3376.5,
+     "mps": 3253.5
+    }
+   },
+   "runs": [
+    {
+     "device": "cpu",
+     "repeat": 1,
+     "device_line_from_log": "env device cpu; learner device cpu",
+     "iterations": 12,
+     "median_steps_per_second": 3584,
+     "median_collection_seconds": 26.658,
+     "median_learning_seconds": 0.99,
+     "steps_per_second_each_iteration": [
+      3529,
+      3401,
+      3295,
+      3278,
+      3394,
+      3584,
+      3705,
+      3762,
+      3712,
+      3593,
+      3656,
+      3477
+     ],
+     "learning_seconds_each_iteration": [
+      1.163,
+      1.132,
+      1.152,
+      1.118,
+      0.974,
+      0.77,
+      0.788,
+      1.157,
+      0.929,
+      0.861,
+      1.122,
+      0.99
+     ],
+     "measured": {
+      "wall_seconds": 353.73,
+      "exit_code": 0,
+      "cores_busy": 1.0,
+      "cpu_user_seconds": 345.85,
+      "cpu_system_seconds": 9.55,
+      "process_gpu_seconds": 0.0,
+      "process_gpu_share_of_wall": 0.0,
+      "gpu_device_utilization_percent_before": {
+       "samples": 8,
+       "mean": 1.6,
+       "median": 0,
+       "p95": 13,
+       "max": 13
+      },
+      "gpu_device_utilization_percent_during": {
+       "samples": 341,
+       "mean": 2.9,
+       "median": 0,
+       "p95": 15,
+       "max": 29
+      },
+      "other_processes_cpu_percent": {
+       "samples": 69,
+       "mean": 284.4,
+       "median": 285.4,
+       "p95": 398.7,
+       "max": 591.6
+      },
+      "competing_during_max_cpu_percent": {
+       "Python": 199.9,
+       "com.apple.WebKit.WebContent": 101.2,
+       "python": 99.6,
+       "duetexpertd": 85.5,
+       "intelligenceflowd": 82.6,
+       "Claude Helper (Renderer)": 60.7,
+       "Safari": 54.3,
+       "com.apple.WebKit.Networking": 51.1
+      },
+      "uptime_before": "10:18  up 5 days, 20:57, 5 users, load averages: 6.55 6.33 5.60",
+      "uptime_after": "10:24  up 5 days, 21:03, 5 users, load averages: 6.05 5.92 5.63",
+      "argv": [
+       "~/cumlx-isaaclab/go2/venv/bin/python",
+       "~/code/CuMLX/spikes/isaac_lab_train_device.py",
+       "--learner-device",
+       "cpu",
+       "--",
+       "--num_envs",
+       "4096",
+       "--max_iterations",
+       "12",
+       "--task",
+       "Isaac-Velocity-Flat-UnitreeGo2",
+       "--device",
+       "cpu",
+       "presets=newton_mjwarp"
+      ]
+     }
+    },
+    {
+     "device": "cpu",
+     "repeat": 2,
+     "device_line_from_log": "env device cpu; learner device cpu",
+     "iterations": 12,
+     "median_steps_per_second": 3169,
+     "median_collection_seconds": 29.923,
+     "median_learning_seconds": 1.098,
+     "steps_per_second_each_iteration": [
+      3398,
+      3350,
+      3229,
+      3112,
+      3040,
+      3045,
+      3092,
+      3169,
+      3158,
+      3231,
+      3312,
+      3531
+     ],
+     "learning_seconds_each_iteration": [
+      1.037,
+      1.065,
+      1.079,
+      1.113,
+      1.027,
+      1.099,
+      1.101,
+      1.098,
+      1.148,
+      1.103,
+      0.965,
+      0.854
+     ],
+     "measured": {
+      "wall_seconds": 376.58,
+      "exit_code": 0,
+      "cores_busy": 1.03,
+      "cpu_user_seconds": 380.7,
+      "cpu_system_seconds": 7.47,
+      "process_gpu_seconds": 0.0,
+      "process_gpu_share_of_wall": 0.0,
+      "gpu_device_utilization_percent_before": {
+       "samples": 8,
+       "mean": 0.0,
+       "median": 0,
+       "p95": 0,
+       "max": 0
+      },
+      "gpu_device_utilization_percent_during": {
+       "samples": 363,
+       "mean": 16.9,
+       "median": 21,
+       "p95": 30,
+       "max": 36
+      },
+      "other_processes_cpu_percent": {
+       "samples": 73,
+       "mean": 366.5,
+       "median": 354.2,
+       "p95": 513.9,
+       "max": 653.9
+      },
+      "competing_during_max_cpu_percent": {
+       "Claude Helper": 114.4,
+       "Claude Helper (Renderer)": 103.4,
+       "com.apple.WebKit.WebContent": 101.3,
+       "python": 99.7,
+       "ScreenTimeAgent": 89.8,
+       "duetexpertd": 87.1,
+       "com.apple.Safari.History": 82.8,
+       "BackgroundShortcutRunner": 56.4
+      },
+      "uptime_before": "10:31  up 5 days, 21:09, 5 users, load averages: 4.40 5.10 5.32",
+      "uptime_after": "10:37  up 5 days, 21:16, 5 users, load averages: 6.57 5.78 5.53",
+      "argv": [
+       "~/cumlx-isaaclab/go2/venv/bin/python",
+       "~/code/CuMLX/spikes/isaac_lab_train_device.py",
+       "--learner-device",
+       "cpu",
+       "--",
+       "--num_envs",
+       "4096",
+       "--max_iterations",
+       "12",
+       "--task",
+       "Isaac-Velocity-Flat-UnitreeGo2",
+       "--device",
+       "cpu",
+       "presets=newton_mjwarp"
+      ]
+     }
+    },
+    {
+     "device": "mps",
+     "repeat": 1,
+     "device_line_from_log": "env device cpu; learner device mps:0",
+     "iterations": 12,
+     "median_steps_per_second": 3382,
+     "median_collection_seconds": 28.787,
+     "median_learning_seconds": 0.282,
+     "steps_per_second_each_iteration": [
+      3446,
+      3452,
+      3363,
+      3288,
+      3202,
+      2987,
+      3209,
+      3382,
+      3403,
+      3524,
+      3436,
+      3430
+     ],
+     "learning_seconds_each_iteration": [
+      2.146,
+      0.292,
+      0.282,
+      0.28,
+      0.302,
+      0.298,
+      0.29,
+      0.277,
+      0.271,
+      0.269,
+      0.275,
+      0.3
+     ],
+     "measured": {
+      "wall_seconds": 364.83,
+      "exit_code": 0,
+      "cores_busy": 0.97,
+      "cpu_user_seconds": 344.83,
+      "cpu_system_seconds": 8.55,
+      "process_gpu_seconds": 3.9,
+      "process_gpu_share_of_wall": 0.011,
+      "gpu_device_utilization_percent_before": {
+       "samples": 8,
+       "mean": 0.0,
+       "median": 0,
+       "p95": 0,
+       "max": 0
+      },
+      "gpu_device_utilization_percent_during": {
+       "samples": 352,
+       "mean": 8.0,
+       "median": 0,
+       "p95": 24,
+       "max": 58
+      },
+      "other_processes_cpu_percent": {
+       "samples": 71,
+       "mean": 343.8,
+       "median": 303.0,
+       "p95": 519.3,
+       "max": 784.9
+      },
+      "competing_during_max_cpu_percent": {
+       "kicad-cli": 465.4,
+       "Claude Helper (Renderer)": 159.2,
+       "com.apple.WebKit.WebContent": 115.0,
+       "python": 100.0,
+       "unzip": 92.6,
+       "Safari": 85.6,
+       "com.apple.WebKit.GPU": 85.5,
+       "mediaanalysisd": 71.4
+      },
+      "uptime_before": "10:24  up 5 days, 21:03, 5 users, load averages: 5.88 5.89 5.62",
+      "uptime_after": "10:30  up 5 days, 21:09, 5 users, load averages: 4.84 5.21 5.36",
+      "argv": [
+       "~/cumlx-isaaclab/go2/venv/bin/python",
+       "~/code/CuMLX/spikes/isaac_lab_train_device.py",
+       "--learner-device",
+       "mps",
+       "--",
+       "--num_envs",
+       "4096",
+       "--max_iterations",
+       "12",
+       "--task",
+       "Isaac-Velocity-Flat-UnitreeGo2",
+       "--device",
+       "cpu",
+       "presets=newton_mjwarp"
+      ]
+     }
+    },
+    {
+     "device": "mps",
+     "repeat": 2,
+     "device_line_from_log": "env device cpu; learner device mps:0",
+     "iterations": 12,
+     "median_steps_per_second": 3125,
+     "median_collection_seconds": 31.15,
+     "median_learning_seconds": 0.301,
+     "steps_per_second_each_iteration": [
+      3991,
+      3826,
+      3326,
+      3117,
+      3078,
+      3197,
+      3181,
+      3213,
+      3063,
+      3058,
+      3053,
+      3125
+     ],
+     "learning_seconds_each_iteration": [
+      0.962,
+      0.36,
+      0.295,
+      0.289,
+      0.361,
+      0.276,
+      0.284,
+      0.282,
+      0.328,
+      0.352,
+      0.349,
+      0.301
+     ],
+     "measured": {
+      "wall_seconds": 377.02,
+      "exit_code": 0,
+      "cores_busy": 0.97,
+      "cpu_user_seconds": 350.91,
+      "cpu_system_seconds": 13.96,
+      "process_gpu_seconds": 4.0,
+      "process_gpu_share_of_wall": 0.011,
+      "gpu_device_utilization_percent_before": {
+       "samples": 8,
+       "mean": 0.0,
+       "median": 0,
+       "p95": 0,
+       "max": 0
+      },
+      "gpu_device_utilization_percent_during": {
+       "samples": 363,
+       "mean": 15.3,
+       "median": 14,
+       "p95": 33,
+       "max": 71
+      },
+      "other_processes_cpu_percent": {
+       "samples": 73,
+       "mean": 348.2,
+       "median": 339.2,
+       "p95": 511.5,
+       "max": 568.1
+      },
+      "competing_during_max_cpu_percent": {
+       "Claude Helper (Renderer)": 168.6,
+       "com.apple.WebKit.WebContent": 101.4,
+       "python": 99.7,
+       "perl": 91.8,
+       "mobileassetd": 89.6,
+       "duetexpertd": 88.8,
+       "Google Chrome Helper (Aperitif Renderer)": 83.7,
+       "WindowServer": 62.7
+      },
+      "uptime_before": "10:37  up 5 days, 21:16, 5 users, load averages: 6.17 5.72 5.51",
+      "uptime_after": "10:43  up 5 days, 21:22, 5 users, load averages: 6.00 6.24 5.89",
+      "argv": [
+       "~/cumlx-isaaclab/go2/venv/bin/python",
+       "~/code/CuMLX/spikes/isaac_lab_train_device.py",
+       "--learner-device",
+       "mps",
+       "--",
+       "--num_envs",
+       "4096",
+       "--max_iterations",
+       "12",
+       "--task",
+       "Isaac-Velocity-Flat-UnitreeGo2",
+       "--device",
+       "cpu",
+       "presets=newton_mjwarp"
+      ]
+     }
+    }
+   ]
+  },
+  "policy_alone": {
+   "protocol": "Forward passes only, 300 per value. spikes/isaac_policy_bench.py on the 4096-env model_299.pt.",
+   "ms_per_pass": [
+    {
+     "framework": "mlx",
+     "device": "DeviceType.gpu",
+     "batch": 1,
+     "ms_per_pass": 0.3327
+    },
+    {
+     "framework": "mlx",
+     "device": "DeviceType.cpu",
+     "batch": 1,
+     "ms_per_pass": 0.0729
+    },
+    {
+     "framework": "torch",
+     "device": "cpu",
+     "batch": 1,
+     "ms_per_pass": 0.0195
+    },
+    {
+     "framework": "torch",
+     "device": "mps",
+     "batch": 1,
+     "ms_per_pass": 0.4198
+    },
+    {
+     "framework": "mlx",
+     "device": "DeviceType.gpu",
+     "batch": 128,
+     "ms_per_pass": 0.2174
+    },
+    {
+     "framework": "mlx",
+     "device": "DeviceType.cpu",
+     "batch": 128,
+     "ms_per_pass": 0.1577
+    },
+    {
+     "framework": "torch",
+     "device": "cpu",
+     "batch": 128,
+     "ms_per_pass": 0.1529
+    },
+    {
+     "framework": "torch",
+     "device": "mps",
+     "batch": 128,
+     "ms_per_pass": 0.3838
+    },
+    {
+     "framework": "mlx",
+     "device": "DeviceType.gpu",
+     "batch": 1024,
+     "ms_per_pass": 0.221
+    },
+    {
+     "framework": "mlx",
+     "device": "DeviceType.cpu",
+     "batch": 1024,
+     "ms_per_pass": 0.9639
+    },
+    {
+     "framework": "torch",
+     "device": "cpu",
+     "batch": 1024,
+     "ms_per_pass": 0.5933
+    },
+    {
+     "framework": "torch",
+     "device": "mps",
+     "batch": 1024,
+     "ms_per_pass": 0.4561
+    },
+    {
+     "framework": "mlx",
+     "device": "DeviceType.gpu",
+     "batch": 4096,
+     "ms_per_pass": 0.2676
+    },
+    {
+     "framework": "mlx",
+     "device": "DeviceType.cpu",
+     "batch": 4096,
+     "ms_per_pass": 3.6683
+    },
+    {
+     "framework": "torch",
+     "device": "cpu",
+     "batch": 4096,
+     "ms_per_pass": 1.703
+    },
+    {
+     "framework": "torch",
+     "device": "mps",
+     "batch": 4096,
+     "ms_per_pass": 0.6396
+    },
+    {
+     "framework": "mlx",
+     "device": "DeviceType.gpu",
+     "batch": 16384,
+     "ms_per_pass": 0.6016
+    },
+    {
+     "framework": "mlx",
+     "device": "DeviceType.cpu",
+     "batch": 16384,
+     "ms_per_pass": 16.3589
+    },
+    {
+     "framework": "torch",
+     "device": "cpu",
+     "batch": 16384,
+     "ms_per_pass": 6.8133
+    },
+    {
+     "framework": "torch",
+     "device": "mps",
+     "batch": 16384,
+     "ms_per_pass": 1.5177
+    }
+   ],
+   "measured": {
+    "wall_seconds": 14.11,
+    "exit_code": 0,
+    "cores_busy": 1.15,
+    "cpu_user_seconds": 15.13,
+    "cpu_system_seconds": 1.12,
+    "process_gpu_seconds": 0.75,
+    "process_gpu_share_of_wall": 0.053,
+    "gpu_device_utilization_percent_before": {
+     "samples": 8,
+     "mean": 2.8,
+     "median": 0,
+     "p95": 11,
+     "max": 11
+    },
+    "gpu_device_utilization_percent_during": {
+     "samples": 14,
+     "mean": 8.8,
+     "median": 0,
+     "p95": 78,
+     "max": 78
+    },
+    "other_processes_cpu_percent": {
+     "samples": 3,
+     "mean": 281.8,
+     "median": 272.8,
+     "p95": 305.6,
+     "max": 305.6
+    },
+    "competing_during_max_cpu_percent": {
+     "com.apple.WebKit.WebContent": 100.6,
+     "python": 98.4,
+     "WindowServer": 32.1
+    },
+    "uptime_before": "10:17  up 5 days, 20:56, 5 users, load averages: 6.22 6.14 5.45",
+    "uptime_after": "10:17  up 5 days, 20:56, 5 users, load averages: 6.02 6.10 5.45",
+    "argv": [
+     "~/cumlx-isaaclab/go2/venv/bin/python",
+     "~/code/CuMLX/spikes/isaac_policy_bench.py",
+     "--checkpoint",
+     "~/cumlx-isaaclab/go2/run/logs/rsl_rl/unitree_go2_flat/2026-11-03_00-51-54/model_299.pt",
+     "--output",
+     "bench.out.json"
+    ]
+   }
+  },
+  "closed_loop_mlx": {
+   "result": {
+    "controller": "mlx",
+    "checkpoint": "model_299.pt",
+    "envs": 128,
+    "steps": 1000,
+    "seed": 7,
+    "device": "cpu",
+    "reward_per_env_step": 0.033660377838881685,
+    "terminated_per_env": 0.03125,
+    "timed_out_per_env": 0.96875,
+    "seconds": 56.92,
+    "task": "Isaac-Velocity-Flat-UnitreeGo2",
+    "forward_command": 0.8,
+    "mean_forward_speed": 0.739915769977702,
+    "mean_velocity_error": 0.16397923736108674,
+    "mean_base_height": 0.3543387208051152,
+    "window": "after step 100",
+    "mlx_vs_torch_worst_rel_l2": 2.742534377375705e-07,
+    "mlx_inference_ms_per_step": 0.8681,
+    "mlx_device": "gpu"
+   },
+   "measured": {
+    "wall_seconds": 66.54,
+    "exit_code": 0,
+    "cores_busy": 0.94,
+    "cpu_user_seconds": 60.1,
+    "cpu_system_seconds": 2.48,
+    "process_gpu_seconds": 0.49,
+    "process_gpu_share_of_wall": 0.007,
+    "gpu_device_utilization_percent_before": {
+     "samples": 8,
+     "mean": 11.4,
+     "median": 0,
+     "p95": 79,
+     "max": 79
+    },
+    "gpu_device_utilization_percent_during": {
+     "samples": 64,
+     "mean": 2.9,
+     "median": 0,
+     "p95": 15,
+     "max": 16
+    },
+    "other_processes_cpu_percent": {
+     "samples": 13,
+     "mean": 435.4,
+     "median": 375.9,
+     "p95": 860.9,
+     "max": 860.9
+    },
+    "competing_during_max_cpu_percent": {
+     "kicad-cli": 606.3,
+     "Claude Helper (Renderer)": 151.4,
+     "com.apple.WebKit.WebContent": 101.7,
+     "python": 98.3,
+     "Safari": 94.1,
+     "SafariNotificationAgent": 57.2,
+     "WindowServer": 50.9,
+     "coreduetd": 38.8
+    },
+    "uptime_before": "10:17  up 5 days, 20:56, 5 users, load averages: 5.71 6.03 5.43",
+    "uptime_after": "10:18  up 5 days, 20:57, 5 users, load averages: 7.10 6.42 5.62",
+    "argv": [
+     "~/cumlx-isaaclab/go2/venv/bin/python",
+     "~/code/CuMLX/spikes/isaac_lab_mlx_loop.py",
+     "--controller",
+     "mlx",
+     "--checkpoint",
+     "~/cumlx-isaaclab/go2/run/logs/rsl_rl/unitree_go2_flat/2026-11-03_00-51-54/model_299.pt",
+     "--forward",
+     "0.8",
+     "--output",
+     "loop_mlx.out.json",
+     "--num_envs",
+     "128",
+     "--steps",
+     "1000",
+     "--task",
+     "Isaac-Velocity-Flat-UnitreeGo2",
+     "--device",
+     "cpu",
+     "presets=newton_mjwarp"
+    ]
+   },
+   "note": "The process GPU time is the policy only, because physics stayed on the CPU. The speed repeats validation/isaac-lab-go2.json to every printed digit."
+  }
+ },
+ "not_shown": [
+  "Learning: the matrix is 3 iterations, and this record trains nothing to a useful result",
+  "Tasks outside the 23",
+  "The effect of MPS on a task where the update takes a larger share of an iteration",
+  "An idle Mac: other jobs used 280 to 370% CPU on average during the learner runs"
+ ]
+}

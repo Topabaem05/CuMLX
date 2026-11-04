@@ -51,7 +51,7 @@ cumlx rundiff golden/ mps/        # CUDA와 MPS의 손실 기록을 비교해 �
 
 `cumlx recipe`는 선택지마다 근거를 표시합니다. `evidence: run`은 Apple Silicon에서 실행한 결과가 `validation/`에 있다는 뜻이고, `evidence: docs`는 문서만 읽었다는 뜻입니다. `--verified-only`를 주면 실행한 것만 남습니다.
 
-**Isaac Sim은 Mac에서 직접 실행할 수 없습니다.** `pip install isaacsim`은 macOS에서 실패합니다(`Didn't find wheel`). RTX 장비에서 실행하고 Mac에서 스트리밍하거나, [학습된 정책만 MLX로 옮겨](examples/robot-policy/) 쓰십시오. Isaac Sim 없는 Isaac Lab cartpole 학습은 Newton으로 Mac CPU에서 돌았습니다. Unitree Go2 평지 보행도 같은 경로로 학습했고, MLX로 돌린 정책이 시뮬레이션에서 명령 속도를 따라갑니다(시드 1개). NVIDIA가 지원하지 않는 구성입니다([cartpole](validation/isaac-lab-mac.json), [Go2](validation/isaac-lab-go2.json) 측정값). Apple GPU 물리(warp-metal)와 Isaac Sim 연결 작업은 비공개 저장소 [OrchardSim](https://github.com/Topabaem05/OrchardSim)으로 옮겼습니다. [검토 문서](docs/PORTING-CUDA-MODELS.md)를 보십시오.
+**Isaac Sim은 Mac에서 직접 실행할 수 없습니다.** `pip install isaacsim`은 macOS에서 실패합니다(`Didn't find wheel`). RTX 장비에서 실행하고 Mac에서 스트리밍하거나, [학습된 정책만 MLX로 옮겨](examples/robot-policy/) 쓰십시오. Isaac Sim 없는 Isaac Lab cartpole 학습은 Newton으로 Mac CPU에서 돌았습니다. Unitree Go2 평지 보행도 같은 경로로 학습했고, MLX로 돌린 정책이 시뮬레이션에서 명령 속도를 따라갑니다(시드 1개). NVIDIA가 지원하지 않는 구성입니다([cartpole](validation/isaac-lab-mac.json), [Go2](validation/isaac-lab-go2.json) 측정값). Apple GPU 물리(warp-metal)와 Isaac Sim 연결은 측정 기록만 [보관](validation/archive-orchardsim/)했고, 그 작업은 2026-11-04에 중단했습니다. [검토 문서](docs/PORTING-CUDA-MODELS.md)를 보십시오.
 
 ### 모델을 MLX로 옮겼다
 
@@ -154,7 +154,7 @@ CLI는 stdout에 JSON 문서 하나만 내보내고, 오류마다 해결 명령�
 | `cumlx.render` | Mitsuba Metal RGB, 깊이, 세그멘테이션, 레이캐스트 | USD는 메시, 카메라, 조명 2종, 확산 색만 읽습니다. 작은 장면 2개로 시험했습니다 |
 | `cumlx doctor --stack --env PYTHON` | 여러 환경에 걸친 스택 점검 | 부품이 한 프로세스에서 함께 로드되는지는 보지 않습니다 |
 
-Isaac Sim과 Isaac Lab의 Mac 작업은 비공개 저장소 OrchardSim에 있습니다. **Isaac Sim은 Mac GPU를 쓰지 못합니다.** Linux 컨테이너에서 CPU PhysX만 돌고, 창은 검은 화면에서 멈춥니다. Isaac Lab은 warp-metal로 물리를 Metal에서 돌리고 Newton 뷰어와 버튼도 동작합니다.
+Isaac Sim과 Isaac Lab의 Mac 작업은 라이선스 조건 때문에 오픈소스로 공개하기 어렵다고 판단해 2026-11-04에 중단했습니다. [측정 기록](validation/archive-orchardsim/)만 남아 있고, 그 스크립트는 공개되어 있지 않습니다. **Isaac Sim은 Mac GPU를 쓰지 못합니다.** 설치한 그대로는 Linux 컨테이너에서 CPU PhysX만 돌고, 창은 검은 화면에서 멈춥니다. Isaac Lab은 warp-metal로 물리를 Metal에서 돌리고 Newton 뷰어와 버튼도 동작했습니다.
 
 ## 문서
 

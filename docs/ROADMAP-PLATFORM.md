@@ -72,7 +72,7 @@
 |---|---|---|---|---|
 | **물리** | [Genesis](https://github.com/Genesis-Embodied-AI/genesis-world) ★30k | Apache-2.0 | **실행**: Metal에서 Go2 4096개, Isaac USD 불러오기 | 1순위 시뮬레이터 |
 | 물리 | [MuJoCo](https://github.com/google-deepmind/mujoco) ★16k | Apache-2.0 | **실행** (CPU 약 72만 step/s) | 등급 B의 기준 물리 |
-| 물리 | [Newton](https://github.com/newton-physics/newton), [Warp](https://github.com/NVIDIA/warp) | Apache-2.0 | **실행** (공식판은 Mac에서 CPU만. warp-metal 경로는 OrchardSim) | 호환 대상, Metal 없음 |
+| 물리 | [Newton](https://github.com/newton-physics/newton), [Warp](https://github.com/NVIDIA/warp) | Apache-2.0 | **실행** (공식판은 Mac에서 CPU만. warp-metal 경로는 보관 기록만 있음) | 호환 대상, Metal 없음 |
 | **GPU 언어** | [Quadrants](https://github.com/Genesis-Embodied-AI/quadrants) ★228 | Apache-2.0 | **실행**: Metal과 CPU 차이 7.0e-8 | Warp 스타일 커널의 이식 대상 |
 | **레이트레이싱** | [Mitsuba 3.9](https://github.com/mitsuba-renderer/mitsuba3), [Dr.Jit](https://github.com/mitsuba-renderer/drjit) | BSD 3조항 형식, BSD-3-Clause | **실행**: `metal_ad_rgb` 렌더링. 하드웨어 레이트레이싱 사용 여부는 문서로만 확인 | RTX 대체 1순위 |
 | 렌더링 | [LuisaRender](https://github.com/LuisaGroup/LuisaRender) ★629 | BSD-3-Clause | Mac 지원 미확인 | M5에서 평가 |
@@ -130,15 +130,15 @@ Apple M5 Pro 한 대에서 직접 실행했습니다. 재현 방법은 [spikes/]
 
 **M0 이후 Isaac Sim 시험 (2026-11-02):**
 
-- Linux arm64 컨테이너에서 Isaac Sim 6.2의 Kit과 CPU PhysX가 돌았습니다. RTX와 카메라는 실패했습니다. 재현 스크립트는 OrchardSim의 `spikes/isaac_sim_container_record.sh`이고, EULA 동의는 실행하는 사람이 직접 설정해야 합니다.
+- Linux arm64 컨테이너에서 Isaac Sim 6.2의 Kit과 CPU PhysX가 돌았습니다. RTX와 카메라는 실패했습니다. 재현 스크립트는 2026-11-04에 삭제했습니다.
 - V100에서도 Kit과 CPU PhysX만 돕니다. RTX는 `Skipping unsupported non-RTX GPU`로 거부됩니다. 따라서 M5의 V100 비교는 Mitsuba CUDA로만 가능합니다.
 - Mac 컨테이너(arm64)와 V100 서버(x86_64)의 CPU PhysX 값이 출력된 모든 자릿수까지 같습니다. 작은 장면 2개의 결과입니다. 이 경로는 M4에서 Isaac 쪽 기준 물리로 쓸 수 있습니다.
 - 같은 cartpole USD의 막대 각도가 1초 후 PhysX 3.31 rad, Genesis 1.97 rad로 다릅니다. 원인은 조사하지 않았습니다. M4의 등급 B 비교에서 먼저 풀어야 합니다.
-- **Isaac Lab을 Isaac Sim 없이 Mac CPU에서 실행했습니다.** Newton으로 cartpole을 100회 학습하는 데 약 18초 걸렸고, 처리량은 환경 256개에서 약 4만 step/s입니다. 시드 3개 모두 보상이 올랐고, 마지막 에피소드 길이는 300, 293, 246입니다(최대 300). 수동 구성이며 NVIDIA가 지원하지 않습니다. `uv sync`는 macOS를 거부합니다. 측정값은 `validation/isaac-lab-mac.json`, 재현은 OrchardSim의 `spikes/isaac_lab_mac.sh`입니다.
+- **Isaac Lab을 Isaac Sim 없이 Mac CPU에서 실행했습니다.** Newton으로 cartpole을 100회 학습하는 데 약 18초 걸렸고, 처리량은 환경 256개에서 약 4만 step/s입니다. 시드 3개 모두 보상이 올랐고, 마지막 에피소드 길이는 300, 293, 246입니다(최대 300). 수동 구성이며 NVIDIA가 지원하지 않습니다. `uv sync`는 macOS를 거부합니다. 측정값은 `validation/isaac-lab-mac.json`이고, 재현 스크립트는 2026-11-04에 삭제했습니다.
 - **같은 경로로 Unitree Go2 평지 보행을 학습했습니다.** CPU 물리라 약 3,700 step/s이고, 환경 4096개 × 300회에 약 2.2시간 걸렸습니다. MLX로 돌린 정책은 시뮬레이션에서 명령 +0.8 m/s에 +0.74, -0.8에 -0.87, 0에 0.00으로 따라가고, 넘어짐은 환경당 0.07회 이하입니다. 대조군은 모두 약 0 m/s입니다. 환경 1024개 × 300회 정책은 서기만 하고 걷지 못했습니다. 시드 1개, CPU 물리이며 실제 로봇이나 PhysX와는 비교하지 않았습니다. 측정값은 `validation/isaac-lab-go2.json`입니다.
 - 그 체크포인트의 MLX 정책이 rsl_rl 원본 출력과 7.9e-8까지 일치합니다. 이 정책이 Newton 환경을 직접 제어해 시드 3개에서 막대를 100% 세웠습니다. 힘을 주지 않는 대조군은 0%, 1회차 체크포인트는 5%입니다.
 
-**범위 결정 (2026-11-03):** Isaac Sim과 Isaac Lab의 macOS 작업을 비공개 저장소 [OrchardSim](https://github.com/Topabaem05/OrchardSim)으로 분리했습니다. CuMLX에는 검증기와 레시피에 필요한 결과만 남깁니다.
+**범위 결정 (2026-11-04):** Isaac Sim과 Isaac Lab의 macOS 작업을 2026-11-03에 별도 저장소 OrchardSim으로 분리했다가, 라이선스 조건 때문에 오픈소스로 공개하기 어렵다고 판단해 2026-11-04에 삭제했습니다. 이제 CuMLX에 집중합니다. 측정 기록은 [보관](../validation/archive-orchardsim/)했습니다.
 
 **확인하지 못한 것:** 실제 CUDA에서의 kernelport 원본 검증, 복잡한 USD 자산(cartpole 하나만 시험), Mitsuba가 실제로 하드웨어 레이트레이싱을 쓰는지, 정책 추론을 포함한 처리량, `mps-*`, metalsplat, mlx3D 실행(M2 첫 작업으로 넘김).
 
@@ -231,12 +231,12 @@ Isaac Sim 대체가 아니라, **Isaac Lab 스타일 학습 작업을 Mac에서 
 - 등급 B 지표: 같은 초기 상태와 행동의 궤적 오차, 같은 정책의 평균 보상
 - 학습한 정책을 MLX로 내보내고 `check_op`으로 검증 (이미 있는 `examples/robot-policy` 확장)
 
-**현재 상태 (2026-11-04):** 아래 완료 조건의 학습과 측정은 OrchardSim에서 했습니다. `cumlx.sim`은 그와 별도로 이제 있습니다. cartpole과 Go2 평지 작업을 Genesis와 MuJoCo에 연결하고, MJCF와 URDF를 읽습니다. Isaac Lab 작업이나 자산이 아니라 그 형식을 따른 작업입니다. USD는 이 환경들에 읽을 수단이 없어 돌려 보지 않았습니다. Go2는 환경 4096개 × 300회를 Metal에서 약 5분 만에 학습했고(MLX 정책 +0.81, -0.86, 0.00 m/s, 대조군 0.00, 넘어짐 0), MLX 정책은 rsl_rl과 최악 6.1e-7입니다. 시드 1개이고 시뮬레이션 결과입니다. Genesis와 MuJoCo 비교에서 cartpole은 처음 쓴 허용치를 **넘었습니다**(레일 끝에 닿은 뒤 갈라짐). 그 전 구간은 약 2e-6까지 일치합니다. Go2는 1초 동안 허용치 안입니다(중앙값 0.024). [기록](../validation/m4-sim.json)
+**현재 상태 (2026-11-04):** 아래 완료 조건의 학습과 측정은 지금은 삭제한 OrchardSim에서 했고, [기록만 보관](../validation/archive-orchardsim/)했습니다. 스크립트가 없어 외부에서 다시 측정할 수 없습니다. `cumlx.sim`은 그와 별도로 이제 있습니다. cartpole과 Go2 평지 작업을 Genesis와 MuJoCo에 연결하고, MJCF와 URDF를 읽습니다. Isaac Lab 작업이나 자산이 아니라 그 형식을 따른 작업입니다. USD는 이 환경들에 읽을 수단이 없어 돌려 보지 않았습니다. Go2는 환경 4096개 × 300회를 Metal에서 약 5분 만에 학습했고(MLX 정책 +0.81, -0.86, 0.00 m/s, 대조군 0.00, 넘어짐 0), MLX 정책은 rsl_rl과 최악 6.1e-7입니다. 시드 1개이고 시뮬레이션 결과입니다. Genesis와 MuJoCo 비교에서 cartpole은 처음 쓴 허용치를 **넘었습니다**(레일 끝에 닿은 뒤 갈라짐). 그 전 구간은 약 2e-6까지 일치합니다. Go2는 1초 동안 허용치 안입니다(중앙값 0.024). [기록](../validation/m4-sim.json)
 
 완료 조건:
 
-- [x] cartpole, 사족 보행 작업이 Mac GPU에서 학습 완료. 두 작업 모두 물리를 warp-metal로 Apple GPU에서 돌렸고, 판정 기준은 실행 전에 커밋했습니다. cartpole은 시드 3개 모두 통과했습니다(세운 비율 1.0, 0.9997, 1.0, 대조군 0.051 이하). 학습기는 CPU입니다. Go2는 학습기가 MPS이고, 새 시드 2개 중 1개만 통과했습니다. 시드 2는 +0.87, -0.87, 0.00 m/s입니다. **시드 1은 학습은 끝났지만 +0.8 m/s에서 넘어짐이 0.14로 기준 0.1을 넘어 실패입니다.** 시드 42는 기준을 쓰기 전의 실행입니다(+0.87, -0.88, 0.00). 시뮬레이션 결과이고 PhysX나 실제 로봇과는 비교하지 않았습니다. OrchardSim `validation/m4-cartpole-metal.json`, `validation/m4-go2-seeds.json`
-- [x] 기준 물리(MuJoCo)와의 궤적 오차를 사전에 정한 허용치로 등급 B 판정. MuJoCo Warp on `metal:0`과 MuJoCo C(float64)를 같은 시작과 행동으로 비교했습니다. 256개 world, 200 step, 시작 3개, 반복 2회로 6회 모두 통과했습니다. 최악 qpos 오차의 중앙값 7.7e-5~1.0e-4(허용 1e-2), p90 7.9e-3~3.9e-2(허용 5e-2)이고, CPU의 Warp 대조군과 비슷합니다. 주입한 결함 2종은 걸러집니다. **모델은 Go2가 아니라 humanoid입니다.** 드문 world는 1.31까지 벗어나며 이 허용치는 그 값을 제한하지 않습니다. OrchardSim `validation/m4-trajectory.json`
+- [x] cartpole, 사족 보행 작업이 Mac GPU에서 학습 완료. 두 작업 모두 물리를 warp-metal로 Apple GPU에서 돌렸고, 판정 기준은 실행 전에 커밋했습니다. cartpole은 시드 3개 모두 통과했습니다(세운 비율 1.0, 0.9997, 1.0, 대조군 0.051 이하). 학습기는 CPU입니다. Go2는 학습기가 MPS이고, 새 시드 2개 중 1개만 통과했습니다. 시드 2는 +0.87, -0.87, 0.00 m/s입니다. **시드 1은 학습은 끝났지만 +0.8 m/s에서 넘어짐이 0.14로 기준 0.1을 넘어 실패입니다.** 시드 42는 기준을 쓰기 전의 실행입니다(+0.87, -0.88, 0.00). 시뮬레이션 결과이고 PhysX나 실제 로봇과는 비교하지 않았습니다. `validation/archive-orchardsim/m4-cartpole-metal.json`, `validation/m4-go2-seeds.json`
+- [x] 기준 물리(MuJoCo)와의 궤적 오차를 사전에 정한 허용치로 등급 B 판정. MuJoCo Warp on `metal:0`과 MuJoCo C(float64)를 같은 시작과 행동으로 비교했습니다. 256개 world, 200 step, 시작 3개, 반복 2회로 6회 모두 통과했습니다. 최악 qpos 오차의 중앙값 7.7e-5~1.0e-4(허용 1e-2), p90 7.9e-3~3.9e-2(허용 5e-2)이고, CPU의 Warp 대조군과 비슷합니다. 주입한 결함 2종은 걸러집니다. **모델은 Go2가 아니라 humanoid입니다.** 드문 world는 1.31까지 벗어나며 이 허용치는 그 값을 제한하지 않습니다. `validation/archive-orchardsim/m4-trajectory.json`
 - [x] 실제 Isaac Lab 체크포인트 하나를 MLX에서 실행, 등급 A. cartpole 4-32-32-1, rsl_rl 출력과 최악 7.9e-8. Go2 사족 보행 정책도 MLX에서 최악 2.48e-7이지만, 기준은 rsl_rl 출력이 아니라 직접 만든 torch 구현입니다
 - [x] 처리량(env-step/s)을 여러 번 측정해 범위로 공개. 목표: 4096 환경에서 10만 step/s 이상. 2026-11-04에 이 저장소를 공개했습니다. **목표는 Genesis 경로로만 넘었습니다.** Go2 평지, 물리 Metal, MLX 정책 추론 포함, 학습기 제외, 5회 반복입니다. Genesis는 173,832~327,866(중앙값 181,172)으로 목표를 넘습니다. Isaac Lab은 29,771~38,849(중앙값 30,994)로 **목표에 못 미칩니다.** Genesis는 Isaac Lab과 다른 엔진이고 작업과 모델도 다릅니다. 첫 반복이 다른 값의 약 2배인데 원인은 찾지 못했습니다. 다른 작업이 함께 돌았습니다. [기록](../validation/m4-throughput.json)
 
@@ -265,8 +265,8 @@ RTX가 필요하던 렌더링 경로를 Metal 레이트레이싱으로 대체합
 
 완료 조건:
 
-- [ ] 기함 작업을 새 Mac에서 처음부터 재현. **미실행:** 새 Mac 대신 최근 macOS VM으로 재현하기로 2026-11-04에 정했습니다. VM은 같은 Mac 위에서 준가상화 GPU로 돌아가므로 결과에 그 사실을 함께 적습니다. 실행 스크립트는 작성해 스텁으로 시험했고, 실제 VM에서는 아직 돌리지 않았습니다. 지금까지의 기록은 [보고서의 기함 작업 표](PLATFORM-REPORT.md#기함-작업)에 있고, 처음부터 재현된 작업은 없습니다
-- [x] 결과 보고서 공개, 모든 항목에 증명 등급 표시. [보고서](PLATFORM-REPORT.md)를 2026-11-04에 저장소와 함께 공개했습니다. `OrchardSim` 표시가 있는 원본 기록은 비공개로 남습니다
+- [ ] 기함 작업을 새 Mac에서 처음부터 재현. **미실행:** 새 Mac 대신 최근 macOS VM으로 재현하기로 2026-11-04에 정했습니다. VM은 같은 Mac 위에서 준가상화 GPU로 돌아가므로 결과에 그 사실을 함께 적습니다. [실행 스크립트](../spikes/m6_vm_reproduce.sh)는 작성해 스텁으로 시험했고, 실제 VM에서는 아직 돌리지 않았습니다. 지금까지의 기록은 [보고서의 기함 작업 표](PLATFORM-REPORT.md#기함-작업)에 있고, 처음부터 재현된 작업은 없습니다
+- [x] 결과 보고서 공개, 모든 항목에 증명 등급 표시. [보고서](PLATFORM-REPORT.md)를 2026-11-04에 저장소와 함께 공개했습니다. `validation/archive-orchardsim/`의 기록은 다시 측정할 수 없습니다
 - [x] 미검증 영역 목록 공개. [목록](UNVERIFIED.md)을 2026-11-04에 저장소와 함께 공개했습니다
 
 ### 기함 작업

@@ -1,0 +1,3539 @@
+{
+ "schema": "orchardsim.validation.warp_metal_o2.v1",
+ "date": "2026-11-03",
+ "machine": "Apple M5 Pro, 48 GB, macOS 27.0.1. Shared with other jobs: each throughput run lists them.",
+ "software": {
+  "warp-metal": "1.17.0.3, third party, not from NVIDIA, wheel SHA-256 fab8f30586105f5776a7e6ae88740ce943da204a2c8a7cdab4021f81cbbbaf57",
+  "warp-lang": "1.17.0",
+  "mujoco_warp": "3.15.0 with spikes/isaac_warp_metal_patch.py",
+  "installed_by": "the user, in their own terminal, with spikes/isaac_warp_metal_env.sh. The classifier denied that command from this session."
+ },
+ "verdict": "warp-metal installs and metal:0 runs MuJoCo Warp at 10 to 21 times the CPU at 4096 worlds. The parity test written before the run FAILED: max qpos difference 2.02e-3 against the limit 1e-3, with qvel 2.84e-2 inside its limit 5e-2. The limit stays. The controls show the cause: float32 rounding that tips one contact on or off in a rare world. It is not a Metal kernel error that any control could find, and it is not the mujoco_warp patch. The CPU fails the same limit against itself when one ulp of noise is added at each step.",
+ "install": {
+  "metal_device_appears": true,
+  "status": "ok",
+  "devices": [
+   "cpu",
+   "metal:0"
+  ]
+ },
+ "parity_written_before_the_run": {
+  "verdict": "FAIL, and it stays a failure. The limits were not changed.",
+  "result": {
+   "limits": {
+    "qpos": 0.001,
+    "qvel": 0.05,
+    "horizon_steps": 60,
+    "grade": "B"
+   },
+   "reference": "cpu",
+   "other": "metal:0",
+   "xml": "humanoid.xml",
+   "worlds": 64,
+   "runs": {
+    "bias_one_world_qvel_after_each_step": {
+     "max_abs_dqpos": 0.2346407175064087,
+     "max_abs_dqvel": 1.7290481328964233,
+     "finite": true,
+     "within_limits": false
+    },
+    "gravity_plus_2_percent": {
+     "max_abs_dqpos": 0.02451789379119873,
+     "max_abs_dqvel": 0.7668205499649048,
+     "finite": true,
+     "within_limits": false
+    }
+   },
+   "cpu": {
+    "device": "cpu",
+    "worlds": 64,
+    "steps": 60,
+    "nv": 27,
+    "world_steps_per_second": 9194,
+    "first_step_seconds": 10.84,
+    "nefc_mean": 39.890625
+   },
+   "other_clean": {
+    "device": "metal:0",
+    "worlds": 64,
+    "steps": 60,
+    "nv": 27,
+    "world_steps_per_second": 7841,
+    "first_step_seconds": 25.88,
+    "nefc_mean": 39.890625
+   },
+   "clean": {
+    "max_abs_dqpos": 0.0020227432250976562,
+    "max_abs_dqvel": 0.02841430902481079,
+    "finite": true,
+    "within_limits": false
+   },
+   "contacts_active": true,
+   "faults_caught": true,
+   "verdict": "fail"
+  },
+  "faults_caught": "Both injected faults broke the limits, so the comparison can fail for a wrong result."
+ },
+ "diagnosis": {
+  "question": "Is the parity failure a real physics difference, a warp-metal kernel bug, the patch or probe, or float precision?",
+  "answer": "Float32 rounding amplified by a discrete contact event in a rare world. Evidence below. This does not prove that every kernel is right: it shows that this failure needs no kernel error to explain it.",
+  "not_the_patch": {
+   "control": "Metal with the stock mujoco_warp 3.15, against the CPU with the same stock code",
+   "result": "The same worst world and value: 2.024e-3 in world 23, with nefc differing at the same steps 10, 49 and 55",
+   "record": {
+    "max_dqpos": 0.002024412155151367,
+    "median_world_max_dqpos": 1.4007091522216797e-06,
+    "worst_world_and_qpos_index": [
+     23,
+     15
+    ],
+    "max_dqvel": 0.028451263904571533
+   }
+  },
+  "not_the_cpu_overlay": {
+   "control": "CPU under warp-metal and the patch, against the CPU under stock warp and stock mujoco_warp",
+   "result": "Differences stay at the noise floor: max qpos 4.7e-6 at step 60. They are not bit-identical.",
+   "record": {
+    "max_dqpos": 4.708766937255859e-06,
+    "median_world_max_dqpos": 1.2218952178955078e-06,
+    "worst_world_and_qpos_index": [
+     25,
+     15
+    ],
+    "max_dqvel": 9.435415267944336e-05
+   }
+  },
+  "contacts_cause_it": {
+   "control": "The same model with contacts and joint limits disabled, 1024 worlds, 60 steps",
+   "result": "max qpos 1.43e-6 and qvel 6.88e-6, far inside the limits. Metal repeats itself exactly here.",
+   "ensemble": {
+    "worlds": 1024,
+    "steps": 60,
+    "cpu_vs_metal": {
+     "worlds": 1024,
+     "max_dqpos": 0.0026630759239196777,
+     "median_dqpos": 2.4437904357910156e-06,
+     "p99_dqpos": 6.67572021484375e-06,
+     "max_dqvel": 0.28319162130355835,
+     "worlds_over_qpos_limit": 1,
+     "worlds_over_qvel_limit": 2,
+     "worlds_over_1e-4": 6,
+     "worlds_with_any_nefc_difference": 6,
+     "max_dqpos_where_nefc_is_equal": 7.3909759521484375e-06,
+     "max_dqpos_where_nefc_differs": 0.0026630759239196777
+    },
+    "repeat_metal_vs_metal": {
+     "worlds": 1024,
+     "max_dqpos": 0.013904154300689697,
+     "median_dqpos": 2.1457672119140625e-06,
+     "p99_dqpos": 6.973743438720703e-06,
+     "max_dqvel": 0.7172372341156006,
+     "worlds_over_qpos_limit": 1,
+     "worlds_over_qvel_limit": 3,
+     "worlds_over_1e-4": 5,
+     "worlds_with_any_nefc_difference": 8,
+     "max_dqpos_where_nefc_is_equal": 9.834766387939453e-06,
+     "max_dqpos_where_nefc_differs": 0.013904154300689697
+    },
+    "cpu_vs_cpu_with_step_noise_1.2e-7_seed1": {
+     "worlds": 1024,
+     "max_dqpos": 0.0028386712074279785,
+     "median_dqpos": 2.1457672119140625e-06,
+     "p99_dqpos": 6.139278411865234e-06,
+     "max_dqvel": 0.2979428172111511,
+     "worlds_over_qpos_limit": 2,
+     "worlds_over_qvel_limit": 2,
+     "worlds_over_1e-4": 5,
+     "worlds_with_any_nefc_difference": 7,
+     "max_dqpos_where_nefc_is_equal": 7.331371307373047e-06,
+     "max_dqpos_where_nefc_differs": 0.0028386712074279785
+    },
+    "cpu_vs_cpu_with_step_noise_1.2e-7_seed2": {
+     "worlds": 1024,
+     "max_dqpos": 0.0028388500213623047,
+     "median_dqpos": 2.086162567138672e-06,
+     "p99_dqpos": 6.258487701416016e-06,
+     "max_dqvel": 0.29791420698165894,
+     "worlds_over_qpos_limit": 2,
+     "worlds_over_qvel_limit": 4,
+     "worlds_over_1e-4": 5,
+     "worlds_with_any_nefc_difference": 6,
+     "max_dqpos_where_nefc_is_equal": 6.9141387939453125e-06,
+     "max_dqpos_where_nefc_differs": 0.0028388500213623047
+    },
+    "cpu_vs_cpu_with_step_noise_1.2e-7_seed3": {
+     "worlds": 1024,
+     "max_dqpos": 0.00416797399520874,
+     "median_dqpos": 2.086162567138672e-06,
+     "p99_dqpos": 6.616115570068359e-06,
+     "max_dqvel": 0.4621548652648926,
+     "worlds_over_qpos_limit": 4,
+     "worlds_over_qvel_limit": 5,
+     "worlds_over_1e-4": 7,
+     "worlds_with_any_nefc_difference": 7,
+     "max_dqpos_where_nefc_is_equal": 7.510185241699219e-06,
+     "max_dqpos_where_nefc_differs": 0.00416797399520874
+    },
+    "metal_vs_metal_with_step_noise_1.2e-7": {
+     "worlds": 1024,
+     "max_dqpos": 0.0028380155563354492,
+     "median_dqpos": 2.1457672119140625e-06,
+     "p99_dqpos": 7.927417755126953e-06,
+     "max_dqvel": 0.305011510848999,
+     "worlds_over_qpos_limit": 3,
+     "worlds_over_qvel_limit": 5,
+     "worlds_over_1e-4": 10,
+     "worlds_with_any_nefc_difference": 10,
+     "max_dqpos_where_nefc_is_equal": 7.927417755126953e-06,
+     "max_dqpos_where_nefc_differs": 0.0028380155563354492
+    },
+    "no_contact_no_limit_cpu_vs_metal": {
+     "worlds": 1024,
+     "max_dqpos": 1.430511474609375e-06,
+     "median_dqpos": 2.384185791015625e-07,
+     "p99_dqpos": 9.5367431640625e-07,
+     "max_dqvel": 6.884336471557617e-06,
+     "worlds_over_qpos_limit": 0,
+     "worlds_over_qvel_limit": 0,
+     "worlds_over_1e-4": 0,
+     "worlds_with_any_nefc_difference": 0,
+     "max_dqpos_where_nefc_is_equal": 1.430511474609375e-06,
+     "max_dqpos_where_nefc_differs": null
+    },
+    "no_contact_no_limit_repeat_metal": {
+     "worlds": 1024,
+     "max_dqpos": 0.0,
+     "median_dqpos": 0.0,
+     "p99_dqpos": 0.0,
+     "max_dqvel": 0.0,
+     "worlds_over_qpos_limit": 0,
+     "worlds_over_qvel_limit": 0,
+     "worlds_over_1e-4": 0,
+     "worlds_with_any_nefc_difference": 0,
+     "max_dqpos_where_nefc_is_equal": 0.0,
+     "max_dqpos_where_nefc_differs": null
+    },
+    "no_contact_no_limit_repeat_cpu": {
+     "worlds": 1024,
+     "max_dqpos": 0.0,
+     "median_dqpos": 0.0,
+     "p99_dqpos": 0.0,
+     "max_dqvel": 0.0,
+     "worlds_over_qpos_limit": 0,
+     "worlds_over_qvel_limit": 0,
+     "worlds_over_1e-4": 0,
+     "worlds_with_any_nefc_difference": 0,
+     "max_dqpos_where_nefc_is_equal": 0.0,
+     "max_dqpos_where_nefc_differs": null
+    }
+   }
+  },
+  "only_worlds_with_a_contact_change_diverge": "In the 1024-world run, worlds with equal nefc reach at most 7.39e-6. All 6 worlds over 1e-4 are worlds whose nefc differs.",
+  "rounding_alone_gives_the_same_failure": "The CPU against itself, with about one ulp of noise on qvel at each step, gives the same picture over 3 seeds: 5 to 7 worlds over 1e-4 (Metal 6), max qpos 2.84e-3 to 4.17e-3 (Metal 2.66e-3).",
+  "details_64_worlds": {
+   "limits_unchanged": {
+    "qpos": 0.001,
+    "qvel": 0.05
+   },
+   "xml": "humanoid.xml",
+   "worlds": 64,
+   "steps": 60,
+   "cpu_vs_metal": {
+    "1": {
+     "max_dqpos": 2.384185791015625e-07,
+     "median_world_max_dqpos": 5.960464477539063e-08,
+     "worst_world_and_qpos_index": [
+      4,
+      12
+     ],
+     "max_dqvel": 4.291534423828125e-06
+    },
+    "2": {
+     "max_dqpos": 4.76837158203125e-07,
+     "median_world_max_dqpos": 5.960464477539063e-08,
+     "worst_world_and_qpos_index": [
+      41,
+      13
+     ],
+     "max_dqvel": 1.0639429092407227e-05
+    },
+    "5": {
+     "max_dqpos": 4.76837158203125e-07,
+     "median_world_max_dqpos": 2.384185791015625e-07,
+     "worst_world_and_qpos_index": [
+      26,
+      18
+     ],
+     "max_dqvel": 2.4050474166870117e-05
+    },
+    "10": {
+     "max_dqpos": 6.046891212463379e-05,
+     "median_world_max_dqpos": 2.384185791015625e-07,
+     "worst_world_and_qpos_index": [
+      23,
+      16
+     ],
+     "max_dqvel": 0.0120924711227417
+    },
+    "20": {
+     "max_dqpos": 0.0007784366607666016,
+     "median_world_max_dqpos": 3.5762786865234375e-07,
+     "worst_world_and_qpos_index": [
+      23,
+      21
+     ],
+     "max_dqvel": 0.009634971618652344
+    },
+    "30": {
+     "max_dqpos": 0.00029334425926208496,
+     "median_world_max_dqpos": 1.0728836059570312e-06,
+     "worst_world_and_qpos_index": [
+      23,
+      16
+     ],
+     "max_dqvel": 0.008838891983032227
+    },
+    "40": {
+     "max_dqpos": 0.00045293569564819336,
+     "median_world_max_dqpos": 1.4901161193847656e-06,
+     "worst_world_and_qpos_index": [
+      23,
+      21
+     ],
+     "max_dqvel": 0.005103588104248047
+    },
+    "50": {
+     "max_dqpos": 0.0008954405784606934,
+     "median_world_max_dqpos": 1.8477439880371094e-06,
+     "worst_world_and_qpos_index": [
+      23,
+      21
+     ],
+     "max_dqvel": 0.04812335968017578
+    },
+    "60": {
+     "max_dqpos": 0.0020252466201782227,
+     "median_world_max_dqpos": 1.430511474609375e-06,
+     "worst_world_and_qpos_index": [
+      23,
+      15
+     ],
+     "max_dqvel": 0.028455495834350586
+    }
+   },
+   "nefc_differs_at_steps": [
+    10,
+    49,
+    55
+   ],
+   "worlds_with_nefc_difference": 1,
+   "solver_niter_mean": {
+    "cpu": 2.03203125,
+    "metal": 2.0317708333333333
+   },
+   "solver_niter_differs_steps": 5,
+   "repeat_metal_vs_metal": {
+    "60": {
+     "max_dqpos": 3.993511199951172e-06,
+     "median_world_max_dqpos": 1.6689300537109375e-06,
+     "worst_world_and_qpos_index": [
+      41,
+      15
+     ],
+     "max_dqvel": 9.682774543762207e-05
+    }
+   },
+   "repeat_cpu_vs_cpu": {
+    "60": {
+     "max_dqpos": 0.0,
+     "median_world_max_dqpos": 0.0,
+     "worst_world_and_qpos_index": [
+      0,
+      0
+     ],
+     "max_dqvel": 0.0
+    }
+   },
+   "ulp_noise_1.2e-07_cpu_vs_cpu": {
+    "1": {
+     "max_dqpos": 5.960464477539063e-08,
+     "median_world_max_dqpos": 2.0372681319713593e-09,
+     "worst_world_and_qpos_index": [
+      8,
+      15
+     ],
+     "max_dqvel": 3.5762786865234375e-06
+    },
+    "2": {
+     "max_dqpos": 2.384185791015625e-07,
+     "median_world_max_dqpos": 2.9802322387695312e-08,
+     "worst_world_and_qpos_index": [
+      8,
+      19
+     ],
+     "max_dqvel": 6.861984729766846e-06
+    },
+    "5": {
+     "max_dqpos": 2.384185791015625e-07,
+     "median_world_max_dqpos": 5.960464477539063e-08,
+     "worst_world_and_qpos_index": [
+      2,
+      13
+     ],
+     "max_dqvel": 9.953975677490234e-06
+    },
+    "10": {
+     "max_dqpos": 4.172325134277344e-07,
+     "median_world_max_dqpos": 1.1920928955078125e-07,
+     "worst_world_and_qpos_index": [
+      10,
+      14
+     ],
+     "max_dqvel": 1.7821788787841797e-05
+    },
+    "20": {
+     "max_dqpos": 7.152557373046875e-07,
+     "median_world_max_dqpos": 2.980232238769531e-07,
+     "worst_world_and_qpos_index": [
+      2,
+      19
+     ],
+     "max_dqvel": 3.319978713989258e-05
+    },
+    "30": {
+     "max_dqpos": 2.8014183044433594e-06,
+     "median_world_max_dqpos": 9.834766387939453e-07,
+     "worst_world_and_qpos_index": [
+      30,
+      21
+     ],
+     "max_dqvel": 5.6743621826171875e-05
+    },
+    "40": {
+     "max_dqpos": 3.5762786865234375e-06,
+     "median_world_max_dqpos": 1.2814998626708984e-06,
+     "worst_world_and_qpos_index": [
+      38,
+      15
+     ],
+     "max_dqvel": 9.173154830932617e-05
+    },
+    "50": {
+     "max_dqpos": 4.112720489501953e-06,
+     "median_world_max_dqpos": 1.7583370208740234e-06,
+     "worst_world_and_qpos_index": [
+      63,
+      21
+     ],
+     "max_dqvel": 0.00015497207641601562
+    },
+    "60": {
+     "max_dqpos": 3.0994415283203125e-06,
+     "median_world_max_dqpos": 1.259148120880127e-06,
+     "worst_world_and_qpos_index": [
+      63,
+      21
+     ],
+     "max_dqvel": 0.0001099705696105957
+    }
+   },
+   "ulp_noise_6e-08_cpu_vs_cpu": {
+    "1": {
+     "max_dqpos": 2.384185791015625e-07,
+     "median_world_max_dqpos": 2.6775524020195007e-09,
+     "worst_world_and_qpos_index": [
+      4,
+      12
+     ],
+     "max_dqvel": 2.9802322387695312e-06
+    },
+    "2": {
+     "max_dqpos": 2.384185791015625e-07,
+     "median_world_max_dqpos": 2.9802322387695312e-08,
+     "worst_world_and_qpos_index": [
+      4,
+      12
+     ],
+     "max_dqvel": 7.152557373046875e-06
+    },
+    "5": {
+     "max_dqpos": 2.384185791015625e-07,
+     "median_world_max_dqpos": 5.960464477539063e-08,
+     "worst_world_and_qpos_index": [
+      4,
+      12
+     ],
+     "max_dqvel": 1.233816146850586e-05
+    },
+    "10": {
+     "max_dqpos": 4.172325134277344e-07,
+     "median_world_max_dqpos": 1.7881393432617188e-07,
+     "worst_world_and_qpos_index": [
+      39,
+      20
+     ],
+     "max_dqvel": 1.5854835510253906e-05
+    },
+    "20": {
+     "max_dqpos": 5.960464477539062e-07,
+     "median_world_max_dqpos": 2.384185791015625e-07,
+     "worst_world_and_qpos_index": [
+      16,
+      15
+     ],
+     "max_dqvel": 3.9637088775634766e-05
+    },
+    "30": {
+     "max_dqpos": 2.5033950805664062e-06,
+     "median_world_max_dqpos": 8.642673492431641e-07,
+     "worst_world_and_qpos_index": [
+      62,
+      21
+     ],
+     "max_dqvel": 4.38690185546875e-05
+    },
+    "40": {
+     "max_dqpos": 3.6954879760742188e-06,
+     "median_world_max_dqpos": 1.1622905731201172e-06,
+     "worst_world_and_qpos_index": [
+      8,
+      21
+     ],
+     "max_dqvel": 0.00020074844360351562
+    },
+    "50": {
+     "max_dqpos": 5.424022674560547e-06,
+     "median_world_max_dqpos": 1.4901161193847656e-06,
+     "worst_world_and_qpos_index": [
+      8,
+      21
+     ],
+     "max_dqvel": 0.00017148256301879883
+    },
+    "60": {
+     "max_dqpos": 4.470348358154297e-06,
+     "median_world_max_dqpos": 1.2665987014770508e-06,
+     "worst_world_and_qpos_index": [
+      2,
+      15
+     ],
+     "max_dqvel": 8.940696716308594e-05
+    }
+   },
+   "ulp_noise_2.4e-07_cpu_vs_cpu": {
+    "1": {
+     "max_dqpos": 5.960464477539063e-08,
+     "median_world_max_dqpos": 1.8535502022132277e-09,
+     "worst_world_and_qpos_index": [
+      8,
+      15
+     ],
+     "max_dqvel": 3.337860107421875e-06
+    },
+    "2": {
+     "max_dqpos": 2.384185791015625e-07,
+     "median_world_max_dqpos": 2.9802322387695312e-08,
+     "worst_world_and_qpos_index": [
+      8,
+      19
+     ],
+     "max_dqvel": 7.681548595428467e-06
+    },
+    "5": {
+     "max_dqpos": 2.384185791015625e-07,
+     "median_world_max_dqpos": 5.960464477539063e-08,
+     "worst_world_and_qpos_index": [
+      1,
+      12
+     ],
+     "max_dqvel": 1.0907649993896484e-05
+    },
+    "10": {
+     "max_dqpos": 5.960464477539062e-07,
+     "median_world_max_dqpos": 1.7881393432617188e-07,
+     "worst_world_and_qpos_index": [
+      10,
+      15
+     ],
+     "max_dqvel": 2.899765968322754e-05
+    },
+    "20": {
+     "max_dqpos": 1.0728836059570312e-06,
+     "median_world_max_dqpos": 2.384185791015625e-07,
+     "worst_world_and_qpos_index": [
+      10,
+      15
+     ],
+     "max_dqvel": 3.123283386230469e-05
+    },
+    "30": {
+     "max_dqpos": 3.993511199951172e-06,
+     "median_world_max_dqpos": 8.940696716308594e-07,
+     "worst_world_and_qpos_index": [
+      30,
+      21
+     ],
+     "max_dqvel": 9.649991989135742e-05
+    },
+    "40": {
+     "max_dqpos": 4.0531158447265625e-06,
+     "median_world_max_dqpos": 1.430511474609375e-06,
+     "worst_world_and_qpos_index": [
+      42,
+      15
+     ],
+     "max_dqvel": 9.909272193908691e-05
+    },
+    "50": {
+     "max_dqpos": 4.351139068603516e-06,
+     "median_world_max_dqpos": 1.6391277313232422e-06,
+     "worst_world_and_qpos_index": [
+      50,
+      21
+     ],
+     "max_dqvel": 0.00016927719116210938
+    },
+    "60": {
+     "max_dqpos": 4.887580871582031e-06,
+     "median_world_max_dqpos": 1.4044344425201416e-06,
+     "worst_world_and_qpos_index": [
+      25,
+      15
+     ],
+     "max_dqvel": 0.00010508298873901367
+    }
+   },
+   "ulp_noise_1.2e-07_metal_vs_metal": {
+    "1": {
+     "max_dqpos": 5.960464477539063e-08,
+     "median_world_max_dqpos": 2.3865140974521637e-09,
+     "worst_world_and_qpos_index": [
+      40,
+      17
+     ],
+     "max_dqvel": 4.5299530029296875e-06
+    },
+    "2": {
+     "max_dqpos": 2.384185791015625e-07,
+     "median_world_max_dqpos": 2.9802322387695312e-08,
+     "worst_world_and_qpos_index": [
+      58,
+      12
+     ],
+     "max_dqvel": 6.8247318267822266e-06
+    },
+    "5": {
+     "max_dqpos": 2.384185791015625e-07,
+     "median_world_max_dqpos": 5.960464477539063e-08,
+     "worst_world_and_qpos_index": [
+      2,
+      19
+     ],
+     "max_dqvel": 1.4483928680419922e-05
+    },
+    "10": {
+     "max_dqpos": 4.76837158203125e-07,
+     "median_world_max_dqpos": 1.7881393432617188e-07,
+     "worst_world_and_qpos_index": [
+      6,
+      13
+     ],
+     "max_dqvel": 1.5109777450561523e-05
+    },
+    "20": {
+     "max_dqpos": 8.940696716308594e-07,
+     "median_world_max_dqpos": 2.384185791015625e-07,
+     "worst_world_and_qpos_index": [
+      24,
+      21
+     ],
+     "max_dqvel": 3.314018249511719e-05
+    },
+    "30": {
+     "max_dqpos": 2.3245811462402344e-06,
+     "median_world_max_dqpos": 8.642673492431641e-07,
+     "worst_world_and_qpos_index": [
+      30,
+      21
+     ],
+     "max_dqvel": 9.79304313659668e-05
+    },
+    "40": {
+     "max_dqpos": 3.993511199951172e-06,
+     "median_world_max_dqpos": 1.2558884918689728e-06,
+     "worst_world_and_qpos_index": [
+      33,
+      15
+     ],
+     "max_dqvel": 0.00011450052261352539
+    },
+    "50": {
+     "max_dqpos": 6.318092346191406e-06,
+     "median_world_max_dqpos": 1.8775463104248047e-06,
+     "worst_world_and_qpos_index": [
+      32,
+      15
+     ],
+     "max_dqvel": 0.00011947751045227051
+    },
+    "60": {
+     "max_dqpos": 0.00021213293075561523,
+     "median_world_max_dqpos": 1.3709068298339844e-06,
+     "worst_world_and_qpos_index": [
+      54,
+      8
+     ],
+     "max_dqvel": 0.003786325454711914
+    }
+   },
+   "c_float64_vs_cpu": {
+    "1": {
+     "max_dqpos": 6.38549901288421e-07,
+     "median_world_max_dqpos": 1.2169760132962892e-07,
+     "worst_world_and_qpos_index": [
+      35,
+      21
+     ],
+     "max_dqvel": 0.0001236419632726915
+    },
+    "2": {
+     "max_dqpos": 1.1014371803508283e-06,
+     "median_world_max_dqpos": 1.5263882691129993e-07,
+     "worst_world_and_qpos_index": [
+      35,
+      21
+     ],
+     "max_dqvel": 9.075951414697081e-05
+    },
+    "5": {
+     "max_dqpos": 2.094165263533121e-06,
+     "median_world_max_dqpos": 2.5234993272782447e-07,
+     "worst_world_and_qpos_index": [
+      23,
+      15
+     ],
+     "max_dqvel": 0.0001277196637290423
+    },
+    "10": {
+     "max_dqpos": 3.877906786242669e-06,
+     "median_world_max_dqpos": 3.651735732135286e-07,
+     "worst_world_and_qpos_index": [
+      23,
+      15
+     ],
+     "max_dqvel": 5.841124008054699e-05
+    },
+    "20": {
+     "max_dqpos": 0.0006076263209557897,
+     "median_world_max_dqpos": 5.62744218446376e-07,
+     "worst_world_and_qpos_index": [
+      55,
+      21
+     ],
+     "max_dqvel": 0.009100634310090006
+    },
+    "30": {
+     "max_dqpos": 0.0004209252921438811,
+     "median_world_max_dqpos": 1.350672876487824e-06,
+     "worst_world_and_qpos_index": [
+      55,
+      21
+     ],
+     "max_dqvel": 0.00843095409599337
+    },
+    "40": {
+     "max_dqpos": 0.0002298050347763203,
+     "median_world_max_dqpos": 1.6213347932558797e-06,
+     "worst_world_and_qpos_index": [
+      55,
+      20
+     ],
+     "max_dqvel": 0.0020823372718106747
+    },
+    "50": {
+     "max_dqpos": 0.0003064306755460322,
+     "median_world_max_dqpos": 2.072215048165571e-06,
+     "worst_world_and_qpos_index": [
+      55,
+      15
+     ],
+     "max_dqvel": 0.007718820852610317
+    },
+    "60": {
+     "max_dqpos": 0.00026762777099331725,
+     "median_world_max_dqpos": 1.3804901631553346e-06,
+     "worst_world_and_qpos_index": [
+      55,
+      15
+     ],
+     "max_dqvel": 0.005703985847655302
+    }
+   },
+   "c_float64_vs_metal": {
+    "1": {
+     "max_dqpos": 6.38549901288421e-07,
+     "median_world_max_dqpos": 1.3738623638737124e-07,
+     "worst_world_and_qpos_index": [
+      35,
+      21
+     ],
+     "max_dqvel": 0.00012528109100401474
+    },
+    "2": {
+     "max_dqpos": 1.1014371803508283e-06,
+     "median_world_max_dqpos": 1.797679904935734e-07,
+     "worst_world_and_qpos_index": [
+      35,
+      21
+     ],
+     "max_dqvel": 8.941840963952452e-05
+    },
+    "5": {
+     "max_dqpos": 2.094165263533121e-06,
+     "median_world_max_dqpos": 2.5479805110251164e-07,
+     "worst_world_and_qpos_index": [
+      23,
+      15
+     ],
+     "max_dqvel": 0.00013308408175882747
+    },
+    "10": {
+     "max_dqpos": 6.053612205897396e-05,
+     "median_world_max_dqpos": 3.703243107722187e-07,
+     "worst_world_and_qpos_index": [
+      23,
+      16
+     ],
+     "max_dqvel": 0.012090639274761728
+    },
+    "20": {
+     "max_dqpos": 0.0007804584860966468,
+     "median_world_max_dqpos": 5.897724760783873e-07,
+     "worst_world_and_qpos_index": [
+      23,
+      21
+     ],
+     "max_dqvel": 0.009688776411311828
+    },
+    "30": {
+     "max_dqpos": 0.0004208656874991057,
+     "median_world_max_dqpos": 1.2680399085751581e-06,
+     "worst_world_and_qpos_index": [
+      55,
+      21
+     ],
+     "max_dqvel": 0.008889614239095955
+    },
+    "40": {
+     "max_dqpos": 0.00045431078423696647,
+     "median_world_max_dqpos": 1.6241270282546516e-06,
+     "worst_world_and_qpos_index": [
+      23,
+      21
+     ],
+     "max_dqvel": 0.005113509894864698
+    },
+    "50": {
+     "max_dqpos": 0.0008962703722378285,
+     "median_world_max_dqpos": 2.238274323773659e-06,
+     "worst_world_and_qpos_index": [
+      23,
+      21
+     ],
+     "max_dqvel": 0.04809894396100356
+    },
+    "60": {
+     "max_dqpos": 0.002028012080762087,
+     "median_world_max_dqpos": 1.4428646022413005e-06,
+     "worst_world_and_qpos_index": [
+      23,
+      15
+     ],
+     "max_dqvel": 0.028531944632079087
+    }
+   },
+   "seconds": 25.2
+  },
+  "uncertainty": [
+   "The noise control puts rounding on qvel only, once per step, which is not the same as a different rounding in each kernel",
+   "One model, humanoid.xml, 60 steps. Go2 was not compared at this level",
+   "The cause of the Metal repeat difference below was not found"
+  ]
+ },
+ "metal_does_not_repeat_exactly_with_contacts": {
+  "finding": "Two runs on Metal with the same start differ when contacts are active: over 1024 worlds, max qpos 1.39e-2 and qvel 7.17e-1 in rare worlds. Without contacts and limits they are exactly equal. The CPU repeats exactly in both cases.",
+  "not_verified": "A likely cause is that parallel contact generation orders contacts differently from run to run. warp-metal lists deterministic scatter mode as unsupported. This session did not test that cause.",
+  "consequence": "A single seed on Metal cannot reproduce a run bit for bit. Compare by statistics.",
+  "tested_on_2026_11_03": {
+   "result": {
+    "xml": "humanoid.xml",
+    "worlds": 256,
+    "steps": 60,
+    "metal_repeat_unsorted": {
+     "max_dqpos": 0.00011855363845825195,
+     "max_dqvel": 0.013128995895385742,
+     "worlds_not_bit_equal": 256,
+     "worlds": 256
+    },
+    "metal_repeat_contact_order": {
+     "steps": 60,
+     "steps_with_same_geom_pairs_in_another_order": 60,
+     "steps_with_other_geom_pairs": 2,
+     "worlds_with_another_order": 256
+    },
+    "cpu_repeat_unsorted": {
+     "max_dqpos": 0.0,
+     "max_dqvel": 0.0,
+     "worlds_not_bit_equal": 0,
+     "worlds": 256
+    },
+    "cpu_repeat_contact_order": {
+     "steps": 60,
+     "steps_with_same_geom_pairs_in_another_order": 0,
+     "steps_with_other_geom_pairs": 0,
+     "worlds_with_another_order": 0
+    },
+    "metal_repeat_with_fixed_contact_order": {
+     "max_dqpos": 0.0007857680320739746,
+     "max_dqvel": 0.029124945402145386,
+     "worlds_not_bit_equal": 255,
+     "worlds": 256
+    },
+    "metal_repeat_with_fixed_contact_order_again": {
+     "max_dqpos": 0.004914402961730957,
+     "max_dqvel": 0.701810359954834,
+     "worlds_not_bit_equal": 255,
+     "worlds": 256
+    },
+    "metal_vs_cpu_with_fixed_contact_order": {
+     "max_dqpos": 0.004914760589599609,
+     "max_dqvel": 0.701810359954834,
+     "worlds_not_bit_equal": 256,
+     "worlds": 256
+    },
+    "metal_vs_cpu_unsorted": {
+     "max_dqpos": 0.002233266830444336,
+     "max_dqvel": 0.30512428283691406,
+     "worlds_not_bit_equal": 256,
+     "worlds": 256
+    }
+   },
+   "reading": "Contacts land in other slots from run to run in every world, while the CPU repeats exactly. A fixed contact order does not make Metal repeat, so the slot order is not the whole cause. mujoco_warp/_src/constraint.py takes constraint rows from about 50 more atomic counters, which is the likely remainder. That part was not tested."
+  }
+ },
+ "throughput": {
+  "protocol": "MuJoCo Warp humanoid.xml, patched, 100 steps after the first compile step, 3 repeats with other jobs running. World-steps per second. No policy, no learner, no Isaac Lab.",
+  "gpu_note": "accumulatedGPUTime is sampled about every 2 s to 5 s and these runs last seconds, so process_gpu_seconds is a low lower bound. It is above zero on Metal and exactly 0.0 on the CPU.",
+  "rows": [
+   {
+    "device": "metal",
+    "worlds": 256,
+    "min": 25055,
+    "max": 28806,
+    "repeats": 3,
+    "runs": [
+     {
+      "world_steps_per_second": 27115,
+      "wall_seconds": 26.37,
+      "exit_code": 0,
+      "cores_busy": 0.11,
+      "process_gpu_seconds": 0.01,
+      "gpu_device_utilization_percent_during": {
+       "samples": 26,
+       "mean": 19.2,
+       "median": 18,
+       "p95": 38,
+       "max": 64
+      },
+      "other_processes_cpu_percent": {
+       "samples": 6,
+       "mean": 596.5,
+       "median": 612.5,
+       "p95": 712.0,
+       "max": 712.0
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 348.3,
+       "com.apple.WebKit.WebContent": 101.2,
+       "MTLCompilerService": 99.4,
+       "python": 96.9,
+       "WindowServer": 35.2,
+       "Google Chrome Helper (Aperitif)": 24.4
+      },
+      "uptime_before": "11:01  up 5 days, 21:40, 5 users, load averages: 8.66 9.21 8.21"
+     },
+     {
+      "world_steps_per_second": 25055,
+      "wall_seconds": 6.09,
+      "exit_code": 0,
+      "cores_busy": 0.46,
+      "process_gpu_seconds": 0.15,
+      "gpu_device_utilization_percent_during": {
+       "samples": 6,
+       "mean": 38.2,
+       "median": 32,
+       "p95": 60,
+       "max": 60
+      },
+      "other_processes_cpu_percent": {
+       "samples": 3,
+       "mean": 641.5,
+       "median": 595.2,
+       "p95": 793.4,
+       "max": 793.4
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 373.2,
+       "com.apple.WebKit.WebContent": 101.0,
+       "python": 98.5,
+       "MTLCompilerService": 83.6,
+       "WindowServer": 42.7,
+       "Google Chrome Helper (Aperitif)": 23.4
+      },
+      "uptime_before": "11:03  up 5 days, 21:42, 5 users, load averages: 8.43 9.10 8.28"
+     },
+     {
+      "world_steps_per_second": 28806,
+      "wall_seconds": 3.57,
+      "exit_code": 0,
+      "cores_busy": 0.72,
+      "process_gpu_seconds": 0.29,
+      "gpu_device_utilization_percent_during": {
+       "samples": 4,
+       "mean": 33.0,
+       "median": 26,
+       "p95": 57,
+       "max": 57
+      },
+      "other_processes_cpu_percent": {
+       "samples": 2,
+       "mean": 685.5,
+       "median": 751.9,
+       "p95": 751.9,
+       "max": 751.9
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 370.7,
+       "com.apple.WebKit.WebContent": 100.3,
+       "MTLCompilerService": 99.9,
+       "WindowServer": 34.0,
+       "python": 27.0,
+       "Google Chrome Helper (Aperitif)": 25.7
+      },
+      "uptime_before": "11:04  up 5 days, 21:43, 5 users, load averages: 9.53 9.26 8.43"
+     }
+    ]
+   },
+   {
+    "device": "metal",
+    "worlds": 1024,
+    "min": 87951,
+    "max": 139752,
+    "repeats": 3,
+    "runs": [
+     {
+      "world_steps_per_second": 87951,
+      "wall_seconds": 4.05,
+      "exit_code": 0,
+      "cores_busy": 0.76,
+      "process_gpu_seconds": 0.17,
+      "gpu_device_utilization_percent_during": {
+       "samples": 4,
+       "mean": 44.2,
+       "median": 55,
+       "p95": 56,
+       "max": 56
+      },
+      "other_processes_cpu_percent": {
+       "samples": 2,
+       "mean": 703.3,
+       "median": 821.8,
+       "p95": 821.8,
+       "max": 821.8
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 266.5,
+       "com.apple.WebKit.WebContent": 100.9,
+       "python": 96.2,
+       "WindowServer": 36.1,
+       "mds_stores": 35.6,
+       "Google Chrome Helper (Aperitif)": 26.6
+      },
+      "uptime_before": "11:02  up 5 days, 21:40, 5 users, load averages: 8.83 9.18 8.24"
+     },
+     {
+      "world_steps_per_second": 91534,
+      "wall_seconds": 23.3,
+      "exit_code": 0,
+      "cores_busy": 0.12,
+      "process_gpu_seconds": 0.07,
+      "gpu_device_utilization_percent_during": {
+       "samples": 22,
+       "mean": 32.2,
+       "median": 28,
+       "p95": 54,
+       "max": 67
+      },
+      "other_processes_cpu_percent": {
+       "samples": 11,
+       "mean": 699.9,
+       "median": 683.2,
+       "p95": 870.3,
+       "max": 870.3
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 356.0,
+       "com.apple.WebKit.WebContent": 101.2,
+       "MTLCompilerService": 100.0,
+       "python": 98.1,
+       "WindowServer": 43.0,
+       "Google Chrome Helper (Aperitif)": 27.8,
+       "claude": 21.0
+      },
+      "uptime_before": "11:03  up 5 days, 21:42, 5 users, load averages: 8.15 9.01 8.26"
+     },
+     {
+      "world_steps_per_second": 139752,
+      "wall_seconds": 3.05,
+      "exit_code": 0,
+      "cores_busy": 0.8,
+      "process_gpu_seconds": 0.31,
+      "gpu_device_utilization_percent_during": {
+       "samples": 3,
+       "mean": 27.0,
+       "median": 23,
+       "p95": 45,
+       "max": 45
+      },
+      "other_processes_cpu_percent": {
+       "samples": 2,
+       "mean": 631.0,
+       "median": 729.7,
+       "p95": 729.7,
+       "max": 729.7
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 549.6,
+       "com.apple.WebKit.WebContent": 100.4,
+       "WindowServer": 25.8
+      },
+      "uptime_before": "11:04  up 5 days, 21:43, 5 users, load averages: 8.90 9.13 8.39"
+     }
+    ]
+   },
+   {
+    "device": "metal",
+    "worlds": 4096,
+    "min": 160584,
+    "max": 316526,
+    "repeats": 3,
+    "runs": [
+     {
+      "world_steps_per_second": 163265,
+      "wall_seconds": 5.57,
+      "exit_code": 0,
+      "cores_busy": 0.61,
+      "process_gpu_seconds": 1.44,
+      "gpu_device_utilization_percent_during": {
+       "samples": 6,
+       "mean": 49.5,
+       "median": 61,
+       "p95": 74,
+       "max": 74
+      },
+      "other_processes_cpu_percent": {
+       "samples": 3,
+       "mean": 624.8,
+       "median": 657.0,
+       "p95": 709.6,
+       "max": 709.6
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 315.9,
+       "node": 153.7,
+       "com.apple.WebKit.WebContent": 100.6,
+       "python": 96.5,
+       "(python3.13)": 78.6,
+       "WindowServer": 36.1,
+       "esbuild": 30.4,
+       "Google Chrome Helper (Aperitif Renderer)": 23.6
+      },
+      "uptime_before": "11:02  up 5 days, 21:41, 5 users, load averages: 9.28 9.25 8.28"
+     },
+     {
+      "world_steps_per_second": 160584,
+      "wall_seconds": 5.08,
+      "exit_code": 0,
+      "cores_busy": 0.59,
+      "process_gpu_seconds": 1.56,
+      "gpu_device_utilization_percent_during": {
+       "samples": 5,
+       "mean": 53.4,
+       "median": 69,
+       "p95": 81,
+       "max": 81
+      },
+      "other_processes_cpu_percent": {
+       "samples": 3,
+       "mean": 525.9,
+       "median": 495.09999999999997,
+       "p95": 606.6,
+       "max": 606.6
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 354.6,
+       "com.apple.WebKit.WebContent": 100.6,
+       "MTLCompilerService": 96.1,
+       "python": 50.7,
+       "WindowServer": 37.3,
+       "Google Chrome Helper (Aperitif)": 21.1,
+       "storagekitd": 20.5
+      },
+      "uptime_before": "11:04  up 5 days, 21:42, 5 users, load averages: 9.38 9.25 8.39"
+     },
+     {
+      "world_steps_per_second": 316526,
+      "wall_seconds": 4.04,
+      "exit_code": 0,
+      "cores_busy": 0.66,
+      "process_gpu_seconds": 0.28,
+      "gpu_device_utilization_percent_during": {
+       "samples": 4,
+       "mean": 41.5,
+       "median": 51,
+       "p95": 66,
+       "max": 66
+      },
+      "other_processes_cpu_percent": {
+       "samples": 2,
+       "mean": 447.4,
+       "median": 530.4,
+       "p95": 530.4,
+       "max": 530.4
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 349.0,
+       "com.apple.WebKit.WebContent": 100.2,
+       "WindowServer": 42.5,
+       "Google Chrome Helper (Aperitif)": 22.9
+      },
+      "uptime_before": "11:05  up 5 days, 21:44, 5 users, load averages: 8.84 9.11 8.40"
+     }
+    ]
+   },
+   {
+    "device": "cpu",
+    "worlds": 256,
+    "min": 11854,
+    "max": 14449,
+    "repeats": 3,
+    "runs": [
+     {
+      "world_steps_per_second": 11854,
+      "wall_seconds": 4.04,
+      "exit_code": 0,
+      "cores_busy": 0.94,
+      "process_gpu_seconds": 0.0,
+      "gpu_device_utilization_percent_during": {
+       "samples": 4,
+       "mean": 21.8,
+       "median": 22,
+       "p95": 24,
+       "max": 24
+      },
+      "other_processes_cpu_percent": {
+       "samples": 2,
+       "mean": 705.6,
+       "median": 738.4,
+       "p95": 738.4,
+       "max": 738.4
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 311.6,
+       "com.apple.WebKit.WebContent": 100.9,
+       "python": 96.1,
+       "WindowServer": 26.7,
+       "node": 25.6
+      },
+      "uptime_before": "11:01  up 5 days, 21:40, 5 users, load averages: 8.81 9.18 8.23"
+     },
+     {
+      "world_steps_per_second": 12417,
+      "wall_seconds": 4.05,
+      "exit_code": 0,
+      "cores_busy": 0.88,
+      "process_gpu_seconds": 0.0,
+      "gpu_device_utilization_percent_during": {
+       "samples": 4,
+       "mean": 15.8,
+       "median": 25,
+       "p95": 38,
+       "max": 38
+      },
+      "other_processes_cpu_percent": {
+       "samples": 2,
+       "mean": 653.7,
+       "median": 735.3000000000001,
+       "p95": 735.3000000000001,
+       "max": 735.3000000000001
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 317.1,
+       "com.apple.WebKit.WebContent": 101.2,
+       "python": 98.6,
+       "MTLCompilerService": 93.6,
+       "WindowServer": 40.3,
+       "Google Chrome Helper (Aperitif)": 22.5
+      },
+      "uptime_before": "11:03  up 5 days, 21:42, 5 users, load averages: 8.34 9.06 8.28"
+     },
+     {
+      "world_steps_per_second": 14449,
+      "wall_seconds": 3.55,
+      "exit_code": 0,
+      "cores_busy": 0.88,
+      "process_gpu_seconds": 0.0,
+      "gpu_device_utilization_percent_during": {
+       "samples": 4,
+       "mean": 24.5,
+       "median": 25,
+       "p95": 25,
+       "max": 25
+      },
+      "other_processes_cpu_percent": {
+       "samples": 2,
+       "mean": 610.8,
+       "median": 696.9,
+       "p95": 696.9,
+       "max": 696.9
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 412.6,
+       "com.apple.WebKit.WebContent": 100.2,
+       "python": 97.7,
+       "WindowServer": 30.2
+      },
+      "uptime_before": "11:04  up 5 days, 21:43, 5 users, load averages: 9.16 9.19 8.40"
+     }
+    ]
+   },
+   {
+    "device": "cpu",
+    "worlds": 1024,
+    "min": 13339,
+    "max": 16004,
+    "repeats": 3,
+    "runs": [
+     {
+      "world_steps_per_second": 13339,
+      "wall_seconds": 9.65,
+      "exit_code": 0,
+      "cores_busy": 0.96,
+      "process_gpu_seconds": 0.0,
+      "gpu_device_utilization_percent_during": {
+       "samples": 10,
+       "mean": 15.8,
+       "median": 14,
+       "p95": 25,
+       "max": 25
+      },
+      "other_processes_cpu_percent": {
+       "samples": 5,
+       "mean": 583.6,
+       "median": 627.3,
+       "p95": 727.4,
+       "max": 727.4
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 270.8,
+       "com.apple.WebKit.WebContent": 101.2,
+       "python": 97.4,
+       "MTLCompilerService": 95.6,
+       "WindowServer": 36.9,
+       "mds_stores": 25.8,
+       "mds": 23.7
+      },
+      "uptime_before": "11:02  up 5 days, 21:41, 5 users, load averages: 8.31 9.05 8.21"
+     },
+     {
+      "world_steps_per_second": 15101,
+      "wall_seconds": 8.62,
+      "exit_code": 0,
+      "cores_busy": 0.96,
+      "process_gpu_seconds": 0.0,
+      "gpu_device_utilization_percent_during": {
+       "samples": 9,
+       "mean": 18.4,
+       "median": 18,
+       "p95": 47,
+       "max": 47
+      },
+      "other_processes_cpu_percent": {
+       "samples": 5,
+       "mean": 571.7,
+       "median": 605.8,
+       "p95": 779.6,
+       "max": 779.6
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 478.4,
+       "com.apple.WebKit.WebContent": 100.9,
+       "python": 97.8,
+       "WindowServer": 35.1,
+       "storagekitd": 22.6,
+       "Google Chrome Helper (Aperitif)": 21.1
+      },
+      "uptime_before": "11:03  up 5 days, 21:42, 5 users, load averages: 9.91 9.34 8.41"
+     },
+     {
+      "world_steps_per_second": 16004,
+      "wall_seconds": 8.12,
+      "exit_code": 0,
+      "cores_busy": 0.95,
+      "process_gpu_seconds": 0.0,
+      "gpu_device_utilization_percent_during": {
+       "samples": 8,
+       "mean": 25.1,
+       "median": 25,
+       "p95": 26,
+       "max": 26
+      },
+      "other_processes_cpu_percent": {
+       "samples": 4,
+       "mean": 467.8,
+       "median": 548.6999999999999,
+       "p95": 581.7,
+       "max": 581.7
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 362.0,
+       "com.apple.WebKit.WebContent": 100.7,
+       "WindowServer": 44.4,
+       "claude": 35.9,
+       "Google Chrome Helper (Aperitif)": 22.3,
+       "Terminal": 20.6
+      },
+      "uptime_before": "11:05  up 5 days, 21:43, 5 users, load averages: 9.07 9.16 8.41"
+     }
+    ]
+   },
+   {
+    "device": "cpu",
+    "worlds": 4096,
+    "min": 14521,
+    "max": 15551,
+    "repeats": 3,
+    "runs": [
+     {
+      "world_steps_per_second": 14521,
+      "wall_seconds": 30.42,
+      "exit_code": 0,
+      "cores_busy": 0.99,
+      "process_gpu_seconds": 0.0,
+      "gpu_device_utilization_percent_during": {
+       "samples": 29,
+       "mean": 25.1,
+       "median": 25,
+       "p95": 33,
+       "max": 48
+      },
+      "other_processes_cpu_percent": {
+       "samples": 15,
+       "mean": 557.8,
+       "median": 572.5,
+       "p95": 743.8,
+       "max": 743.8
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 344.7,
+       "node": 159.0,
+       "com.apple.WebKit.WebContent": 101.2,
+       "python": 85.8,
+       "WindowServer": 41.2,
+       "Google Chrome Helper (Aperitif Renderer)": 39.2,
+       "Google Chrome Helper (Aperitif)": 25.8
+      },
+      "uptime_before": "11:02  up 5 days, 21:41, 5 users, load averages: 9.94 9.39 8.34"
+     },
+     {
+      "world_steps_per_second": 15551,
+      "wall_seconds": 28.43,
+      "exit_code": 0,
+      "cores_busy": 0.98,
+      "process_gpu_seconds": 0.0,
+      "gpu_device_utilization_percent_during": {
+       "samples": 27,
+       "mean": 18.2,
+       "median": 18,
+       "p95": 24,
+       "max": 27
+      },
+      "other_processes_cpu_percent": {
+       "samples": 14,
+       "mean": 544.2,
+       "median": 588.7,
+       "p95": 737.4,
+       "max": 737.4
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 455.0,
+       "com.apple.WebKit.WebContent": 101.3,
+       "python": 100.5,
+       "MTLCompilerService": 100.0,
+       "photoanalysisd": 82.8,
+       "WindowServer": 38.8,
+       "launchd": 24.0
+      },
+      "uptime_before": "11:04  up 5 days, 21:43, 5 users, load averages: 8.78 9.13 8.35"
+     },
+     {
+      "world_steps_per_second": 15134,
+      "wall_seconds": 28.96,
+      "exit_code": 0,
+      "cores_busy": 0.98,
+      "process_gpu_seconds": 0.0,
+      "gpu_device_utilization_percent_during": {
+       "samples": 28,
+       "mean": 26.7,
+       "median": 25,
+       "p95": 52,
+       "max": 52
+      },
+      "other_processes_cpu_percent": {
+       "samples": 14,
+       "mean": 541.7,
+       "median": 553.1,
+       "p95": 777.8000000000001,
+       "max": 777.8000000000001
+      },
+      "competing_during_max_cpu_percent": {
+       "Autodesk Fusion": 603.6,
+       "com.apple.WebKit.WebContent": 101.0,
+       "MTLCompilerService": 98.2,
+       "python": 97.8,
+       "WindowServer": 43.0,
+       "Google Chrome Helper (Aperitif)": 22.7,
+       "claude": 22.5
+      },
+      "uptime_before": "11:05  up 5 days, 21:44, 5 users, load averages: 8.45 9.02 8.37"
+     }
+    ]
+   }
+  ]
+ },
+ "newton": {
+  "status": "runs, with a patched copy of Newton",
+  "works": "Newton's model, state, control and SolverMuJoCo ran on metal:0 inside Isaac Lab's Go2 task with use_mujoco_contacts=true. See validation/isaac-lab-metal.json.",
+  "fails": "Newton's own collision pipeline, the Go2 task's default, does not compile on Metal: 'narrow_phase_gjk_mpr_True_False_write_contact_support_map_default', no template named 'fixedarray_t'. multicontact.py uses local arrays from wp.zeros in a kernel, and warp-metal lists wp.fixedarray as unsupported.",
+  "not_done": "A Newton-only comparison of metal:0 against the CPU.",
+  "update_2026_11_03": {
+   "change": "spikes/isaac_newton_metal_patch.py writes a copy of Newton in a separate folder. multicontact.py takes its two polygon buffers from a global scratch array instead of a local fixed array. warp-metal resolves the raw address. The installed Newton stays as it is, and it still fails with fixedarray_t: seen again on 2026-11-03, when a run by mistake used it.",
+   "what_runs": "Newton's own collision pipeline, and SolverXPBD on a small scene, or SolverMuJoCo inside Isaac Lab's Go2 task, on metal:0.",
+   "limit_of_the_patch": "Two calls share a slot only if one is still running when 2^20 other calls have started. This was not shown to be impossible, and no test looks for it. The scratch address enters each kernel through wp.static, so each new process recompiles those kernels.",
+   "first_contact_test": {
+    "verdict": "fail",
+    "note": "Failed by its own rule, written before the run: the clean run was 7.2e-7 from the CPU, and the gravity fault passed the coarse limit of 5e-2.",
+    "record": {
+     "limits": {
+      "z_at_rest": 0.001,
+      "any_position": 0.05,
+      "contacts_relative": 0.05,
+      "grade": "B"
+     },
+     "scene": "box, capsule and sphere on a ground plane, 64 worlds, 300 steps at 240 Hz, SolverXPBD with Newton's own collision pipeline",
+     "cpu_world_steps_per_second": 39920,
+     "metal_world_steps_per_second": 53996,
+     "rate_note": "world-steps per second with 64 worlds; compile time is left out",
+     "clean": {
+      "z_at_rest": 0.0,
+      "any_position": 7.152557373046875e-07,
+      "contacts_relative": 0.0,
+      "contacts": [
+       448,
+       448
+      ],
+      "finite": true,
+      "within_limits": true
+     },
+     "faults": {
+      "gravity_plus_2_percent": {
+       "z_at_rest": 4.0978193283081055e-07,
+       "any_position": 0.006233468651771545,
+       "contacts_relative": 0.0,
+       "contacts": [
+        448,
+        448
+       ],
+       "finite": true,
+       "within_limits": true
+      },
+      "box_half_size_plus_2mm": {
+       "z_at_rest": 0.001999996602535248,
+       "any_position": 0.001999996602535248,
+       "contacts_relative": 0.0,
+       "contacts": [
+        448,
+        448
+       ],
+       "finite": true,
+       "within_limits": false
+      }
+     },
+     "cpu_final_z": [
+      0.09997951239347458,
+      0.04999630153179169,
+      0.10000000149011612
+     ],
+     "metal_final_z": [
+      0.09997951239347458,
+      0.04999630153179169,
+      0.10000000149011612
+     ],
+     "bodies_moved": true,
+     "verdict": "fail"
+    }
+   },
+   "second_contact_test": {
+    "verdict": "fail",
+    "note": "The limit was tightened to 1e-3 after the first test, and stacked and rounded shapes were added, before their first run. It failed that limit on the cone only. The patched path ran: the scratch counter rose on Metal.",
+    "record": {
+     "limits": {
+      "z_at_rest": 0.001,
+      "any_position": 0.001,
+      "contacts_relative": 0.05,
+      "grade": "B"
+     },
+     "scene": "box, capsule and sphere on a ground plane, 64 worlds, 300 steps at 240 Hz, SolverXPBD with Newton's own collision pipeline",
+     "cpu_world_steps_per_second": 17286,
+     "metal_world_steps_per_second": 47699,
+     "rate_note": "world-steps per second with 64 worlds; compile time is left out",
+     "clean": {
+      "z_at_rest": 1.1101365089416504e-06,
+      "any_position": 0.004887521266937256,
+      "contacts_relative": 0.0,
+      "contacts": [
+       1664,
+       1664
+      ],
+      "finite": true,
+      "within_limits": false
+     },
+     "faults": {
+      "gravity_plus_2_percent": {
+       "z_at_rest": 6.67572021484375e-06,
+       "any_position": 0.006233468651771545,
+       "contacts_relative": 0.0,
+       "contacts": [
+        1664,
+        1664
+       ],
+       "finite": true,
+       "within_limits": false
+      },
+      "box_half_size_plus_2mm": {
+       "z_at_rest": 0.001999996602535248,
+       "any_position": 0.004888594150543213,
+       "contacts_relative": 0.0,
+       "contacts": [
+        1664,
+        1664
+       ],
+       "finite": true,
+       "within_limits": false
+      }
+     },
+     "cpu_final_z": [
+      0.09997951239347458,
+      0.04999630153179169,
+      0.10000000149011612,
+      0.0998237356543541,
+      0.29966798424720764,
+      0.09999465197324753,
+      0.09995873272418976
+     ],
+     "metal_final_z": [
+      0.09997951239347458,
+      0.04999630153179169,
+      0.10000000149011612,
+      0.09982375055551529,
+      0.29966795444488525,
+      0.09999465197324753,
+      0.0999583899974823
+     ],
+     "manifold_calls_so_far": {
+      "cpu": 38272,
+      "metal": 76608
+     },
+     "bodies_moved": true,
+     "patched_path_ran": true,
+     "verdict": "fail"
+    }
+   },
+   "cone_finding": {
+    "per_body_cpu_vs_metal": {
+     "box": 0.0,
+     "capsule": 7.15e-07,
+     "sphere": 0.0,
+     "box_low": 2.24e-08,
+     "box_top": 2.98e-08,
+     "cylinder": 0.0,
+     "cone": 0.00489
+    },
+    "cone_final": 0.000406,
+    "metal_vs_metal_cone": 9.66e-06,
+    "cpu_with_one_ulp_at_the_start_cone": 1.4e-06,
+    "reading": "The difference takes two values, whatever the world count or other bodies: about 5e-6 at some start positions and 4.89e-3 at others (one cone alone, 1 world: (0,0) 4.4e-6, (0.5,0) 2.6e-6, (-0.5,0) 4.0e-6, (0.3,0.7) 4.7e-6, (-2.3,1.7) 7.9e-6, against (0,1) 4.88e-3, (0.5,1) 4.89e-3, (1.1,-0.9) 4.89e-3). It starts at the landing (step 47). That looks like one discrete event at first contact, not growing rounding. It is not proven. On the CPU, 1, 2 or 8 ulps at the start do not trigger it at (-0.5,1): at most 6.6e-6. So rounding of the start does not explain it, and a wrong cone path on Metal is not ruled out. Metal repeats itself on this scene to 9.7e-6.",
+    "earlier_note_corrected": "An earlier draft said that a single cone lands much the same on both devices. That holds at (0,0), not at every position."
+   },
+   "go2_with_newton_contacts": {
+    "verdict": "pass",
+    "limits": {
+     "speed": 0.05,
+     "velocity_error": 0.05,
+     "height": 0.01,
+     "falls": 0.1,
+     "reward": 0.005,
+     "grade": "B"
+    },
+    "note": "The limits are those written for the first Go2 parity test, unchanged. The policy was trained with MuJoCo's contacts on Metal. The zero-action control also passes. The run without the wait before torch reads passes too, so this test still cannot show that the wait is needed.",
+    "trained_cpu_vs_metal": {
+     "differences": {
+      "speed": 0.00206062180300548,
+      "velocity_error": 0.0016229552361700095,
+      "height": 0.00010280357466807555,
+      "falls": 0.015625,
+      "reward": 0.00015152698906603645
+     },
+     "within_limits": true
+    },
+    "zero_cpu_vs_metal": {
+     "differences": {
+      "speed": 1.2470925479040945e-05,
+      "velocity_error": 1.1366407076440765e-05,
+      "height": 2.5000704659355888e-05,
+      "falls": 0.0,
+      "reward": 5.8538679390039765e-05
+     },
+     "within_limits": true
+    },
+    "no_read_sync_vs_cpu": {
+     "differences": {
+      "speed": 0.0003175729430383578,
+      "velocity_error": 0.0009455730186568312,
+      "height": 5.707462628684601e-05,
+      "falls": 0.015625,
+      "reward": 4.9351316178211646e-05
+     },
+     "within_limits": true
+    },
+    "results": {
+     "cpu_trained": {
+      "controller": "mlx",
+      "checkpoint": "model_299.pt",
+      "envs": 128,
+      "steps": 1000,
+      "seed": 7,
+      "device": "cpu",
+      "reward_per_env_step": 0.03354147672618274,
+      "terminated_per_env": 0.0234375,
+      "timed_out_per_env": 0.984375,
+      "seconds": 198.92,
+      "warp_device": "cpu",
+      "read_sync": true,
+      "task": "Isaac-Velocity-Flat-UnitreeGo2",
+      "forward_command": 0.8,
+      "mean_forward_speed": 0.8708165897263421,
+      "mean_velocity_error": 0.1611354183157285,
+      "mean_base_height": 0.35164946125613317,
+      "window": "after step 100",
+      "mlx_vs_torch_worst_rel_l2": 2.7698172289092327e-07,
+      "mlx_inference_ms_per_step": 1.6438,
+      "mlx_device": "gpu"
+     },
+     "metal_trained": {
+      "controller": "mlx",
+      "checkpoint": "model_299.pt",
+      "envs": 128,
+      "steps": 1000,
+      "seed": 7,
+      "device": "cpu",
+      "reward_per_env_step": 0.033693003715248776,
+      "terminated_per_env": 0.0078125,
+      "timed_out_per_env": 0.9921875,
+      "seconds": 269.92,
+      "warp_device": "metal:0",
+      "read_sync": true,
+      "task": "Isaac-Velocity-Flat-UnitreeGo2",
+      "forward_command": 0.8,
+      "mean_forward_speed": 0.8728772115293476,
+      "mean_velocity_error": 0.1595124630795585,
+      "mean_base_height": 0.35175226483080124,
+      "window": "after step 100",
+      "mlx_vs_torch_worst_rel_l2": 2.66482146571434e-07,
+      "mlx_inference_ms_per_step": 1.547,
+      "mlx_device": "gpu"
+     },
+     "cpu_zero": {
+      "controller": "zero",
+      "checkpoint": null,
+      "envs": 128,
+      "steps": 1000,
+      "seed": 7,
+      "device": "cpu",
+      "reward_per_env_step": -0.0001613135948064155,
+      "terminated_per_env": 0.0,
+      "timed_out_per_env": 1.0,
+      "seconds": 150.71,
+      "warp_device": "cpu",
+      "read_sync": true,
+      "task": "Isaac-Velocity-Flat-UnitreeGo2",
+      "forward_command": 0.8,
+      "mean_forward_speed": 0.0019403457830776461,
+      "mean_velocity_error": 0.7984602514902751,
+      "mean_base_height": 0.24794782433244916,
+      "window": "after step 100"
+     },
+     "metal_zero": {
+      "controller": "zero",
+      "checkpoint": null,
+      "envs": 128,
+      "steps": 1000,
+      "seed": 7,
+      "device": "cpu",
+      "reward_per_env_step": -0.00010277491541637573,
+      "terminated_per_env": 0.0,
+      "timed_out_per_env": 1.0,
+      "seconds": 174.99,
+      "warp_device": "metal:0",
+      "read_sync": true,
+      "task": "Isaac-Velocity-Flat-UnitreeGo2",
+      "forward_command": 0.8,
+      "mean_forward_speed": 0.0019278748575986052,
+      "mean_velocity_error": 0.7984716178973515,
+      "mean_base_height": 0.2479228236277898,
+      "window": "after step 100"
+     },
+     "metal_trained_no_read_sync": {
+      "controller": "mlx",
+      "checkpoint": "model_299.pt",
+      "envs": 128,
+      "steps": 1000,
+      "seed": 7,
+      "device": "cpu",
+      "reward_per_env_step": 0.03359082804236095,
+      "terminated_per_env": 0.0078125,
+      "timed_out_per_env": 0.9921875,
+      "seconds": 185.66,
+      "warp_device": "metal:0",
+      "read_sync": false,
+      "task": "Isaac-Velocity-Flat-UnitreeGo2",
+      "forward_command": 0.8,
+      "mean_forward_speed": 0.8711341626693805,
+      "mean_velocity_error": 0.16018984529707167,
+      "mean_base_height": 0.35170653588242,
+      "window": "after step 100",
+      "mlx_vs_torch_worst_rel_l2": 2.8107697858104075e-07,
+      "mlx_inference_ms_per_step": 0.7156,
+      "mlx_device": "gpu"
+     }
+    },
+    "process_gpu_seconds": {
+     "cpu_trained": 0.36,
+     "metal_trained": 25.96,
+     "cpu_zero": 0.0,
+     "metal_zero": 18.61,
+     "metal_trained_no_read_sync": 23.9
+    },
+    "other_jobs": "A Go2 training ran on Metal at the same time, so these times are not rates."
+   },
+   "training_smoke_with_newton_contacts": {
+    "task": "Isaac-Velocity-Flat-UnitreeGo2",
+    "envs": 64,
+    "iterations": 5,
+    "exit_code": 0,
+    "process_gpu_seconds": 3.01,
+    "shows": "It runs. It does not show that a policy learns with these contacts."
+   },
+   "not_shown": "A full training with Newton contacts on Metal. Rates at 4096 envs with these contacts."
+  }
+ },
+ "isaac_lab_on_metal_0_unpatched": {
+  "status": "failed, as the launcher's stage 6 expected",
+  "error": "RuntimeError: Expected one of cpu, cuda, ipu, xpu, mkldnn, opengl, opencl, ideep, hip, ve, fpga, maia, xla, lazy, vulkan, mps, meta, hpu, mtia, privateuseone device type at start of device string: met"
+ },
+ "parity_second_measure": {
+  "verdict": "fail",
+  "measure_changed": "The first test stays failed. This one asks another question, because the CPU fails the first test's single worst number against itself with one ulp of noise. Limits written in commit 4188800 before any run on these starts.",
+  "limits": {
+   "p99": 0.0001,
+   "worst_factor": 5.0,
+   "counts": "control mean + 3 sqrt(mean) + 1"
+  },
+  "repeats_passed": "8 of 9",
+  "failed": [
+   [
+    "worlds_with_nefc_difference 15 above 11.0"
+   ]
+  ],
+  "worlds_with_nefc_difference": {
+   "metal": [
+    15,
+    11,
+    10,
+    14,
+    12,
+    13,
+    11,
+    12,
+    13
+   ],
+   "cpu_with_one_ulp_controls": [
+    1,
+    7,
+    4,
+    9,
+    8,
+    7,
+    10,
+    10,
+    10
+   ]
+  },
+  "finding": "Worlds with a different event count are more common on Metal than in the control: mean 12.3 against 7.3 per 1024 worlds. One repeat is over the written count limit. Where events are equal, every Metal world is inside the first test's limits. Without contacts and limits, Metal is inside them everywhere: 1.4e-6 at worst.",
+  "starts": {
+   "11": {
+    "controls": [
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.086162567138672e-06,
+      "p99_dqpos": 6.501674761238974e-06,
+      "max_dqpos": 0.0005835890769958496,
+      "max_dqvel": 0.052467286586761475,
+      "worlds_over_qpos_limit": 0,
+      "worlds_over_qvel_limit": 1,
+      "worlds_with_nefc_difference": 1,
+      "max_dqpos_where_nefc_is_equal": 9.834766387939453e-06,
+      "max_dqvel_where_nefc_is_equal": 0.0006165504455566406
+     },
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.086162567138672e-06,
+      "p99_dqpos": 5.529522695724154e-06,
+      "max_dqpos": 0.0020581483840942383,
+      "max_dqvel": 0.21192127466201782,
+      "worlds_over_qpos_limit": 2,
+      "worlds_over_qvel_limit": 3,
+      "worlds_with_nefc_difference": 7,
+      "max_dqpos_where_nefc_is_equal": 6.377696990966797e-06,
+      "max_dqvel_where_nefc_is_equal": 0.0006442070007324219
+     },
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.086162567138672e-06,
+      "p99_dqpos": 5.933046395512065e-06,
+      "max_dqpos": 0.02412813901901245,
+      "max_dqvel": 0.8272106647491455,
+      "worlds_over_qpos_limit": 1,
+      "worlds_over_qvel_limit": 2,
+      "worlds_with_nefc_difference": 4,
+      "max_dqpos_where_nefc_is_equal": 7.212162017822266e-06,
+      "max_dqvel_where_nefc_is_equal": 0.0005166530609130859
+     }
+    ],
+    "controls_judged": [
+     {
+      "pass": true,
+      "reasons": []
+     },
+     {
+      "pass": true,
+      "reasons": []
+     },
+     {
+      "pass": true,
+      "reasons": []
+     }
+    ],
+    "metal": [
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.5033950805664062e-06,
+      "p99_dqpos": 6.706416752422228e-05,
+      "max_dqpos": 0.02412891387939453,
+      "max_dqvel": 0.8272008895874023,
+      "worlds_over_qpos_limit": 2,
+      "worlds_over_qvel_limit": 4,
+      "worlds_with_nefc_difference": 15,
+      "max_dqpos_where_nefc_is_equal": 1.2218952178955078e-05,
+      "max_dqvel_where_nefc_is_equal": 0.0006488561630249023,
+      "pass": false,
+      "reasons": [
+       "worlds_with_nefc_difference 15 above 11.0"
+      ]
+     },
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.5033950805664062e-06,
+      "p99_dqpos": 9.005665560835041e-06,
+      "max_dqpos": 0.0241277813911438,
+      "max_dqvel": 0.8272085189819336,
+      "worlds_over_qpos_limit": 3,
+      "worlds_over_qvel_limit": 4,
+      "worlds_with_nefc_difference": 11,
+      "max_dqpos_where_nefc_is_equal": 1.2695789337158203e-05,
+      "max_dqvel_where_nefc_is_equal": 0.0006880760192871094,
+      "pass": true,
+      "reasons": []
+     },
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.384185791015625e-06,
+      "p99_dqpos": 7.07924345988431e-06,
+      "max_dqpos": 0.014621913433074951,
+      "max_dqvel": 0.6930947303771973,
+      "worlds_over_qpos_limit": 3,
+      "worlds_over_qvel_limit": 3,
+      "worlds_with_nefc_difference": 10,
+      "max_dqpos_where_nefc_is_equal": 1.3530254364013672e-05,
+      "max_dqvel_where_nefc_is_equal": 0.0007127523422241211,
+      "pass": true,
+      "reasons": []
+     }
+    ],
+    "no_contact_no_limit": {
+     "worlds": 1024,
+     "median_dqpos": 2.384185791015625e-07,
+     "p99_dqpos": 9.5367431640625e-07,
+     "max_dqpos": 1.430511474609375e-06,
+     "max_dqvel": 6.67572021484375e-06,
+     "worlds_over_qpos_limit": 0,
+     "worlds_over_qvel_limit": 0,
+     "worlds_with_nefc_difference": 0,
+     "max_dqpos_where_nefc_is_equal": 1.430511474609375e-06,
+     "max_dqvel_where_nefc_is_equal": 6.67572021484375e-06,
+     "pass": true
+    },
+    "faults": {
+     "bias_one_world_qvel_after_each_step": {
+      "worlds": 1024,
+      "median_dqpos": 2.384185791015625e-06,
+      "p99_dqpos": 9.120106369664427e-06,
+      "max_dqpos": 0.270297646522522,
+      "max_dqvel": 5.138732433319092,
+      "worlds_over_qpos_limit": 2,
+      "worlds_over_qvel_limit": 3,
+      "worlds_with_nefc_difference": 11,
+      "max_dqpos_where_nefc_is_equal": 1.2993812561035156e-05,
+      "max_dqvel_where_nefc_is_equal": 0.0006766319274902344,
+      "pass": false,
+      "reasons": [
+       "worst 0.270297646522522 above 0.12064069509506226"
+      ]
+     },
+     "gravity_plus_2_percent": {
+      "worlds": 1024,
+      "median_dqpos": 0.018646717071533203,
+      "p99_dqpos": 0.03519177436828613,
+      "max_dqpos": 0.04790288209915161,
+      "max_dqvel": 2.4650774002075195,
+      "worlds_over_qpos_limit": 1024,
+      "worlds_over_qvel_limit": 1024,
+      "worlds_with_nefc_difference": 1024,
+      "max_dqpos_where_nefc_is_equal": null,
+      "max_dqvel_where_nefc_is_equal": null,
+      "pass": false,
+      "reasons": [
+       "p99 0.03519177436828613",
+       "worlds_over_qpos_limit 1024 above 5.0",
+       "worlds_over_qvel_limit 1024 above 7.242640687119286",
+       "worlds_with_nefc_difference 1024 above 11.0",
+       "no world has the same events"
+      ]
+     },
+     "gravity_plus_0_2_percent": {
+      "worlds": 1024,
+      "median_dqpos": 0.001940995454788208,
+      "p99_dqpos": 0.027223022654652596,
+      "max_dqpos": 0.0339241623878479,
+      "max_dqvel": 1.2212576866149902,
+      "worlds_over_qpos_limit": 1024,
+      "worlds_over_qvel_limit": 1024,
+      "worlds_with_nefc_difference": 946,
+      "max_dqpos_where_nefc_is_equal": 0.0023575425148010254,
+      "max_dqvel_where_nefc_is_equal": 0.2126152515411377,
+      "pass": false,
+      "reasons": [
+       "p99 0.027223022654652596",
+       "worlds_over_qpos_limit 1024 above 5.0",
+       "worlds_over_qvel_limit 1024 above 7.242640687119286",
+       "worlds_with_nefc_difference 946 above 11.0",
+       "qpos where events are equal 0.0023575425148010254",
+       "qvel where events are equal 0.2126152515411377"
+      ]
+     }
+    }
+   },
+   "12": {
+    "controls": [
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.086162567138672e-06,
+      "p99_dqpos": 6.28173347649863e-06,
+      "max_dqpos": 0.002286374568939209,
+      "max_dqvel": 0.2981065511703491,
+      "worlds_over_qpos_limit": 3,
+      "worlds_over_qvel_limit": 4,
+      "worlds_with_nefc_difference": 9,
+      "max_dqpos_where_nefc_is_equal": 7.212162017822266e-06,
+      "max_dqvel_where_nefc_is_equal": 0.0006182193756103516
+     },
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.1457672119140625e-06,
+      "p99_dqpos": 6.290674264164409e-06,
+      "max_dqpos": 0.040346741676330566,
+      "max_dqvel": 1.2115015983581543,
+      "worlds_over_qpos_limit": 3,
+      "worlds_over_qvel_limit": 3,
+      "worlds_with_nefc_difference": 8,
+      "max_dqpos_where_nefc_is_equal": 8.404254913330078e-06,
+      "max_dqvel_where_nefc_is_equal": 0.0009572505950927734
+     },
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.086162567138672e-06,
+      "p99_dqpos": 6.2769649957772344e-06,
+      "max_dqpos": 0.0011883378028869629,
+      "max_dqvel": 0.18860340118408203,
+      "worlds_over_qpos_limit": 2,
+      "worlds_over_qvel_limit": 1,
+      "worlds_with_nefc_difference": 7,
+      "max_dqpos_where_nefc_is_equal": 6.9141387939453125e-06,
+      "max_dqvel_where_nefc_is_equal": 0.0006392002105712891
+     }
+    ],
+    "controls_judged": [
+     {
+      "pass": true,
+      "reasons": []
+     },
+     {
+      "pass": true,
+      "reasons": []
+     },
+     {
+      "pass": true,
+      "reasons": []
+     }
+    ],
+    "metal": [
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.384185791015625e-06,
+      "p99_dqpos": 7.10725771568832e-06,
+      "max_dqpos": 0.040345847606658936,
+      "max_dqvel": 1.211073875427246,
+      "worlds_over_qpos_limit": 5,
+      "worlds_over_qvel_limit": 5,
+      "worlds_with_nefc_difference": 14,
+      "max_dqpos_where_nefc_is_equal": 7.271766662597656e-06,
+      "max_dqvel_where_nefc_is_equal": 0.0005877017974853516,
+      "pass": true,
+      "reasons": []
+     },
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.384185791015625e-06,
+      "p99_dqpos": 6.89148919263971e-06,
+      "max_dqpos": 0.003200054168701172,
+      "max_dqvel": 0.6557782888412476,
+      "worlds_over_qpos_limit": 5,
+      "worlds_over_qvel_limit": 5,
+      "worlds_with_nefc_difference": 12,
+      "max_dqpos_where_nefc_is_equal": 8.404254913330078e-06,
+      "max_dqvel_where_nefc_is_equal": 0.0006730556488037109,
+      "pass": true,
+      "reasons": []
+     },
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.4437904357910156e-06,
+      "p99_dqpos": 8.005499694263563e-06,
+      "max_dqpos": 0.04034852981567383,
+      "max_dqvel": 1.2108917236328125,
+      "worlds_over_qpos_limit": 3,
+      "worlds_over_qvel_limit": 4,
+      "worlds_with_nefc_difference": 13,
+      "max_dqpos_where_nefc_is_equal": 8.225440979003906e-06,
+      "max_dqvel_where_nefc_is_equal": 0.0007259845733642578,
+      "pass": true,
+      "reasons": []
+     }
+    ],
+    "no_contact_no_limit": {
+     "worlds": 1024,
+     "median_dqpos": 2.384185791015625e-07,
+     "p99_dqpos": 9.5367431640625e-07,
+     "max_dqpos": 1.1920928955078125e-06,
+     "max_dqvel": 7.62939453125e-06,
+     "worlds_over_qpos_limit": 0,
+     "worlds_over_qvel_limit": 0,
+     "worlds_with_nefc_difference": 0,
+     "max_dqpos_where_nefc_is_equal": 1.1920928955078125e-06,
+     "max_dqvel_where_nefc_is_equal": 7.62939453125e-06,
+     "pass": true
+    },
+    "faults": {
+     "bias_one_world_qvel_after_each_step": {
+      "worlds": 1024,
+      "median_dqpos": 2.4437904357910156e-06,
+      "p99_dqpos": 0.0003736394573934376,
+      "max_dqpos": 0.2297859489917755,
+      "max_dqvel": 4.069271564483643,
+      "worlds_over_qpos_limit": 4,
+      "worlds_over_qvel_limit": 8,
+      "worlds_with_nefc_difference": 16,
+      "max_dqpos_where_nefc_is_equal": 8.64267349243164e-06,
+      "max_dqvel_where_nefc_is_equal": 0.0006246566772460938,
+      "pass": false,
+      "reasons": [
+       "p99 0.0003736394573934376",
+       "worst 0.2297859489917755 above 0.20173370838165283"
+      ]
+     },
+     "gravity_plus_2_percent": {
+      "worlds": 1024,
+      "median_dqpos": 0.01850399374961853,
+      "p99_dqpos": 0.03789660334587097,
+      "max_dqpos": 0.04444855451583862,
+      "max_dqvel": 2.457038640975952,
+      "worlds_over_qpos_limit": 1024,
+      "worlds_over_qvel_limit": 1024,
+      "worlds_with_nefc_difference": 1024,
+      "max_dqpos_where_nefc_is_equal": null,
+      "max_dqvel_where_nefc_is_equal": null,
+      "pass": false,
+      "reasons": [
+       "p99 0.03789660334587097",
+       "worlds_over_qpos_limit 1024 above 8.565646152233022",
+       "worlds_over_qvel_limit 1024 above 8.565646152233022",
+       "worlds_with_nefc_difference 1024 above 17.48528137423857",
+       "no world has the same events"
+      ]
+     },
+     "gravity_plus_0_2_percent": {
+      "worlds": 1024,
+      "median_dqpos": 0.0019476115703582764,
+      "p99_dqpos": 0.026810651645064354,
+      "max_dqpos": 0.03912085294723511,
+      "max_dqvel": 1.3852992057800293,
+      "worlds_over_qpos_limit": 1024,
+      "worlds_over_qvel_limit": 1024,
+      "worlds_with_nefc_difference": 918,
+      "max_dqpos_where_nefc_is_equal": 0.0026630759239196777,
+      "max_dqvel_where_nefc_is_equal": 0.2277979850769043,
+      "pass": false,
+      "reasons": [
+       "p99 0.026810651645064354",
+       "worlds_over_qpos_limit 1024 above 8.565646152233022",
+       "worlds_over_qvel_limit 1024 above 8.565646152233022",
+       "worlds_with_nefc_difference 918 above 17.48528137423857",
+       "qpos where events are equal 0.0026630759239196777",
+       "qvel where events are equal 0.2277979850769043"
+      ]
+     }
+    }
+   },
+   "13": {
+    "controls": [
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.0265579223632812e-06,
+      "p99_dqpos": 6.529092843265971e-06,
+      "max_dqpos": 0.0010715126991271973,
+      "max_dqvel": 0.10891962051391602,
+      "worlds_over_qpos_limit": 1,
+      "worlds_over_qvel_limit": 4,
+      "worlds_with_nefc_difference": 10,
+      "max_dqpos_where_nefc_is_equal": 6.973743438720703e-06,
+      "max_dqvel_where_nefc_is_equal": 0.0007464885711669922
+     },
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.115964889526367e-06,
+      "p99_dqpos": 7.0518253778573126e-06,
+      "max_dqpos": 0.004493534564971924,
+      "max_dqvel": 0.6624236106872559,
+      "worlds_over_qpos_limit": 2,
+      "worlds_over_qvel_limit": 5,
+      "worlds_with_nefc_difference": 10,
+      "max_dqpos_where_nefc_is_equal": 1.1026859283447266e-05,
+      "max_dqvel_where_nefc_is_equal": 0.0008890628814697266
+     },
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.0265579223632812e-06,
+      "p99_dqpos": 6.290674264164409e-06,
+      "max_dqpos": 0.004493415355682373,
+      "max_dqvel": 0.6624186038970947,
+      "worlds_over_qpos_limit": 1,
+      "worlds_over_qvel_limit": 4,
+      "worlds_with_nefc_difference": 10,
+      "max_dqpos_where_nefc_is_equal": 9.357929229736328e-06,
+      "max_dqvel_where_nefc_is_equal": 0.001102447509765625
+     }
+    ],
+    "controls_judged": [
+     {
+      "pass": true,
+      "reasons": []
+     },
+     {
+      "pass": true,
+      "reasons": []
+     },
+     {
+      "pass": true,
+      "reasons": []
+     }
+    ],
+    "metal": [
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.384185791015625e-06,
+      "p99_dqpos": 6.845593361504143e-06,
+      "max_dqpos": 0.004320979118347168,
+      "max_dqvel": 0.4269641637802124,
+      "worlds_over_qpos_limit": 2,
+      "worlds_over_qvel_limit": 3,
+      "worlds_with_nefc_difference": 11,
+      "max_dqpos_where_nefc_is_equal": 9.715557098388672e-06,
+      "max_dqvel_where_nefc_is_equal": 0.0009400844573974609,
+      "pass": true,
+      "reasons": []
+     },
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.4437904357910156e-06,
+      "p99_dqpos": 8.290409823530354e-06,
+      "max_dqpos": 0.000976860523223877,
+      "max_dqvel": 0.0829463005065918,
+      "worlds_over_qpos_limit": 0,
+      "worlds_over_qvel_limit": 3,
+      "worlds_with_nefc_difference": 12,
+      "max_dqpos_where_nefc_is_equal": 9.059906005859375e-06,
+      "max_dqvel_where_nefc_is_equal": 0.0007612705230712891,
+      "pass": true,
+      "reasons": []
+     },
+     {
+      "worlds": 1024,
+      "median_dqpos": 2.4437904357910156e-06,
+      "p99_dqpos": 8.046627044677734e-06,
+      "max_dqpos": 0.004319608211517334,
+      "max_dqvel": 0.42696988582611084,
+      "worlds_over_qpos_limit": 1,
+      "worlds_over_qvel_limit": 4,
+      "worlds_with_nefc_difference": 13,
+      "max_dqpos_where_nefc_is_equal": 1.1622905731201172e-05,
+      "max_dqvel_where_nefc_is_equal": 0.0008728504180908203,
+      "pass": true,
+      "reasons": []
+     }
+    ],
+    "no_contact_no_limit": {
+     "worlds": 1024,
+     "median_dqpos": 2.384185791015625e-07,
+     "p99_dqpos": 7.152557373046875e-07,
+     "max_dqpos": 9.5367431640625e-07,
+     "max_dqvel": 6.9141387939453125e-06,
+     "worlds_over_qpos_limit": 0,
+     "worlds_over_qvel_limit": 0,
+     "worlds_with_nefc_difference": 0,
+     "max_dqpos_where_nefc_is_equal": 9.5367431640625e-07,
+     "max_dqvel_where_nefc_is_equal": 6.9141387939453125e-06,
+     "pass": true
+    },
+    "faults": {
+     "bias_one_world_qvel_after_each_step": {
+      "worlds": 1024,
+      "median_dqpos": 2.384185791015625e-06,
+      "p99_dqpos": 7.99179088062374e-06,
+      "max_dqpos": 0.2653236389160156,
+      "max_dqvel": 4.645008563995361,
+      "worlds_over_qpos_limit": 4,
+      "worlds_over_qvel_limit": 7,
+      "worlds_with_nefc_difference": 14,
+      "max_dqpos_where_nefc_is_equal": 1.0013580322265625e-05,
+      "max_dqvel_where_nefc_is_equal": 0.0009212493896484375,
+      "pass": false,
+      "reasons": [
+       "worst 0.2653236389160156 above 0.02246767282485962"
+      ]
+     },
+     "gravity_plus_2_percent": {
+      "worlds": 1024,
+      "median_dqpos": 0.01849299669265747,
+      "p99_dqpos": 0.03307195380330086,
+      "max_dqpos": 0.042996883392333984,
+      "max_dqvel": 2.5309154987335205,
+      "worlds_over_qpos_limit": 1024,
+      "worlds_over_qvel_limit": 1024,
+      "worlds_with_nefc_difference": 1024,
+      "max_dqpos_where_nefc_is_equal": null,
+      "max_dqvel_where_nefc_is_equal": null,
+      "pass": false,
+      "reasons": [
+       "p99 0.03307195380330086",
+       "worst 0.042996883392333984 above 0.02246767282485962",
+       "worlds_over_qpos_limit 1024 above 5.797434948471087",
+       "worlds_over_qvel_limit 1024 above 11.578331331731732",
+       "worlds_with_nefc_difference 1024 above 20.486832980505138",
+       "no world has the same events"
+      ]
+     },
+     "gravity_plus_0_2_percent": {
+      "worlds": 1024,
+      "median_dqpos": 0.001956760883331299,
+      "p99_dqpos": 0.027510754764080048,
+      "max_dqpos": 0.04232680797576904,
+      "max_dqvel": 1.3163228034973145,
+      "worlds_over_qpos_limit": 1024,
+      "worlds_over_qvel_limit": 1024,
+      "worlds_with_nefc_difference": 936,
+      "max_dqpos_where_nefc_is_equal": 0.0021732449531555176,
+      "max_dqvel_where_nefc_is_equal": 0.20696687698364258,
+      "pass": false,
+      "reasons": [
+       "p99 0.027510754764080048",
+       "worst 0.04232680797576904 above 0.02246767282485962",
+       "worlds_over_qpos_limit 1024 above 5.797434948471087",
+       "worlds_over_qvel_limit 1024 above 11.578331331731732",
+       "worlds_with_nefc_difference 936 above 20.486832980505138",
+       "qpos where events are equal 0.0021732449531555176",
+       "qvel where events are equal 0.20696687698364258"
+      ]
+     }
+    }
+   }
+  },
+  "measured": {
+   "wall_seconds": 70.5,
+   "exit_code": 1,
+   "process_gpu_seconds": 7.03,
+   "peak_footprint_gb": 0.6,
+   "system_used_gb_peak": 28.7,
+   "other_processes_cpu_percent": {
+    "samples": 26,
+    "mean": 241.7,
+    "median": 257.3,
+    "p95": 309.4,
+    "max": 465.0
+   },
+   "competing_during_max_cpu_percent": {
+    "com.apple.WebKit.WebContent": 106.7,
+    "python": 100.0,
+    "MTLCompilerService": 100.0,
+    "top": 71.3,
+    "WindowServer": 48.7,
+    "(python3.13)": 31.9,
+    "Claude Helper (Renderer)": 20.9
+   },
+   "stopped_for_memory": false,
+   "stopped_for_system_memory": false
+  }
+ },
+ "diagnosis_2026_11_04": {
+  "question": "Why do more worlds differ in events on Metal than in the control?",
+  "answer": "The control's noise is too small. One step from one state differs by 2.6e-6 in qvel between Metal and the CPU, and one float32 ulp on qvel gives 1.8e-7. With contacts, Metal's own error against MuJoCo C in float64 has the size of the CPU's: 4.06e-6 against 3.86e-6. So the excess of events needs no larger error on Metal. It does not show that every kernel is right, and the size of the excess was not reproduced exactly (see noise_at_the_measured_size).",
+  "ruled_out": {
+   "fused_multiply_add": "a*b+c is not fused on either device, with fast_math on or off.",
+   "reassociation": "(a+b)-a stays as written on either device, with fast_math on or off.",
+   "solver_stop": "12 of 61,440 world-steps have other solver iterations. A tolerance of 0 changes nothing here, so that control may not reach the solver's stop rule: this is not proved."
+  },
+  "not_ruled_out": "Metal's sin, cos, exp, log and acos are less exact than the CPU's (below), and this was not removed in a run, so their share of the difference is not known.",
+  "warp_math_ulp": {
+   "sin": {
+    "cpu": {
+     "mean_ulp": -0.00022529001957316552,
+     "std_ulp": 0.2894152769567626,
+     "max_ulp": 0.5617191176861525,
+     "exact": 0.986541748046875
+    },
+    "metal:0": {
+     "mean_ulp": -2.9786784709884273e-05,
+     "std_ulp": 0.6448377040762198,
+     "max_ulp": 2.610090795904398,
+     "exact": 0.5617399215698242
+    }
+   },
+   "cos": {
+    "cpu": {
+     "mean_ulp": 2.0295627819244544e-05,
+     "std_ulp": 0.28946089023528987,
+     "max_ulp": 0.5622141174972057,
+     "exact": 0.9861326217651367
+    },
+    "metal:0": {
+     "mean_ulp": 0.011243134983287995,
+     "std_ulp": 0.6067918489840056,
+     "max_ulp": 2.492528496310115,
+     "exact": 0.5919094085693359
+    }
+   },
+   "sqrt": {
+    "cpu": {
+     "mean_ulp": -5.225587761614747e-05,
+     "std_ulp": 0.28870107907864334,
+     "max_ulp": 0.4999999850988388,
+     "exact": 1.0
+    },
+    "metal:0": {
+     "mean_ulp": -5.225587761614747e-05,
+     "std_ulp": 0.28870107907864334,
+     "max_ulp": 0.4999999850988388,
+     "exact": 1.0
+    }
+   },
+   "exp": {
+    "cpu": {
+     "mean_ulp": -8.804483879742975e-07,
+     "std_ulp": 0.28885389273735046,
+     "max_ulp": 0.5135171134024858,
+     "exact": 0.9937906265258789
+    },
+    "metal:0": {
+     "mean_ulp": 0.2847510116414558,
+     "std_ulp": 0.43937608441130205,
+     "max_ulp": 1.469782354310155,
+     "exact": 0.642277717590332
+    }
+   },
+   "log": {
+    "cpu": {
+     "mean_ulp": -0.0005430805544826001,
+     "std_ulp": 0.28894514299324303,
+     "max_ulp": 0.5578192956745625,
+     "exact": 0.999751091003418
+    },
+    "metal:0": {
+     "mean_ulp": -0.20263525126981463,
+     "std_ulp": 0.6656146361402446,
+     "max_ulp": 2.5331202521920204,
+     "exact": 0.5154876708984375
+    }
+   },
+   "atan2": {
+    "cpu": {
+     "mean_ulp": 2.093105584144439e-05,
+     "std_ulp": 0.3123973582905595,
+     "max_ulp": 0.7194975931197405,
+     "exact": 0.9016399383544922
+    },
+    "metal:0": {
+     "mean_ulp": 0.0004929998424625381,
+     "std_ulp": 0.5363233623019207,
+     "max_ulp": 3.184972630813718,
+     "exact": 0.6493282318115234
+    }
+   },
+   "acos": {
+    "cpu": {
+     "mean_ulp": 0.00023696838086451066,
+     "std_ulp": 0.2891909513762418,
+     "max_ulp": 0.5731104109436274,
+     "exact": 0.9890480041503906
+    },
+    "metal:0": {
+     "mean_ulp": 0.2188324731416067,
+     "std_ulp": 0.6977165536666914,
+     "max_ulp": 2.777317577973008,
+     "exact": 0.46648406982421875
+    }
+   },
+   "div": {
+    "cpu": {
+     "mean_ulp": 0.0002565082938428276,
+     "std_ulp": 0.2888107473356538,
+     "max_ulp": 0.49999949149787426,
+     "exact": 1.0
+    },
+    "metal:0": {
+     "mean_ulp": 0.0002565082938428276,
+     "std_ulp": 0.2888107473356538,
+     "max_ulp": 0.49999949149787426,
+     "exact": 1.0
+    }
+   },
+   "reciprocal_sqrt": {
+    "cpu": {
+     "mean_ulp": 0.00018220192128914903,
+     "std_ulp": 0.42986766618200617,
+     "max_ulp": 1.4903489593416452,
+     "exact": 0.7403535842895508
+    },
+    "metal:0": {
+     "mean_ulp": 0.00018220192128914903,
+     "std_ulp": 0.42986766618200617,
+     "max_ulp": 1.4903489593416452,
+     "exact": 0.7403535842895508
+    }
+   },
+   "length": {
+    "cpu": {
+     "mean_ulp": -0.0001788420696318127,
+     "std_ulp": 0.3832902860673387,
+     "max_ulp": 1.4429380390793085,
+     "exact": 0.7985811233520508
+    },
+    "metal:0": {
+     "mean_ulp": -0.00027325582695603146,
+     "std_ulp": 0.3682586237238472,
+     "max_ulp": 1.3721757493913174,
+     "exact": 0.8174457550048828
+    }
+   }
+  },
+  "compiler": {
+   "cpu": {
+    "default_fraction_fused": 0.0005178451538085938,
+    "default_fraction_not_fused": 1.0,
+    "default_reassociation_kept_as_written": 1.0,
+    "default_reassociation_returned_b": 0.0,
+    "fast_math_fraction_fused": 0.0005178451538085938,
+    "fast_math_fraction_not_fused": 1.0,
+    "fast_math_reassociation_kept_as_written": 1.0,
+    "fast_math_reassociation_returned_b": 0.0
+   },
+   "metal:0": {
+    "default_fraction_fused": 0.0005178451538085938,
+    "default_fraction_not_fused": 1.0,
+    "default_reassociation_kept_as_written": 1.0,
+    "default_reassociation_returned_b": 0.0,
+    "fast_math_fraction_fused": 0.0005178451538085938,
+    "fast_math_fraction_not_fused": 1.0,
+    "fast_math_reassociation_kept_as_written": 1.0,
+    "fast_math_reassociation_returned_b": 0.0
+   }
+  },
+  "one_step_from_one_state_1024_worlds_60_steps": {
+   "summary": {
+    "metal_vs_cpu": {
+     "world_steps_with_other_nefc": 6,
+     "qvel_std_median_over_steps_where_nefc_is_equal": 2.600142280275772e-06,
+     "qvel_max_over_steps_where_nefc_is_equal": 0.00016689300537109375,
+     "qpos_std_median_over_steps_where_nefc_is_equal": 2.5229861837100937e-08
+    },
+    "metal_vs_metal": {
+     "world_steps_with_other_nefc": 0,
+     "qvel_std_median_over_steps_where_nefc_is_equal": 1.4809272428824032e-07,
+     "qvel_max_over_steps_where_nefc_is_equal": 9.1552734375e-05,
+     "qpos_std_median_over_steps_where_nefc_is_equal": 4.146046669988982e-09
+    },
+    "cpu_1_ulp_qvel_vs_cpu": {
+     "world_steps_with_other_nefc": 0,
+     "qvel_std_median_over_steps_where_nefc_is_equal": 1.7840305364987303e-07,
+     "qvel_max_over_steps_where_nefc_is_equal": 3.6850571632385254e-05,
+     "qpos_std_median_over_steps_where_nefc_is_equal": 5.727991867956555e-09
+    },
+    "cpu_vs_cpu": {
+     "world_steps_with_other_nefc": 0,
+     "qvel_std_median_over_steps_where_nefc_is_equal": 0.0,
+     "qvel_max_over_steps_where_nefc_is_equal": 0.0,
+     "qpos_std_median_over_steps_where_nefc_is_equal": 0.0
+    }
+   },
+   "stage_std_median_metal_vs_cpu": {
+    "xpos": 3.156542781469825e-08,
+    "xquat": 3.437561575916998e-08,
+    "geom_xpos": 3.630331745851732e-08,
+    "cdof": 5.8205021103900033e-08,
+    "qfrc_bias": 4.332529661801947e-06,
+    "qacc_smooth": 7.816662540915056e-05,
+    "qacc": 0.0005381951862841502,
+    "qpos": 2.5585410479531023e-08,
+    "qvel": 2.6916366109446237e-06
+   },
+   "other_solver_iterations": 12
+  },
+  "reading_of_the_stages": "xpos and cdof differ by 3e-8 to 6e-8. qfrc_bias differs by 4.3e-6, qacc_smooth by 7.8e-5, and qacc by 5.4e-4. The size grows through the mass matrix solve and the constraint solve.",
+  "one_step_against_mujoco_c_start_11": {
+   "no_contact_no_limit": {
+    "metal_std": 1.5378417977026048e-07,
+    "cpu_std": 1.5717814324848926e-07,
+    "metal_mean": 1.2864426195539433e-09,
+    "cpu_mean": 9.829657468543015e-10,
+    "metal_max": 1.1313027430404077e-06,
+    "cpu_max": 1.1375342696129387e-06,
+    "metal_vs_cpu_std": 1.9426062093816953e-07,
+    "worlds_same_events": 256.0
+   },
+   "with_contacts": {
+    "metal_std": 4.055341268993756e-06,
+    "cpu_std": 3.860531663613439e-06,
+    "metal_mean": 3.184651836855639e-07,
+    "cpu_mean": 3.619880441945506e-07,
+    "metal_max": 5.420812952708354e-05,
+    "cpu_max": 5.550869512871426e-05,
+    "metal_vs_cpu_std": 2.5954241292229123e-06,
+    "worlds_same_events": 256.0
+   }
+  },
+  "noise_at_the_measured_size": {
+   "note": "The CPU with absolute noise of 2.6e-6 on every qvel at every step, on the starts of the second measure. It overshoots Metal, because real noise sits in the worlds with contacts. So the two controls bracket Metal, and neither fits. A control of this size would loosen the second measure, so it was not used as a measure.",
+   "rows": [
+    {
+     "start": 11,
+     "ulp": [
+      1,
+      7
+     ],
+     "sized": [
+      [
+       21,
+       0.0003086,
+       0.00406
+      ],
+      [
+       23,
+       0.0010611,
+       0.0116
+      ],
+      [
+       41,
+       0.00255,
+       0.02412
+      ]
+     ],
+     "metal": [
+      [
+       14,
+       6.67e-05,
+       0.0052
+      ],
+      [
+       14,
+       6.73e-05,
+       0.02413
+      ],
+      [
+       14,
+       6.73e-05,
+       0.02413
+      ]
+     ]
+    },
+    {
+     "start": 12,
+     "ulp": [
+      9,
+      8
+     ],
+     "sized": [
+      [
+       40,
+       0.002065,
+       0.04032
+      ],
+      [
+       35,
+       0.0009672,
+       0.02671
+      ],
+      [
+       47,
+       0.0015773,
+       0.04036
+      ]
+     ],
+     "metal": [
+      [
+       16,
+       0.0001231,
+       0.0104
+      ],
+      [
+       18,
+       0.0007314,
+       0.04035
+      ],
+      [
+       15,
+       6.9e-06,
+       0.0032
+      ]
+     ]
+    },
+    {
+     "start": 13,
+     "ulp": [
+      10,
+      10
+     ],
+     "sized": [
+      [
+       49,
+       0.0019024,
+       0.0085
+      ],
+      [
+       40,
+       0.0005472,
+       0.02188
+      ],
+      [
+       54,
+       0.002775,
+       0.02315
+      ]
+     ],
+     "metal": [
+      [
+       11,
+       7.1e-06,
+       0.00449
+      ],
+      [
+       16,
+       8.1e-06,
+       0.00432
+      ],
+      [
+       11,
+       7.2e-06,
+       0.00432
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ "one_step_measure": {
+  "limits_written": "spikes/isaac_warp_metal_onestep_c.py, commit a522afb, before any run on starts 31 to 33",
+  "verdict": "pass",
+  "question": "One step from one state: is Metal's error against MuJoCo C in float64 within 1.2 times the CPU's?",
+  "narrower_than_the_gate": "One step, not a trajectory. Rare worlds and the events that build up over steps are not in it. The first two parity tests stay failed, and the gate stays open.",
+  "limits": {
+   "std_ratio": 1.2,
+   "mean_ratio": 2.0,
+   "mean_floor": 1e-06
+  },
+  "starts": {
+   "31": {
+    "clean": {
+     "no_contact_no_limit": {
+      "metal_std": 1.5304887899304212e-07,
+      "cpu_std": 1.5540168068120143e-07,
+      "metal_mean": 1.3708863637431134e-09,
+      "cpu_mean": 5.503905269838373e-10,
+      "pass": true
+     },
+     "with_contacts": {
+      "metal_std": 4.149515972775526e-06,
+      "cpu_std": 4.015343089465215e-06,
+      "metal_mean": 3.0962743574400363e-07,
+      "cpu_mean": 3.553592026364688e-07,
+      "pass": true
+     }
+    },
+    "faults_caught": {
+     "gravity_plus_0_2_percent": true,
+     "qvel_noise_2e_5": true,
+     "qvel_bias_1e_5": true
+    }
+   },
+   "32": {
+    "clean": {
+     "no_contact_no_limit": {
+      "metal_std": 1.5199633660230547e-07,
+      "cpu_std": 1.5603949543274334e-07,
+      "metal_mean": 1.0403531369873366e-09,
+      "cpu_mean": 1.2340266028534e-09,
+      "pass": true
+     },
+     "with_contacts": {
+      "metal_std": 4.142677207971795e-06,
+      "cpu_std": 4.042338544894593e-06,
+      "metal_mean": 3.2396392200818073e-07,
+      "cpu_mean": 3.3189782975798216e-07,
+      "pass": true
+     }
+    },
+    "faults_caught": {
+     "gravity_plus_0_2_percent": true,
+     "qvel_noise_2e_5": true,
+     "qvel_bias_1e_5": true
+    }
+   },
+   "33": {
+    "clean": {
+     "no_contact_no_limit": {
+      "metal_std": 1.5336475701125436e-07,
+      "cpu_std": 1.5729741814339862e-07,
+      "metal_mean": 1.1700031039253377e-09,
+      "cpu_mean": 1.0877122609315368e-09,
+      "pass": true
+     },
+     "with_contacts": {
+      "metal_std": 4.187986109446682e-06,
+      "cpu_std": 4.072099082826447e-06,
+      "metal_mean": 3.161631609338286e-07,
+      "cpu_mean": 3.8329395261278024e-07,
+      "pass": true
+     }
+    },
+    "faults_caught": {
+     "gravity_plus_0_2_percent": true,
+     "qvel_noise_2e_5": true,
+     "qvel_bias_1e_5": true
+    }
+   }
+  },
+  "resolution": "Extra noise much below 2.6e-6 cannot move the std ratio past 1.2 with contacts.",
+  "measured": {
+   "wall_seconds": 38.33,
+   "exit_code": 0,
+   "stopped_for_memory": false,
+   "stopped_for_system_memory": false,
+   "system_used_gb_peak": 31.37,
+   "peak_footprint_gb": 0.37
+  }
+ },
+ "header_changes_2026_11_04": {
+  "gate": "Met by the first written test with its unchanged limits, on a patched copy of warp-metal. The second measure fails on new starts, and that stays.",
+  "question": "Do Metal's less exact math functions explain the differences from the CPU?",
+  "answer": "Partly. There were two causes, and both are needed. Metal's math functions, and fusion of a*b+c inside one expression of Warp's headers.",
+  "correction": "diagnosis_2026_11_04 said that fused multiply-add was ruled out. That test used one operation per statement, as generated kernels do. Inside one expression of a header, the Metal compiler fuses, and the CPU does not. Warp's fuse_fp option does not change it on Metal.",
+  "arithmetic_bits_cpu_vs_metal": {
+   "stock": {
+    "scalar_sum": {
+     "bit_equal": 1.0,
+     "max_abs": 0.0
+    },
+    "dot": {
+     "bit_equal": 0.8891766866048177,
+     "max_abs": 9.5367431640625e-07,
+     "equal_to_plain": {
+      "cpu": 1.0,
+      "metal:0": 0.6675300598144531
+     }
+    },
+    "length": {
+     "bit_equal": 0.964532216389974,
+     "max_abs": 4.76837158203125e-07
+    },
+    "cross": {
+     "bit_equal": 0.7537625630696615,
+     "max_abs": 9.5367431640625e-07
+    },
+    "mat33_vec3": {
+     "bit_equal": 1.0,
+     "max_abs": 0.0
+    },
+    "quat_rotate": {
+     "bit_equal": 0.5837135314941406,
+     "max_abs": 9.5367431640625e-07
+    },
+    "normalize": {
+     "bit_equal": 0.9041595458984375,
+     "max_abs": 1.7881393432617188e-07
+    },
+    "expression": {
+     "bit_equal": 1.0,
+     "max_abs": 0.0
+    }
+   },
+   "contract_off": {
+    "scalar_sum": {
+     "bit_equal": 1.0,
+     "max_abs": 0.0
+    },
+    "dot": {
+     "bit_equal": 1.0,
+     "max_abs": 0.0,
+     "equal_to_plain": {
+      "cpu": 1.0,
+      "metal:0": 1.0
+     }
+    },
+    "length": {
+     "bit_equal": 1.0,
+     "max_abs": 0.0
+    },
+    "cross": {
+     "bit_equal": 1.0,
+     "max_abs": 0.0
+    },
+    "mat33_vec3": {
+     "bit_equal": 1.0,
+     "max_abs": 0.0
+    },
+    "quat_rotate": {
+     "bit_equal": 1.0,
+     "max_abs": 0.0
+    },
+    "normalize": {
+     "bit_equal": 1.0,
+     "max_abs": 0.0
+    },
+    "expression": {
+     "bit_equal": 1.0,
+     "max_abs": 0.0
+    }
+   }
+  },
+  "math_after_the_change": {
+   "sin": {
+    "mean_ulp": -0.00011466379887004052,
+    "std_ulp": 0.28859748315659833,
+    "max_ulp": 0.4999990798532963,
+    "exact": 1.0
+   },
+   "cos": {
+    "mean_ulp": 4.4137485729400794e-05,
+    "std_ulp": 0.28863802731484944,
+    "max_ulp": 0.49999952502548695,
+    "exact": 1.0
+   },
+   "sqrt": {
+    "mean_ulp": -5.225587761614747e-05,
+    "std_ulp": 0.28870107907864334,
+    "max_ulp": 0.4999999850988388,
+    "exact": 1.0
+   },
+   "exp": {
+    "mean_ulp": 6.301573081124445e-05,
+    "std_ulp": 0.28876821549984055,
+    "max_ulp": 0.4999994672834873,
+    "exact": 1.0
+   },
+   "log": {
+    "mean_ulp": -0.0003151523928615063,
+    "std_ulp": 0.2889402306828538,
+    "max_ulp": 0.49999910965561867,
+    "exact": 1.0
+   },
+   "atan2": {
+    "mean_ulp": 0.0003032186534976944,
+    "std_ulp": 0.2886304091461663,
+    "max_ulp": 0.4999999515712261,
+    "exact": 1.0
+   },
+   "acos": {
+    "mean_ulp": 0.00023124633496607316,
+    "std_ulp": 0.28847607534803005,
+    "max_ulp": 0.4999996516853571,
+    "exact": 1.0
+   },
+   "asin": {
+    "mean_ulp": -0.0004005842001379989,
+    "std_ulp": 0.28873218277499113,
+    "max_ulp": 0.49999989569187164,
+    "exact": 1.0
+   },
+   "tan": {
+    "mean_ulp": 0.00042586271423594724,
+    "std_ulp": 0.2886698597964688,
+    "max_ulp": 0.4999999199062586,
+    "exact": 1.0
+   },
+   "pow": {
+    "mean_ulp": -1.1945888214626166e-05,
+    "std_ulp": 0.28863337610514017,
+    "max_ulp": 0.5000000409781933,
+    "exact": 0.9999990463256836
+   },
+   "div": {
+    "mean_ulp": 0.0002565082938428276,
+    "std_ulp": 0.2888107473356538,
+    "max_ulp": 0.49999949149787426,
+    "exact": 1.0
+   },
+   "reciprocal_sqrt": {
+    "mean_ulp": 0.00018220192128914903,
+    "std_ulp": 0.42986766618200617,
+    "max_ulp": 1.4903489593416452,
+    "exact": 0.7403535842895508
+   },
+   "length": {
+    "mean_ulp": -0.00027325582695603146,
+    "std_ulp": 0.3682586237238472,
+    "max_ulp": 1.3721757493913174,
+    "exact": 0.8174457550048828
+   }
+  },
+  "patched_copy": "spikes/warp_metal_accurate_math.py. It changes only native/metal_crt.h. Stock warp-metal stays installed and still fails. See docs/PATCHES.md.",
+  "first_written_test_limits_unchanged": {
+   "limits": {
+    "qpos": 0.001,
+    "qvel": 0.05
+   },
+   "stock": {
+    "verdicts": [
+     "fail",
+     "fail",
+     "fail",
+     "fail",
+     "fail",
+     "fail"
+    ],
+    "max_dqpos": [
+     0.0020241141319274902,
+     0.002022862434387207,
+     0.002021312713623047,
+     0.002022266387939453,
+     0.0020217299461364746,
+     0.0020229220390319824
+    ],
+    "max_dqvel": [
+     0.028459519147872925,
+     0.02843552827835083,
+     0.028403908014297485,
+     0.02842089533805847,
+     0.02837318181991577,
+     0.0284193754196167
+    ],
+    "faults_caught": true,
+    "worlds": 64
+   },
+   "both_changes": {
+    "verdicts": [
+     "pass",
+     "pass",
+     "pass",
+     "pass",
+     "pass",
+     "pass"
+    ],
+    "max_dqpos": [
+     4.291534423828125e-06,
+     4.231929779052734e-06,
+     3.814697265625e-06,
+     0.00021249055862426758,
+     3.039836883544922e-06,
+     3.039836883544922e-06
+    ],
+    "max_dqvel": [
+     8.159875869750977e-05,
+     0.00011593103408813477,
+     0.00011652708053588867,
+     0.003787517547607422,
+     7.867813110351562e-05,
+     7.2479248046875e-05
+    ],
+    "faults_caught": true,
+    "worlds": 64
+   }
+  },
+  "second_measure_limits_unchanged": {
+   "starts_11_to_13": {
+    "stock": {
+     "verdict": "fail",
+     "starts": [
+      "11",
+      "12",
+      "13"
+     ],
+     "repeats_passed": "1 of 9",
+     "failed": [
+      [
+       "p99 0.0002492105995770544",
+       "worlds_with_nefc_difference 16 above 11.0"
+      ],
+      [
+       "p99 0.0002500390983186662",
+       "worlds_with_nefc_difference 17 above 11.0"
+      ],
+      [
+       "worlds_with_nefc_difference 13 above 11.0"
+      ],
+      [
+       "p99 0.00011281609477009624"
+      ],
+      [
+       "p99 0.0005645668716169894",
+       "worlds_with_nefc_difference 18 above 17.48528137423857"
+      ],
+      [
+       "p99 0.00011173307575518265",
+       "worlds_with_nefc_difference 18 above 17.48528137423857"
+      ],
+      [
+       "p99 0.00011666714999591932"
+      ],
+      [
+       "p99 0.0002092766808345914"
+      ]
+     ],
+     "worlds_with_nefc_difference": [
+      16,
+      17,
+      13,
+      16,
+      18,
+      18,
+      13,
+      15,
+      16
+     ],
+     "mean": 15.777777777777779,
+     "control_counts": [
+      1,
+      7,
+      4,
+      9,
+      8,
+      7,
+      10,
+      10,
+      10
+     ],
+     "control_mean": 7.333333333333333,
+     "p99_dqpos_max": 0.0005645668716169894,
+     "faults_passing": []
+    },
+    "math_only": {
+     "verdict": "fail",
+     "starts": [
+      "11",
+      "12",
+      "13"
+     ],
+     "repeats_passed": "8 of 9",
+     "failed": [
+      [
+       "p99 0.00025768339401111007"
+      ]
+     ],
+     "worlds_with_nefc_difference": [
+      7,
+      5,
+      5,
+      8,
+      10,
+      11,
+      12,
+      18,
+      17
+     ],
+     "mean": 10.333333333333334,
+     "control_counts": [
+      1,
+      7,
+      4,
+      9,
+      8,
+      7,
+      10,
+      10,
+      10
+     ],
+     "control_mean": 7.333333333333333,
+     "p99_dqpos_max": 0.00025768339401111007,
+     "faults_passing": []
+    },
+    "fusion_off_only": {
+     "verdict": "fail",
+     "starts": [
+      "11",
+      "12",
+      "13"
+     ],
+     "repeats_passed": "3 of 9",
+     "failed": [
+      [
+       "worlds_with_nefc_difference 14 above 11.0"
+      ],
+      [
+       "worlds_with_nefc_difference 13 above 11.0"
+      ],
+      [
+       "p99 0.000564475660212338",
+       "worlds_with_nefc_difference 21 above 17.48528137423857"
+      ],
+      [
+       "p99 0.00011755705054383725"
+      ],
+      [
+       "p99 0.0005266702501103282"
+      ],
+      [
+       "p99 0.0001296716945944354"
+      ]
+     ],
+     "worlds_with_nefc_difference": [
+      14,
+      13,
+      11,
+      21,
+      17,
+      17,
+      15,
+      18,
+      10
+     ],
+     "mean": 15.11111111111111,
+     "control_counts": [
+      1,
+      7,
+      4,
+      9,
+      8,
+      7,
+      10,
+      10,
+      10
+     ],
+     "control_mean": 7.333333333333333,
+     "p99_dqpos_max": 0.000564475660212338,
+     "faults_passing": []
+    },
+    "both_changes": {
+     "verdict": "pass",
+     "starts": [
+      "11",
+      "12",
+      "13"
+     ],
+     "repeats_passed": "9 of 9",
+     "failed": [],
+     "worlds_with_nefc_difference": [
+      4,
+      6,
+      6,
+      13,
+      10,
+      10,
+      9,
+      15,
+      7
+     ],
+     "mean": 8.88888888888889,
+     "control_counts": [
+      1,
+      7,
+      4,
+      9,
+      8,
+      7,
+      10,
+      10,
+      10
+     ],
+     "control_mean": 7.333333333333333,
+     "p99_dqpos_max": 1.6608239093329757e-05,
+     "faults_passing": []
+    }
+   },
+   "new_starts_14_to_16": {
+    "stock": {
+     "verdict": "fail",
+     "starts": [
+      "14",
+      "15",
+      "16"
+     ],
+     "repeats_passed": "4 of 9",
+     "failed": [
+      [
+       "p99 0.00033635555882938206"
+      ],
+      [
+       "p99 0.00012073815014446154"
+      ],
+      [
+       "p99 0.0002763891243375838"
+      ],
+      [
+       "p99 0.00027505040634423494",
+       "worlds_with_nefc_difference 18 above 17.99358737117772"
+      ],
+      [
+       "p99 0.00027671040152199566",
+       "worlds_with_nefc_difference 18 above 17.99358737117772"
+      ]
+     ],
+     "worlds_with_nefc_difference": [
+      10,
+      11,
+      9,
+      15,
+      18,
+      15,
+      17,
+      18,
+      18
+     ],
+     "mean": 14.555555555555555,
+     "control_counts": [
+      5,
+      4,
+      4,
+      11,
+      12,
+      10,
+      9,
+      10,
+      6
+     ],
+     "control_mean": 7.888888888888889,
+     "p99_dqpos_max": 0.00033635555882938206,
+     "faults_passing": []
+    },
+    "both_changes": {
+     "verdict": "fail",
+     "starts": [
+      "14",
+      "15",
+      "16"
+     ],
+     "repeats_passed": "7 of 9",
+     "failed": [
+      [
+       "worlds_over_qvel_limit 8 above 7.242640687119286"
+      ],
+      [
+       "worst 0.016447842121124268 above 0.014836788177490234",
+       "worlds_over_qpos_limit 5 above 4.116156409449845"
+      ]
+     ],
+     "worlds_with_nefc_difference": [
+      10,
+      11,
+      4,
+      12,
+      6,
+      9,
+      7,
+      11,
+      8
+     ],
+     "mean": 8.666666666666666,
+     "control_counts": [
+      5,
+      4,
+      4,
+      11,
+      12,
+      10,
+      9,
+      10,
+      6
+     ],
+     "control_mean": 7.888888888888889,
+     "p99_dqpos_max": 8.258223715529311e-06,
+     "faults_passing": []
+    }
+   }
+  },
+  "one_step_from_one_state": {
+   "stock": {
+    "qvel_std_median": 2.6001133591102487e-06,
+    "world_steps_with_other_nefc": 6,
+    "stages": {
+     "xpos": 3.156542781469825e-08,
+     "xquat": 3.437561575916998e-08,
+     "geom_xpos": 3.630331745851732e-08,
+     "cdof": 5.8205021103900033e-08,
+     "qfrc_bias": 4.332529661801947e-06,
+     "qacc_smooth": 7.816662540915056e-05,
+     "qacc": 0.0005380667842951845,
+     "qpos": 2.5586746448701894e-08,
+     "qvel": 2.691003626393911e-06
+    },
+    "kinematics_first_step_max": {
+     "xpos": 8.940696716308594e-08,
+     "xquat": 1.1920928955078125e-07,
+     "geom_xpos": 7.450580596923828e-08
+    },
+    "metal_vs_metal_qvel_std": 1.4958757810297851e-07,
+    "cpu_1_ulp_qvel_std": 1.7840305364987303e-07
+   },
+   "math_only": {
+    "qvel_std_median": 1.628781528744903e-06,
+    "world_steps_with_other_nefc": 3,
+    "stages": {
+     "xpos": 2.0790137766365543e-08,
+     "xquat": 1.99946446218418e-08,
+     "geom_xpos": 2.4103926246189244e-08,
+     "cdof": 3.5670819983181126e-08,
+     "qfrc_bias": 3.2301049086865115e-06,
+     "qacc_smooth": 6.536160322183899e-05,
+     "qacc": 0.0003278000714569065,
+     "qpos": 1.7580102519335046e-08,
+     "qvel": 1.6398908468441774e-06
+    },
+    "kinematics_first_step_max": {
+     "xpos": 2.9802322387695312e-08,
+     "xquat": 1.1920928955078125e-07,
+     "geom_xpos": 4.470348358154297e-08
+    },
+    "metal_vs_metal_qvel_std": 1.4591398209283736e-07,
+    "cpu_1_ulp_qvel_std": 1.7840305364987303e-07
+   },
+   "fusion_off_only": {
+    "qvel_std_median": 2.510769580392644e-06,
+    "world_steps_with_other_nefc": 6,
+    "stages": {
+     "xpos": 2.935317519835349e-08,
+     "xquat": 3.2904332216357296e-08,
+     "geom_xpos": 3.4175792878660986e-08,
+     "cdof": 5.4321717052792765e-08,
+     "qfrc_bias": 3.7239126332564418e-06,
+     "qacc_smooth": 7.817829892365087e-05,
+     "qacc": 0.0005275818489395126,
+     "qpos": 2.4714651853126434e-08,
+     "qvel": 2.638671780756523e-06
+    },
+    "kinematics_first_step_max": {
+     "xpos": 8.940696716308594e-08,
+     "xquat": 1.1920928955078125e-07,
+     "geom_xpos": 8.195638656616211e-08
+    },
+    "metal_vs_metal_qvel_std": 1.5312487002028196e-07,
+    "cpu_1_ulp_qvel_std": 1.7840305364987303e-07
+   },
+   "both_changes": {
+    "qvel_std_median": 2.390627723909043e-07,
+    "world_steps_with_other_nefc": 0,
+    "stages": {
+     "xpos": 1.3910443041352127e-09,
+     "xquat": 1.5502601508838386e-09,
+     "geom_xpos": 1.665071681086631e-09,
+     "cdof": 2.4686672780874912e-09,
+     "qfrc_bias": 1.3279703883405301e-07,
+     "qacc_smooth": 5.602186174496199e-06,
+     "qacc": 4.7155047940599995e-05,
+     "qpos": 5.803652582012436e-09,
+     "qvel": 2.390627723909043e-07
+    },
+    "kinematics_first_step_max": {
+     "xpos": 0.0,
+     "xquat": 0.0,
+     "geom_xpos": 0.0
+    },
+    "metal_vs_metal_qvel_std": 1.520482195033335e-07,
+    "cpu_1_ulp_qvel_std": 1.7840305364987303e-07
+   }
+  },
+  "rate_4096_worlds_world_steps_per_second": {
+   "stock": [
+    312317,
+    330714,
+    297456
+   ],
+   "both": [
+    287851,
+    293968,
+    323212
+   ],
+   "note": "3 repeats of 200 steps, with other jobs running. The ranges overlap."
+  },
+  "training_with_both_changes": "One cartpole run with rsl_rl's update, seed 9200, finished with mean reward 4.952. One seed. It is not a parity result.",
+  "not_shown": [
+   "Go2 at this level of parity",
+   "That the remaining differences are all rounding: Metal still differs from itself with contacts",
+   "The second measure on new starts: 2 of 9 repeats fail on rare-world counts"
+  ]
+ }
+}

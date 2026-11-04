@@ -1,0 +1,426 @@
+{
+ "schema": "orchardsim.validation.m4_go2_seeds.v1",
+ "date": "2026-11-03",
+ "gate": "CuMLX M4: quadruped trained with physics on metal:0, seeds beyond the first",
+ "verdict": "1 of 2 new seeds passes the criteria written before the run. Seed 1 fails on falls at +0.8 m/s, and its speeds and controls are inside the limits. Seed 42 is in validation/isaac-lab-metal.json, from before these criteria existed; its numbers are inside them.",
+ "criteria_written": "spikes/isaac_m4_train.py, commit 69a36a4, before the first run. +0.8 and -0.8 within 0.2 m/s, stop and both controls within 0.1 m/s, falls at most 0.1 per env in 1000 steps, MLX against rsl_rl at most 1e-4, GPU time above zero.",
+ "protocol": "Go2 flat, 4096 envs, 300 iterations, physics on metal:0 with MuJoCo contacts, learner on MPS. Then the policy in MLX on the GPU, 128 envs, 1000 steps, seed 7.",
+ "timing_note": "Seed 1 shared the Mac with the PPO, parity and Newton runs: 2532 s. Seed 2 ran with no other job of this work: 758 s. Neither is a clean rate.",
+ "not_shown": "Comparison with PhysX. Lateral or yaw commands. A real robot.",
+ "seeds": {
+  "1": {
+   "train": {
+    "wall_seconds": 2532.36,
+    "exit_code": 0,
+    "cores_busy": 0.51,
+    "process_gpu_seconds": 800.86,
+    "peak_footprint_gb": 2.64,
+    "system_used_gb_peak": 31.75,
+    "stopped_for_memory": false,
+    "stopped_for_system_memory": false,
+    "other_processes_cpu_percent": {
+     "samples": 538,
+     "mean": 291.6,
+     "median": 279.0,
+     "p95": 487.09999999999997,
+     "max": 513.9
+    }
+   },
+   "closed_loop": {
+    "fwd": {
+     "controller": "mlx",
+     "checkpoint": "model_299.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": 0.03097000070626382,
+     "terminated_per_env": 0.140625,
+     "timed_out_per_env": 0.921875,
+     "seconds": 140.1,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": 0.8,
+     "mean_forward_speed": 0.7767237159651187,
+     "mean_velocity_error": 0.17659900383816826,
+     "mean_base_height": 0.34740968591637084,
+     "window": "after step 100",
+     "mlx_vs_torch_worst_rel_l2": 2.6263521135660994e-07,
+     "mlx_inference_ms_per_step": 0.7253,
+     "mlx_device": "gpu",
+     "mlx_vs_rsl_rl_closed_loop": {
+      "limit": 0.0001,
+      "steps_compared": 1000,
+      "worst_rel_l2": 2.6263522295770363e-07,
+      "within_limit": true,
+      "wrong_policies_on_the_same_observations": {
+       "wrong_activation_relu": {
+        "smallest_rel_l2": 0.8793851788738858,
+        "largest_rel_l2": 0.9510453207220634,
+        "caught_at_every_step": true
+       },
+       "one_weight_1_percent": {
+        "smallest_rel_l2": 5.650401096987185e-06,
+        "largest_rel_l2": 2.9004868675871983e-05,
+        "caught_at_every_step": false
+       }
+      }
+     },
+     "process_gpu_seconds": 38.48,
+     "peak_footprint_gb": 0.78,
+     "wall_seconds": 153.64
+    },
+    "back": {
+     "controller": "mlx",
+     "checkpoint": "model_299.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": 0.0377960446740035,
+     "terminated_per_env": 0.03125,
+     "timed_out_per_env": 0.984375,
+     "seconds": 41.95,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": -0.8,
+     "mean_forward_speed": -0.8902070291216174,
+     "mean_velocity_error": 0.12145168562730153,
+     "mean_base_height": 0.3684570589661598,
+     "window": "after step 100",
+     "mlx_vs_torch_worst_rel_l2": 2.5402215442227316e-07,
+     "mlx_inference_ms_per_step": 0.2698,
+     "mlx_device": "gpu",
+     "mlx_vs_rsl_rl_closed_loop": {
+      "limit": 0.0001,
+      "steps_compared": 1000,
+      "worst_rel_l2": 2.540221461758876e-07,
+      "within_limit": true,
+      "wrong_policies_on_the_same_observations": {
+       "wrong_activation_relu": {
+        "smallest_rel_l2": 0.8769365488050215,
+        "largest_rel_l2": 0.9206725039361189,
+        "caught_at_every_step": true
+       },
+       "one_weight_1_percent": {
+        "smallest_rel_l2": 1.5063559238062396e-06,
+        "largest_rel_l2": 9.181041823894988e-06,
+        "caught_at_every_step": false
+       }
+      }
+     },
+     "process_gpu_seconds": 18.12,
+     "peak_footprint_gb": 0.78,
+     "wall_seconds": 47.41
+    },
+    "stop": {
+     "controller": "mlx",
+     "checkpoint": "model_299.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": 0.042391427137888966,
+     "terminated_per_env": 0.0078125,
+     "timed_out_per_env": 0.9921875,
+     "seconds": 39.99,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": 0.0,
+     "mean_forward_speed": -0.0001352350410686793,
+     "mean_velocity_error": 0.04409037914541033,
+     "mean_base_height": 0.3671938916047414,
+     "window": "after step 100",
+     "mlx_vs_torch_worst_rel_l2": 2.558974188104912e-07,
+     "mlx_inference_ms_per_step": 0.276,
+     "mlx_device": "gpu",
+     "mlx_vs_rsl_rl_closed_loop": {
+      "limit": 0.0001,
+      "steps_compared": 1000,
+      "worst_rel_l2": 2.558974306305803e-07,
+      "within_limit": true,
+      "wrong_policies_on_the_same_observations": {
+       "wrong_activation_relu": {
+        "smallest_rel_l2": 0.8811416888390559,
+        "largest_rel_l2": 0.9230258197475875,
+        "caught_at_every_step": true
+       },
+       "one_weight_1_percent": {
+        "smallest_rel_l2": 1.3564171358705138e-06,
+        "largest_rel_l2": 1.7701805434901648e-05,
+        "caught_at_every_step": false
+       }
+      }
+     },
+     "process_gpu_seconds": 16.74,
+     "peak_footprint_gb": 0.79,
+     "wall_seconds": 45.39
+    },
+    "first_iteration": {
+     "controller": "mlx",
+     "checkpoint": "model_0.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": -0.002510000398797274,
+     "terminated_per_env": 0.015625,
+     "timed_out_per_env": 0.984375,
+     "seconds": 38.55,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": 0.8,
+     "mean_forward_speed": 0.002361705108746214,
+     "mean_velocity_error": 0.7981161393721898,
+     "mean_base_height": 0.2394753100640244,
+     "window": "after step 100",
+     "mlx_vs_torch_worst_rel_l2": 4.215153239783831e-07,
+     "mlx_inference_ms_per_step": 0.2961,
+     "mlx_device": "gpu",
+     "process_gpu_seconds": 14.75,
+     "peak_footprint_gb": 0.77,
+     "wall_seconds": 43.89
+    },
+    "zero": {
+     "controller": "zero",
+     "checkpoint": null,
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": -0.00020760960449115373,
+     "terminated_per_env": 0.0,
+     "timed_out_per_env": 1.0,
+     "seconds": 35.05,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": 0.8,
+     "mean_forward_speed": 0.0019277200359566551,
+     "mean_velocity_error": 0.7984731920560201,
+     "mean_base_height": 0.24792873286538653,
+     "window": "after step 100",
+     "process_gpu_seconds": 13.86,
+     "peak_footprint_gb": 0.76,
+     "wall_seconds": 39.85
+    }
+   },
+   "verdict": {
+    "pass": false,
+    "reasons": [
+     "fwd: terminated_per_env 0.140625 is outside [0.0, 0.1]"
+    ]
+   }
+  },
+  "2": {
+   "train": {
+    "wall_seconds": 757.65,
+    "exit_code": 0,
+    "cores_busy": 0.45,
+    "process_gpu_seconds": 418.36,
+    "peak_footprint_gb": 2.64,
+    "system_used_gb_peak": 29.57,
+    "stopped_for_memory": false,
+    "stopped_for_system_memory": false,
+    "other_processes_cpu_percent": {
+     "samples": 275,
+     "mean": 119.8,
+     "median": 114.6,
+     "p95": 173.7,
+     "max": 290.0
+    }
+   },
+   "closed_loop": {
+    "fwd": {
+     "controller": "mlx",
+     "checkpoint": "model_299.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": 0.03499714119930286,
+     "terminated_per_env": 0.015625,
+     "timed_out_per_env": 0.984375,
+     "seconds": 44.46,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": 0.8,
+     "mean_forward_speed": 0.8691017475993269,
+     "mean_velocity_error": 0.14218410560654268,
+     "mean_base_height": 0.3577465076578988,
+     "window": "after step 100",
+     "mlx_vs_torch_worst_rel_l2": 2.8507699312285695e-07,
+     "mlx_inference_ms_per_step": 0.2875,
+     "mlx_device": "gpu",
+     "mlx_vs_rsl_rl_closed_loop": {
+      "limit": 0.0001,
+      "steps_compared": 1000,
+      "worst_rel_l2": 2.850769871908451e-07,
+      "within_limit": true,
+      "wrong_policies_on_the_same_observations": {
+       "wrong_activation_relu": {
+        "smallest_rel_l2": 0.8955335989151436,
+        "largest_rel_l2": 0.9933841434325752,
+        "caught_at_every_step": true
+       },
+       "one_weight_1_percent": {
+        "smallest_rel_l2": 3.7364073617538227e-06,
+        "largest_rel_l2": 1.2146419738949048e-05,
+        "caught_at_every_step": false
+       }
+      }
+     },
+     "process_gpu_seconds": 18.64,
+     "peak_footprint_gb": 0.79,
+     "wall_seconds": 49.92
+    },
+    "back": {
+     "controller": "mlx",
+     "checkpoint": "model_299.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": 0.03876395301008597,
+     "terminated_per_env": 0.0078125,
+     "timed_out_per_env": 0.9921875,
+     "seconds": 43.73,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": -0.8,
+     "mean_forward_speed": -0.8662439120271139,
+     "mean_velocity_error": 0.10061178620490763,
+     "mean_base_height": 0.3715833310286204,
+     "window": "after step 100",
+     "mlx_vs_torch_worst_rel_l2": 2.5649131885074894e-07,
+     "mlx_inference_ms_per_step": 0.2896,
+     "mlx_device": "gpu",
+     "mlx_vs_rsl_rl_closed_loop": {
+      "limit": 0.0001,
+      "steps_compared": 1000,
+      "worst_rel_l2": 2.56491313842347e-07,
+      "within_limit": true,
+      "wrong_policies_on_the_same_observations": {
+       "wrong_activation_relu": {
+        "smallest_rel_l2": 0.8804873121199045,
+        "largest_rel_l2": 0.9485178729349384,
+        "caught_at_every_step": true
+       },
+       "one_weight_1_percent": {
+        "smallest_rel_l2": 6.430511307781355e-06,
+        "largest_rel_l2": 1.2204732727833029e-05,
+        "caught_at_every_step": false
+       }
+      }
+     },
+     "process_gpu_seconds": 17.9,
+     "peak_footprint_gb": 0.79,
+     "wall_seconds": 48.88
+    },
+    "stop": {
+     "controller": "mlx",
+     "checkpoint": "model_299.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": 0.0425814793203026,
+     "terminated_per_env": 0.0234375,
+     "timed_out_per_env": 0.9765625,
+     "seconds": 42.11,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": 0.0,
+     "mean_forward_speed": 0.0025259778368733046,
+     "mean_velocity_error": 0.042061119199626976,
+     "mean_base_height": 0.3683859587046835,
+     "window": "after step 100",
+     "mlx_vs_torch_worst_rel_l2": 2.556305389589397e-07,
+     "mlx_inference_ms_per_step": 0.2983,
+     "mlx_device": "gpu",
+     "mlx_vs_rsl_rl_closed_loop": {
+      "limit": 0.0001,
+      "steps_compared": 1000,
+      "worst_rel_l2": 2.5563053300921984e-07,
+      "within_limit": true,
+      "wrong_policies_on_the_same_observations": {
+       "wrong_activation_relu": {
+        "smallest_rel_l2": 0.8747266968936293,
+        "largest_rel_l2": 0.9632550005911317,
+        "caught_at_every_step": true
+       },
+       "one_weight_1_percent": {
+        "smallest_rel_l2": 4.727398290118375e-06,
+        "largest_rel_l2": 9.178480022249254e-06,
+        "caught_at_every_step": false
+       }
+      }
+     },
+     "process_gpu_seconds": 17.13,
+     "peak_footprint_gb": 0.78,
+     "wall_seconds": 47.88
+    },
+    "first_iteration": {
+     "controller": "mlx",
+     "checkpoint": "model_0.pt",
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": 0.00020017029535665643,
+     "terminated_per_env": 0.0,
+     "timed_out_per_env": 1.0,
+     "seconds": 37.79,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": 0.8,
+     "mean_forward_speed": 0.0021874741421520918,
+     "mean_velocity_error": 0.7982558436526193,
+     "mean_base_height": 0.24871326196524832,
+     "window": "after step 100",
+     "mlx_vs_torch_worst_rel_l2": 5.028048803978891e-07,
+     "mlx_inference_ms_per_step": 0.2932,
+     "mlx_device": "gpu",
+     "process_gpu_seconds": 14.89,
+     "peak_footprint_gb": 0.77,
+     "wall_seconds": 43.34
+    },
+    "zero": {
+     "controller": "zero",
+     "checkpoint": null,
+     "envs": 128,
+     "steps": 1000,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": -0.00020952573194517755,
+     "terminated_per_env": 0.0,
+     "timed_out_per_env": 1.0,
+     "seconds": 36.0,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "task": "Isaac-Velocity-Flat-UnitreeGo2",
+     "forward_command": 0.8,
+     "mean_forward_speed": 0.0019256337362134623,
+     "mean_velocity_error": 0.7984751725196838,
+     "mean_base_height": 0.24793207499716016,
+     "window": "after step 100",
+     "process_gpu_seconds": 13.96,
+     "peak_footprint_gb": 0.76,
+     "wall_seconds": 40.84
+    }
+   },
+   "verdict": {
+    "pass": true,
+    "reasons": []
+   }
+  }
+ }
+}

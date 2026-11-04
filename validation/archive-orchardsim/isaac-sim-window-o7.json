@@ -1,0 +1,322 @@
+{
+ "schema": "orchardsim.validation.isaac_sim_window_o7.v1",
+ "date": "2026-11-04",
+ "setup": "Isaac Sim 6.2.0.0, unmodified, Linux arm64 container in a Colima vz VM of 4 GiB, on the volume from spikes/isaac_sim_container.sh. Xvfb and x11vnc in the container, with the VNC port on 127.0.0.1:15900. The user allowed the EULA value for container tests on this Mac on 2026-11-04.",
+ "gates": {
+  "window_seen_from_the_mac": {
+   "met": false,
+   "state": "FAILED. Kit opens no usable window: the screen is black."
+  },
+  "play_and_stop_drive_the_backend": {
+   "met": false,
+   "state": "Not testable: there is no window and no button to click. No click was sent to Kit."
+  },
+  "simple_sim_test": {
+   "met": true,
+   "state": "Met by PhysX step count, in a Kit process with no window, with the timeline driven from Python. Not a button test."
+  },
+  "what_stays_unavailable": {
+   "met": true,
+   "state": "Stated from this run, below."
+  }
+ },
+ "where_the_window_stops": {
+  "first_error": "[omni.gpu_foundation_factory.plugin] Failed to create any GPU devices, including an attempt with compatibility mode.",
+  "then": [
+   "[omni.kit.renderer.plugin] GPU Foundation is not initialized!",
+   "[omni.kit.imgui_renderer.plugin] _prepareDefaultWindow: invalid device attached to the default window!"
+  ],
+  "device_table": "Kit prints its GPU table with no rows.",
+  "software_vulkan": "llvmpipe (Mesa 25.2.8) is present with VK_KHR_ray_tracing_pipeline, VK_KHR_ray_query and VK_KHR_acceleration_structure, device type CPU. Kit's Vulkan loader finds its manifest (VK_ICD_FILENAMES, loader log), and Kit's table stays empty. Why Kit leaves it out was not found: reading its binaries is not allowed (licence 6.3).",
+  "tried": [
+   "The default experience",
+   "isaacsim.exp.full.kit",
+   "VK_ICD_FILENAMES for llvmpipe",
+   "--/exts/omni.kit.renderer.core/compatibilityMode=true, the one such setting found in Isaac Sim's text configs"
+  ],
+  "not_tried": "A Vulkan layer that makes llvmpipe report another device type. That would defeat Kit's device check, so it needs the user's decision. An RTX viewport on a CPU device would also be far from useful.",
+  "screen": {
+   "pixel_std": 1.952,
+   "windows": 3,
+   "pass": false
+  },
+  "samples": [
+   {
+    "seconds": 4,
+    "kit": 2,
+    "windows": 2,
+    "pixel_std": 1.594
+   },
+   {
+    "seconds": 8,
+    "kit": 2,
+    "windows": 2,
+    "pixel_std": 1.594
+   },
+   {
+    "seconds": 12,
+    "kit": 3,
+    "windows": 2,
+    "pixel_std": 1.594
+   },
+   {
+    "seconds": 17,
+    "kit": 2,
+    "windows": 3,
+    "pixel_std": 1.952
+   },
+   {
+    "seconds": 21,
+    "kit": 2,
+    "windows": 3,
+    "pixel_std": 1.952
+   },
+   {
+    "seconds": 25,
+    "kit": 1,
+    "windows": 1,
+    "pixel_std": 1.952
+   },
+   {
+    "seconds": 29,
+    "kit": 1,
+    "windows": 1,
+    "pixel_std": 1.952
+   },
+   {
+    "seconds": 33,
+    "kit": 1,
+    "windows": 1,
+    "pixel_std": 1.952
+   },
+   {
+    "seconds": 37,
+    "kit": 1,
+    "windows": 1,
+    "pixel_std": 1.952
+   },
+   {
+    "seconds": 41,
+    "kit": 1,
+    "windows": 1,
+    "pixel_std": 1.952
+   },
+   {
+    "seconds": 45,
+    "kit": 1,
+    "windows": 1,
+    "pixel_std": 1.952
+   },
+   {
+    "seconds": 50,
+    "kit": 1,
+    "windows": 1,
+    "pixel_std": 1.952
+   },
+   {
+    "seconds": 54,
+    "kit": 1,
+    "windows": 1,
+    "pixel_std": 1.952
+   },
+   {
+    "seconds": 58,
+    "kit": 1,
+    "windows": 1,
+    "pixel_std": 1.952
+   },
+   {
+    "seconds": 62,
+    "kit": 1,
+    "windows": 1,
+    "pixel_std": 1.952
+   },
+   {
+    "seconds": 66,
+    "kit": 1,
+    "windows": 1,
+    "pixel_std": 1.952
+   },
+   {
+    "seconds": 71,
+    "kit": 1,
+    "windows": 1,
+    "pixel_std": 1.952
+   },
+   {
+    "seconds": 75,
+    "kit": 1,
+    "windows": 1,
+    "pixel_std": 1.952
+   },
+   {
+    "seconds": 80,
+    "kit": 1,
+    "windows": 1,
+    "pixel_std": 1.952
+   },
+   {
+    "seconds": 84,
+    "kit": 1,
+    "windows": 1,
+    "pixel_std": 1.952
+   },
+   {
+    "seconds": 89,
+    "kit": 1,
+    "windows": 1,
+    "pixel_std": 1.952
+   }
+  ],
+  "kit_log": {
+   "lines": [
+    "[Error] [omni.gpu_foundation_factory.plugin] Failed to create any GPU devices, including an attempt with compatibility mode.",
+    "[Error] [omni.rtx] No device could be created. Some known system issues:",
+    "[Error] [omni.rtx] No device could be created. Some known system issues:",
+    "[Error] [omni.kit.renderer.plugin] GPU Foundation is not initialized!",
+    "[Error] [omni.kit.imgui_renderer.plugin] _prepareDefaultWindow: invalid device attached to the default window!",
+    "Simulation App Shutting Down"
+   ],
+   "gpu_rows": 0,
+   "error_lines": 598
+  },
+  "picture": "validation/app-screen/isaac_sim_kit_black_screen.png. A person read it: a black screen with an X cursor."
+ },
+ "control_of_the_viewing_path": {
+  "result": {
+   "vnc_size": [
+    1280,
+    800
+   ],
+   "desktop_name": "fde07281c249:1",
+   "empty_display": {
+    "pixel_std": 1.594,
+    "windows": 0,
+    "pass": false
+   },
+   "window_shown": {
+    "pixel_std": 96.243,
+    "windows": 4,
+    "pass": true
+   },
+   "click": {
+    "counts": [
+     0,
+     1,
+     1,
+     1
+    ],
+    "checks": {
+     "click_inside_delivered": true,
+     "no_click_silent": true,
+     "click_outside_silent": true
+    },
+    "pass": true
+   },
+   "pass": true
+  },
+  "picture": "validation/app-screen/isaac_sim_vnc_control_xclock.png",
+  "reading": "This path can see a window and can deliver a click, so the black screen is not a fault of the VNC path.",
+  "first_runs_stay_here": {
+   "port_5900": "The first run reached macOS Screen Sharing on port 5900, which offered only Apple's security types. The client refused it and sent nothing, and the port moved to 15900.",
+   "click_counted_late": {
+    "counts": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "checks": {
+     "click_inside_delivered": false,
+     "no_click_silent": true,
+     "click_outside_silent": false
+    },
+    "pass": false
+   }
+  },
+  "port_binding": "docker port shows 127.0.0.1:15900, and a connection to the Mac's LAN address on 15900 is refused."
+ },
+ "simple_sim_test": {
+  "rule": "docs/MILESTONES.md, O7. From rest, at gravity 9.81, within 0.2 m of the exact 4.905 m after 1 s of simulated time. With gravity off, less than 1e-6 m.",
+  "verdict": {
+   "drop_after_60_steps": 4.98675537109375,
+   "exact": 4.905,
+   "control_moved": 0.0,
+   "at_1s_on_the_timeline_clock": {
+    "drop": 5.321929931640625,
+    "physics_steps": 62,
+    "within_tolerance": false
+   },
+   "checks": {
+    "falls": true,
+    "control_still": true,
+    "pause_holds": true
+   },
+   "pass": true
+  },
+  "first_failure": "The first reading took z at 1.0 s on the timeline's clock, and the drop is 5.322 m, outside the tolerance. It stays here. Play runs 2 PhysX steps at clock 0, so PhysX had taken 62 steps of 1/60 s: 62 steps give exactly 5.322 m. The rule's time is read in PhysX steps from then on, and the limit did not change.",
+  "falling": {
+   "gravity": 9.81,
+   "app": {
+    "app_is_running_at_start": false
+   },
+   "z_begin": 100.0,
+   "z_end": 94.67807006835938,
+   "simulated_seconds": 1.0000000000000013,
+   "physics_steps": 62,
+   "z_by_step": {
+    "0": 100.0,
+    "1": 99.99727630615234,
+    "2": 99.99182891845703,
+    "3": 99.98365020751953,
+    "59": 95.17674255371094,
+    "60": 95.01324462890625,
+    "61": 94.8470230102539
+   },
+   "updates": 60,
+   "paused_change": 0.0,
+   "timeline_playing_after_pause": false
+  },
+  "no_gravity": {
+   "gravity": 0.0,
+   "app": {
+    "app_is_running_at_start": false
+   },
+   "z_begin": 100.0,
+   "z_end": 100.0,
+   "simulated_seconds": 1.0000000000000013,
+   "physics_steps": 62,
+   "z_by_step": {
+    "0": 100.0,
+    "1": 100.0,
+    "2": 100.0,
+    "3": 100.0,
+    "59": 100.0,
+    "60": 100.0,
+    "61": 100.0
+   },
+   "updates": 60,
+   "paused_change": 0.0,
+   "timeline_playing_after_pause": false
+  },
+  "not_shown": "Any scene but one cube. This Kit process has no window, and `app.is_running()` is already False at the start of the test."
+ },
+ "what_the_mac_gpu_does_here": {
+  "statement": "Nothing. Isaac Sim does not use the Mac GPU. CPU PhysX, no RTX, no Metal.",
+  "evidence": [
+   "The VM's processes have no AGXDeviceUserClient in ioreg",
+   "No /dev/dri in the container",
+   "The only Vulkan device is llvmpipe, device type CPU",
+   "World(device='cpu')"
+  ],
+  "licence": "Isaac Sim is not modified, disassembled, or given replaced parts (6.3, 6.4, 6.13). Nothing here is Isaac Sim on Metal.",
+  "what_does_use_it": "Isaac Lab with Newton on warp-metal, validation/app-metal-o7.json, and the MLX policy over the bridge, validation/isaac-sim-o5.json. Isaac Lab's Newton viewer is the app screen that does appear on the Mac."
+ },
+ "what_a_window_would_need": "A device that Kit accepts. RTX needs a supported NVIDIA GPU, and the V100 is refused too (validation/isaac-sim.json), so neither machine here can show it. Not tried: Isaac Sim on a supported NVIDIA machine with its window streamed to the Mac.",
+ "memory": {
+  "system_used_gb_peak": 34.8,
+  "stop_at": 38,
+  "vm_gib": 4,
+  "stopped_by_the_watch": false
+ }
+}

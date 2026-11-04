@@ -1,0 +1,329 @@
+{
+ "schema": "orchardsim.validation.m4_cartpole_metal.v1",
+ "date": "2026-11-03",
+ "gate": "CuMLX M4: cartpole trained to completion with physics on metal:0",
+ "verdict": "pass",
+ "criteria_written": "spikes/isaac_m4_train.py, commit 69a36a4, before the first run. Trained upright fraction at least 0.95, first-iteration and no-action controls at most 0.20, MLX against rsl_rl at most 1e-4, GPU time above zero.",
+ "protocol": "Isaac-Cartpole-Direct, 256 envs, the shipped 150 iterations, learner torch on the CPU, physics on metal:0 with the patches in docs/PATCHES.md. Then the policy in MLX on the GPU controls 256 envs for 900 steps, seed 7.",
+ "not_shown": "Comparison with PhysX. Other cartpole tasks.",
+ "seeds": {
+  "42": {
+   "train": {
+    "wall_seconds": 42.85,
+    "exit_code": 0,
+    "cores_busy": 0.74,
+    "process_gpu_seconds": 10.03,
+    "peak_footprint_gb": 0.73,
+    "system_used_gb_peak": 28.6,
+    "stopped_for_memory": false,
+    "stopped_for_system_memory": false,
+    "other_processes_cpu_percent": {
+     "samples": 16,
+     "mean": 284.7,
+     "median": 280.5,
+     "p95": 382.2,
+     "max": 382.2
+    }
+   },
+   "closed_loop": {
+    "trained": {
+     "controller": "mlx",
+     "checkpoint": "model_149.pt",
+     "envs": 256,
+     "steps": 900,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": 0.016526616986634,
+     "terminated_per_env": 0.0,
+     "timed_out_per_env": 3.0,
+     "seconds": 15.57,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "mean_abs_pole_rad_last_100": 0.0019575000868644566,
+     "upright_fraction_last_100": 1.0,
+     "mlx_vs_torch_worst_rel_l2": 9.157769454759546e-06,
+     "mlx_inference_ms_per_step": 0.398,
+     "mlx_device": "gpu",
+     "mlx_vs_rsl_rl_closed_loop": {
+      "limit": 0.0001,
+      "steps_compared": 900,
+      "worst_rel_l2": 9.157769381840643e-06,
+      "within_limit": true,
+      "wrong_policies_on_the_same_observations": {
+       "wrong_activation_relu": {
+        "smallest_rel_l2": 0.6516724738809414,
+        "largest_rel_l2": 3.992065795521054,
+        "caught_at_every_step": true
+       },
+       "one_weight_1_percent": {
+        "smallest_rel_l2": 0.00017199200711100887,
+        "largest_rel_l2": 0.04839442873393143,
+        "caught_at_every_step": true
+       }
+      }
+     },
+     "process_gpu_seconds": 6.2,
+     "peak_footprint_gb": 0.72,
+     "wall_seconds": 21.67
+    },
+    "first_iteration": {
+     "controller": "mlx",
+     "checkpoint": "model_0.pt",
+     "envs": 256,
+     "steps": 900,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": -0.021599634192534724,
+     "terminated_per_env": 6.78515625,
+     "timed_out_per_env": 0.00390625,
+     "seconds": 16.07,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "mean_abs_pole_rad_last_100": 1.2581378972530366,
+     "upright_fraction_last_100": 0.0509765625,
+     "mlx_vs_torch_worst_rel_l2": 2.63723933358051e-07,
+     "mlx_inference_ms_per_step": 0.3739,
+     "mlx_device": "gpu",
+     "process_gpu_seconds": 5.39,
+     "peak_footprint_gb": 0.7,
+     "wall_seconds": 22.7
+    },
+    "zero": {
+     "controller": "zero",
+     "checkpoint": null,
+     "envs": 256,
+     "steps": 900,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": -0.07244484980011799,
+     "terminated_per_env": 0.0,
+     "timed_out_per_env": 3.0,
+     "seconds": 14.78,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "mean_abs_pole_rad_last_100": 2.6845315384864805,
+     "upright_fraction_last_100": 0.0,
+     "process_gpu_seconds": 4.26,
+     "peak_footprint_gb": 0.7,
+     "wall_seconds": 20.67
+    }
+   },
+   "verdict": {
+    "pass": true,
+    "reasons": []
+   }
+  },
+  "1": {
+   "train": {
+    "wall_seconds": 47.37,
+    "exit_code": 0,
+    "cores_busy": 0.75,
+    "process_gpu_seconds": 11.2,
+    "peak_footprint_gb": 0.72,
+    "system_used_gb_peak": 29.25,
+    "stopped_for_memory": false,
+    "stopped_for_system_memory": false,
+    "other_processes_cpu_percent": {
+     "samples": 17,
+     "mean": 550.1,
+     "median": 353.9,
+     "p95": 963.8,
+     "max": 963.8
+    }
+   },
+   "closed_loop": {
+    "trained": {
+     "controller": "mlx",
+     "checkpoint": "model_149.pt",
+     "envs": 256,
+     "steps": 900,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": 0.016502977980093824,
+     "terminated_per_env": 0.05078125,
+     "timed_out_per_env": 2.953125,
+     "seconds": 11.15,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "mean_abs_pole_rad_last_100": 0.007456141822040081,
+     "upright_fraction_last_100": 0.9996875,
+     "mlx_vs_torch_worst_rel_l2": 9.672401574789546e-06,
+     "mlx_inference_ms_per_step": 0.2909,
+     "mlx_device": "gpu",
+     "mlx_vs_rsl_rl_closed_loop": {
+      "limit": 0.0001,
+      "steps_compared": 900,
+      "worst_rel_l2": 9.672401431749937e-06,
+      "within_limit": true,
+      "wrong_policies_on_the_same_observations": {
+       "wrong_activation_relu": {
+        "smallest_rel_l2": 0.9257429447997523,
+        "largest_rel_l2": 16.195709618510175,
+        "caught_at_every_step": true
+       },
+       "one_weight_1_percent": {
+        "smallest_rel_l2": 3.5425475009720134e-06,
+        "largest_rel_l2": 0.0007506728226742845,
+        "caught_at_every_step": false
+       }
+      }
+     },
+     "process_gpu_seconds": 3.51,
+     "peak_footprint_gb": 0.71,
+     "wall_seconds": 17.15
+    },
+    "first_iteration": {
+     "controller": "mlx",
+     "checkpoint": "model_0.pt",
+     "envs": 256,
+     "steps": 900,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": -0.03656113644744942,
+     "terminated_per_env": 5.171875,
+     "timed_out_per_env": 0.02734375,
+     "seconds": 29.66,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "mean_abs_pole_rad_last_100": 1.6022211742401122,
+     "upright_fraction_last_100": 0.01625,
+     "mlx_vs_torch_worst_rel_l2": 5.792394972559123e-07,
+     "mlx_inference_ms_per_step": 0.6576,
+     "mlx_device": "gpu",
+     "process_gpu_seconds": 7.22,
+     "peak_footprint_gb": 0.7,
+     "wall_seconds": 42.83
+    },
+    "zero": {
+     "controller": "zero",
+     "checkpoint": null,
+     "envs": 256,
+     "steps": 900,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": -0.07244484980011799,
+     "terminated_per_env": 0.0,
+     "timed_out_per_env": 3.0,
+     "seconds": 12.49,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "mean_abs_pole_rad_last_100": 2.6845315384864805,
+     "upright_fraction_last_100": 0.0,
+     "process_gpu_seconds": 3.87,
+     "peak_footprint_gb": 0.69,
+     "wall_seconds": 18.17
+    }
+   },
+   "verdict": {
+    "pass": true,
+    "reasons": []
+   }
+  },
+  "2": {
+   "train": {
+    "wall_seconds": 49.89,
+    "exit_code": 0,
+    "cores_busy": 0.73,
+    "process_gpu_seconds": 12.89,
+    "peak_footprint_gb": 0.72,
+    "system_used_gb_peak": 27.9,
+    "stopped_for_memory": false,
+    "stopped_for_system_memory": false,
+    "other_processes_cpu_percent": {
+     "samples": 18,
+     "mean": 813.9,
+     "median": 804.0,
+     "p95": 1081.3,
+     "max": 1081.3
+    }
+   },
+   "closed_loop": {
+    "trained": {
+     "controller": "mlx",
+     "checkpoint": "model_149.pt",
+     "envs": 256,
+     "steps": 900,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": 0.016491549510715735,
+     "terminated_per_env": 0.0,
+     "timed_out_per_env": 3.0,
+     "seconds": 13.99,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "mean_abs_pole_rad_last_100": 0.0035533965157810597,
+     "upright_fraction_last_100": 1.0,
+     "mlx_vs_torch_worst_rel_l2": 2.399843833700288e-05,
+     "mlx_inference_ms_per_step": 0.3536,
+     "mlx_device": "gpu",
+     "mlx_vs_rsl_rl_closed_loop": {
+      "limit": 0.0001,
+      "steps_compared": 900,
+      "worst_rel_l2": 2.399843875211729e-05,
+      "within_limit": true,
+      "wrong_policies_on_the_same_observations": {
+       "wrong_activation_relu": {
+        "smallest_rel_l2": 0.8810209190503918,
+        "largest_rel_l2": 49.46585532646348,
+        "caught_at_every_step": true
+       },
+       "one_weight_1_percent": {
+        "smallest_rel_l2": 1.2041565847790664e-07,
+        "largest_rel_l2": 4.541900284393595e-05,
+        "caught_at_every_step": false
+       }
+      }
+     },
+     "process_gpu_seconds": 4.73,
+     "peak_footprint_gb": 0.72,
+     "wall_seconds": 20.15
+    },
+    "first_iteration": {
+     "controller": "mlx",
+     "checkpoint": "model_0.pt",
+     "envs": 256,
+     "steps": 900,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": -0.07123342321060287,
+     "terminated_per_env": 6.11328125,
+     "timed_out_per_env": 1.65625,
+     "seconds": 19.23,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "mean_abs_pole_rad_last_100": 2.123239378929138,
+     "upright_fraction_last_100": 0.0158984375,
+     "mlx_vs_torch_worst_rel_l2": 2.0986951199120085e-07,
+     "mlx_inference_ms_per_step": 0.4541,
+     "mlx_device": "gpu",
+     "process_gpu_seconds": 4.61,
+     "peak_footprint_gb": 0.71,
+     "wall_seconds": 26.2
+    },
+    "zero": {
+     "controller": "zero",
+     "checkpoint": null,
+     "envs": 256,
+     "steps": 900,
+     "seed": 7,
+     "device": "cpu",
+     "reward_per_env_step": -0.07244484980011799,
+     "terminated_per_env": 0.0,
+     "timed_out_per_env": 3.0,
+     "seconds": 15.62,
+     "warp_device": "metal:0",
+     "read_sync": true,
+     "mean_abs_pole_rad_last_100": 2.6845315384864805,
+     "upright_fraction_last_100": 0.0,
+     "process_gpu_seconds": 3.95,
+     "peak_footprint_gb": 0.7,
+     "wall_seconds": 21.68
+    }
+   },
+   "verdict": {
+    "pass": true,
+    "reasons": []
+   }
+  }
+ }
+}

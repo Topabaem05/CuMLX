@@ -19,7 +19,7 @@ python spikes/collect.py -o validation/spikes.json <work dir>/results.jsonl
 | `probe_woof.py` | Does woof's translator run kernels that it was not written for? |
 | `probe_genesis.py` | What is the Go2 throughput on Metal and CPU? |
 
-The Isaac Sim and Isaac Lab scripts moved to the private repository [OrchardSim](https://github.com/Topabaem05/OrchardSim) on 2026-11-03. `validation/isaac-sim.json`, `validation/isaac-lab-mac.json` and `validation/isaac-lab-go2.json` stay here, because the recipes and the checkpoint test use them. The script paths in those records are the paths at the time of the run.
+The Isaac Sim and Isaac Lab scripts moved to a separate repository, OrchardSim, on 2026-11-03. It was deleted on 2026-11-04, because its Isaac Sim work could not easily be published under that licence, and its records are in `validation/archive-orchardsim/`. `validation/isaac-sim.json`, `validation/isaac-lab-mac.json` and `validation/isaac-lab-go2.json` stay here, because the recipes and the checkpoint test use them. The script paths in those records are the paths at the time of the run.
 
 M5 scripts run outside `run_all.sh` too. The limits are in [validation/m5-render-limits.json](../validation/m5-render-limits.json).
 

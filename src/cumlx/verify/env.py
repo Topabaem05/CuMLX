@@ -213,9 +213,8 @@ def inspect_stack() -> dict[str, Any]:
         'metal_device': _metal_device(),
         'genesis': _package('genesis', 'genesis-world', 'physics in examples/physics-camera', 'python -m pip install genesis-world'),
         'mitsuba_metal': _mitsuba_metal(),
-        'warp_metal': _package('warp', 'warp-metal', 'Warp physics on metal:0, in OrchardSim',
-                               'not on PyPI on 2026-11-03: the wheel is at https://github.com/innate-inc/warp-metal, and OrchardSim '
-                               'spikes/isaac_warp_metal_env.sh builds an environment with it', other_dist='warp-lang'),
+        'warp_metal': _package('warp', 'warp-metal', 'Warp physics on metal:0, a third-party package',
+                               'not on PyPI on 2026-11-03: the wheel is at https://github.com/innate-inc/warp-metal', other_dist='warp-lang'),
         'translator': _package('woof', 'metal-woof', 'cumlx kernel port, cumlx kernel verify --engine woof',
                                'install it yourself if you accept its terms: python -m pip install metal-woof. '
                                'spikes/m3_kernels.sh uses its own environment'),
