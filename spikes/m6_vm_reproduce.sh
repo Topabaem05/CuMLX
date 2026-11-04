@@ -199,6 +199,7 @@ esac
 ask_password
 if [ "$MODE" = --work-attach ]; then
     GUEST=$2
+    IMAGE="a Mac that was already running, not an image from this script"
     stage "a Mac that is already running, at $GUEST"
 else
 stage "1/6 Tart $TART_VERSION"

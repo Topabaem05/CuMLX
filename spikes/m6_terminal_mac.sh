@@ -96,6 +96,19 @@ state() {
     stage "state: $1"
 }
 
+within_limits() {
+    used=$(used_gb)
+    if at_least "$used" "$MAX_USED_GB"; then
+        state "stopped_memory_$used"
+        return 1
+    fi
+    if [ "$(free_gb)" -le "$MIN_FREE_GB" ]; then
+        state stopped_disk
+        return 1
+    fi
+    return 0
+}
+
 if [ ! -x "$TM" ]; then
     stage "1/3 terminal-mac at $COMMIT"
     [ -d "$SRC" ] && { state error_source_folder_exists; exit 1; }
@@ -111,20 +124,24 @@ fi
 "$TM" doctor || { state error_doctor; exit 1; }
 
 stage "2/3 macOS from Apple, into a new VM: $VM_CPUS CPUs, $VM_MEMORY_GIB GiB, a $VM_DISK_GIB GiB sparse disk"
-"$TM" up default --detach --cpus "$VM_CPUS" --memory "$VM_MEMORY_GIB" --disk "$VM_DISK_GIB" || { state error_up; exit 1; }
+# The install runs a VM too, so the limits hold during it.
+"$TM" up default --detach --cpus "$VM_CPUS" --memory "$VM_MEMORY_GIB" --disk "$VM_DISK_GIB" &
+UP=$!
+while kill -0 "$UP" 2>/dev/null; do
+    if ! within_limits; then
+        kill "$UP" 2>/dev/null
+        "$TM" stop default --force
+        exit 1
+    fi
+    sleep "$POLL"
+done
+wait "$UP" || { state error_up; exit 1; }
 
 stage "3/3 the window"
 "$TM" show default || { state error_show; "$TM" stop default; exit 1; }
 state window_open
 while :; do
-    used=$(used_gb)
-    if at_least "$used" "$MAX_USED_GB"; then
-        state "stopped_memory_$used"
-        "$TM" stop default
-        exit 1
-    fi
-    if [ "$(free_gb)" -le "$MIN_FREE_GB" ]; then
-        state stopped_disk
+    if ! within_limits; then
         "$TM" stop default
         exit 1
     fi

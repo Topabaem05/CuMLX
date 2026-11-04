@@ -213,6 +213,7 @@ def test_attach_runs_no_tart_and_reports_what_the_guest_reports(box, answer):
     assert (box.root / "result" / "verdict.txt").read_text().strip() == answer
     calls = box.log.read_text()
     assert "tart " not in calls and "tm stop default" in calls
+    assert "ghcr.io" not in (box.root / "result" / "image.txt").read_text()  # The record names what really ran.
 
 
 def test_attach_stops_the_vm_at_the_memory_limit_and_is_not_a_pass(box):

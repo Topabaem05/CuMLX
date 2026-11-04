@@ -116,3 +116,17 @@ def test_the_memory_limit_stops_the_vm(box):
     assert run(box, "--work").returncode == 1
     assert (box.root / "setup_state.txt").read_text().strip().startswith("stopped_memory")
     assert "tm stop default" in box.log.read_text()
+
+
+@pytest.mark.parametrize("over", ["memory", "disk"])
+def test_the_limits_hold_during_the_install(box, over):
+    run(box, "--work")
+    tm = box.root / "terminal-mac-src" / "dist" / "terminal-mac"
+    tm.write_text(f'#!/bin/sh\necho "tm $*" >> "{box.log}"\ncase "$1" in up) exec sleep 50 ;; esac\nexit 0\n')
+    if over == "memory":
+        (box.tmp / "vm_stat.txt").write_text(vm_stat_text(38.5))
+    else:
+        (box.tmp / "free_kb").write_text(str(15_000_000))
+    assert run(box, "--work").returncode == 1  # The timeout of 60 seconds would raise if it waited for the install.
+    assert (box.root / "setup_state.txt").read_text().strip().startswith(f"stopped_{over}")
+    assert "tm stop default --force" in box.log.read_text()
