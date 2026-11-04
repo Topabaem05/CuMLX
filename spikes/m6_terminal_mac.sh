@@ -125,17 +125,28 @@ fi
 
 stage "2/3 macOS from Apple, into a new VM: $VM_CPUS CPUs, $VM_MEMORY_GIB GiB, a $VM_DISK_GIB GiB sparse disk"
 # The install runs a VM too, so the limits hold during it.
-"$TM" up default --detach --cpus "$VM_CPUS" --memory "$VM_MEMORY_GIB" --disk "$VM_DISK_GIB" &
-UP=$!
-while kill -0 "$UP" 2>/dev/null; do
-    if ! within_limits; then
-        kill "$UP" 2>/dev/null
-        "$TM" stop default --force
-        exit 1
-    fi
-    sleep "$POLL"
-done
-wait "$UP" || { state error_up; exit 1; }
+up_watched() {
+    "$TM" "$@" &
+    UP=$!
+    while kill -0 "$UP" 2>/dev/null; do
+        if ! within_limits; then
+            kill "$UP" 2>/dev/null
+            "$TM" stop default --force
+            exit 1
+        fi
+        sleep "$POLL"
+    done
+    wait "$UP"
+}
+# terminal-mac refuses creation options for a VM that exists, so a second start leaves them out.
+if "$TM" ls 2>/dev/null | grep -q '"installed" : true'; then
+    up_watched up default --detach || { state error_up; exit 1; }
+elif ! up_watched up default --detach --cpus "$VM_CPUS" --memory "$VM_MEMORY_GIB" --disk "$VM_DISK_GIB"; then
+    # On 2026-11-04 macOS installed and the first boot failed with "Failed to lock auxiliary storage", right after the installer. A second boot worked. So a finished install gets one more try.
+    "$TM" ls 2>/dev/null | grep -q '"installed" : true' || { state error_up; exit 1; }
+    sleep "${CUMLX_VM_RETRY_SECONDS:-30}"
+    up_watched up default --detach || { state error_up; exit 1; }
+fi
 
 stage "3/3 the window"
 "$TM" show default || { state error_show; "$TM" stop default; exit 1; }

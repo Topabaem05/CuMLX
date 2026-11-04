@@ -130,3 +130,41 @@ def test_the_limits_hold_during_the_install(box, over):
     assert run(box, "--work").returncode == 1  # The timeout of 60 seconds would raise if it waited for the install.
     assert (box.root / "setup_state.txt").read_text().strip().startswith(f"stopped_{over}")
     assert "tm stop default --force" in box.log.read_text()
+
+
+def tm_stub(box, body):
+    tm = box.root / "terminal-mac-src" / "dist" / "terminal-mac"
+    tm.write_text(f'#!/bin/sh\necho "tm $*" >> "{box.log}"\n{body}\nexit 0\n')
+
+
+def test_a_second_start_gives_no_creation_options(box):
+    run(box, "--work")
+    (box.log).write_text("")
+    tm_stub(box, """case "$1" in ls) echo '"installed" : true' ;; esac""")
+    assert run(box, "--work").returncode == 0
+    calls = box.log.read_text()
+    assert "tm up default --detach\n" in calls and "--memory" not in calls
+
+
+def test_a_finished_install_whose_boot_failed_gets_one_more_try(box):
+    run(box, "--work")
+    (box.log).write_text("")
+    # `ls` says not installed before the first up, and installed after it. The first up fails, as the boot did.
+    flag = box.tmp / "up_once"
+    tm_stub(box, f"""case "$1" in
+ls) [ -f "{flag}" ] && echo '"installed" : true' ;;
+up) if [ ! -f "{flag}" ]; then touch "{flag}"; exit 1; fi ;;
+esac""")
+    assert run(box, "--work", CUMLX_VM_RETRY_SECONDS="0").returncode == 0
+    calls = box.log.read_text()
+    assert calls.count("tm up default") == 2 and "tm show default" in calls
+    assert (box.root / "setup_state.txt").read_text().strip() == "window_open"
+
+
+def test_a_failed_install_gets_no_second_try(box):
+    run(box, "--work")
+    (box.log).write_text("")
+    tm_stub(box, 'case "$1" in up) exit 1 ;; esac')
+    assert run(box, "--work", CUMLX_VM_RETRY_SECONDS="0").returncode == 1
+    assert box.log.read_text().count("tm up default") == 1
+    assert (box.root / "setup_state.txt").read_text().strip() == "error_up"

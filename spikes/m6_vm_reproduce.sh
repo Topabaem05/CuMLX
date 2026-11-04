@@ -239,7 +239,7 @@ fi
 COMMIT=$(git -C "$REPO" rev-parse HEAD)
 stage "5/6 the guest script. The guest gets CuMLX $COMMIT from the public repository"
 to_guest 'cat > "$HOME/m6_vm_guest.sh"' <"$HERE/m6_vm_guest.sh" || { verdict setup_error_copy; stop_vm; exit 1; }
-to_guest "nohup sh \"\$HOME/m6_vm_guest.sh\" $COMMIT >\"\$HOME/guest.log\" 2>&1 </dev/null & echo started" || { verdict setup_error_guest; stop_vm; exit 1; }
+to_guest "nohup caffeinate -ims sh \"\$HOME/m6_vm_guest.sh\" $COMMIT >\"\$HOME/guest.log\" 2>&1 </dev/null & echo started" || { verdict setup_error_guest; stop_vm; exit 1; }
 
 stage "6/6 running in the guest. Limits on this Mac: $MAX_USED_GB GB of memory, $MIN_FREE_GB GB of free disk"
 begin=$(date +%s)
