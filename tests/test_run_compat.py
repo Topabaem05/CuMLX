@@ -359,3 +359,19 @@ def test_a_module_takes_its_arguments_after_the_separator(tmp_path, target):
                           capture_output=True, text=True, cwd=tmp_path, env={**os.environ, 'PYTHONPATH': f"{ROOT / 'src'}{os.pathsep}{tmp_path}"}, check=False)
     assert json.loads(done.stdout)['exit_code'] == 0, done.stdout
     assert "ARGS ['--a=1', 'b']" in done.stderr
+
+
+def test_the_m2_install_builds_this_package_without_the_pytorch_index():
+    """With that index, uv builds this package against an old `packaging`, and setuptools 77 fails. It happened on the V100."""
+    import importlib.util
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parent.parent / 'spikes' / 'm2_scripts.py'
+    spec = importlib.util.spec_from_file_location('m2_scripts_under_test', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    torch, package = module.install_commands(Path('/venv/bin/python'), 'cuda')
+    assert '--index' in torch and 'torch==2.14.1' in torch and '-e' not in torch
+    assert '-e' in package and '--index' not in package
+    torch_here, _ = module.install_commands(Path('/venv/bin/python'), 'mps')
+    assert '--index' not in torch_here

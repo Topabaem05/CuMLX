@@ -104,6 +104,17 @@ def run_one(entry: dict, sources: Path, python: Path, reports: Path, target: str
             'tail': text[-600:] if code else ''}
 
 
+def install_commands(python: Path, target: str) -> list[list[str]]:
+    """Torch from its own index, then this package with no extra index.
+
+    uv uses the first index that has a package, and build requirements follow it too. The PyTorch index holds an old `packaging`,
+    which setuptools 77 and later cannot use, so building this package against that index fails.
+    """
+    index = ['--index', CUDA_INDEX] if target == 'cuda' else []
+    base = ['uv', 'pip', 'install', '-q', '--python', str(python)]
+    return [[*base, *index, *TORCH, 'numpy', 'requests', 'tiktoken'], [*base, '-e', str(ROOT)]]
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--work', type=Path, required=True)
@@ -127,8 +138,8 @@ def main(argv: list[str] | None = None) -> int:
         python = work / 'venv' / 'bin' / 'python'
         print('[setup] venv and packages', flush=True)
         subprocess.run(['uv', 'venv', '--clear', '-q', '--python', '3.12', str(work / 'venv')], check=True)
-        index = ['--index', CUDA_INDEX] if args.target == 'cuda' else []
-        subprocess.run(['uv', 'pip', 'install', '-q', '--python', str(python), *index, *TORCH, 'numpy', 'requests', 'tiktoken', '-e', str(ROOT)], check=True)
+        for command in install_commands(python, args.target):
+            subprocess.run(command, check=True)
         for name, (url, commit) in REPOSITORIES.items():
             target = sources / name
             if not (target / '.git').exists():
