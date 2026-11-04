@@ -65,6 +65,7 @@ export PATH
 command -v uv >/dev/null 2>&1 || finish setup_error_uv
 
 stage "5/9 CuMLX from its public repository, at $COMMIT"
+rm -rf "$HOME/code/CuMLX" "$HOME/f4"
 mkdir -p "$HOME/code/CuMLX"
 cd "$HOME/code/CuMLX" || finish setup_error_folder
 git init -q . && git remote add origin https://github.com/Topabaem05/CuMLX || finish setup_error_git

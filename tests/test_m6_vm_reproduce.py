@@ -37,7 +37,7 @@ def box(tmp_path):
     stub("tart", 'case "$1" in ip) echo 192.0.2.1 ;; --version) echo stub ;; run) sleep 30 ;; esac; exit 0')
     # A stub ssh runs the remote text in a shell, with HOME set to the guest's folder.
     # It never starts the guest script: that line is only logged, so that a test cannot run the real work on this machine.
-    stub("ssh", f'for last; do :; done; case "$last" in *m6_vm_guest.sh*nohup*|*nohup*m6_vm_guest.sh*) echo started; exit 0 ;; esac; HOME="{guest_home}" /bin/sh -c "$last"')
+    stub("ssh", f'for last; do :; done; case "$last" in *m6_vm_guest.sh*nohup*|*nohup*m6_vm_guest.sh*) mkdir -p "{guest_home}/repro-result"; echo facts > "{guest_home}/repro-result/machine.txt"; [ -f "{guest_home}/next_verdict" ] && mv "{guest_home}/next_verdict" "{guest_home}/repro-result/guest_verdict.txt"; echo started; exit 0 ;; esac; HOME="{guest_home}" /bin/sh -c "$last"')
     (tmp_path / "free_kb").write_text(str(100_000_000))
     (tmp_path / "vm_stat.txt").write_text(vm_stat_text(20.0))
     env = {"PATH": f"{stubs}:/usr/bin:/bin", "HOME": str(tmp_path / "host_home"), "CUMLX_VM_ROOT": str(root), "CUMLX_VM_TART": str(stubs / "tart"), "CUMLX_VM_POLL": "0"}
@@ -121,8 +121,7 @@ def repo_with_git(box):
 def test_the_run_reports_what_the_guest_reports(box, answer):
     repo_with_git(box)
     (box.tmp / "host_home").mkdir()
-    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text(answer + "\n")
-    (box.guest_home / "repro-result" / "machine.txt").write_text("a machine\n")
+    (box.guest_home / "next_verdict").write_text(answer + "\n")
     done = run(box, "--work")
     assert done.returncode == 0, done.stdout + done.stderr
     assert (box.root / "result" / "verdict.txt").read_text().strip() == answer
@@ -138,7 +137,7 @@ def test_memory_over_the_limit_stops_the_vm_and_is_not_a_pass(box):
     (box.tmp / "host_home").mkdir()
     (box.tmp / "vm_stat.txt").write_text(vm_stat_text(38.5))
     # The guest would report a pass, and the limit comes first.
-    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text("pass\n")
+    (box.guest_home / "next_verdict").write_text("pass\n")
     done = run(box, "--work")
     assert done.returncode == 1
     assert (box.root / "result" / "verdict.txt").read_text().strip() == "stopped_memory"
@@ -150,7 +149,7 @@ def test_low_disk_during_the_run_stops_the_vm_and_is_not_a_pass(box):
     repo_with_git(box)
     (box.tmp / "host_home").mkdir()
     (box.tmp / "free_kb").write_text(str(15_000_000))
-    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text("pass\n")
+    (box.guest_home / "next_verdict").write_text("pass\n")
     done = run(box, "--work")
     assert done.returncode == 1
     assert (box.root / "result" / "verdict.txt").read_text().strip() == "stopped_disk"
@@ -206,7 +205,7 @@ def test_attach_refuses_low_disk_high_memory_and_an_old_verdict(box):
 def test_attach_runs_no_tart_and_reports_what_the_guest_reports(box, answer):
     repo_with_git(box)
     (box.tmp / "host_home").mkdir()
-    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text(answer + "\n")
+    (box.guest_home / "next_verdict").write_text(answer + "\n")
     box.stub("tm", "exit 0")
     done = run(box, "--work-attach", "192.0.2.9", CUMLX_VM_TERMINAL_MAC=str(box.tmp / "stubs" / "tm"))
     assert done.returncode == 0, done.stdout + done.stderr
@@ -220,7 +219,7 @@ def test_attach_stops_the_vm_at_the_memory_limit_and_is_not_a_pass(box):
     repo_with_git(box)
     (box.tmp / "host_home").mkdir()
     (box.tmp / "vm_stat.txt").write_text(vm_stat_text(38.5))
-    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text("pass\n")
+    (box.guest_home / "next_verdict").write_text("pass\n")
     box.stub("tm", "exit 0")
     done = run(box, "--work-attach", "192.0.2.9", CUMLX_VM_TERMINAL_MAC=str(box.tmp / "stubs" / "tm"))
     assert done.returncode == 1
@@ -231,7 +230,7 @@ def test_attach_stops_the_vm_at_the_memory_limit_and_is_not_a_pass(box):
 def test_a_test_run_never_starts_the_guest_script(box):
     repo_with_git(box)
     (box.tmp / "host_home").mkdir()
-    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text("pass\n")
+    (box.guest_home / "next_verdict").write_text("pass\n")
     assert run(box, "--work").returncode == 0
     assert (box.guest_home / "m6_vm_guest.sh").exists()  # It was copied.
     assert not (box.guest_home / "repro-result" / "stage.txt").exists()  # It did not run.
@@ -269,7 +268,7 @@ def test_the_guest_script_goes_on_inside_a_vm(box):
 def test_attach_logs_in_with_the_account_it_is_given_and_writes_no_password_to_disk(box):
     repo_with_git(box)
     (box.tmp / "host_home").mkdir()
-    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text("pass\n")
+    (box.guest_home / "next_verdict").write_text("pass\n")
     box.stub("tm", "exit 0")
     done = run(box, "--work-attach", "192.0.2.9", CUMLX_VM_TERMINAL_MAC=str(box.tmp / "stubs" / "tm"), CUMLX_VM_USER="someone", CUMLX_VM_PASSWORD="pw-for-a-test")
     assert done.returncode == 0, done.stdout + done.stderr
@@ -290,7 +289,7 @@ def test_a_password_with_a_quote_is_refused_before_anything_runs(box):
 def test_the_askpass_script_reads_the_password_from_the_environment(box):
     repo_with_git(box)
     (box.tmp / "host_home").mkdir()
-    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text("pass\n")
+    (box.guest_home / "next_verdict").write_text("pass\n")
     box.stub("tm", "exit 0")
     run(box, "--work-attach", "192.0.2.9", CUMLX_VM_TERMINAL_MAC=str(box.tmp / "stubs" / "tm"), CUMLX_VM_PASSWORD="pw-for-a-test")
     said = subprocess.run(["sh", str(box.root / "askpass.sh")], env={"CUMLX_VM_PASSWORD": "pw-for-a-test"}, capture_output=True, text=True, check=True)
@@ -319,7 +318,7 @@ def test_the_guest_uses_a_proxy_only_when_given_one(box):
 def test_attach_with_a_proxy_opens_a_tunnel_and_the_record_says_so(box):
     repo_with_git(box)
     (box.tmp / "host_home").mkdir()
-    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text("pass\n")
+    (box.guest_home / "next_verdict").write_text("pass\n")
     box.stub("tm", "exit 0")
     done = run(box, "--work-attach", "192.0.2.9", CUMLX_VM_TERMINAL_MAC=str(box.tmp / "stubs" / "tm"), CUMLX_VM_PROXY="1", CUMLX_VM_PROXY_PORT="0")
     assert done.returncode == 0, done.stdout + done.stderr
@@ -332,9 +331,19 @@ def test_attach_with_a_proxy_opens_a_tunnel_and_the_record_says_so(box):
 def test_attach_with_no_proxy_opens_no_tunnel_and_records_none(box):
     repo_with_git(box)
     (box.tmp / "host_home").mkdir()
-    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text("pass\n")
+    (box.guest_home / "next_verdict").write_text("pass\n")
     box.stub("tm", "exit 0")
     assert run(box, "--work-attach", "192.0.2.9", CUMLX_VM_TERMINAL_MAC=str(box.tmp / "stubs" / "tm")).returncode == 0
     calls = box.log.read_text()
     assert " -R " not in calls and "CUMLX_VM_PROXY" not in calls
     assert not (box.root / "result" / "network.txt").exists()
+
+
+def test_a_verdict_left_by_an_earlier_run_does_not_count(box):
+    repo_with_git(box)
+    (box.tmp / "host_home").mkdir()
+    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text("pass\n")  # The guest left this, and this run has given no verdict.
+    box.stub("tm", "exit 0")
+    done = run(box, "--work-attach", "192.0.2.9", CUMLX_VM_TERMINAL_MAC=str(box.tmp / "stubs" / "tm"), CUMLX_VM_LIMIT_SECONDS="-1")
+    assert done.returncode == 1
+    assert (box.root / "result" / "verdict.txt").read_text().strip() == "stopped_time"

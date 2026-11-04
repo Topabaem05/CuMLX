@@ -277,6 +277,8 @@ fi
 
 COMMIT=$(git -C "$REPO" rev-parse HEAD)
 stage "5/6 the guest script. The guest gets CuMLX $COMMIT from the public repository"
+# A verdict left by an earlier run must not read as this run's.
+to_guest 'rm -rf "$HOME/repro-result"' || { verdict setup_error_copy; stop_vm; exit 1; }
 to_guest 'cat > "$HOME/m6_vm_guest.sh"' <"$HERE/m6_vm_guest.sh" || { verdict setup_error_copy; stop_vm; exit 1; }
 GUEST_ENV=
 if [ -n "${CUMLX_VM_PROXY:-}" ]; then
