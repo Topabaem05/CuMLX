@@ -1,0 +1,4675 @@
+{
+ "schema": "cumlx.opgolden.v1",
+ "cumlx_version": "0.5.0",
+ "created_utc": "2026-11-04T01:12:14Z",
+ "golden": {
+  "kind": "cuda"
+ },
+ "source": {
+  "framework": "cuda",
+  "gpu": "Tesla V100-SXM2-16GB",
+  "driver": "580.178.04",
+  "arch": "7.0",
+  "compiler": {
+   "name": "nvcc",
+   "version": "12.0.140",
+   "flags": [
+    "-arch=native"
+   ]
+  },
+  "cuda_runtime": 12000,
+  "cuda_driver_api": 13000,
+  "host": {
+   "machine": "x86_64",
+   "system": "Linux"
+  },
+  "repeats": 3,
+  "idle_during_capture": true
+ },
+ "floating_point": {
+  "ftz": {
+   "flag": "false (nvcc default)",
+   "load_flushes": false,
+   "input_flushes": false,
+   "output_flushes": false
+  },
+  "fmad": {
+   "flag": "true (nvcc default)",
+   "contracts": true
+  },
+  "fp64": {
+   "available": true
+  },
+  "warp_size": 32,
+  "probe_outputs": [
+   9.99994610111476e-41,
+   9.99994610111476e-41,
+   9.99994610111476e-41,
+   7.346839692639297e-40,
+   5.960464477539063e-08
+  ]
+ },
+ "kernels": {
+  "connected_components": {
+   "source_file": "connected_components.cu",
+   "source_sha256": "434eef4935cd2fd8b67cf48d72a73f671a979d2033af1bbf5c8c79cd60e4f8ea",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": true,
+    "warp_level": []
+   }
+  },
+  "cumsum": {
+   "source_file": "cumsum.cu",
+   "source_sha256": "3952140da7d99f68a4acf06d3445a8bea43bdc2a16725472038810044cc1c8aa",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  },
+  "embedding_gather": {
+   "source_file": "embedding_gather.cu",
+   "source_sha256": "ba717aebcb4d8e91517a8ab089e9b35ccc3211bc4de42246f032ad01b33c67ed",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  },
+  "layernorm": {
+   "source_file": "layernorm.cu",
+   "source_sha256": "28c791effdde916df7f0d6dffe414b50f609f4b8afced8204a3c73055adb94a5",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  },
+  "matmul_naive": {
+   "source_file": "matmul_naive.cu",
+   "source_sha256": "426a417ea1656064108253e18a0163b36ddab5346f89422a1c60243ba83207bc",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  },
+  "reduce_sum": {
+   "source_file": "reduce_sum.cu",
+   "source_sha256": "d90f60c459d371261b0c7b491588e2a150013552dc74ebacc1d13cbe2268be97",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": true,
+    "warp_level": []
+   }
+  },
+  "relu": {
+   "source_file": "relu.cu",
+   "source_sha256": "fc5a63e6a9a2d452d07b76a658701475423f8a43b86e55872345dc3e8484bfdf",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  },
+  "rmsnorm": {
+   "source_file": "rmsnorm.cu",
+   "source_sha256": "1ce837f154763d5f9fa082795a9d78a7a27a38412396673f346b879f2298ce31",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": [
+     "__shfl_xor_sync"
+    ]
+   }
+  },
+  "rope": {
+   "source_file": "rope.cu",
+   "source_sha256": "6ccf29889f35369f9996e55594130c93e2c7ea685e52e4711ea9cb828eb1e53c",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  },
+  "saxpy": {
+   "source_file": "saxpy.cu",
+   "source_sha256": "0eabbd1b09b3dd9ee4be97003458510dc4b92fe6225d3a53e574a4f2b03be86c",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  },
+  "softmax": {
+   "source_file": "softmax.cu",
+   "source_sha256": "ab92323e21b2d9a1d933a640c0a2cfd2b40e57a8408e1de30dd8a22e8dd840f1",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  },
+  "transpose": {
+   "source_file": "transpose.cu",
+   "source_sha256": "9fe6eff85a311c724d01e7e6a0622c8322399193d54db0a7ac245fe9888b5bec",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  },
+  "vector_add": {
+   "source_file": "vector_add.cu",
+   "source_sha256": "c91b9636881c6191d72f608709f828a566fd6076826e6a7921215421ed43d5a5",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "zoo.cumsum.tiny_1x1",
+   "kernel": "cumsum",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    256,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "cumsum<float>",
+   "call": [
+    "x",
+    "y",
+    "rows",
+    "cols"
+   ],
+   "file": "cases/c0000.safetensors",
+   "sha256": "9b237f9de715ed92d45fb82862eb74b4b7827e1cbb15e921b0fbabf97d6c5c0c",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.cumsum.tiny_3x7",
+   "kernel": "cumsum",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      3,
+      7
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      3,
+      7
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    768,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "cumsum<float>",
+   "call": [
+    "x",
+    "y",
+    "rows",
+    "cols"
+   ],
+   "file": "cases/c0001.safetensors",
+   "sha256": "af4613d411a404d5a0fef04a2704187546a2d8eb9959e8874d06581e4ba16065",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.cumsum.odd_7x1000",
+   "kernel": "cumsum",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      7,
+      1000
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      7,
+      1000
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    1792,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "cumsum<float>",
+   "call": [
+    "x",
+    "y",
+    "rows",
+    "cols"
+   ],
+   "file": "cases/c0002.safetensors",
+   "sha256": "b967500829aca1e2f7e11b8647deebf28662f09f254af8dc35c6de2a271900e1",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.cumsum.odd_5x1023",
+   "kernel": "cumsum",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      5,
+      1023
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      5,
+      1023
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    1280,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "cumsum<float>",
+   "call": [
+    "x",
+    "y",
+    "rows",
+    "cols"
+   ],
+   "file": "cases/c0003.safetensors",
+   "sha256": "55c615f4c775728730a6185b0b89d3028e7a695136792adae9d6ae49dfb0f4e1",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.cumsum.odd_3x4097",
+   "kernel": "cumsum",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      3,
+      4097
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      3,
+      4097
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    768,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "cumsum<float>",
+   "call": [
+    "x",
+    "y",
+    "rows",
+    "cols"
+   ],
+   "file": "cases/c0004.safetensors",
+   "sha256": "5b43b2b7d314b78eb8a448827ef8a4388f0ac9b28ab3563dba1d90ec65b16a0f",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.embedding_gather.tiny_1x1",
+   "kernel": "embedding_gather",
+   "inputs": [
+    {
+     "name": "ids",
+     "dtype": "int64",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "table",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1
+     ]
+    },
+    {
+     "name": "tokens",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "dim",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    128,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ],
+   "entry": "embedding_gather<float>",
+   "call": [
+    "ids",
+    "table",
+    "out",
+    "tokens",
+    "dim"
+   ],
+   "file": "cases/c0005.safetensors",
+   "sha256": "7f317aa3d31f035a147276b0c25b105ec17363935ef506c1a772b30c506da4d0",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.embedding_gather.tiny_7x3",
+   "kernel": "embedding_gather",
+   "inputs": [
+    {
+     "name": "ids",
+     "dtype": "int64",
+     "shape": [
+      7
+     ]
+    },
+    {
+     "name": "table",
+     "dtype": "float32",
+     "shape": [
+      5,
+      3
+     ]
+    },
+    {
+     "name": "tokens",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "dim",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      7,
+      3
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    896,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ],
+   "entry": "embedding_gather<float>",
+   "call": [
+    "ids",
+    "table",
+    "out",
+    "tokens",
+    "dim"
+   ],
+   "file": "cases/c0006.safetensors",
+   "sha256": "02f910e97a28338c443fe621777c8035c7c724e48428baddf76027a4e80e79b9",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.embedding_gather.m3_64x50x300",
+   "kernel": "embedding_gather",
+   "inputs": [
+    {
+     "name": "ids",
+     "dtype": "int64",
+     "shape": [
+      64
+     ]
+    },
+    {
+     "name": "table",
+     "dtype": "float32",
+     "shape": [
+      50,
+      300
+     ]
+    },
+    {
+     "name": "tokens",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "dim",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      64,
+      300
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    8192,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ],
+   "entry": "embedding_gather<float>",
+   "call": [
+    "ids",
+    "table",
+    "out",
+    "tokens",
+    "dim"
+   ],
+   "file": "cases/c0007.safetensors",
+   "sha256": "ef1566540f6933c7b64df47f060b2ce2c06239eaf913caa24170a423f5d468ee",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.layernorm.tiny_1x1",
+   "kernel": "layernorm",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1
+     ]
+    },
+    {
+     "name": "gamma",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "beta",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "eps",
+     "dtype": "float32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    256,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "layernorm<float>",
+   "call": [
+    "x",
+    "gamma",
+    "beta",
+    "y",
+    "rows",
+    "cols",
+    "eps"
+   ],
+   "file": "cases/c0008.safetensors",
+   "sha256": "75174022ef2dd52d0296cbc172038ffe9f950eaa33de30c152f464436410b42d",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.layernorm.tiny_3x7",
+   "kernel": "layernorm",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      3,
+      7
+     ]
+    },
+    {
+     "name": "gamma",
+     "dtype": "float32",
+     "shape": [
+      7
+     ]
+    },
+    {
+     "name": "beta",
+     "dtype": "float32",
+     "shape": [
+      7
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "eps",
+     "dtype": "float32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      3,
+      7
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    768,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "layernorm<float>",
+   "call": [
+    "x",
+    "gamma",
+    "beta",
+    "y",
+    "rows",
+    "cols",
+    "eps"
+   ],
+   "file": "cases/c0009.safetensors",
+   "sha256": "bff54d7ec56662e840df25197aef06b89e906ba2362534975b06253909abfcee",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.layernorm.odd_7x1000",
+   "kernel": "layernorm",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      7,
+      1000
+     ]
+    },
+    {
+     "name": "gamma",
+     "dtype": "float32",
+     "shape": [
+      1000
+     ]
+    },
+    {
+     "name": "beta",
+     "dtype": "float32",
+     "shape": [
+      1000
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "eps",
+     "dtype": "float32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      7,
+      1000
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    1792,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "layernorm<float>",
+   "call": [
+    "x",
+    "gamma",
+    "beta",
+    "y",
+    "rows",
+    "cols",
+    "eps"
+   ],
+   "file": "cases/c0010.safetensors",
+   "sha256": "a83cd015c7163dbeab8575a000aca3a64fdc82d2249df0b69281c31baa2199c6",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.layernorm.odd_5x1023",
+   "kernel": "layernorm",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      5,
+      1023
+     ]
+    },
+    {
+     "name": "gamma",
+     "dtype": "float32",
+     "shape": [
+      1023
+     ]
+    },
+    {
+     "name": "beta",
+     "dtype": "float32",
+     "shape": [
+      1023
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "eps",
+     "dtype": "float32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      5,
+      1023
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    1280,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "layernorm<float>",
+   "call": [
+    "x",
+    "gamma",
+    "beta",
+    "y",
+    "rows",
+    "cols",
+    "eps"
+   ],
+   "file": "cases/c0011.safetensors",
+   "sha256": "a09841448fe411400eade88fcccb39fb7dab37d55c4eb9be98d2e6bb6f49b37d",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.layernorm.odd_3x4097",
+   "kernel": "layernorm",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      3,
+      4097
+     ]
+    },
+    {
+     "name": "gamma",
+     "dtype": "float32",
+     "shape": [
+      4097
+     ]
+    },
+    {
+     "name": "beta",
+     "dtype": "float32",
+     "shape": [
+      4097
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "eps",
+     "dtype": "float32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      3,
+      4097
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    768,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "layernorm<float>",
+   "call": [
+    "x",
+    "gamma",
+    "beta",
+    "y",
+    "rows",
+    "cols",
+    "eps"
+   ],
+   "file": "cases/c0012.safetensors",
+   "sha256": "5a8ec73ec1d3bc97fb923b47655693ea0fbdc28bdbd54a72e56fe52842e39b03",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.layernorm.offset_16x768",
+   "kernel": "layernorm",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      16,
+      768
+     ]
+    },
+    {
+     "name": "gamma",
+     "dtype": "float32",
+     "shape": [
+      768
+     ]
+    },
+    {
+     "name": "beta",
+     "dtype": "float32",
+     "shape": [
+      768
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "eps",
+     "dtype": "float32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      16,
+      768
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    4096,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "layernorm<float>",
+   "call": [
+    "x",
+    "gamma",
+    "beta",
+    "y",
+    "rows",
+    "cols",
+    "eps"
+   ],
+   "file": "cases/c0013.safetensors",
+   "sha256": "84608186e70728dd59d68e9d86ff997b789e3192443bf609773c2bb51a030708",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.matmul_naive.tiny_1x1x1",
+   "kernel": "matmul_naive",
+   "inputs": [
+    {
+     "name": "A",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1
+     ]
+    },
+    {
+     "name": "B",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1
+     ]
+    },
+    {
+     "name": "M",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "N",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "K",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "C",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    16,
+    16,
+    1
+   ],
+   "threadgroup": [
+    16,
+    16,
+    1
+   ],
+   "entry": "matmul_naive<float>",
+   "call": [
+    "A",
+    "B",
+    "C",
+    "M",
+    "N",
+    "K"
+   ],
+   "file": "cases/c0014.safetensors",
+   "sha256": "3a0d2412147b9e826e21b2536938e9bb510947fbf015d77cc8f6d1100b2c8b5d",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.matmul_naive.tiny_3x5x7",
+   "kernel": "matmul_naive",
+   "inputs": [
+    {
+     "name": "A",
+     "dtype": "float32",
+     "shape": [
+      3,
+      7
+     ]
+    },
+    {
+     "name": "B",
+     "dtype": "float32",
+     "shape": [
+      7,
+      5
+     ]
+    },
+    {
+     "name": "M",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "N",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "K",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "C",
+     "dtype": "float32",
+     "shape": [
+      3,
+      5
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    16,
+    16,
+    1
+   ],
+   "threadgroup": [
+    16,
+    16,
+    1
+   ],
+   "entry": "matmul_naive<float>",
+   "call": [
+    "A",
+    "B",
+    "C",
+    "M",
+    "N",
+    "K"
+   ],
+   "file": "cases/c0015.safetensors",
+   "sha256": "a53d3f3d3e8305253e8406a008735953ee34b3985414006f96b1b2fc199225e2",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.matmul_naive.odd_33x65x17",
+   "kernel": "matmul_naive",
+   "inputs": [
+    {
+     "name": "A",
+     "dtype": "float32",
+     "shape": [
+      33,
+      17
+     ]
+    },
+    {
+     "name": "B",
+     "dtype": "float32",
+     "shape": [
+      17,
+      65
+     ]
+    },
+    {
+     "name": "M",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "N",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "K",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "C",
+     "dtype": "float32",
+     "shape": [
+      33,
+      65
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    80,
+    48,
+    1
+   ],
+   "threadgroup": [
+    16,
+    16,
+    1
+   ],
+   "entry": "matmul_naive<float>",
+   "call": [
+    "A",
+    "B",
+    "C",
+    "M",
+    "N",
+    "K"
+   ],
+   "file": "cases/c0016.safetensors",
+   "sha256": "3e83c7d1ce4e3abc9f3bac5fc46ccc462d8443d7d8fc257099406637151cea15",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.matmul_naive.fullprec_33x65x17",
+   "kernel": "matmul_naive",
+   "inputs": [
+    {
+     "name": "A",
+     "dtype": "float32",
+     "shape": [
+      33,
+      17
+     ]
+    },
+    {
+     "name": "B",
+     "dtype": "float32",
+     "shape": [
+      17,
+      65
+     ]
+    },
+    {
+     "name": "M",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "N",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "K",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "C",
+     "dtype": "float32",
+     "shape": [
+      33,
+      65
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    80,
+    48,
+    1
+   ],
+   "threadgroup": [
+    16,
+    16,
+    1
+   ],
+   "entry": "matmul_naive<float>",
+   "call": [
+    "A",
+    "B",
+    "C",
+    "M",
+    "N",
+    "K"
+   ],
+   "file": "cases/c0017.safetensors",
+   "sha256": "75e5a2c1ea5598cacea3770cf24e096ae1328a3491197c018aeb44c5169713e9",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.matmul_naive.fullprec_64x64x64",
+   "kernel": "matmul_naive",
+   "inputs": [
+    {
+     "name": "A",
+     "dtype": "float32",
+     "shape": [
+      64,
+      64
+     ]
+    },
+    {
+     "name": "B",
+     "dtype": "float32",
+     "shape": [
+      64,
+      64
+     ]
+    },
+    {
+     "name": "M",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "N",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "K",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "C",
+     "dtype": "float32",
+     "shape": [
+      64,
+      64
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    64,
+    64,
+    1
+   ],
+   "threadgroup": [
+    16,
+    16,
+    1
+   ],
+   "entry": "matmul_naive<float>",
+   "call": [
+    "A",
+    "B",
+    "C",
+    "M",
+    "N",
+    "K"
+   ],
+   "file": "cases/c0018.safetensors",
+   "sha256": "83261f6a66bd7344d309cb231c320aedce7842db3ffdd3f8bf44e83c9354f284",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.reduce_sum.tiny_1",
+   "kernel": "reduce_sum",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "out_in",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    256,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "reduce_sum<float>",
+   "call": [
+    "x",
+    "out",
+    "n"
+   ],
+   "initial": {
+    "out": "out_in"
+   },
+   "file": "cases/c0019.safetensors",
+   "sha256": "03e0893210cc5476f6fe3d9c408ef03caf163e733767c294f769b07a8aa5e7e8",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.reduce_sum.tiny_7",
+   "kernel": "reduce_sum",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      7
+     ]
+    },
+    {
+     "name": "out_in",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    256,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "reduce_sum<float>",
+   "call": [
+    "x",
+    "out",
+    "n"
+   ],
+   "initial": {
+    "out": "out_in"
+   },
+   "file": "cases/c0020.safetensors",
+   "sha256": "609728a2f1c79a4d66f70e7c18d2de2c5c7f148c0e498c1aacf0c6dd7dfe0955",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.reduce_sum.odd_1000",
+   "kernel": "reduce_sum",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1000
+     ]
+    },
+    {
+     "name": "out_in",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    1024,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "reduce_sum<float>",
+   "call": [
+    "x",
+    "out",
+    "n"
+   ],
+   "initial": {
+    "out": "out_in"
+   },
+   "file": "cases/c0021.safetensors",
+   "sha256": "26aa2a8c3780443380d838b6b49c1f4d7670b519d6967d97169868a4066f9487",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.reduce_sum.odd_1023",
+   "kernel": "reduce_sum",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1023
+     ]
+    },
+    {
+     "name": "out_in",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    1024,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "reduce_sum<float>",
+   "call": [
+    "x",
+    "out",
+    "n"
+   ],
+   "initial": {
+    "out": "out_in"
+   },
+   "file": "cases/c0022.safetensors",
+   "sha256": "59d7008113e6b5efadc371c3211b094b533e25c4d6f34bd4379cf8ef8a7b59fe",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.reduce_sum.odd_4097",
+   "kernel": "reduce_sum",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      4097
+     ]
+    },
+    {
+     "name": "out_in",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    4352,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "reduce_sum<float>",
+   "call": [
+    "x",
+    "out",
+    "n"
+   ],
+   "initial": {
+    "out": "out_in"
+   },
+   "file": "cases/c0023.safetensors",
+   "sha256": "8cf4d53d80571ed4a3b4f40d30933f0c12fc8629c878e1311a39f5badcafd74b",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.reduce_sum.accumulate_1000",
+   "kernel": "reduce_sum",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1000
+     ]
+    },
+    {
+     "name": "out_in",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    1024,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "reduce_sum<float>",
+   "call": [
+    "x",
+    "out",
+    "n"
+   ],
+   "initial": {
+    "out": "out_in"
+   },
+   "file": "cases/c0024.safetensors",
+   "sha256": "b5fdd5269ed8d79eed9c7703451658d6b79a8f348db76066c865fa3ce283be95",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.relu.tiny_1",
+   "kernel": "relu",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    256,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "relu<float>",
+   "call": [
+    "x",
+    "y",
+    "n"
+   ],
+   "file": "cases/c0025.safetensors",
+   "sha256": "1793355c52da6cfb17df71598b98502033c4c112709f77c3fd470f4647509b82",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.relu.tiny_7",
+   "kernel": "relu",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      7
+     ]
+    },
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      7
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    256,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "relu<float>",
+   "call": [
+    "x",
+    "y",
+    "n"
+   ],
+   "file": "cases/c0026.safetensors",
+   "sha256": "63a3372961bc128ff0a9d81c0c236e0c333a4645c3f5863b7d04e39d47505731",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.relu.odd_1000",
+   "kernel": "relu",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1000
+     ]
+    },
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      1000
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    1024,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "relu<float>",
+   "call": [
+    "x",
+    "y",
+    "n"
+   ],
+   "file": "cases/c0027.safetensors",
+   "sha256": "ee3b57f3144a15d99055074a241bad9790aec8bb091ce976fa0fa70e3f6ecb71",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.relu.odd_1023",
+   "kernel": "relu",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1023
+     ]
+    },
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      1023
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    1024,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "relu<float>",
+   "call": [
+    "x",
+    "y",
+    "n"
+   ],
+   "file": "cases/c0028.safetensors",
+   "sha256": "461dd8a48f242de74675823321ea967a7d95b82fd6d6f0c8225b9fd591aba47a",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.relu.odd_4097",
+   "kernel": "relu",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      4097
+     ]
+    },
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      4097
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    4352,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "relu<float>",
+   "call": [
+    "x",
+    "y",
+    "n"
+   ],
+   "file": "cases/c0029.safetensors",
+   "sha256": "74c3cbaec6c0a19e8f4ec7213ee05321c77b28dbae6c8dd6afc0dfe9d14baaaf",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.rmsnorm.tiny_1x1",
+   "kernel": "rmsnorm",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1
+     ]
+    },
+    {
+     "name": "weight",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "eps",
+     "dtype": "float32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    256,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "rmsnorm<float>",
+   "call": [
+    "x",
+    "weight",
+    "y",
+    "rows",
+    "cols",
+    "eps"
+   ],
+   "file": "cases/c0030.safetensors",
+   "sha256": "9ceafb0117527a76c85d780e0fe47ce157ebdf368ec3b7131dcac913d0d82a4a",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.rmsnorm.tiny_3x7",
+   "kernel": "rmsnorm",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      3,
+      7
+     ]
+    },
+    {
+     "name": "weight",
+     "dtype": "float32",
+     "shape": [
+      7
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "eps",
+     "dtype": "float32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      3,
+      7
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    768,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "rmsnorm<float>",
+   "call": [
+    "x",
+    "weight",
+    "y",
+    "rows",
+    "cols",
+    "eps"
+   ],
+   "file": "cases/c0031.safetensors",
+   "sha256": "45ceef9f84606a81465d6c79eb90281dd36fadaaaf088295288cd02d1415b817",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.rmsnorm.odd_7x1000",
+   "kernel": "rmsnorm",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      7,
+      1000
+     ]
+    },
+    {
+     "name": "weight",
+     "dtype": "float32",
+     "shape": [
+      1000
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "eps",
+     "dtype": "float32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      7,
+      1000
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    1792,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "rmsnorm<float>",
+   "call": [
+    "x",
+    "weight",
+    "y",
+    "rows",
+    "cols",
+    "eps"
+   ],
+   "file": "cases/c0032.safetensors",
+   "sha256": "22f08819a03e2c941b779e7deedacba46f1f817bcc362dfe1e2c5a7ac547cd0c",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.rmsnorm.odd_5x1023",
+   "kernel": "rmsnorm",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      5,
+      1023
+     ]
+    },
+    {
+     "name": "weight",
+     "dtype": "float32",
+     "shape": [
+      1023
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "eps",
+     "dtype": "float32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      5,
+      1023
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    1280,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "rmsnorm<float>",
+   "call": [
+    "x",
+    "weight",
+    "y",
+    "rows",
+    "cols",
+    "eps"
+   ],
+   "file": "cases/c0033.safetensors",
+   "sha256": "368ac955d7602227930cd09aa84842484996cfdf18933897c1de9e49cf6da6cf",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.rmsnorm.odd_3x4097",
+   "kernel": "rmsnorm",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      3,
+      4097
+     ]
+    },
+    {
+     "name": "weight",
+     "dtype": "float32",
+     "shape": [
+      4097
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "eps",
+     "dtype": "float32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      3,
+      4097
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    768,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "rmsnorm<float>",
+   "call": [
+    "x",
+    "weight",
+    "y",
+    "rows",
+    "cols",
+    "eps"
+   ],
+   "file": "cases/c0034.safetensors",
+   "sha256": "d024c248a56e57e21a4b5f828e2f94a89517ce11d275980c81baeb2a92d515d0",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.rmsnorm.zeros_2x64",
+   "kernel": "rmsnorm",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      2,
+      64
+     ]
+    },
+    {
+     "name": "weight",
+     "dtype": "float32",
+     "shape": [
+      64
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "eps",
+     "dtype": "float32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      2,
+      64
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    512,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "rmsnorm<float>",
+   "call": [
+    "x",
+    "weight",
+    "y",
+    "rows",
+    "cols",
+    "eps"
+   ],
+   "file": "cases/c0035.safetensors",
+   "sha256": "341314a7d5a3e7132493320ec920f58e391ba88da35e0c9afac6963cf9ec9062",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.rope.tiny_1tok_1h_2d",
+   "kernel": "rope",
+   "inputs": [
+    {
+     "name": "positions",
+     "dtype": "int64",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1,
+      2
+     ]
+    },
+    {
+     "name": "cos_cache",
+     "dtype": "float32",
+     "shape": [
+      4,
+      1
+     ]
+    },
+    {
+     "name": "sin_cache",
+     "dtype": "float32",
+     "shape": [
+      4,
+      1
+     ]
+    },
+    {
+     "name": "tokens",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "heads",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "head_dim",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1,
+      2
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    128,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ],
+   "entry": "rope<float>",
+   "call": [
+    "positions",
+    "x",
+    "cos_cache",
+    "sin_cache",
+    "y",
+    "tokens",
+    "heads",
+    "head_dim"
+   ],
+   "file": "cases/c0036.safetensors",
+   "sha256": "76380ca7f110efca36fa25ae78e9ca272c58c9e60d81c17e31945f8d5bbb2f60",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.rope.tiny_7tok_3h_8d",
+   "kernel": "rope",
+   "inputs": [
+    {
+     "name": "positions",
+     "dtype": "int64",
+     "shape": [
+      7
+     ]
+    },
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      7,
+      3,
+      8
+     ]
+    },
+    {
+     "name": "cos_cache",
+     "dtype": "float32",
+     "shape": [
+      16,
+      4
+     ]
+    },
+    {
+     "name": "sin_cache",
+     "dtype": "float32",
+     "shape": [
+      16,
+      4
+     ]
+    },
+    {
+     "name": "tokens",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "heads",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "head_dim",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      7,
+      3,
+      8
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    896,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ],
+   "entry": "rope<float>",
+   "call": [
+    "positions",
+    "x",
+    "cos_cache",
+    "sin_cache",
+    "y",
+    "tokens",
+    "heads",
+    "head_dim"
+   ],
+   "file": "cases/c0037.safetensors",
+   "sha256": "e963fe5cab14aa051f847161b651e084d09c3435e079600f55bebc25551ddcc3",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.rope.m3_16tok_4h_128d",
+   "kernel": "rope",
+   "inputs": [
+    {
+     "name": "positions",
+     "dtype": "int64",
+     "shape": [
+      16
+     ]
+    },
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      16,
+      4,
+      128
+     ]
+    },
+    {
+     "name": "cos_cache",
+     "dtype": "float32",
+     "shape": [
+      32,
+      64
+     ]
+    },
+    {
+     "name": "sin_cache",
+     "dtype": "float32",
+     "shape": [
+      32,
+      64
+     ]
+    },
+    {
+     "name": "tokens",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "heads",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "head_dim",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      16,
+      4,
+      128
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    2048,
+    1,
+    1
+   ],
+   "threadgroup": [
+    128,
+    1,
+    1
+   ],
+   "entry": "rope<float>",
+   "call": [
+    "positions",
+    "x",
+    "cos_cache",
+    "sin_cache",
+    "y",
+    "tokens",
+    "heads",
+    "head_dim"
+   ],
+   "file": "cases/c0038.safetensors",
+   "sha256": "070a8f404eba87144bc43e22dc49f85eecc77bc3afaeb82c8bd9102aa31db175",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.saxpy.tiny_1",
+   "kernel": "saxpy",
+   "inputs": [
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "a",
+     "dtype": "float32",
+     "shape": []
+    },
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "y_in",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    256,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "saxpy<float>",
+   "call": [
+    "n",
+    "a",
+    "x",
+    "y"
+   ],
+   "initial": {
+    "y": "y_in"
+   },
+   "file": "cases/c0039.safetensors",
+   "sha256": "ddedf143c5c9dcd09ec15f04bb7a4b0bf868ba99f45cc84b6875069b8fd0f26f",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.saxpy.tiny_7",
+   "kernel": "saxpy",
+   "inputs": [
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "a",
+     "dtype": "float32",
+     "shape": []
+    },
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      7
+     ]
+    },
+    {
+     "name": "y_in",
+     "dtype": "float32",
+     "shape": [
+      7
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      7
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    256,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "saxpy<float>",
+   "call": [
+    "n",
+    "a",
+    "x",
+    "y"
+   ],
+   "initial": {
+    "y": "y_in"
+   },
+   "file": "cases/c0040.safetensors",
+   "sha256": "e388683e9d7ce3a395b600daaee6c41a60351591109f04efa329c07fa6814c57",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.saxpy.odd_1000",
+   "kernel": "saxpy",
+   "inputs": [
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "a",
+     "dtype": "float32",
+     "shape": []
+    },
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1000
+     ]
+    },
+    {
+     "name": "y_in",
+     "dtype": "float32",
+     "shape": [
+      1000
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      1000
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    1024,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "saxpy<float>",
+   "call": [
+    "n",
+    "a",
+    "x",
+    "y"
+   ],
+   "initial": {
+    "y": "y_in"
+   },
+   "file": "cases/c0041.safetensors",
+   "sha256": "7d1226e71c253d67313d7dc66366a512aa0e358ad10f621bbd7ea3351f07ca44",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.saxpy.odd_1023",
+   "kernel": "saxpy",
+   "inputs": [
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "a",
+     "dtype": "float32",
+     "shape": []
+    },
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1023
+     ]
+    },
+    {
+     "name": "y_in",
+     "dtype": "float32",
+     "shape": [
+      1023
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      1023
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    1024,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "saxpy<float>",
+   "call": [
+    "n",
+    "a",
+    "x",
+    "y"
+   ],
+   "initial": {
+    "y": "y_in"
+   },
+   "file": "cases/c0042.safetensors",
+   "sha256": "ae411c0cf0c7980655882d42424d6c6b2c742d492ebe95f303ec8cf12870c1e7",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.saxpy.odd_4097",
+   "kernel": "saxpy",
+   "inputs": [
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "a",
+     "dtype": "float32",
+     "shape": []
+    },
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      4097
+     ]
+    },
+    {
+     "name": "y_in",
+     "dtype": "float32",
+     "shape": [
+      4097
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      4097
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    4352,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "saxpy<float>",
+   "call": [
+    "n",
+    "a",
+    "x",
+    "y"
+   ],
+   "initial": {
+    "y": "y_in"
+   },
+   "file": "cases/c0043.safetensors",
+   "sha256": "829103e53c233601bb50ded5b36140b60bcfda31e4f50f852c1e97aed9f5c873",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.softmax.tiny_1x1",
+   "kernel": "softmax",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    256,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "softmax<float>",
+   "call": [
+    "x",
+    "y",
+    "rows",
+    "cols"
+   ],
+   "file": "cases/c0044.safetensors",
+   "sha256": "3e38e0a4fb8da60d896b0b6766384a7224658df555e2947b9f13c268d49df2db",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.softmax.tiny_3x7",
+   "kernel": "softmax",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      3,
+      7
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      3,
+      7
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    768,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "softmax<float>",
+   "call": [
+    "x",
+    "y",
+    "rows",
+    "cols"
+   ],
+   "file": "cases/c0045.safetensors",
+   "sha256": "154ad8f5d85d49ad0a02d9be3ce0afcefe3e92bd886e6fdcf872f39895d25062",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.softmax.odd_7x1000",
+   "kernel": "softmax",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      7,
+      1000
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      7,
+      1000
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    1792,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "softmax<float>",
+   "call": [
+    "x",
+    "y",
+    "rows",
+    "cols"
+   ],
+   "file": "cases/c0046.safetensors",
+   "sha256": "c7400d4aba8ed7fcd7e84ae4739e3ea83cde0bdb66984b4c782fc98e07596afa",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.softmax.odd_5x1023",
+   "kernel": "softmax",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      5,
+      1023
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      5,
+      1023
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    1280,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "softmax<float>",
+   "call": [
+    "x",
+    "y",
+    "rows",
+    "cols"
+   ],
+   "file": "cases/c0047.safetensors",
+   "sha256": "4fc34929a4b1210d7d79b3dce292e20345c671e5b3f0fb96ed705c105117f000",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.softmax.odd_3x4097",
+   "kernel": "softmax",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      3,
+      4097
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      3,
+      4097
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    768,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "softmax<float>",
+   "call": [
+    "x",
+    "y",
+    "rows",
+    "cols"
+   ],
+   "file": "cases/c0048.safetensors",
+   "sha256": "25fc18b3d1a4f661c5dd8d6e31a81ba5886a84fc884edecde32a7dc252a8ecf3",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.softmax.edges_big_8x513",
+   "kernel": "softmax",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      8,
+      513
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "y",
+     "dtype": "float32",
+     "shape": [
+      8,
+      513
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    2048,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "softmax<float>",
+   "call": [
+    "x",
+    "y",
+    "rows",
+    "cols"
+   ],
+   "file": "cases/c0049.safetensors",
+   "sha256": "901f22985ea5adb6c7292f8852db47980b4f4d99319c8eea3454f23da18a1794",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.transpose.tiny_1x1",
+   "kernel": "transpose",
+   "inputs": [
+    {
+     "name": "inp",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      1,
+      1
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    32,
+    8,
+    1
+   ],
+   "threadgroup": [
+    32,
+    8,
+    1
+   ],
+   "entry": "transpose<float>",
+   "call": [
+    "inp",
+    "out",
+    "rows",
+    "cols"
+   ],
+   "file": "cases/c0050.safetensors",
+   "sha256": "a93bebd0fc4ee3f47298771369ddccb5e6e60defd4a286e2f35eeb31e9d5f8bc",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.transpose.tiny_3x7",
+   "kernel": "transpose",
+   "inputs": [
+    {
+     "name": "inp",
+     "dtype": "float32",
+     "shape": [
+      3,
+      7
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      7,
+      3
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    32,
+    8,
+    1
+   ],
+   "threadgroup": [
+    32,
+    8,
+    1
+   ],
+   "entry": "transpose<float>",
+   "call": [
+    "inp",
+    "out",
+    "rows",
+    "cols"
+   ],
+   "file": "cases/c0051.safetensors",
+   "sha256": "6ff57bc93d080948dd1e38241da294a23678881cc5e0a3f6992f5c369b6d0263",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.transpose.odd_1000x3",
+   "kernel": "transpose",
+   "inputs": [
+    {
+     "name": "inp",
+     "dtype": "float32",
+     "shape": [
+      1000,
+      3
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      3,
+      1000
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    32,
+    256,
+    1
+   ],
+   "threadgroup": [
+    32,
+    8,
+    1
+   ],
+   "entry": "transpose<float>",
+   "call": [
+    "inp",
+    "out",
+    "rows",
+    "cols"
+   ],
+   "file": "cases/c0052.safetensors",
+   "sha256": "02e1adc6b368ed2f25641b359f835b6f877285fc9b9fe6845b068b0af3acab64",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.transpose.m3_33x300",
+   "kernel": "transpose",
+   "inputs": [
+    {
+     "name": "inp",
+     "dtype": "float32",
+     "shape": [
+      33,
+      300
+     ]
+    },
+    {
+     "name": "rows",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "cols",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      300,
+      33
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    320,
+    16,
+    1
+   ],
+   "threadgroup": [
+    32,
+    8,
+    1
+   ],
+   "entry": "transpose<float>",
+   "call": [
+    "inp",
+    "out",
+    "rows",
+    "cols"
+   ],
+   "file": "cases/c0053.safetensors",
+   "sha256": "8c99f4a4c2bc9760e445ad41ecff770e57ca89cbc6a83f04cf968bf1829dbd82",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.vector_add.tiny_1",
+   "kernel": "vector_add",
+   "inputs": [
+    {
+     "name": "a",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "b",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    },
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      1
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    256,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "vector_add<float>",
+   "call": [
+    "a",
+    "b",
+    "out",
+    "n"
+   ],
+   "file": "cases/c0054.safetensors",
+   "sha256": "85a6498ee18fee9033167feba0422f16cd5cf6119b40aacceb80284371aa30bc",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.vector_add.tiny_7",
+   "kernel": "vector_add",
+   "inputs": [
+    {
+     "name": "a",
+     "dtype": "float32",
+     "shape": [
+      7
+     ]
+    },
+    {
+     "name": "b",
+     "dtype": "float32",
+     "shape": [
+      7
+     ]
+    },
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      7
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    256,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "vector_add<float>",
+   "call": [
+    "a",
+    "b",
+    "out",
+    "n"
+   ],
+   "file": "cases/c0055.safetensors",
+   "sha256": "9f6509391c5953721097f0404ca9dbaa9d734c81fce8def458431cd2425a3864",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.vector_add.odd_1000",
+   "kernel": "vector_add",
+   "inputs": [
+    {
+     "name": "a",
+     "dtype": "float32",
+     "shape": [
+      1000
+     ]
+    },
+    {
+     "name": "b",
+     "dtype": "float32",
+     "shape": [
+      1000
+     ]
+    },
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      1000
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    1024,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "vector_add<float>",
+   "call": [
+    "a",
+    "b",
+    "out",
+    "n"
+   ],
+   "file": "cases/c0056.safetensors",
+   "sha256": "500e42e222a8e08fc498c70c9e7387ffff6df1d9cebbac88fa69d286006ec766",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.vector_add.odd_1023",
+   "kernel": "vector_add",
+   "inputs": [
+    {
+     "name": "a",
+     "dtype": "float32",
+     "shape": [
+      1023
+     ]
+    },
+    {
+     "name": "b",
+     "dtype": "float32",
+     "shape": [
+      1023
+     ]
+    },
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      1023
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    1024,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "vector_add<float>",
+   "call": [
+    "a",
+    "b",
+    "out",
+    "n"
+   ],
+   "file": "cases/c0057.safetensors",
+   "sha256": "79fee101e29f82cbfb3dbbdc305fbb4456705464e392f1f1baa0ef802d1dad90",
+   "repeat_identical": true
+  },
+  {
+   "id": "zoo.vector_add.odd_4097",
+   "kernel": "vector_add",
+   "inputs": [
+    {
+     "name": "a",
+     "dtype": "float32",
+     "shape": [
+      4097
+     ]
+    },
+    {
+     "name": "b",
+     "dtype": "float32",
+     "shape": [
+      4097
+     ]
+    },
+    {
+     "name": "n",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "out",
+     "dtype": "float32",
+     "shape": [
+      4097
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    4352,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "entry": "vector_add<float>",
+   "call": [
+    "a",
+    "b",
+    "out",
+    "n"
+   ],
+   "file": "cases/c0058.safetensors",
+   "sha256": "5678947bb3b449c75b3c77fa1e8cb143032ac292c492587e6fc73f2905245ee4",
+   "repeat_identical": true
+  },
+  {
+   "id": "sam2.init_labeling.zeros.32x32",
+   "kernel": "connected_components",
+   "inputs": [
+    {
+     "name": "label_in",
+     "dtype": "int32",
+     "shape": [
+      32,
+      32
+     ]
+    },
+    {
+     "name": "W",
+     "dtype": "uint32",
+     "shape": []
+    },
+    {
+     "name": "H",
+     "dtype": "uint32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "label",
+     "dtype": "int32",
+     "shape": [
+      32,
+      32
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    16,
+    16,
+    1
+   ],
+   "threadgroup": [
+    16,
+    16,
+    1
+   ],
+   "entry": "init_labeling",
+   "call": [
+    "label",
+    "W",
+    "H"
+   ],
+   "initial": {
+    "label": "label_in"
+   },
+   "file": "cases/c0059.safetensors",
+   "sha256": "88c2c7ca92c5c7d3d681bc5e9a5fc2d7824d5874d1e99e10ec3a4c20f2a67ab7",
+   "repeat_identical": true
+  },
+  {
+   "id": "sam2.merge.sparse.32x32",
+   "kernel": "connected_components",
+   "inputs": [
+    {
+     "name": "img",
+     "dtype": "uint8",
+     "shape": [
+      32,
+      32
+     ]
+    },
+    {
+     "name": "label_in",
+     "dtype": "int32",
+     "shape": [
+      32,
+      32
+     ]
+    },
+    {
+     "name": "W",
+     "dtype": "uint32",
+     "shape": []
+    },
+    {
+     "name": "H",
+     "dtype": "uint32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "label",
+     "dtype": "int32",
+     "shape": [
+      32,
+      32
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    16,
+    16,
+    1
+   ],
+   "threadgroup": [
+    16,
+    16,
+    1
+   ],
+   "entry": "merge",
+   "call": [
+    "img",
+    "label",
+    "W",
+    "H"
+   ],
+   "initial": {
+    "label": "label_in"
+   },
+   "file": "cases/c0060.safetensors",
+   "sha256": "aa0adc1582ac6adb56b710d6556a8fdc98a6471b26faf657e356963e940a1d02",
+   "repeat_identical": true
+  },
+  {
+   "id": "sam2.compression.dense.32x32",
+   "kernel": "connected_components",
+   "inputs": [
+    {
+     "name": "label_in",
+     "dtype": "int32",
+     "shape": [
+      32,
+      32
+     ]
+    },
+    {
+     "name": "W",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "H",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "label",
+     "dtype": "int32",
+     "shape": [
+      32,
+      32
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    16,
+    16,
+    1
+   ],
+   "threadgroup": [
+    16,
+    16,
+    1
+   ],
+   "entry": "compression",
+   "call": [
+    "label",
+    "W",
+    "H"
+   ],
+   "initial": {
+    "label": "label_in"
+   },
+   "file": "cases/c0061.safetensors",
+   "sha256": "dff291e589d6052c9cb4b006f806e1bf2c46a13af59c55c7998f10563911c920",
+   "repeat_identical": true
+  },
+  {
+   "id": "sam2.final_labeling.dense.32x32",
+   "kernel": "connected_components",
+   "inputs": [
+    {
+     "name": "img",
+     "dtype": "uint8",
+     "shape": [
+      32,
+      32
+     ]
+    },
+    {
+     "name": "label_in",
+     "dtype": "int32",
+     "shape": [
+      32,
+      32
+     ]
+    },
+    {
+     "name": "W",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "H",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "label",
+     "dtype": "int32",
+     "shape": [
+      32,
+      32
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    16,
+    16,
+    1
+   ],
+   "threadgroup": [
+    16,
+    16,
+    1
+   ],
+   "entry": "final_labeling",
+   "call": [
+    "img",
+    "label",
+    "W",
+    "H"
+   ],
+   "initial": {
+    "label": "label_in"
+   },
+   "file": "cases/c0062.safetensors",
+   "sha256": "90e001533f439b46aafd34a9a53ea13b4d05fb23a0fb8453add5844667b2b293",
+   "repeat_identical": true
+  },
+  {
+   "id": "sam2.init_counting.dense.32x32",
+   "kernel": "connected_components",
+   "inputs": [
+    {
+     "name": "label",
+     "dtype": "int32",
+     "shape": [
+      32,
+      32
+     ]
+    },
+    {
+     "name": "count_init_in",
+     "dtype": "int32",
+     "shape": [
+      32,
+      32
+     ]
+    },
+    {
+     "name": "W",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "H",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "count_init",
+     "dtype": "int32",
+     "shape": [
+      32,
+      32
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    48,
+    48,
+    1
+   ],
+   "threadgroup": [
+    16,
+    16,
+    1
+   ],
+   "entry": "init_counting",
+   "call": [
+    "label",
+    "count_init",
+    "W",
+    "H"
+   ],
+   "initial": {
+    "count_init": "count_init_in"
+   },
+   "file": "cases/c0063.safetensors",
+   "sha256": "6684ee798daa697ae52c5419edfe25e14a9cd9e7e6f9373603a5958a3fd6afe2",
+   "repeat_identical": true
+  },
+  {
+   "id": "sam2.final_counting.dense.32x32",
+   "kernel": "connected_components",
+   "inputs": [
+    {
+     "name": "label",
+     "dtype": "int32",
+     "shape": [
+      32,
+      32
+     ]
+    },
+    {
+     "name": "count_init",
+     "dtype": "int32",
+     "shape": [
+      32,
+      32
+     ]
+    },
+    {
+     "name": "count_final_in",
+     "dtype": "int32",
+     "shape": [
+      32,
+      32
+     ]
+    },
+    {
+     "name": "W",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "H",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "count_final",
+     "dtype": "int32",
+     "shape": [
+      32,
+      32
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    48,
+    48,
+    1
+   ],
+   "threadgroup": [
+    16,
+    16,
+    1
+   ],
+   "entry": "final_counting",
+   "call": [
+    "label",
+    "count_init",
+    "count_final",
+    "W",
+    "H"
+   ],
+   "initial": {
+    "count_final": "count_final_in"
+   },
+   "file": "cases/c0064.safetensors",
+   "sha256": "0b763d6bbac178e20ab0dc4909fbae05c54c9bcd6d96ebbf23b9aeca05efffb8",
+   "repeat_identical": true
+  },
+  {
+   "id": "sam2.init_labeling.zeros.48x64",
+   "kernel": "connected_components",
+   "inputs": [
+    {
+     "name": "label_in",
+     "dtype": "int32",
+     "shape": [
+      48,
+      64
+     ]
+    },
+    {
+     "name": "W",
+     "dtype": "uint32",
+     "shape": []
+    },
+    {
+     "name": "H",
+     "dtype": "uint32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "label",
+     "dtype": "int32",
+     "shape": [
+      48,
+      64
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    32,
+    32,
+    1
+   ],
+   "threadgroup": [
+    16,
+    16,
+    1
+   ],
+   "entry": "init_labeling",
+   "call": [
+    "label",
+    "W",
+    "H"
+   ],
+   "initial": {
+    "label": "label_in"
+   },
+   "file": "cases/c0065.safetensors",
+   "sha256": "437dcbaf662f0006d447214c34459a7b71a9264381d0ca3d1cdf7c2510f2d751",
+   "repeat_identical": true
+  },
+  {
+   "id": "sam2.merge.sparse.48x64",
+   "kernel": "connected_components",
+   "inputs": [
+    {
+     "name": "img",
+     "dtype": "uint8",
+     "shape": [
+      48,
+      64
+     ]
+    },
+    {
+     "name": "label_in",
+     "dtype": "int32",
+     "shape": [
+      48,
+      64
+     ]
+    },
+    {
+     "name": "W",
+     "dtype": "uint32",
+     "shape": []
+    },
+    {
+     "name": "H",
+     "dtype": "uint32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "label",
+     "dtype": "int32",
+     "shape": [
+      48,
+      64
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    32,
+    32,
+    1
+   ],
+   "threadgroup": [
+    16,
+    16,
+    1
+   ],
+   "entry": "merge",
+   "call": [
+    "img",
+    "label",
+    "W",
+    "H"
+   ],
+   "initial": {
+    "label": "label_in"
+   },
+   "file": "cases/c0066.safetensors",
+   "sha256": "3b27a462c5223475157b684b77b846116debae36cf10ac2243a8731de66af3ef",
+   "repeat_identical": true
+  },
+  {
+   "id": "sam2.compression.dense.48x64",
+   "kernel": "connected_components",
+   "inputs": [
+    {
+     "name": "label_in",
+     "dtype": "int32",
+     "shape": [
+      48,
+      64
+     ]
+    },
+    {
+     "name": "W",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "H",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "label",
+     "dtype": "int32",
+     "shape": [
+      48,
+      64
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    32,
+    32,
+    1
+   ],
+   "threadgroup": [
+    16,
+    16,
+    1
+   ],
+   "entry": "compression",
+   "call": [
+    "label",
+    "W",
+    "H"
+   ],
+   "initial": {
+    "label": "label_in"
+   },
+   "file": "cases/c0067.safetensors",
+   "sha256": "a278285da980af403e03efe9fe020f095811b28fb847f22d3a7af64af4ffd514",
+   "repeat_identical": true
+  },
+  {
+   "id": "sam2.final_labeling.dense.48x64",
+   "kernel": "connected_components",
+   "inputs": [
+    {
+     "name": "img",
+     "dtype": "uint8",
+     "shape": [
+      48,
+      64
+     ]
+    },
+    {
+     "name": "label_in",
+     "dtype": "int32",
+     "shape": [
+      48,
+      64
+     ]
+    },
+    {
+     "name": "W",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "H",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "label",
+     "dtype": "int32",
+     "shape": [
+      48,
+      64
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    32,
+    32,
+    1
+   ],
+   "threadgroup": [
+    16,
+    16,
+    1
+   ],
+   "entry": "final_labeling",
+   "call": [
+    "img",
+    "label",
+    "W",
+    "H"
+   ],
+   "initial": {
+    "label": "label_in"
+   },
+   "file": "cases/c0068.safetensors",
+   "sha256": "71d35b854e2846b045a6bdddb30fa0ebc056ab4d65a48be52a461d8091fb718c",
+   "repeat_identical": true
+  },
+  {
+   "id": "sam2.init_counting.dense.48x64",
+   "kernel": "connected_components",
+   "inputs": [
+    {
+     "name": "label",
+     "dtype": "int32",
+     "shape": [
+      48,
+      64
+     ]
+    },
+    {
+     "name": "count_init_in",
+     "dtype": "int32",
+     "shape": [
+      48,
+      64
+     ]
+    },
+    {
+     "name": "W",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "H",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "count_init",
+     "dtype": "int32",
+     "shape": [
+      48,
+      64
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    80,
+    64,
+    1
+   ],
+   "threadgroup": [
+    16,
+    16,
+    1
+   ],
+   "entry": "init_counting",
+   "call": [
+    "label",
+    "count_init",
+    "W",
+    "H"
+   ],
+   "initial": {
+    "count_init": "count_init_in"
+   },
+   "file": "cases/c0069.safetensors",
+   "sha256": "0cba9159e75ddf4b608f5d58b654d30a24716fb5185187f96f13aaa01b36a028",
+   "repeat_identical": true
+  },
+  {
+   "id": "sam2.final_counting.dense.48x64",
+   "kernel": "connected_components",
+   "inputs": [
+    {
+     "name": "label",
+     "dtype": "int32",
+     "shape": [
+      48,
+      64
+     ]
+    },
+    {
+     "name": "count_init",
+     "dtype": "int32",
+     "shape": [
+      48,
+      64
+     ]
+    },
+    {
+     "name": "count_final_in",
+     "dtype": "int32",
+     "shape": [
+      48,
+      64
+     ]
+    },
+    {
+     "name": "W",
+     "dtype": "int32",
+     "shape": []
+    },
+    {
+     "name": "H",
+     "dtype": "int32",
+     "shape": []
+    }
+   ],
+   "outputs": [
+    {
+     "name": "count_final",
+     "dtype": "int32",
+     "shape": [
+      48,
+      64
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    80,
+    64,
+    1
+   ],
+   "threadgroup": [
+    16,
+    16,
+    1
+   ],
+   "entry": "final_counting",
+   "call": [
+    "label",
+    "count_init",
+    "count_final",
+    "W",
+    "H"
+   ],
+   "initial": {
+    "count_final": "count_final_in"
+   },
+   "file": "cases/c0070.safetensors",
+   "sha256": "e2a991fb5f06627f5ff5c60b625278e32d2385c3c0f0f13ae32390c2f9833a9c",
+   "repeat_identical": true
+  }
+ ]
+}

@@ -1,0 +1,94 @@
+{
+  "schema": "cumlx.result.v1",
+  "command": "kernel capture",
+  "ok": true,
+  "status": "ok",
+  "exit_code": 0,
+  "summary": "recorded 71 of 71 case(s), 13 kernel(s), on Tesla V100-SXM2-16GB (driver 580.178.04, nvcc 12.0.140)",
+  "data": {
+    "kernels_recorded": [
+      "connected_components",
+      "cumsum",
+      "embedding_gather",
+      "layernorm",
+      "matmul_naive",
+      "reduce_sum",
+      "relu",
+      "rmsnorm",
+      "rope",
+      "saxpy",
+      "softmax",
+      "transpose",
+      "vector_add"
+    ],
+    "cases_recorded": 71,
+    "cases_total": 71,
+    "source": {
+      "framework": "cuda",
+      "gpu": "Tesla V100-SXM2-16GB",
+      "driver": "580.178.04",
+      "arch": "7.0",
+      "compiler": {
+        "name": "nvcc",
+        "version": "12.0.140",
+        "flags": [
+          "-arch=native"
+        ]
+      },
+      "cuda_runtime": 12000,
+      "cuda_driver_api": 13000,
+      "host": {
+        "machine": "x86_64",
+        "system": "Linux"
+      },
+      "repeats": 3,
+      "idle_during_capture": true
+    },
+    "floating_point": {
+      "ftz": {
+        "flag": "false (nvcc default)",
+        "load_flushes": false,
+        "input_flushes": false,
+        "output_flushes": false
+      },
+      "fmad": {
+        "flag": "true (nvcc default)",
+        "contracts": true
+      },
+      "fp64": {
+        "available": true
+      },
+      "warp_size": 32,
+      "probe_outputs": [
+        9.99994610111476e-41,
+        9.99994610111476e-41,
+        9.99994610111476e-41,
+        7.346839692639297e-40,
+        5.960464477539063e-08
+      ]
+    },
+    "failed": {
+      "items": [],
+      "total": 0,
+      "omitted": 0
+    },
+    "not_repeating": []
+  },
+  "artifacts": [
+    {
+      "kind": "golden",
+      "path": "golden"
+    }
+  ],
+  "warnings": [],
+  "errors": [],
+  "next_steps": [
+    {
+      "command": "cumlx kernel verify foo.metal golden",
+      "why": "on a Mac: compare a Metal kernel with this golden"
+    }
+  ],
+  "truncated": false,
+  "cumlx_version": "0.5.0",
+  "elapsed_ms": 54717
+}

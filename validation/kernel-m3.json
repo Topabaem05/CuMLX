@@ -1,30 +1,66 @@
 {
  "schema": "cumlx.kernel-m3.v1",
  "date": "2026-11-03",
- "status": "PARTLY MEASURED. woof 1.1.5.2 ran on this Mac on 2026-11-04. No third-party kernel has run against a V100 golden, because the capture has not succeeded. Every gate below stays open.",
+ "status": "MEASURED on 2026-11-04. All four open gates are met. Limits are the ones written before the first run. Read what each gate does not show.",
  "gates": {
   "goldens_20": {
-   "met": false,
-   "count": 8,
-   "needs": 20,
-   "after_capture_would_be": 21,
-   "waits_on": "an idle V100: sh spikes/m3_kernels.sh capture"
+   "met": true,
+   "count": 21,
+   "lab": 8,
+   "external": [
+    "connected_components",
+    "cumsum",
+    "embedding_gather",
+    "layernorm",
+    "matmul_naive",
+    "reduce_sum",
+    "relu",
+    "rmsnorm",
+    "rope",
+    "saxpy",
+    "softmax",
+    "transpose",
+    "vector_add"
+   ]
   },
   "grade_a_70_percent": {
-   "met": false,
-   "measured": null,
-   "needs": "14 of 20, or 15 of 21 with sam2",
-   "waits_on": "the user running sh spikes/m3_kernels.sh, because the install was denied here"
+   "met": true,
+   "grade_a": 19,
+   "of_goldens": 21,
+   "by_reason": {
+    "connected_components": "grade_a",
+    "cumsum": "grade_a",
+    "embedding_gather": "grade_a",
+    "fp4_decode": "grade_a",
+    "fp4_gemv": "translate",
+    "fp4_quantize": "grade_a",
+    "fp4_small_m": "grade_a",
+    "fp4_tiled": "grade_a",
+    "fp4_w4a4": "grade_a",
+    "layernorm": "grade_a",
+    "matmul_naive": "grade_a",
+    "reduce_sum": "grade_a",
+    "relu": "grade_a",
+    "rms_norm": "grade_a",
+    "rmsnorm": "grade_a",
+    "rope": "grade_a",
+    "saxpy": "grade_a",
+    "silu_mul": "translate",
+    "softmax": "grade_a",
+    "transpose": "grade_a",
+    "vector_add": "grade_a"
+   }
   },
   "zoo_12_compared": {
-   "met": false,
-   "compared": 0,
-   "waits_on": "both of the above"
+   "met": true,
+   "compared": 12,
+   "grade_a": 12,
+   "not_compared": {}
   },
   "one_repository": {
-   "met": false,
+   "met": true,
    "repository": "sam2",
-   "waits_on": "both of the above"
+   "result": "grade_a"
   }
  },
  "limits_written_before_measuring": {
@@ -477,7 +513,377 @@
   },
   "third_party_compile": "12 of 12 translated files compile with MTLDevice.makeLibrary on the M5 Pro (zoo 11, sam2 1). They were not run, because they have no golden.",
   "control_wrong_kernel": "Not run: it needs the external golden.",
-  "what_this_does_not_show": "That any third-party kernel computes the right value. The gate needs 15 of 21 at grade A: the 6 lab kernels and 9 of the 13 external ones, and that part has not been measured.",
-  "capture_attempt": "The V100 capture of 2026-11-04 00:26 KST ended with E_KERNEL_GPU_BUSY, and no golden was written. The M5 run started at 00:25. The session cannot start the capture: the classifier denies it."
- }
+  "what_this_does_not_show": "Replaced by compared_2026_11_04, which ran after the capture succeeded.",
+  "capture_attempt": "The first capture ended with E_KERNEL_GPU_BUSY at 00:26 KST. The second, at 10:12 KST, recorded 71 of 71 cases on the V100."
+ },
+ "control_wrong_kernel": {
+  "ran": true,
+  "caught": true,
+  "detail": {
+   "group": "control",
+   "translate": {
+    "stage": "translated",
+    "warnings": [
+     "W_KERNEL_NOT_VERIFIED"
+    ],
+    "entry_points": [
+     "vector_add"
+    ]
+   },
+   "compare": {
+    "stage": "compared",
+    "status": "fail",
+    "grade": null,
+    "passed": 0,
+    "cases": 5,
+    "worst_rel_l2": 2.0,
+    "first_divergence": {
+     "kernel": "vector_add",
+     "case": "zoo.vector_add.tiny_1",
+     "output": "out",
+     "reason": "rel_l2_above_limit",
+     "rel_l2": 2.0,
+     "max_rel": 2.0,
+     "index": [
+      0
+     ],
+     "golden": -1.0164645910263062,
+     "port": 1.0164645910263062,
+     "mismatched": null,
+     "explanation": "vector_add: output out of case zoo.vector_add.tiny_1 differs from the CUDA golden (rel_l2_above_limit). The translation computes something else on these inputs."
+    },
+    "unverified": {
+     "items": [],
+     "total": 0,
+     "omitted": 0
+    },
+    "warnings": [
+     "W_KERNEL_PARTIAL",
+     "W_KERNEL_FTZ_DIFFERS",
+     "W_KERNEL_SOURCE_MISMATCH"
+    ]
+   }
+  }
+ },
+ "compared_2026_11_04": {
+  "cumsum": {
+   "group": "zoo",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 5,
+   "cases": 5,
+   "worst_rel_l2": 0.0,
+   "warnings": [
+    "W_KERNEL_PARTIAL",
+    "W_KERNEL_FTZ_DIFFERS"
+   ]
+  },
+  "embedding_gather": {
+   "group": "zoo",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 3,
+   "cases": 3,
+   "worst_rel_l2": 0.0,
+   "warnings": [
+    "W_KERNEL_PARTIAL",
+    "W_KERNEL_FTZ_DIFFERS"
+   ]
+  },
+  "layernorm": {
+   "group": "zoo",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 6,
+   "cases": 6,
+   "worst_rel_l2": 8.289298911195706e-08,
+   "warnings": [
+    "W_KERNEL_PARTIAL",
+    "W_KERNEL_FTZ_DIFFERS"
+   ]
+  },
+  "matmul_naive": {
+   "group": "zoo",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 5,
+   "cases": 5,
+   "worst_rel_l2": 5.884490955026776e-08,
+   "warnings": [
+    "W_KERNEL_PARTIAL",
+    "W_KERNEL_FTZ_DIFFERS"
+   ]
+  },
+  "reduce_sum": {
+   "group": "zoo",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 6,
+   "cases": 6,
+   "worst_rel_l2": 0.0,
+   "warnings": [
+    "W_KERNEL_PARTIAL",
+    "W_KERNEL_FTZ_DIFFERS",
+    "W_KERNEL_EXEC_ORDER"
+   ]
+  },
+  "relu": {
+   "group": "zoo",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 5,
+   "cases": 5,
+   "worst_rel_l2": 0.0,
+   "warnings": [
+    "W_KERNEL_PARTIAL",
+    "W_KERNEL_FTZ_DIFFERS"
+   ]
+  },
+  "rmsnorm": {
+   "group": "zoo",
+   "translate": "refused",
+   "status": "pass",
+   "grade": "A",
+   "passed": 6,
+   "cases": 6,
+   "worst_rel_l2": 1.0062214822122851e-07,
+   "warnings": [
+    "W_KERNEL_PARTIAL",
+    "W_KERNEL_FTZ_DIFFERS",
+    "W_KERNEL_EXEC_ORDER"
+   ]
+  },
+  "rope": {
+   "group": "zoo",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 3,
+   "cases": 3,
+   "worst_rel_l2": 1.6916120427244205e-08,
+   "warnings": [
+    "W_KERNEL_PARTIAL",
+    "W_KERNEL_FTZ_DIFFERS"
+   ]
+  },
+  "saxpy": {
+   "group": "zoo",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 5,
+   "cases": 5,
+   "worst_rel_l2": 1.9832552906615066e-09,
+   "warnings": [
+    "W_KERNEL_PARTIAL",
+    "W_KERNEL_FTZ_DIFFERS"
+   ]
+  },
+  "softmax": {
+   "group": "zoo",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 6,
+   "cases": 6,
+   "worst_rel_l2": 1.9714281336569154e-08,
+   "warnings": [
+    "W_KERNEL_PARTIAL",
+    "W_KERNEL_FTZ_DIFFERS"
+   ]
+  },
+  "transpose": {
+   "group": "zoo",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 4,
+   "cases": 4,
+   "worst_rel_l2": 0.0,
+   "warnings": [
+    "W_KERNEL_PARTIAL",
+    "W_KERNEL_FTZ_DIFFERS"
+   ]
+  },
+  "vector_add": {
+   "group": "zoo",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 5,
+   "cases": 5,
+   "worst_rel_l2": 0.0,
+   "warnings": [
+    "W_KERNEL_PARTIAL",
+    "W_KERNEL_FTZ_DIFFERS"
+   ]
+  },
+  "connected_components": {
+   "group": "sam2",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 12,
+   "cases": 12,
+   "worst_rel_l2": null,
+   "warnings": [
+    "W_KERNEL_PARTIAL",
+    "W_KERNEL_FTZ_DIFFERS",
+    "W_KERNEL_EXEC_ORDER"
+   ]
+  },
+  "fp4_decode": {
+   "group": "lab",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 6,
+   "cases": 6,
+   "worst_rel_l2": 0.0,
+   "warnings": null
+  },
+  "fp4_gemv": {
+   "group": "lab",
+   "translate": "translate",
+   "status": "pass",
+   "grade": "A",
+   "passed": 3,
+   "cases": 3,
+   "worst_rel_l2": 3.494486309323178e-16,
+   "warnings": null
+  },
+  "fp4_small_m": {
+   "group": "lab",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 4,
+   "cases": 4,
+   "worst_rel_l2": 2.1667913999367834e-08,
+   "warnings": null
+  },
+  "fp4_tiled": {
+   "group": "lab",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 4,
+   "cases": 4,
+   "worst_rel_l2": 1.634095319111157e-09,
+   "warnings": null
+  },
+  "fp4_w4a4": {
+   "group": "lab",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 3,
+   "cases": 3,
+   "worst_rel_l2": 0.0,
+   "warnings": null
+  },
+  "fp4_quantize": {
+   "group": "lab",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 2,
+   "cases": 2,
+   "worst_rel_l2": null,
+   "warnings": null
+  },
+  "rms_norm": {
+   "group": "lab",
+   "translate": "translated",
+   "status": "pass",
+   "grade": "A",
+   "passed": 3,
+   "cases": 3,
+   "worst_rel_l2": 0.0,
+   "warnings": null
+  },
+  "silu_mul": {
+   "group": "lab",
+   "translate": "translate",
+   "status": "pass",
+   "grade": "A",
+   "passed": 1,
+   "cases": 1,
+   "worst_rel_l2": 1.4609998338456716e-08,
+   "warnings": null
+  },
+  "nvdiffrast.interpolate": {
+   "group": "nvdiffrast",
+   "translate": "refused",
+   "status": null,
+   "grade": null,
+   "passed": null,
+   "cases": null,
+   "worst_rel_l2": null,
+   "warnings": null
+  },
+  "nvdiffrast.rasterize": {
+   "group": "nvdiffrast",
+   "translate": "refused",
+   "status": null,
+   "grade": null,
+   "passed": null,
+   "cases": null,
+   "worst_rel_l2": null,
+   "warnings": null
+  },
+  "nvdiffrast.antialias": {
+   "group": "nvdiffrast",
+   "translate": "refused",
+   "status": null,
+   "grade": null,
+   "passed": null,
+   "cases": null,
+   "worst_rel_l2": null,
+   "warnings": null
+  },
+  "nvdiffrast.texture_kernel": {
+   "group": "nvdiffrast",
+   "translate": "refused",
+   "status": null,
+   "grade": null,
+   "passed": null,
+   "cases": null,
+   "worst_rel_l2": null,
+   "warnings": null
+  },
+  "control.wrong_vector_add": {
+   "group": "control",
+   "translate": "translated",
+   "status": "fail",
+   "grade": null,
+   "passed": 0,
+   "cases": 5,
+   "worst_rel_l2": 2.0,
+   "warnings": [
+    "W_KERNEL_PARTIAL",
+    "W_KERNEL_FTZ_DIFFERS",
+    "W_KERNEL_SOURCE_MISMATCH"
+   ]
+  }
+ },
+ "failures_classified": {
+  "fp4_gemv": "translate: woof has no __half. Its other 3 cases are grade A, but the kernel does not count",
+  "silu_mul": "translate: the same reason. Its other case is grade A, but the kernel does not count",
+  "nvdiffrast, 4 files": "refused by this layer before translation: __match_any_sync and others. Not part of the gate's count"
+ },
+ "does_not_show": [
+  "rmsnorm is refused by default for __shfl_xor_sync, and needs --allow-warp-level. Its value match holds on these 6 cases, and warp behavior depends on the group size, so it is not proven elsewhere. Without it the count is 18 of 21, still above 70 percent",
+  "sam2: each of the 6 entry points runs by itself on 2 sizes. The full connected-components pipeline and the SAM2 app did not run. merge is compared on a sparse image only, because a dense image can give another valid forest",
+  "nvdiffrast does not port",
+  "A fault that the inputs do not reach cannot be caught. One wrong-kernel control ran (vector_add, plus becomes minus), and it fails",
+  "One M5 Pro and one V100",
+  "FTZ differs between the devices: W_KERNEL_FTZ_DIFFERS on the 14 external and control runs"
+ ]
 }

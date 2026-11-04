@@ -15,11 +15,11 @@
 | M0 가정 검증 | 2 | 2 | |
 | M1 레시피 | 3 | 3 | |
 | M2 PyTorch 호환 | 4 | 4 | |
-| M3 CUDA 커널 | 1 | 5 | 커널 golden, 번역 등급, zoo, 실제 저장소 |
+| M3 CUDA 커널 | 5 | 5 | |
 | M4 로봇 시뮬레이션 | 3 | 4 | 처리량 공개 |
 | M5 레이트레이싱과 센서 | 2 | 4 | V100 비교, 프레임 속도 공개 |
 | M6 통합 릴리스 | 0 | 3 | 새 Mac 재현, 보고서 공개, 미검증 목록 공개 |
-| **합계** | **15** | **25** | |
+| **합계** | **19** | **25** | |
 
 **기함 작업 5개 중 처음부터 재현된 것은 없습니다.** [아래](#기함-작업)를 보십시오.
 
@@ -55,10 +55,10 @@
 
 | ID | 조건 | 상태 | 등급 | 기록 | 결과와 한계 |
 |---|---|---|---|---|---|
-| M3-1 | V100 원본으로 기록한 커널 golden 20개 이상 | 미달 | A (8개만) | `validation/kernel-m3.json`, `validation/kernel-translation.json` | **8개, case 29개.** 직접 쓴 Metal이 8개 모두 등급 A입니다. 외부 13개 파일의 case 71개는 준비만 했고, 하네스를 nvcc로 컴파일한 적이 없습니다 |
-| M3-2 | 번역 후 등급 A 70% 이상, 실패 분류 | 미달 | 미검증 | `validation/kernel-m3.json` | **부분 측정.** woof 1.1.5.2로 저장소 커널 8개 중 6개가 등급 A입니다. `fp4_gemv`와 `silu_mul`은 `__half` 케이스의 번역이 실패합니다(woof에 이 타입이 없음). 외부 13개는 기준값이 없어 비교하지 못했습니다 |
-| M3-3 | kernelport zoo 12개를 번역, 실행, V100과 비교 | 미달 | 미검증 | `validation/kernel-m3.json` | 비교 0개. 11개는 번역과 Metal 컴파일을 통과했고 실행은 안 했습니다. `rmsnorm`은 `__shfl_xor_sync`로 거부 |
-| M3-4 | 실제 저장소 하나의 커널 전체 처리 | 미달 | 미검증 | `validation/kernel-m3.json` | sam2 커널 6개가 번역과 Metal 컴파일을 통과했고 값 비교는 아직입니다. nvdiffrast 4개는 8~24건으로 거부되며 모두 `__match_any_sync`를 씁니다. 이 계층의 결함이던 거부 이유 2종(`operator`, `make_float4` 재귀)은 고쳤습니다 |
+| M3-1 | V100 원본으로 기록한 커널 golden 20개 이상 | 달성 | A | `validation/kernel-golden-v100-m3`, `validation/kernel-translation.json` | 21개: 저장소 8개, 외부 13개(zoo 12, sam2). 외부 case 71개를 nvcc 12.0으로 V100에서 기록 |
+| M3-2 | 번역 후 등급 A 70% 이상, 실패 분류 | 달성 | A | `validation/kernel-m3.json` | woof로 19/21(90%). `fp4_gemv`, `silu_mul`은 woof에 `__half`가 없어 실패. `rmsnorm`은 `--allow-warp-level`이 필요하며, 빼면 18/21 |
+| M3-3 | kernelport zoo 12개를 번역, 실행, V100과 비교 | 달성 | A | `validation/kernel-m3.json` | 12개 모두 등급 A, 최악 1.0e-7. `rmsnorm`은 플래그가 필요하고 그 입력에서의 일치입니다. 틀린 커널 대조군은 실패 |
+| M3-4 | 실제 저장소 하나의 커널 전체 처리 | 달성 | A | `validation/kernel-m3.json` | sam2 진입점 6개 모두 등급 A(case 12개). 각각 따로 실행했고 전체 파이프라인과 앱은 아닙니다. `merge`는 희소 이미지만. nvdiffrast 4개는 `__match_any_sync` 등으로 거부 |
 | M3-5 | 값이 틀린 번역을 넣으면 찾아냄 | 달성 | A | `validation/kernel-translation.json` | 틀린 9건 모두 diverged, 맞는 9건 모두 ok. 이 저장소의 커널이며, 입력이 닿지 않는 결함은 잡을 수 없습니다 |
 
 ### M4. 로봇 시뮬레이션
@@ -95,7 +95,7 @@
 |---|---|---|---|---|---|---|
 | F1 | FlashAttention + bitsandbytes로 LLM 추론 | A | 재현 안 됨 | 미검증 | `validation/m2-substitutes.json`, `validation/cuda-golden-v100.json` | 두 패키지를 쓰는 프로그램을 돌린 기록이 없습니다. mps-flash-attn은 torch 2.13의 float32에서 CPU sdpa와 최악 4.6e-7(허용 1e-4)이지만, torch 2.15에는 설치되지 않고 `flash_attn_func`가 없어 그대로 대체하지 못합니다. mps-bitsandbytes는 검사 프로세스가 exit -11로 끝나 실패입니다. 별개로 Qwen2.5-0.5B의 bf16 MLX 포트는 V100 golden과 isolated 최악 9.8e-6(허용 1e-4)로 일치합니다. 이것은 이 작업을 재현한 기록이 아닙니다 |
 | F2 | 3D Gaussian Splatting 학습 | B | 재현 안 됨 | 미검증 | `validation/m2-substitutes.json` | metalsplat은 손 계산과 비교한 렌더링 검사를 통과했지만(최고점 오차 0 px) 학습은 돌리지 않았고 `rasterization`이 없어 gsplat을 그대로 대체하지 못합니다. msplat은 학습은 돌았지만(held-out 35.96 dB) 시점 오차 3.14 px로 허용 3 px를 넘어 실패입니다. CUDA 비교는 없습니다 |
-| F3 | CuPy 또는 커스텀 `.cu` 커널 앱 | A | 재현 안 됨 | 미검증 | `validation/kernel-translation.json`, `validation/kernel-m3.json`, `src/cumlx/verify/recipes.json` | 앱을 돌린 기록이 없습니다. 이 저장소의 커널 8개는 직접 쓴 Metal로 V100과 등급 A입니다. 외부 커널은 실행되지 않았습니다. woof의 CuPy 파사드는 `asarray`, `asnumpy`, 커널 실행만 돌린 등급 C입니다 |
+| F3 | CuPy 또는 커스텀 `.cu` 커널 앱 | A | 재현 안 됨 | 미검증 | `validation/kernel-translation.json`, `validation/kernel-m3.json`, `src/cumlx/verify/recipes.json` | 앱을 돌린 기록이 없습니다. 이 저장소의 커널 8개는 직접 쓴 Metal로 V100과 등급 A입니다. 외부 커널 13개는 woof 번역과 V100 비교까지 했지만 앱은 아닙니다. woof의 CuPy 파사드는 `asarray`, `asnumpy`, 커널 실행만 돌린 등급 C입니다 |
 | F4 | Isaac Lab 사족 보행 정책 학습과 추론 | 추론 A, 물리 B | 일부 달성, 다른 경로 | 추론 A, 물리 B(일부) | OrchardSim `validation/mlx-closed-loop-o4.json`, `isaac-lab-metal.json`, `m4-go2-seeds.json`, `m4-trajectory.json`, `warp-metal-o2.json`, `validation/m4-sim.json` | OrchardSim 경로는 Isaac Lab, warp-metal, 런타임 패치입니다. 로드맵의 `cumlx.sim` 경로는 Isaac Lab이 아닌 Genesis의 Go2 작업으로 따로 돌렸습니다(`validation/m4-sim.json`). 시드 1개에서 +0.81, -0.86, 0.00 m/s이고 MLX 정책은 rsl_rl과 최악 6.1e-7, Genesis와 MuJoCo 비교는 1초 동안 통과입니다. 추론은 폐루프 1000 step에서 rsl_rl과 최악 2.70e-7(허용 1e-4)이고, 가중치 하나의 1% 변경은 이 허용치로 잡히지 않습니다. Go2의 CPU와 Metal 비교는 통과(속도 차이 0.002 m/s, 허용 0.05)했지만 MuJoCo Warp 일치 시험은 실패입니다. 새 Mac 재현은 없습니다 |
 | F5 | 물리 기반 카메라 센서 | B | 일부 달성 | B(CPU 렌더와 물리 상태 기준), CUDA는 미검증 | `validation/m5-render.json`, `validation/m4-sim.json`, `validation/m5-lidar.json`, `docs/RENDER-SENSORS.md` | `cumlx.render`로 RGB, 깊이, 세그멘테이션을 만들고 예제가 물리 상태와 일치합니다. 목표인 CUDA 비교는 돌리지 않았습니다. `cumlx.sim` 카메라는 cartpole의 상자 링크로 두 엔진에서 21개 프레임 모두 통과했고(`validation/m4-sim.json`), 레이캐스트 센서는 정확한 거리와 최악 5.6e-6 m입니다(`validation/m5-lidar.json`). USD는 메시, 카메라, 조명 2종, 확산 색만 읽으며, 작은 장면 2개가 같은 장면의 Mitsuba 사전과 등급 B입니다(`validation/m5-usd.json`). 다른 도구의 자산은 시험하지 않았습니다 |
 
