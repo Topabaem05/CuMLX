@@ -59,7 +59,7 @@ def test_every_gate_has_a_row_with_the_same_state_and_a_grade(texts):
 
 def test_a_row_that_disagrees_is_found(texts):
     roadmap, report = texts
-    assert any(p.startswith('M2-2') for p in disagreements(roadmap, re.sub(r'(\| M2-2 \|[^|]*\| )미달', r'\1달성', report)))
+    assert any(p.startswith('M6-1') for p in disagreements(roadmap, re.sub(r'(\| M6-1 \|[^|]*\| )미달', r'\1달성', report)))
     assert any(p.startswith('M3-5') for p in disagreements(roadmap, re.sub(r'(\| M3-5 \|[^|]*\| 달성 \| )A', r'\1좋음', report)))
     assert any('no row' in p for p in disagreements(roadmap, re.sub(r'^\| M5-3 .*$', '', report, flags=re.M)))
     ticked = roadmap.replace('- [ ] 기함 작업을 새 Mac에서', '- [x] 기함 작업을 새 Mac에서')
