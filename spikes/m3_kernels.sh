@@ -62,7 +62,7 @@ status)
     exit "$code"
     ;;
 --work)
-    "$UV" venv -q --python 3.12 "$VENV" || exit $?
+    [ -x "$PY" ] || "$UV" venv -q --python 3.12 "$VENV" || exit $?  # A second run keeps the environment. uv refuses to replace one by default.
     # The same packages as spikes/run_all.sh. It stays in its own environment: woof adds a .pth file and a cupy facade there.
     "$UV" pip install -q --python "$PY" metal-woof==1.1.5.2 'libclang>=18.1' 'mlx>=0.29' 'nanobind>=3.0,<3.2' || exit $?
     "$PY" "$REPO/spikes/m3_kernels.py" fetch --root "$ROOT" || exit $?
