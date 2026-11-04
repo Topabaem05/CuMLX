@@ -33,6 +33,19 @@ if [ "$(df -k / | awk 'NR==2 {print int($4 / 1000000)}')" -lt 40 ]; then
 fi
 df -k / | tail -n 1 >>"$OUT/disk.txt"
 
+# The host can offer a web proxy, for a VM whose NAT does not reach the internet. softwareupdate reads the system's setting, and the other tools read the variables.
+if [ -n "${CUMLX_VM_PROXY:-}" ]; then
+    http_proxy=$CUMLX_VM_PROXY https_proxy=$CUMLX_VM_PROXY HTTP_PROXY=$CUMLX_VM_PROXY HTTPS_PROXY=$CUMLX_VM_PROXY no_proxy=localhost,127.0.0.1 NO_PROXY=localhost,127.0.0.1
+    export http_proxy https_proxy HTTP_PROXY HTTPS_PROXY no_proxy NO_PROXY
+    proxy_port=${CUMLX_VM_PROXY##*:}
+    networksetup -listallnetworkservices | tail -n +2 | grep -v '^\*' | while read -r service; do
+        for setting in -setwebproxy -setsecurewebproxy; do
+            echo "$PASSWORD" | sudo -S -p "" networksetup "$setting" "$service" 127.0.0.1 "$proxy_port"
+        done
+    done >"$OUT/proxy.txt" 2>&1
+fi
+curl -sS -m 30 -o /dev/null https://github.com >"$OUT/internet.txt" 2>&1 || finish setup_error_no_internet
+
 stage "3/9 command line tools, for git"
 if ! xcode-select -p >/dev/null 2>&1; then
     trigger=/tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress

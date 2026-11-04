@@ -7,6 +7,7 @@
 #   sh spikes/m6_vm_reproduce.sh clean     # deletes the VM and the image, and keeps the results
 #   sh spikes/m6_vm_reproduce.sh attach IP # the same work in a Mac that is already running, such as one from spikes/m6_terminal_mac.sh. It logs in as CUMLX_VM_USER with CUMLX_VM_PASSWORD, which default to admin and admin
 #
+# CUMLX_VM_PROXY=1 with attach is for a guest whose NAT does not reach the internet: the guest's web traffic goes through spikes/m6_vm_proxy.py over ssh -R, and no setting on this Mac changes. The result says so.
 # It uses Tart (FSL-1.1-ALv2, third party, checked by SHA-256) and an image built by the Tart project. The image has user admin, password admin, on the VM's private network.
 # It stops the VM when this Mac's memory in use reaches 38 GB or its free disk falls to 15 GB. Those stops are never a pass.
 # A VM is not a new machine: the GPU is Apple's paravirtual device on this same Mac. The results say so.
@@ -35,6 +36,8 @@ case "$CUMLX_VM_PASSWORD" in
     exit 2
     ;;
 esac
+PROXY_PORT=${CUMLX_VM_PROXY_PORT:-38128}
+GUEST_PROXY_PORT=3128
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 REPO=$(dirname -- "$HERE")
 ROOT=${CUMLX_VM_ROOT:-$HOME/cumlx-vm}
@@ -68,7 +71,33 @@ ask_password() {
     chmod 700 "$ROOT/askpass.sh"
 }
 to_guest() {
-    SSH_ASKPASS="$ROOT/askpass.sh" SSH_ASKPASS_REQUIRE=force DISPLAY=:0 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o ConnectTimeout=10 -o LogLevel=ERROR "$VM_USER@$GUEST" "$@"
+    # ssh reads its options only before the destination, so any given here go ahead of it.
+    opts=
+    while [ "${1:-}" = -o ] || [ "${1:-}" = -N ] || [ "${1:-}" = -R ]; do
+        case "$1" in
+        -N)
+            opts="$opts -N"
+            shift
+            ;;
+        *)
+            opts="$opts $1 $2"
+            shift 2
+            ;;
+        esac
+    done
+    # shellcheck disable=SC2086  # opts holds only the fixed words above.
+    SSH_ASKPASS="$ROOT/askpass.sh" SSH_ASKPASS_REQUIRE=force DISPLAY=:0 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o ConnectTimeout=10 -o LogLevel=ERROR $opts "$VM_USER@$GUEST" "$@"
+}
+start_proxy() {
+    python3 "$HERE/m6_vm_proxy.py" "$PROXY_PORT" >"$ROOT/proxy.log" 2>&1 &
+    PROXY_PID=$!
+    trap 'kill "$PROXY_PID" "${TUNNEL_PID:-}" 2>/dev/null' EXIT
+    trap 'exit 143' TERM
+    start_tunnel
+}
+start_tunnel() {
+    to_guest -o ServerAliveInterval=30 -o ExitOnForwardFailure=yes -N -R "$GUEST_PROXY_PORT:127.0.0.1:$PROXY_PORT" >>"$ROOT/proxy.log" 2>&1 &
+    TUNNEL_PID=$!
 }
 stop_vm() {
     if [ "$MODE" = --work-attach ]; then
@@ -201,7 +230,7 @@ attach)
     ;;
 --work | --work-attach) ;;
 *)
-    sed -n 2,12p "$0" >&2
+    sed -n 2,13p "$0" >&2
     exit 2
     ;;
 esac
@@ -249,7 +278,14 @@ fi
 COMMIT=$(git -C "$REPO" rev-parse HEAD)
 stage "5/6 the guest script. The guest gets CuMLX $COMMIT from the public repository"
 to_guest 'cat > "$HOME/m6_vm_guest.sh"' <"$HERE/m6_vm_guest.sh" || { verdict setup_error_copy; stop_vm; exit 1; }
-to_guest "CUMLX_VM_PASSWORD='$CUMLX_VM_PASSWORD' nohup caffeinate -ims sh \"\$HOME/m6_vm_guest.sh\" $COMMIT >\"\$HOME/guest.log\" 2>&1 </dev/null & echo started" || { verdict setup_error_guest; stop_vm; exit 1; }
+GUEST_ENV=
+if [ -n "${CUMLX_VM_PROXY:-}" ]; then
+    start_proxy
+    GUEST_ENV="CUMLX_VM_PROXY=http://127.0.0.1:$GUEST_PROXY_PORT"
+    mkdir -p "$RESULT"
+    echo "The guest reached the internet through a web proxy on the host, over ssh -R, because the VM's NAT did not reach it." >"$RESULT/network.txt"
+fi
+to_guest "$GUEST_ENV CUMLX_VM_PASSWORD='$CUMLX_VM_PASSWORD' nohup caffeinate -ims sh \"\$HOME/m6_vm_guest.sh\" $COMMIT >\"\$HOME/guest.log\" 2>&1 </dev/null & echo started" || { verdict setup_error_guest; stop_vm; exit 1; }
 
 stage "6/6 running in the guest. Limits on this Mac: $MAX_USED_GB GB of memory, $MIN_FREE_GB GB of free disk"
 begin=$(date +%s)
@@ -277,6 +313,9 @@ while :; do
         verdict stopped_time
         stop_vm
         exit 1
+    fi
+    if [ -n "${TUNNEL_PID:-}" ] && ! kill -0 "$TUNNEL_PID" 2>/dev/null; then
+        start_tunnel
     fi
     now=$(to_guest 'cat "$HOME/repro-result/stage.txt" 2>/dev/null' 2>/dev/null || true)
     if [ -n "$now" ] && [ "$now" != "$last" ]; then

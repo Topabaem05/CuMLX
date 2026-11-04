@@ -238,13 +238,16 @@ def test_a_test_run_never_starts_the_guest_script(box):
     assert "m6_vm_guest.sh" in box.log.read_text()
 
 
-def guest_box(box, in_vm):
+def guest_box(box, in_vm, **env):
     """Each tool that the guest script would use is a stub, so the script can run here, and the log shows how far it got."""
     box.stub("sysctl", f'echo {1 if in_vm else 0}')
-    for tool in ("sudo", "diskutil", "softwareupdate", "git", "curl", "sw_vers", "system_profiler", "xcode-select", "touch"):
+    for tool in ("sudo", "diskutil", "softwareupdate", "git", "sw_vers", "system_profiler", "xcode-select", "touch"):
         box.stub(tool, "exit 0")
+    if not (box.tmp / "stubs" / "curl").exists():
+        box.stub("curl", "exit 0")
+    box.stub("networksetup", 'echo "An asterisk denotes a disabled service."; echo Ethernet; echo "*Off"')
     (box.tmp / "home").mkdir(exist_ok=True)
-    return subprocess.run(["sh", str(GUEST), "abc"], env={**box.env, "HOME": str(box.tmp / "home")}, capture_output=True, text=True, timeout=30, check=False)
+    return subprocess.run(["sh", str(GUEST), "abc"], env={**box.env, "HOME": str(box.tmp / "home"), **env}, capture_output=True, text=True, timeout=30, check=False)
 
 
 def test_the_guest_script_does_nothing_outside_a_vm(box):
@@ -292,3 +295,46 @@ def test_the_askpass_script_reads_the_password_from_the_environment(box):
     run(box, "--work-attach", "192.0.2.9", CUMLX_VM_TERMINAL_MAC=str(box.tmp / "stubs" / "tm"), CUMLX_VM_PASSWORD="pw-for-a-test")
     said = subprocess.run(["sh", str(box.root / "askpass.sh")], env={"CUMLX_VM_PASSWORD": "pw-for-a-test"}, capture_output=True, text=True, check=True)
     assert said.stdout.strip() == "pw-for-a-test"
+
+
+def test_a_guest_with_no_internet_says_so(box):
+    box.stub("curl", "exit 28")
+    done = guest_box(box, in_vm=True)
+    assert done.returncode == 0, done.stderr
+    assert (box.tmp / "home" / "repro-result" / "guest_verdict.txt").read_text().strip() == "setup_error_no_internet"
+    assert "softwareupdate" not in box.log.read_text()
+
+
+def test_the_guest_uses_a_proxy_only_when_given_one(box):
+    guest_box(box, in_vm=True)
+    assert "networksetup" not in box.log.read_text()
+    box.log.write_text("")
+    guest_box(box, in_vm=True, CUMLX_VM_PROXY="http://127.0.0.1:3128", CUMLX_VM_PASSWORD="pw")
+    calls = box.log.read_text()
+    assert "networksetup -setsecurewebproxy Ethernet 127.0.0.1 3128" in calls
+    assert "networksetup -setwebproxy Ethernet 127.0.0.1 3128" in calls
+    assert "Off" not in calls  # A disabled service is left alone.
+
+
+def test_attach_with_a_proxy_opens_a_tunnel_and_the_record_says_so(box):
+    repo_with_git(box)
+    (box.tmp / "host_home").mkdir()
+    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text("pass\n")
+    box.stub("tm", "exit 0")
+    done = run(box, "--work-attach", "192.0.2.9", CUMLX_VM_TERMINAL_MAC=str(box.tmp / "stubs" / "tm"), CUMLX_VM_PROXY="1", CUMLX_VM_PROXY_PORT="0")
+    assert done.returncode == 0, done.stdout + done.stderr
+    calls = box.log.read_text()
+    assert "-N -R 3128:127.0.0.1:0 admin@192.0.2.9" in calls
+    assert "CUMLX_VM_PROXY=http://127.0.0.1:3128" in calls
+    assert "proxy" in (box.root / "result" / "network.txt").read_text()
+
+
+def test_attach_with_no_proxy_opens_no_tunnel_and_records_none(box):
+    repo_with_git(box)
+    (box.tmp / "host_home").mkdir()
+    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text("pass\n")
+    box.stub("tm", "exit 0")
+    assert run(box, "--work-attach", "192.0.2.9", CUMLX_VM_TERMINAL_MAC=str(box.tmp / "stubs" / "tm")).returncode == 0
+    calls = box.log.read_text()
+    assert " -R " not in calls and "CUMLX_VM_PROXY" not in calls
+    assert not (box.root / "result" / "network.txt").exists()
