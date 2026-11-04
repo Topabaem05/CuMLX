@@ -663,16 +663,6 @@
        "p95": 438.0,
        "max": 762.4
       },
-      "competing_during_max_cpu_percent": {
-       "com.apple.WebKit.WebContent": 101.2,
-       "python": 100.0,
-       "UsageTrackingAgent": 92.4,
-       "WindowServer": 79.3,
-       "deleted": 74.2,
-       "cloudd": 50.4,
-       "Autodesk Fusion": 46.4,
-       "MTLCompilerService": 44.9
-      },
       "uptime_before": "10:10  up 5 days, 20:49, 5 users, load averages: 3.51 4.52 4.74",
       "uptime_after": "10:14  up 5 days, 20:53, 5 users, load averages: 6.00 5.27 5.02",
       "argv": [
@@ -729,16 +719,6 @@
        "median": 319.0,
        "p95": 464.09999999999997,
        "max": 464.8
-      },
-      "competing_during_max_cpu_percent": {
-       "com.apple.WebKit.WebContent": 101.4,
-       "python": 98.8,
-       "mobileassetd": 94.6,
-       "replayd": 83.4,
-       "System Settings": 76.6,
-       "Safari": 71.4,
-       "du": 61.5,
-       "WindowServer": 53.6
       },
       "uptime_before": "10:14  up 5 days, 20:53, 5 users, load averages: 5.70 5.23 5.00",
       "uptime_after": "10:17  up 5 days, 20:55, 5 users, load averages: 6.32 6.16 5.45",
@@ -847,16 +827,6 @@
        "p95": 398.7,
        "max": 591.6
       },
-      "competing_during_max_cpu_percent": {
-       "Python": 199.9,
-       "com.apple.WebKit.WebContent": 101.2,
-       "python": 99.6,
-       "duetexpertd": 85.5,
-       "intelligenceflowd": 82.6,
-       "Claude Helper (Renderer)": 60.7,
-       "Safari": 54.3,
-       "com.apple.WebKit.Networking": 51.1
-      },
       "uptime_before": "10:18  up 5 days, 20:57, 5 users, load averages: 6.55 6.33 5.60",
       "uptime_after": "10:24  up 5 days, 21:03, 5 users, load averages: 6.05 5.92 5.63",
       "argv": [
@@ -941,16 +911,6 @@
        "median": 354.2,
        "p95": 513.9,
        "max": 653.9
-      },
-      "competing_during_max_cpu_percent": {
-       "Claude Helper": 114.4,
-       "Claude Helper (Renderer)": 103.4,
-       "com.apple.WebKit.WebContent": 101.3,
-       "python": 99.7,
-       "ScreenTimeAgent": 89.8,
-       "duetexpertd": 87.1,
-       "com.apple.Safari.History": 82.8,
-       "BackgroundShortcutRunner": 56.4
       },
       "uptime_before": "10:31  up 5 days, 21:09, 5 users, load averages: 4.40 5.10 5.32",
       "uptime_after": "10:37  up 5 days, 21:16, 5 users, load averages: 6.57 5.78 5.53",
@@ -1037,16 +997,6 @@
        "p95": 519.3,
        "max": 784.9
       },
-      "competing_during_max_cpu_percent": {
-       "kicad-cli": 465.4,
-       "Claude Helper (Renderer)": 159.2,
-       "com.apple.WebKit.WebContent": 115.0,
-       "python": 100.0,
-       "unzip": 92.6,
-       "Safari": 85.6,
-       "com.apple.WebKit.GPU": 85.5,
-       "mediaanalysisd": 71.4
-      },
       "uptime_before": "10:24  up 5 days, 21:03, 5 users, load averages: 5.88 5.89 5.62",
       "uptime_after": "10:30  up 5 days, 21:09, 5 users, load averages: 4.84 5.21 5.36",
       "argv": [
@@ -1131,16 +1081,6 @@
        "median": 339.2,
        "p95": 511.5,
        "max": 568.1
-      },
-      "competing_during_max_cpu_percent": {
-       "Claude Helper (Renderer)": 168.6,
-       "com.apple.WebKit.WebContent": 101.4,
-       "python": 99.7,
-       "perl": 91.8,
-       "mobileassetd": 89.6,
-       "duetexpertd": 88.8,
-       "Google Chrome Helper (Aperitif Renderer)": 83.7,
-       "WindowServer": 62.7
       },
       "uptime_before": "10:37  up 5 days, 21:16, 5 users, load averages: 6.17 5.72 5.51",
       "uptime_after": "10:43  up 5 days, 21:22, 5 users, load averages: 6.00 6.24 5.89",
@@ -1317,11 +1257,6 @@
      "p95": 305.6,
      "max": 305.6
     },
-    "competing_during_max_cpu_percent": {
-     "com.apple.WebKit.WebContent": 100.6,
-     "python": 98.4,
-     "WindowServer": 32.1
-    },
     "uptime_before": "10:17  up 5 days, 20:56, 5 users, load averages: 6.22 6.14 5.45",
     "uptime_after": "10:17  up 5 days, 20:56, 5 users, load averages: 6.02 6.10 5.45",
     "argv": [
@@ -1384,16 +1319,6 @@
      "median": 375.9,
      "p95": 860.9,
      "max": 860.9
-    },
-    "competing_during_max_cpu_percent": {
-     "kicad-cli": 606.3,
-     "Claude Helper (Renderer)": 151.4,
-     "com.apple.WebKit.WebContent": 101.7,
-     "python": 98.3,
-     "Safari": 94.1,
-     "SafariNotificationAgent": 57.2,
-     "WindowServer": 50.9,
-     "coreduetd": 38.8
     },
     "uptime_before": "10:17  up 5 days, 20:56, 5 users, load averages: 5.71 6.03 5.43",
     "uptime_after": "10:18  up 5 days, 20:57, 5 users, load averages: 7.10 6.42 5.62",

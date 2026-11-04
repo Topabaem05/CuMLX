@@ -39,12 +39,25 @@ def test_the_list_holds_only_hashes():
     assert all(re.fullmatch(r'[0-9a-f]{64}', value) for value in PRIVATE_TOKEN_SHA256)
 
 
+def _files_to_scan(repo: Path) -> list[str]:
+    """Tracked files, and new files that git does not ignore: a check before a commit must read what the commit is about to add."""
+    done = subprocess.run(['git', 'ls-files', '-z', '--cached', '--others', '--exclude-standard'], cwd=repo, capture_output=True, check=True)
+    return [name for name in done.stdout.decode().split('\0') if name]
+
+
+def test_the_scan_reads_a_new_file_and_leaves_an_ignored_one(tmp_path):
+    subprocess.run(['git', 'init', '-q', str(tmp_path)], check=True)
+    (tmp_path / '.gitignore').write_text('ignored.txt\n')
+    (tmp_path / 'new.txt').write_text('x')
+    (tmp_path / 'ignored.txt').write_text('x')
+    assert set(_files_to_scan(tmp_path)) == {'.gitignore', 'new.txt'}
+
+
 def test_no_tracked_file_holds_a_private_token():
     if not (REPO / '.git').exists():
         pytest.skip('this copy has no git metadata, so it has no tracked files to read')
-    names = subprocess.run(['git', 'ls-files', '-z'], cwd=REPO, capture_output=True, check=True).stdout.decode().split('\0')
     found = {}
-    for name in filter(None, names):
+    for name in _files_to_scan(REPO):
         path = REPO / name
         if path.is_file():
             tokens = _private_tokens(path.read_bytes().decode('utf-8', 'ignore'), PRIVATE_TOKEN_SHA256)

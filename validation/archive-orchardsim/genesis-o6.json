@@ -58,15 +58,6 @@
         "p95": 443.0,
         "max": 443.0
        },
-       "competing_during_max_cpu_percent": {
-        "com.apple.WebKit.WebContent": 101.2,
-        "python": 98.4,
-        "solve": 98.2,
-        "MTLCompilerService": 95.6,
-        "WindowServer": 43.0,
-        "claude": 34.1,
-        "launchd": 22.3
-       },
        "uptime_before": "10:45  up 5 days, 21:24, 5 users, load averages: 4.70 5.83 5.78",
        "uptime_after": "10:46  up 5 days, 21:25, 5 users, load averages: 5.69 5.89 5.80",
        "system_used_gb_peak": null,
@@ -117,16 +108,6 @@
         "p95": 830.6999999999999,
         "max": 830.6999999999999
        },
-       "competing_during_max_cpu_percent": {
-        "kicad-cli": 360.5,
-        "com.apple.WebKit.WebContent": 100.6,
-        "solve": 99.0,
-        "python": 94.7,
-        "coreduetd": 48.4,
-        "WindowServer": 47.4,
-        "modelcatalogd": 32.2,
-        "TGOnDeviceInferenceProviderService": 24.8
-       },
        "uptime_before": "10:50  up 5 days, 21:28, 5 users, load averages: 6.49 6.16 5.92",
        "uptime_after": "10:50  up 5 days, 21:29, 5 users, load averages: 7.22 6.38 6.01",
        "system_used_gb_peak": null,
@@ -176,16 +157,6 @@
         "median": 862.9,
         "p95": 1122.4,
         "max": 1122.4
-       },
-       "competing_during_max_cpu_percent": {
-        "Autodesk Fusion": 346.7,
-        "com.apple.WebKit.WebContent": 101.0,
-        "solve": 99.1,
-        "python": 99.0,
-        "WindowServer": 93.1,
-        "XprotectService": 83.1,
-        "mediaanalysisd": 76.8,
-        "MTLCompilerService": 62.9
        },
        "uptime_before": "10:52  up 5 days, 21:31, 5 users, load averages: 12.94 8.79 7.01",
        "uptime_after": "10:53  up 5 days, 21:32, 5 users, load averages: 12.83 9.20 7.22",
@@ -246,16 +217,6 @@
         "p95": 608.8,
         "max": 608.8
        },
-       "competing_during_max_cpu_percent": {
-        "Python": 234.1,
-        "com.apple.WebKit.WebContent": 101.2,
-        "python": 100.0,
-        "solve": 100.0,
-        "replicatord": 83.7,
-        "MTLCompilerService": 54.2,
-        "WindowServer": 30.4,
-        "StatusKitAgent": 25.2
-       },
        "uptime_before": "10:46  up 5 days, 21:25, 5 users, load averages: 5.55 5.86 5.79",
        "uptime_after": "10:47  up 5 days, 21:26, 5 users, load averages: 5.36 5.77 5.76",
        "system_used_gb_peak": null,
@@ -306,15 +267,6 @@
         "p95": 583.0,
         "max": 583.0
        },
-       "competing_during_max_cpu_percent": {
-        "com.apple.WebKit.WebContent": 101.5,
-        "solve": 100.0,
-        "python": 98.2,
-        "Python": 75.8,
-        "WindowServer": 61.7,
-        "MTLCompilerService": 30.6,
-        "coreduetd": 21.3
-       },
        "uptime_before": "10:50  up 5 days, 21:29, 5 users, load averages: 6.88 6.32 5.99",
        "uptime_after": "10:51  up 5 days, 21:29, 5 users, load averages: 7.62 6.55 6.08",
        "system_used_gb_peak": null,
@@ -364,16 +316,6 @@
         "median": 622.9,
         "p95": 846.6,
         "max": 846.6
-       },
-       "competing_during_max_cpu_percent": {
-        "mediaanalysisd": 114.3,
-        "mds_stores": 104.0,
-        "com.apple.WebKit.WebContent": 101.2,
-        "solve": 99.7,
-        "python": 95.4,
-        "securityd": 86.3,
-        "mds": 68.6,
-        "MTLCompilerService": 60.5
        },
        "uptime_before": "10:53  up 5 days, 21:32, 5 users, load averages: 12.44 9.18 7.22",
        "uptime_after": "10:53  up 5 days, 21:32, 5 users, load averages: 10.56 9.02 7.23",
@@ -434,14 +376,6 @@
         "p95": 574.1,
         "max": 574.1
        },
-       "competing_during_max_cpu_percent": {
-        "kicad-cli": 319.4,
-        "com.apple.WebKit.WebContent": 101.2,
-        "solve": 100.0,
-        "MTLCompilerService": 70.5,
-        "WindowServer": 30.3,
-        "python": 23.7
-       },
        "uptime_before": "10:47  up 5 days, 21:26, 5 users, load averages: 5.25 5.74 5.75",
        "uptime_after": "10:48  up 5 days, 21:26, 5 users, load averages: 6.55 6.01 5.84",
        "system_used_gb_peak": null,
@@ -492,16 +426,6 @@
         "p95": 936.0,
         "max": 936.0
        },
-       "competing_during_max_cpu_percent": {
-        "Autodesk Fusion": 246.6,
-        "mds_stores": 234.1,
-        "com.apple.WebKit.WebContent": 100.8,
-        "solve": 99.7,
-        "python": 95.7,
-        "uv": 76.1,
-        "MTLCompilerService": 63.9,
-        "WindowServer": 44.0
-       },
        "uptime_before": "10:51  up 5 days, 21:30, 5 users, load averages: 7.41 6.52 6.07",
        "uptime_after": "10:51  up 5 days, 21:30, 5 users, load averages: 8.30 6.81 6.19",
        "system_used_gb_peak": null,
@@ -551,16 +475,6 @@
         "median": 792.2,
         "p95": 857.6,
         "max": 857.6
-       },
-       "competing_during_max_cpu_percent": {
-        "Autodesk Fusion": 220.9,
-        "node": 122.3,
-        "com.apple.WebKit.WebContent": 100.8,
-        "solve": 99.1,
-        "python": 88.4,
-        "mds_stores": 87.2,
-        "mds": 63.4,
-        "mediaanalysisd": 47.5
        },
        "uptime_before": "10:53  up 5 days, 21:32, 5 users, load averages: 10.56 9.02 7.23",
        "uptime_after": "10:54  up 5 days, 21:33, 5 users, load averages: 11.55 9.39 7.43",
@@ -621,16 +535,6 @@
         "p95": 481.4,
         "max": 481.4
        },
-       "competing_during_max_cpu_percent": {
-        "Claude Helper (Renderer)": 159.9,
-        "com.apple.WebKit.WebContent": 101.3,
-        "solve": 100.0,
-        "Safari": 85.5,
-        "replayd": 78.3,
-        "MTLCompilerService": 66.2,
-        "mobileassetd": 57.1,
-        "WindowServer": 42.9
-       },
        "uptime_before": "10:48  up 5 days, 21:27, 5 users, load averages: 6.35 5.97 5.83",
        "uptime_after": "10:49  up 5 days, 21:27, 5 users, load averages: 6.55 6.08 5.88",
        "system_used_gb_peak": null,
@@ -681,16 +585,6 @@
         "p95": 1073.7,
         "max": 1073.7
        },
-       "competing_during_max_cpu_percent": {
-        "Autodesk Fusion": 275.5,
-        "com.apple.WebKit.WebContent": 100.7,
-        "MTLCompilerService": 99.6,
-        "solve": 99.1,
-        "python": 98.6,
-        "mobileassetd": 94.1,
-        "mediaanalysisd": 82.4,
-        "mds_stores": 64.3
-       },
        "uptime_before": "10:51  up 5 days, 21:30, 5 users, load averages: 9.24 7.03 6.27",
        "uptime_after": "10:52  up 5 days, 21:31, 5 users, load averages: 13.72 8.36 6.78",
        "system_used_gb_peak": null,
@@ -740,16 +634,6 @@
         "median": 608.9,
         "p95": 755.3000000000001,
         "max": 755.3000000000001
-       },
-       "competing_during_max_cpu_percent": {
-        "Autodesk Fusion": 385.1,
-        "io.tailscale.ipn.macsys.network-extension": 165.6,
-        "com.apple.WebKit.WebContent": 101.5,
-        "solve": 99.1,
-        "python": 92.0,
-        "XprotectService": 74.9,
-        "MTLCompilerService": 69.6,
-        "WindowServer": 42.8
        },
        "uptime_before": "10:54  up 5 days, 21:33, 5 users, load averages: 11.55 9.39 7.43",
        "uptime_after": "10:54  up 5 days, 21:33, 5 users, load averages: 10.95 9.47 7.53",
@@ -810,16 +694,6 @@
         "p95": 522.9,
         "max": 522.9
        },
-       "competing_during_max_cpu_percent": {
-        "Claude Helper (Renderer)": 119.5,
-        "com.apple.WebKit.WebContent": 101.2,
-        "solve": 98.6,
-        "python": 96.4,
-        "MTLCompilerService": 92.4,
-        "Python": 91.5,
-        "(python3.13)": 90.5,
-        "modelmanagerd": 48.8
-       },
        "uptime_before": "10:49  up 5 days, 21:28, 5 users, load averages: 6.75 6.13 5.90",
        "uptime_after": "10:49  up 5 days, 21:28, 5 users, load averages: 6.49 6.16 5.92",
        "system_used_gb_peak": null,
@@ -870,16 +744,6 @@
         "p95": 1152.0,
         "max": 1152.0
        },
-       "competing_during_max_cpu_percent": {
-        "Autodesk Fusion": 250.0,
-        "node": 140.7,
-        "com.apple.WebKit.WebContent": 100.6,
-        "solve": 98.7,
-        "python": 97.2,
-        "MTLCompilerService": 96.3,
-        "uv": 87.7,
-        "Google Chrome Helper (Aperitif Renderer)": 82.3
-       },
        "uptime_before": "10:52  up 5 days, 21:31, 5 users, load averages: 13.02 8.30 6.77",
        "uptime_after": "10:52  up 5 days, 21:31, 5 users, load averages: 12.94 8.79 7.01",
        "system_used_gb_peak": null,
@@ -929,16 +793,6 @@
         "median": 582.6,
         "p95": 639.0,
         "max": 639.0
-       },
-       "competing_during_max_cpu_percent": {
-        "Autodesk Fusion": 335.3,
-        "com.apple.WebKit.WebContent": 101.2,
-        "solve": 99.1,
-        "python": 55.5,
-        "coreduetd": 38.9,
-        "Claude Helper (Renderer)": 29.3,
-        "WindowServer": 27.5,
-        "claude": 25.9
        },
        "uptime_before": "10:55  up 5 days, 21:33, 5 users, load averages: 11.59 9.63 7.60",
        "uptime_after": "10:55  up 5 days, 21:34, 5 users, load averages: 17.92 11.08 8.18",
@@ -999,15 +853,6 @@
         "p95": 594.2,
         "max": 594.2
        },
-       "competing_during_max_cpu_percent": {
-        "Autodesk Fusion": 377.6,
-        "com.apple.WebKit.WebContent": 101.2,
-        "python": 52.3,
-        "WindowServer": 27.9,
-        "Claude Helper": 27.4,
-        "claude": 21.6,
-        "Claude Helper (Renderer)": 20.2
-       },
        "uptime_before": "10:55  up 5 days, 21:34, 5 users, load averages: 17.04 11.02 8.17",
        "uptime_after": "10:56  up 5 days, 21:35, 5 users, load averages: 13.04 10.69 8.17",
        "system_used_gb_peak": null,
@@ -1057,12 +902,6 @@
         "median": 568.1,
         "p95": 625.6,
         "max": 625.6
-       },
-       "competing_during_max_cpu_percent": {
-        "Autodesk Fusion": 385.5,
-        "com.apple.WebKit.WebContent": 100.9,
-        "python": 90.8,
-        "WindowServer": 26.6
        },
        "uptime_before": "10:57  up 5 days, 21:36, 5 users, load averages: 9.33 10.12 8.17",
        "uptime_after": "10:57  up 5 days, 21:36, 5 users, load averages: 8.08 9.79 8.09",
@@ -1123,13 +962,6 @@
         "p95": 603.2,
         "max": 603.2
        },
-       "competing_during_max_cpu_percent": {
-        "Autodesk Fusion": 369.5,
-        "com.apple.WebKit.WebContent": 100.9,
-        "python": 85.1,
-        "coreduetd": 36.1,
-        "WindowServer": 33.2
-       },
        "uptime_before": "10:56  up 5 days, 21:35, 5 users, load averages: 12.32 10.58 8.15",
        "uptime_after": "10:57  up 5 days, 21:36, 5 users, load averages: 9.88 10.25 8.20",
        "system_used_gb_peak": null,
@@ -1180,15 +1012,6 @@
         "p95": 692.8,
         "max": 692.8
        },
-       "competing_during_max_cpu_percent": {
-        "Autodesk Fusion": 386.5,
-        "node": 156.0,
-        "com.apple.WebKit.WebContent": 101.2,
-        "python": 97.6,
-        "(python3.13)": 90.0,
-        "WindowServer": 33.0,
-        "claude": 32.7
-       },
        "uptime_before": "10:57  up 5 days, 21:36, 5 users, load averages: 8.88 9.93 8.15",
        "uptime_after": "10:58  up 5 days, 21:37, 5 users, load averages: 7.56 9.44 8.07",
        "system_used_gb_peak": null,
@@ -1238,16 +1061,6 @@
     "p95": 515.5,
     "max": 904.2
    },
-   "competing_during_max_cpu_percent": {
-    "Autodesk Fusion": 772.1,
-    "com.apple.Virtualization.VirtualMachine": 288.5,
-    "limactl": 122.8,
-    "JumpConnect": 89.9,
-    "ssh.sock [mux]": 53.1,
-    "WindowServer": 47.0,
-    "storagekitd": 35.1,
-    "runningboardd": 29.8
-   },
    "uptime_before": "13:49  up  2:05, 3 users, load averages: 4.96 6.59 6.15",
    "uptime_after": "13:53  up  2:09, 3 users, load averages: 6.69 6.30 6.10",
    "system_used_gb_peak": 23.37,
@@ -1289,15 +1102,6 @@
     "median": 323.2,
     "p95": 448.4,
     "max": 448.4
-   },
-   "competing_during_max_cpu_percent": {
-    "Autodesk Fusion": 282.7,
-    "JumpConnect": 95.0,
-    "Claude Helper (Renderer)": 58.2,
-    "WindowServer": 46.2,
-    "syspolicyd": 32.3,
-    "Claude Helper": 21.0,
-    "storagekitd": 21.0
    },
    "uptime_before": "13:48  up  2:05, 3 users, load averages: 5.81 6.87 6.24",
    "uptime_after": "13:49  up  2:05, 3 users, load averages: 5.22 6.67 6.18",
@@ -1373,13 +1177,6 @@
      "p95": 1054.7,
      "max": 1054.7
     },
-    "competing_during_max_cpu_percent": {
-     "Autodesk Fusion": 938.4,
-     "MTLCompilerService": 98.8,
-     "JumpConnect": 69.2,
-     "com.apple.Virtualization.VirtualMachine": 47.8,
-     "WindowServer": 37.7
-    },
     "uptime_before": "13:53  up  2:09, 3 users, load averages: 6.69 6.30 6.10",
     "uptime_after": "13:54  up  2:10, 3 users, load averages: 8.92 7.04 6.39",
     "system_used_gb_peak": 21.68,
@@ -1440,11 +1237,6 @@
      "median": 659.2,
      "p95": 921.8000000000001,
      "max": 921.8000000000001
-    },
-    "competing_during_max_cpu_percent": {
-     "Autodesk Fusion": 806.2,
-     "JumpConnect": 72.0,
-     "WindowServer": 36.7
     },
     "uptime_before": "13:54  up  2:10, 3 users, load averages: 8.53 6.98 6.38",
     "uptime_after": "13:54  up  2:11, 3 users, load averages: 9.17 7.28 6.50",
@@ -1507,11 +1299,6 @@
      "p95": 856.6999999999999,
      "max": 856.6999999999999
     },
-    "competing_during_max_cpu_percent": {
-     "Autodesk Fusion": 750.8,
-     "JumpConnect": 63.5,
-     "WindowServer": 37.8
-    },
     "uptime_before": "13:54  up  2:11, 3 users, load averages: 9.17 7.28 6.50",
     "uptime_after": "13:55  up  2:11, 3 users, load averages: 8.27 7.24 6.51",
     "system_used_gb_peak": 21.28,
@@ -1573,15 +1360,6 @@
      "p95": 1322.7,
      "max": 1322.7
     },
-    "competing_during_max_cpu_percent": {
-     "Autodesk Fusion": 1207.7,
-     "com.apple.Virtualization.VirtualMachine": 199.1,
-     "python": 83.6,
-     "JumpConnect": 81.9,
-     "WindowServer": 42.9,
-     "coreduetd": 28.2,
-     "Google Chrome Helper (Aperitif Renderer)": 23.4
-    },
     "uptime_before": "13:55  up  2:11, 3 users, load averages: 8.81 7.37 6.56",
     "uptime_after": "13:55  up  2:12, 3 users, load averages: 11.18 8.06 6.83",
     "system_used_gb_peak": 22.29,
@@ -1639,13 +1417,6 @@
      "median": 308.1,
      "p95": 429.3,
      "max": 429.3
-    },
-    "competing_during_max_cpu_percent": {
-     "Claude Helper": 102.3,
-     "JumpConnect": 99.9,
-     "duetexpertd": 92.4,
-     "Claude Helper (Renderer)": 81.7,
-     "WindowServer": 33.4
     },
     "uptime_before": "13:55  up  2:12, 3 users, load averages: 10.84 8.04 6.83",
     "uptime_after": "13:55  up  2:12, 3 users, load averages: 11.15 8.32 6.96",

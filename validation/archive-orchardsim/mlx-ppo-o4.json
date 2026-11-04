@@ -1467,16 +1467,6 @@
      "p95": 805.5999999999999,
      "max": 853.1
     },
-    "competing_during_max_cpu_percent": {
-     "python": 495.4,
-     "com.apple.WebKit.WebContent": 130.4,
-     "Claude Helper": 110.4,
-     "MTLCompilerService": 93.4,
-     "Claude Helper (Renderer)": 87.8,
-     "top": 86.7,
-     "xcodebuild": 66.5,
-     "com.apple.WebKit.GPU": 64.0
-    },
     "stopped_for_memory": false,
     "stopped_for_system_memory": false
    }
@@ -1580,16 +1570,6 @@
      "median": 383.8,
      "p95": 471.1,
      "max": 493.3
-    },
-    "competing_during_max_cpu_percent": {
-     "RobloxPlayer": 101.9,
-     "(top)": 91.9,
-     "MTLCompilerService": 91.3,
-     "python": 91.2,
-     "top": 83.8,
-     "(python3.13)": 71.2,
-     "tccd": 54.3,
-     "WindowServer": 52.8
     },
     "stopped_for_memory": false,
     "stopped_for_system_memory": false
