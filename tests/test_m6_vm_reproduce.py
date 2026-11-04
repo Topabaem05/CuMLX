@@ -37,7 +37,7 @@ def box(tmp_path):
     stub("tart", 'case "$1" in ip) echo 192.0.2.1 ;; --version) echo stub ;; run) sleep 30 ;; esac; exit 0')
     # A stub ssh runs the remote text in a shell, with HOME set to the guest's folder.
     # It never starts the guest script: that line is only logged, so that a test cannot run the real work on this machine.
-    stub("ssh", f'for last; do :; done; case "$last" in *m6_vm_guest.sh*nohup*|*nohup*m6_vm_guest.sh*) mkdir -p "{guest_home}/repro-result"; echo facts > "{guest_home}/repro-result/machine.txt"; [ -f "{guest_home}/next_verdict" ] && mv "{guest_home}/next_verdict" "{guest_home}/repro-result/guest_verdict.txt"; echo started; exit 0 ;; esac; HOME="{guest_home}" /bin/sh -c "$last"')
+    stub("ssh", f'for last; do :; done; case "$*" in *" -N "*) echo $$ > "{tmp_path}/tunnel_pid"; exec sleep 50 ;; esac; case "$last" in *m6_vm_guest.sh*nohup*|*nohup*m6_vm_guest.sh*) mkdir -p "{guest_home}/repro-result"; echo facts > "{guest_home}/repro-result/machine.txt"; [ -f "{guest_home}/next_verdict" ] && mv "{guest_home}/next_verdict" "{guest_home}/repro-result/guest_verdict.txt"; echo started; exit 0 ;; esac; HOME="{guest_home}" /bin/sh -c "$last"')
     (tmp_path / "free_kb").write_text(str(100_000_000))
     (tmp_path / "vm_stat.txt").write_text(vm_stat_text(20.0))
     env = {"PATH": f"{stubs}:/usr/bin:/bin", "HOME": str(tmp_path / "host_home"), "CUMLX_VM_ROOT": str(root), "CUMLX_VM_TART": str(stubs / "tart"), "CUMLX_VM_POLL": "0"}
@@ -326,6 +326,10 @@ def test_attach_with_a_proxy_opens_a_tunnel_and_the_record_says_so(box):
     assert "-N -R 3128:127.0.0.1:0 admin@192.0.2.9" in calls
     assert "CUMLX_VM_PROXY=http://127.0.0.1:3128" in calls
     assert "proxy" in (box.root / "result" / "network.txt").read_text()
+    # The run ended, so its tunnel has ended too. A tunnel left behind holds the guest's port against the next run.
+    tunnel = int((box.tmp / "tunnel_pid").read_text())
+    with pytest.raises(ProcessLookupError):
+        os.kill(tunnel, 0)
 
 
 def test_attach_with_no_proxy_opens_no_tunnel_and_records_none(box):

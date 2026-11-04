@@ -70,23 +70,10 @@ ask_password() {
     printf '#!/bin/sh\necho "$CUMLX_VM_PASSWORD"\n' >"$ROOT/askpass.sh"
     chmod 700 "$ROOT/askpass.sh"
 }
+SSH_OPTIONS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o ConnectTimeout=10 -o LogLevel=ERROR"
 to_guest() {
-    # ssh reads its options only before the destination, so any given here go ahead of it.
-    opts=
-    while [ "${1:-}" = -o ] || [ "${1:-}" = -N ] || [ "${1:-}" = -R ]; do
-        case "$1" in
-        -N)
-            opts="$opts -N"
-            shift
-            ;;
-        *)
-            opts="$opts $1 $2"
-            shift 2
-            ;;
-        esac
-    done
-    # shellcheck disable=SC2086  # opts holds only the fixed words above.
-    SSH_ASKPASS="$ROOT/askpass.sh" SSH_ASKPASS_REQUIRE=force DISPLAY=:0 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o ConnectTimeout=10 -o LogLevel=ERROR $opts "$VM_USER@$GUEST" "$@"
+    # shellcheck disable=SC2086  # SSH_OPTIONS holds only the fixed words above.
+    SSH_ASKPASS="$ROOT/askpass.sh" SSH_ASKPASS_REQUIRE=force DISPLAY=:0 ssh $SSH_OPTIONS "$VM_USER@$GUEST" "$@"
 }
 start_proxy() {
     python3 "$HERE/m6_vm_proxy.py" "$PROXY_PORT" >"$ROOT/proxy.log" 2>&1 &
@@ -96,7 +83,13 @@ start_proxy() {
     start_tunnel
 }
 start_tunnel() {
-    to_guest -o ServerAliveInterval=30 -o ExitOnForwardFailure=yes -N -R "$GUEST_PROXY_PORT:127.0.0.1:$PROXY_PORT" >>"$ROOT/proxy.log" 2>&1 &
+    # exec, so that this pid is ssh itself, and the trap can end it.
+    # shellcheck disable=SC2086
+    (
+        SSH_ASKPASS="$ROOT/askpass.sh" SSH_ASKPASS_REQUIRE=force DISPLAY=:0
+        export SSH_ASKPASS SSH_ASKPASS_REQUIRE DISPLAY
+        exec ssh $SSH_OPTIONS -o ServerAliveInterval=30 -o ExitOnForwardFailure=yes -N -R "$GUEST_PROXY_PORT:127.0.0.1:$PROXY_PORT" "$VM_USER@$GUEST"
+    ) >>"$ROOT/proxy.log" 2>&1 &
     TUNNEL_PID=$!
 }
 stop_vm() {
