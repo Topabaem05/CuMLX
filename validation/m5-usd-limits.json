@@ -1,0 +1,34 @@
+{
+  "schema": "cumlx.m5_usd_limits.v1",
+  "date": "2026-11-04",
+  "committed_before_any_measurement": "In the commit before the first render through src/cumlx/render/usd.py. No image from this code exists at this commit.",
+  "gate": "Not a completion gate of M5. It is the M5 item for USD scenes in cumlx.render.",
+  "code": "src/cumlx/render/usd.py, spikes/m5_usd.py",
+  "question": "Does a scene written in USD render the same as the equal scene written by hand as a Mitsuba dictionary, on one device?",
+  "protocol": {
+    "variant": "metal_ad_rgb, Mitsuba 3.9.1, on both sides",
+    "scenes": {
+      "cornell": "Mitsuba's mi.cornell_box(), with fov_axis x, which is the same on a square film, and a black surface on the light, because a RectLight has no surface. In USD: quads and cubes with transforms, one cube under a parent, a RectLight with an exposure, UsdPreviewSurface and displayColor. Against Mitsuba's own rectangle and cube",
+      "boxes": "A box on a floor under a parallel light, Z up. In USD: a parent with a rotation and a mirror, a DistantLight with normalize, a camera with a full matrix. Against Mitsuba's own rectangle, cube and directional emitter"
+    },
+    "film": "256 x 256",
+    "spp": 4096,
+    "seeds": {"reference": [1, 2, 3], "usd": [11, 12, 13], "each_fault": [21, 22, 23]}
+  },
+  "limits": "The unchanged limits of src/cumlx/render/compare.py, as in validation/m5-render-limits.json: PSNR floor 40 dB, MSE across at most 2 times MSE within, each channel mean within max(3 standard errors, 1 percent). `ok` is grade B. `inconclusive` is not a pass.",
+  "pass_rule": "Each clean scene is `ok`, and each fault is `diverged`.",
+  "faults_that_must_fail": {
+    "cornell": {
+      "wrong_transform": "The small box's parent moved by +0.1 in x, 5 percent of the room's width",
+      "missing_mesh": "The small box left out of the stage",
+      "wrong_light_size": "The light's width 1.2 times as large"
+    },
+    "boxes": {
+      "wrong_transform": "The box's parent turned 10 degrees further",
+      "missing_mesh": "The box left out of the stage",
+      "wrong_light_direction": "The sun's X rotation 10 degrees further"
+    }
+  },
+  "reasons": "These faults are the errors that a converter can make silently: a wrong matrix order, a dropped prim, a wrong light unit or axis. Their sizes were set here without a render.",
+  "not_shown": "Any USD asset from another tool, such as an Isaac asset. A scene with textures, instancing beyond what the reader accepts, or subdivision. Agreement with any RTX or Hydra renderer: this compares the converter with Mitsuba on the same device, so UsdPreviewSurface's specular lobe, which the converter drops, is not measured."
+}
