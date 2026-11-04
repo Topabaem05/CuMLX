@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import re
 import stat
 import subprocess
 
@@ -64,5 +65,6 @@ def test_xdg_config_home_is_respected(tmp_path):
 
 
 def test_no_launcher_names_one_persons_machine():
-    named = [path.name for folder in ('spikes', 'scripts') for path in (REPO / folder).glob('*.sh') if 'gpu-host-alias' in path.read_text()]
+    default_host = re.compile(r'CUMLX_GPU_HOST:-[^}]')
+    named = [path.name for folder in ('spikes', 'scripts') for path in (REPO / folder).glob('*.sh') if default_host.search(path.read_text())]
     assert not named

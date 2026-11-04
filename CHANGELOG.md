@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Changed
+
+- The history of `main` after `645450b` was rewritten on 2026-11-04, before the repository went public, to remove a local machine identity, a private ssh alias and a user name. Commit hashes after that point changed, and the references in the documents and records now use the new hashes. `tests/test_no_private_strings.py` keeps these strings out, by hash.
+
 ### Fixed
 
 - `spikes/run_all.sh` and `spikes/m3_kernels.sh` failed partway when `uv` was missing. They now end with exit 3 and the install link before they start.
