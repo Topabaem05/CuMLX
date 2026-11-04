@@ -53,6 +53,7 @@ ERROR_CODES: dict[str, tuple[ExitCode, str]] = {
     'E_KERNEL_TRANSLATE_FAILED': (ExitCode.INPUT, 'The translator failed on this kernel or returned an unusable result.'),
     'E_KERNEL_UNPORTABLE': (ExitCode.INPUT, 'The kernel uses a feature with no Metal equivalent. errors[].details.refused names each one and its reason.'),
     'E_SIM_UNSUPPORTED': (ExitCode.INPUT, 'This simulation engine cannot load this kind of asset.'),
+    'E_RENDER_USD_UNSUPPORTED': (ExitCode.INPUT, 'A USD scene holds something that cumlx.render does not convert. Nothing is rendered.'),
     'E_SIZE_LIMIT': (ExitCode.USAGE, 'The operation would exceed a configured size limit.'),
     'E_INTERNAL': (ExitCode.INTERNAL, 'Unexpected internal error.'),
 }
