@@ -17,9 +17,9 @@
 | M2 PyTorch 호환 | 4 | 4 | |
 | M3 CUDA 커널 | 5 | 5 | |
 | M4 로봇 시뮬레이션 | 3 | 4 | 처리량 공개 |
-| M5 레이트레이싱과 센서 | 2 | 4 | V100 비교, 프레임 속도 공개 |
+| M5 레이트레이싱과 센서 | 3 | 4 | 프레임 속도 공개 |
 | M6 통합 릴리스 | 0 | 3 | 새 Mac 재현, 보고서 공개, 미검증 목록 공개 |
-| **합계** | **19** | **25** | |
+| **합계** | **20** | **25** | |
 
 **기함 작업 5개 중 처음부터 재현된 것은 없습니다.** [아래](#기함-작업)를 보십시오.
 
@@ -74,7 +74,7 @@
 
 | ID | 조건 | 상태 | 등급 | 기록 | 결과와 한계 |
 |---|---|---|---|---|---|
-| M5-1 | Mitsuba Metal과 V100 CUDA 비교, 등급 B | 미달 | 미검증 | `validation/m5-render.json`, `validation/m5-render-limits.json` | **V100 이미지 없음.** Mitsuba 3.9.1이 V100을 거부합니다(compute capability 7.5 이상 필요, V100은 7.0). 3.8.0 경로는 실행 전입니다. Metal과 CPU `scalar_rgb`는 두 장면 모두 등급 B(최악 56.94, 45.47 dB, 허용 40 dB)이고 결함 2종은 실패합니다. 이것으로 조건을 대신하지 않습니다 |
+| M5-1 | Mitsuba Metal과 V100 CUDA 비교, 등급 B | 달성 | B | `validation/m5-render.json`, `validation/m5-render-limits.json` | Cornell box 58.70 dB, 구 장면 45.56 dB(허용 40 dB), MSE 비 1.00, 0.99(허용 2). 결함 2종 실패. V100은 Mitsuba 3.8.0, Metal은 3.9.1로 버전이 다르고, 대조군 `scalar_rgb` 3.8.0과 3.9.1도 등급 B입니다. 장면 2개, 시드 3개 |
 | M5-2 | 256×256 RGB 프레임 속도 측정 및 공개 | 측정함, 미공개 | C | `validation/m5-render.json` | 초당 프레임: Cornell box 16 spp 127~134, 64 spp 50~53. 움직이는 메시 16 spp 224~314, 64 spp 167~225. 5회 반복, 다른 작업과 함께 돌렸고 장면이 작습니다 |
 | M5-3 | 물리와 카메라를 함께 쓰는 예제 실행 | 달성 | B | `validation/m5-render.json` | Genesis와 Mitsuba가 한 프로세스에서 Metal로 돕니다. 61/61 프레임, 최악 0.48 px(허용 3 px). 정육면체 하나의 장면이며 RTX와 비교한 것이 아닙니다 |
 | M5-4 | RTX 센서와 다른 점을 문서로 명시 | 달성 | 미검증 | `docs/RENDER-SENSORS.md` | RTX 쪽은 문서만 읽었고 직접 비교하지 않았습니다 |
@@ -97,7 +97,7 @@
 | F2 | 3D Gaussian Splatting 학습 | B | 재현 안 됨 | 미검증 | `validation/m2-substitutes.json` | metalsplat은 손 계산과 비교한 렌더링 검사를 통과했지만(최고점 오차 0 px) 학습은 돌리지 않았고 `rasterization`이 없어 gsplat을 그대로 대체하지 못합니다. msplat은 학습은 돌았지만(held-out 35.96 dB) 시점 오차 3.14 px로 허용 3 px를 넘어 실패입니다. CUDA 비교는 없습니다 |
 | F3 | CuPy 또는 커스텀 `.cu` 커널 앱 | A | 재현 안 됨 | 미검증 | `validation/kernel-translation.json`, `validation/kernel-m3.json`, `src/cumlx/verify/recipes.json` | 앱을 돌린 기록이 없습니다. 이 저장소의 커널 8개는 직접 쓴 Metal로 V100과 등급 A입니다. 외부 커널 13개는 woof 번역과 V100 비교까지 했지만 앱은 아닙니다. woof의 CuPy 파사드는 `asarray`, `asnumpy`, 커널 실행만 돌린 등급 C입니다 |
 | F4 | Isaac Lab 사족 보행 정책 학습과 추론 | 추론 A, 물리 B | 일부 달성, 다른 경로 | 추론 A, 물리 B(일부) | OrchardSim `validation/mlx-closed-loop-o4.json`, `isaac-lab-metal.json`, `m4-go2-seeds.json`, `m4-trajectory.json`, `warp-metal-o2.json`, `validation/m4-sim.json` | OrchardSim 경로는 Isaac Lab, warp-metal, 런타임 패치입니다. 로드맵의 `cumlx.sim` 경로는 Isaac Lab이 아닌 Genesis의 Go2 작업으로 따로 돌렸습니다(`validation/m4-sim.json`). 시드 1개에서 +0.81, -0.86, 0.00 m/s이고 MLX 정책은 rsl_rl과 최악 6.1e-7, Genesis와 MuJoCo 비교는 1초 동안 통과입니다. 추론은 폐루프 1000 step에서 rsl_rl과 최악 2.70e-7(허용 1e-4)이고, 가중치 하나의 1% 변경은 이 허용치로 잡히지 않습니다. Go2의 CPU와 Metal 비교는 통과(속도 차이 0.002 m/s, 허용 0.05)했지만 MuJoCo Warp 일치 시험은 실패입니다. 새 Mac 재현은 없습니다 |
-| F5 | 물리 기반 카메라 센서 | B | 일부 달성 | B(CPU 렌더와 물리 상태 기준), CUDA는 미검증 | `validation/m5-render.json`, `validation/m4-sim.json`, `validation/m5-lidar.json`, `docs/RENDER-SENSORS.md` | `cumlx.render`로 RGB, 깊이, 세그멘테이션을 만들고 예제가 물리 상태와 일치합니다. 목표인 CUDA 비교는 돌리지 않았습니다. `cumlx.sim` 카메라는 cartpole의 상자 링크로 두 엔진에서 21개 프레임 모두 통과했고(`validation/m4-sim.json`), 레이캐스트 센서는 정확한 거리와 최악 5.6e-6 m입니다(`validation/m5-lidar.json`). USD는 메시, 카메라, 조명 2종, 확산 색만 읽으며, 작은 장면 2개가 같은 장면의 Mitsuba 사전과 등급 B입니다(`validation/m5-usd.json`). 다른 도구의 자산은 시험하지 않았습니다 |
+| F5 | 물리 기반 카메라 센서 | B | 일부 달성 | B(Metal과 V100 CUDA, 버전 다름) | `validation/m5-render.json`, `validation/m4-sim.json`, `validation/m5-lidar.json`, `docs/RENDER-SENSORS.md` | `cumlx.render`로 RGB, 깊이, 세그멘테이션을 만들고 예제가 물리 상태와 일치합니다. Metal과 V100 CUDA 렌더는 장면 2개에서 등급 B입니다(Mitsuba 3.9.1, 3.8.0). 센서 전체를 CUDA와 비교하지는 않았습니다. `cumlx.sim` 카메라는 cartpole의 상자 링크로 두 엔진에서 21개 프레임 모두 통과했고(`validation/m4-sim.json`), 레이캐스트 센서는 정확한 거리와 최악 5.6e-6 m입니다(`validation/m5-lidar.json`). USD는 메시, 카메라, 조명 2종, 확산 색만 읽으며, 작은 장면 2개가 같은 장면의 Mitsuba 사전과 등급 B입니다(`validation/m5-usd.json`). 다른 도구의 자산은 시험하지 않았습니다 |
 
 ## 실패와 미달
 

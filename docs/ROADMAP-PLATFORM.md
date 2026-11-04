@@ -252,7 +252,7 @@ RTX가 필요하던 렌더링 경로를 Metal 레이트레이싱으로 대체합
 
 완료 조건:
 
-- [ ] 같은 장면의 Mitsuba Metal과 V100 CUDA 결과 비교, 등급 B (PSNR 허용치는 측정 전에 지정). 허용치는 [측정 전에 커밋](../validation/m5-render-limits.json)했고, Metal 쪽 이미지와 비교 도구는 준비했습니다. **V100 이미지가 아직 없습니다.** Mitsuba 3.9.1은 V100을 거부합니다(Dr.Jit 1.4 이상은 compute capability 7.5 이상 필요, V100은 7.0). 첫 실행은 70분간 CPU 100%로 멈춰 중단했고 그 원인은 찾지 못했습니다. [바꾼 절차](../validation/m5-render-limits.json)는 V100에 3.8.0을 쓰고, 허용치는 그대로이며, 두 버전의 `scalar_rgb` 비교를 대조군으로 둡니다. 대조군이 통과하지 못하면 이 항목은 달성이 아닙니다. 3.8.0에는 Metal이 없어 양쪽 버전을 맞출 수 없습니다. 3.8.0이 V100의 OptiX에서 돌지는 아직 모릅니다. Metal과 CPU `scalar_rgb` 비교는 두 장면 모두 등급 B이고, 주입한 결함 2종은 두 장면 모두 실패합니다. 이것으로 이 항목을 대신하지 않습니다
+- [x] 같은 장면의 Mitsuba Metal과 V100 CUDA 결과 비교, 등급 B (PSNR 허용치는 측정 전에 지정). **두 장면 모두 등급 B입니다.** Cornell box 최악 58.70 dB, 구 장면 45.56 dB(허용 40 dB), 장치 간 MSE는 장치 내 MSE의 1.00배와 0.99배(허용 2배). 주입한 결함 2종은 CUDA 기준에서도 실패합니다. **버전이 다릅니다:** V100은 Mitsuba 3.8.0, Metal은 3.9.1입니다. 3.9는 V100을 거부하고(compute capability 7.5 이상 필요, V100은 7.0) 3.8.0에는 Metal이 없기 때문입니다. 미리 정한 대조군(`scalar_rgb` 3.8.0과 3.9.1)도 등급 B(58.92, 45.89 dB)입니다. 첫 3.9.1 실행이 70분 멈춘 원인은 찾지 못했습니다. 장면 2개, 시드 3개입니다. [허용치](../validation/m5-render-limits.json), [측정값](../validation/m5-render.json)
 - [ ] 256×256 RGB 센서 프레임 속도 측정 및 공개. **측정은 끝났고 공개는 아직입니다.** 저장소가 비공개입니다. 초당 프레임: Cornell box 16 spp 127~134, 64 spp 50~53. 매 프레임 메시를 옮기는 장면 16 spp 224~314, 64 spp 167~225. 각 5회 반복 [측정값](../validation/m5-render.json). 다른 작업이 함께 돌았습니다. 장면이 작습니다
 - [x] 물리와 카메라를 함께 쓰는 예제 하나 실행. [drop_box.py](../examples/physics-camera/drop_box.py): Genesis와 Mitsuba가 한 프로세스에서 Metal로 돕니다. 정육면체 하나의 장면이고, 61개 프레임 모두 물리 상태와 일치합니다(최악 0.48 px). 대조군은 움직이지 않고, 틀린 자세와 틀린 카메라는 실패합니다
 - [x] RTX 센서와 다른 점을 문서로 명시. [docs/RENDER-SENSORS.md](RENDER-SENSORS.md). RTX 쪽은 문서만 읽었고 직접 비교하지 않았습니다

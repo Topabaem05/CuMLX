@@ -1,6 +1,6 @@
 {
  "schema": "cumlx.m5-render.v1",
- "date": "2026-11-03",
+ "date": "2026-11-04",
  "machine": "Apple M5 Pro, 48 GB, macOS 27",
  "versions": {
   "mitsuba": "3.9.1",
@@ -9,14 +9,210 @@
  },
  "limits": "validation/m5-render-limits.json",
  "gates": {
-  "metal_vs_v100_cuda_grade_b": "open",
+  "metal_vs_v100_cuda_grade_b": "see cuda_comparison",
   "frame_rate_256": "measured, see frame_rate",
   "physics_and_camera_example": "ran, see physics_and_camera",
   "rtx_differences_document": "docs/RENDER-SENSORS.md"
  },
  "cuda_comparison": {
-  "status": "not_run",
-  "why": "No image from the V100 yet. See cuda_attempt_with_3_9_1."
+  "status": "compared",
+  "golden": "cuda_ad_rgb",
+  "golden_fault": null,
+  "candidate": "metal_ad_rgb",
+  "candidate_fault": null,
+  "scenes": {
+   "cornell_box": {
+    "verdict": "ok",
+    "grade": "B",
+    "failures": [],
+    "worst_psnr_across_db": 58.69724663747619,
+    "worst_psnr_within_db": 58.71122688856565,
+    "mse_ratio": 1.0030345816823618,
+    "channel_mean_difference": [
+     3.829598426818848e-06,
+     1.5422701835632324e-06,
+     2.8293579816818237e-06
+    ],
+    "channel_mean_allowed": [
+     0.0013969915453344584,
+     0.0006698608049191535,
+     0.00027867028256878257
+    ]
+   },
+   "cornell_spheres": {
+    "verdict": "ok",
+    "grade": "B",
+    "failures": [],
+    "worst_psnr_across_db": 45.558931079724935,
+    "worst_psnr_within_db": 45.48027318698822,
+    "mse_ratio": 0.9872080681286797,
+    "channel_mean_difference": [
+     1.5541911125183105e-05,
+     7.227063179016113e-06,
+     8.918344974517822e-06
+    ],
+    "channel_mean_allowed": [
+     0.0015208718832582235,
+     0.000784620875492692,
+     0.000339575664838776
+    ]
+   }
+  }
+ },
+ "cuda_controls": {
+  "cmp_scalar380_scalar": {
+   "golden": "scalar_rgb",
+   "golden_fault": null,
+   "candidate": "scalar_rgb",
+   "candidate_fault": null,
+   "scenes": {
+    "cornell_box": {
+     "verdict": "ok",
+     "grade": "B",
+     "failures": [],
+     "worst_psnr_across_db": 58.919877596959665,
+     "worst_psnr_within_db": 58.89136448393823,
+     "mse_ratio": 1.001051357859575,
+     "channel_mean_difference": [
+      6.183981895446777e-06,
+      7.748603820800781e-07,
+      1.0058283805847168e-07
+     ],
+     "channel_mean_allowed": [
+      0.0013970202999189496,
+      0.0006699658115394413,
+      0.00027906440664082766
+     ]
+    },
+    "cornell_spheres": {
+     "verdict": "ok",
+     "grade": "B",
+     "failures": [],
+     "worst_psnr_across_db": 45.885208897901855,
+     "worst_psnr_within_db": 45.910370621014266,
+     "mse_ratio": 0.9929562466298242,
+     "channel_mean_difference": [
+      7.3462724685668945e-06,
+      8.046627044677734e-06,
+      1.080334186553955e-06
+     ],
+     "channel_mean_allowed": [
+      0.0015216248575598001,
+      0.000785057432949543,
+      0.00034015270648524165
+     ]
+    }
+   }
+  },
+  "cmp_cuda_metal_direct": {
+   "golden": "cuda_ad_rgb",
+   "golden_fault": null,
+   "candidate": "metal_ad_rgb",
+   "candidate_fault": "direct_only",
+   "scenes": {
+    "cornell_box": {
+     "verdict": "diverged",
+     "grade": null,
+     "failures": [
+      "worst PSNR across devices 24.73 dB is under 40.0 dB",
+      "MSE across devices is 4721.70 times the MSE within a device, limit 2.0",
+      "R mean differs by 0.0748, allowed 0.0014",
+      "G mean differs by 0.0263, allowed 0.00067",
+      "B mean differs by 0.0077, allowed 0.000279"
+     ],
+     "worst_psnr_across_db": 24.73121829719865,
+     "worst_psnr_within_db": 58.73646537549994,
+     "mse_ratio": 4721.704751031632,
+     "channel_mean_difference": [
+      0.07476536929607391,
+      0.026330549269914627,
+      0.007696326822042465
+     ],
+     "channel_mean_allowed": [
+      0.0013969915453344584,
+      0.0006698608049191535,
+      0.00027867028256878257
+     ]
+    },
+    "cornell_spheres": {
+     "verdict": "diverged",
+     "grade": null,
+     "failures": [
+      "worst PSNR across devices 20.11 dB is under 40.0 dB",
+      "MSE across devices is 677.99 times the MSE within a device, limit 2.0",
+      "R mean differs by 0.0862, allowed 0.00152",
+      "G mean differs by 0.0376, allowed 0.000785",
+      "B mean differs by 0.0131, allowed 0.00034"
+     ],
+     "worst_psnr_across_db": 20.105964418022715,
+     "worst_psnr_within_db": 45.48027318698822,
+     "mse_ratio": 677.9905871825457,
+     "channel_mean_difference": [
+      0.08616457879543304,
+      0.03762422129511833,
+      0.013113370165228844
+     ],
+     "channel_mean_allowed": [
+      0.0015208718832582235,
+      0.000784620875492692,
+      0.000339575664838776
+     ]
+    }
+   }
+  },
+  "cmp_cuda_metal_light2": {
+   "golden": "cuda_ad_rgb",
+   "golden_fault": null,
+   "candidate": "metal_ad_rgb",
+   "candidate_fault": "light_2pct",
+   "scenes": {
+    "cornell_box": {
+     "verdict": "diverged",
+     "grade": null,
+     "failures": [
+      "MSE across devices is 4.63 times the MSE within a device, limit 2.0",
+      "R mean differs by 0.00265, allowed 0.0014",
+      "G mean differs by 0.00119, allowed 0.00067",
+      "B mean differs by 0.000426, allowed 0.000279"
+     ],
+     "worst_psnr_across_db": 51.98846340636386,
+     "worst_psnr_within_db": 58.57692645288762,
+     "mse_ratio": 4.630978923179702,
+     "channel_mean_difference": [
+      0.0026450008153915405,
+      0.0011909902095794678,
+      0.00042608752846717834
+     ],
+     "channel_mean_allowed": [
+      0.0013969915453344584,
+      0.0006698608049191535,
+      0.00027867028256878257
+     ]
+    },
+    "cornell_spheres": {
+     "verdict": "diverged",
+     "grade": null,
+     "failures": [
+      "R mean differs by 0.00275, allowed 0.00152",
+      "G mean differs by 0.00137, allowed 0.000785",
+      "B mean differs by 0.000547, allowed 0.00034"
+     ],
+     "worst_psnr_across_db": 44.511198894621124,
+     "worst_psnr_within_db": 45.48027318698822,
+     "mse_ratio": 1.2300109368856087,
+     "channel_mean_difference": [
+      0.0027519166469573975,
+      0.0013676956295967102,
+      0.000547453761100769
+     ],
+     "channel_mean_allowed": [
+      0.0015208718832582235,
+      0.000784620875492692,
+      0.000339575664838776
+     ]
+    }
+   }
+  }
  },
  "cuda_attempt_with_3_9_1": {
   "date": "2026-11-04",
@@ -252,6 +448,50 @@
        0.0015210272977128625,
        0.0007846931111998856,
        0.0003396648389752954
+      ]
+     }
+    }
+   },
+   "scalar380_scalar": {
+    "golden": "scalar_rgb",
+    "golden_fault": null,
+    "candidate": "scalar_rgb",
+    "candidate_fault": null,
+    "scenes": {
+     "cornell_box": {
+      "verdict": "ok",
+      "grade": "B",
+      "failures": [],
+      "worst_psnr_across_db": 58.919877596959665,
+      "worst_psnr_within_db": 58.89136448393823,
+      "mse_ratio": 1.001051357859575,
+      "channel_mean_difference": [
+       6.183981895446777e-06,
+       7.748603820800781e-07,
+       1.0058283805847168e-07
+      ],
+      "channel_mean_allowed": [
+       0.0013970202999189496,
+       0.0006699658115394413,
+       0.00027906440664082766
+      ]
+     },
+     "cornell_spheres": {
+      "verdict": "ok",
+      "grade": "B",
+      "failures": [],
+      "worst_psnr_across_db": 45.885208897901855,
+      "worst_psnr_within_db": 45.910370621014266,
+      "mse_ratio": 0.9929562466298242,
+      "channel_mean_difference": [
+       7.3462724685668945e-06,
+       8.046627044677734e-06,
+       1.080334186553955e-06
+      ],
+      "channel_mean_allowed": [
+       0.0015216248575598001,
+       0.000785057432949543,
+       0.00034015270648524165
       ]
      }
     }

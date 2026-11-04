@@ -67,7 +67,7 @@
 
 ## 렌더링과 센서 (M5)
 
-- **Mitsuba Metal과 V100 CUDA 비교는 아직 없습니다.** Mitsuba 3.9.1은 V100을 거부합니다(compute capability 7.5 이상 필요, V100은 7.0). 3.8.0 경로는 아직 돌리지 않았고, 돌아도 양쪽 버전이 다릅니다. 첫 실행이 70분간 멈춘 원인도 찾지 못했습니다. `validation/m5-render.json`
+- Mitsuba Metal과 V100 CUDA 비교는 등급 B이지만 Mitsuba 버전이 다릅니다(3.9.1, 3.8.0). 장면 2개, 시드 3개입니다. 3.9.1 첫 실행이 70분 멈춘 원인은 찾지 못했습니다. `validation/m5-render.json`
 - RTX와의 직접 비교. RTX 쪽은 문서만 읽었습니다. `docs/RENDER-SENSORS.md`
 - 하드웨어 레이트레이싱: Metal 레이트레이싱 API를 쓰는 것은 확인했지만, 전용 회로가 동작했음을 보여 주는 카운터는 읽지 않았습니다. 하드웨어 가속은 Apple 문서의 내용입니다.
 - USD 장면은 이 저장소에서 만든 작은 장면 2개만 Mitsuba와 비교했습니다. 다른 도구의 자산, 텍스처, 서브디비전, 인스턴싱은 시험하지 않았고, UsdPreviewSurface의 반사 성분은 렌더링하지 않습니다. Hydra나 RTX와도 비교하지 않았습니다. `validation/m5-usd.json`

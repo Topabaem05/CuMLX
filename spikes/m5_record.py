@@ -80,6 +80,7 @@ def main() -> int:
             'rtx_differences_document': 'docs/RENDER-SENSORS.md',
         },
         'cuda_comparison': cuda,
+        'cuda_controls': {name: short_compare(load(raw / f'{name}.json')) for name in ('cmp_scalar380_scalar', 'cmp_cuda_metal_direct', 'cmp_cuda_metal_light2') if (raw / f'{name}.json').exists()},
         'cuda_attempt_with_3_9_1': CUDA_ATTEMPT,
         'metal_renders': metal,
         'local_checks_of_the_comparison': {
