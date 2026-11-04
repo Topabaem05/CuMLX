@@ -36,7 +36,8 @@ def box(tmp_path):
     stub("vm_stat", f'cat "{tmp_path}/vm_stat.txt"')
     stub("tart", 'case "$1" in ip) echo 192.0.2.1 ;; --version) echo stub ;; run) sleep 30 ;; esac; exit 0')
     # A stub ssh runs the remote text in a shell, with HOME set to the guest's folder.
-    stub("ssh", f'shift_to=""; for last; do :; done; HOME="{guest_home}" /bin/sh -c "$last"')
+    # It never starts the guest script: that line is only logged, so that a test cannot run the real work on this machine.
+    stub("ssh", f'for last; do :; done; case "$last" in *m6_vm_guest.sh*nohup*|*nohup*m6_vm_guest.sh*) echo started; exit 0 ;; esac; HOME="{guest_home}" /bin/sh -c "$last"')
     (tmp_path / "free_kb").write_text(str(100_000_000))
     (tmp_path / "vm_stat.txt").write_text(vm_stat_text(20.0))
     env = {"PATH": f"{stubs}:/usr/bin:/bin", "HOME": str(tmp_path / "host_home"), "CUMLX_VM_ROOT": str(root), "CUMLX_VM_TART": str(stubs / "tart"), "CUMLX_VM_POLL": "0"}
@@ -224,3 +225,38 @@ def test_attach_stops_the_vm_at_the_memory_limit_and_is_not_a_pass(box):
     assert done.returncode == 1
     assert (box.root / "result" / "verdict.txt").read_text().strip() == "stopped_memory"
     assert "tm stop default" in box.log.read_text()
+
+
+def test_a_test_run_never_starts_the_guest_script(box):
+    repo_with_git(box)
+    (box.tmp / "host_home").mkdir()
+    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text("pass\n")
+    assert run(box, "--work").returncode == 0
+    assert (box.guest_home / "m6_vm_guest.sh").exists()  # It was copied.
+    assert not (box.guest_home / "repro-result" / "stage.txt").exists()  # It did not run.
+    assert "m6_vm_guest.sh" in box.log.read_text()
+
+
+def guest_box(box, in_vm):
+    """Each tool that the guest script would use is a stub, so the script can run here, and the log shows how far it got."""
+    box.stub("sysctl", f'echo {1 if in_vm else 0}')
+    for tool in ("sudo", "diskutil", "softwareupdate", "git", "curl", "sw_vers", "system_profiler", "xcode-select", "touch"):
+        box.stub(tool, "exit 0")
+    (box.tmp / "home").mkdir(exist_ok=True)
+    return subprocess.run(["sh", str(GUEST), "abc"], env={**box.env, "HOME": str(box.tmp / "home")}, capture_output=True, text=True, timeout=30, check=False)
+
+
+def test_the_guest_script_does_nothing_outside_a_vm(box):
+    done = guest_box(box, in_vm=False)
+    assert done.returncode == 3 and "not a virtual machine" in done.stderr
+    assert not (box.tmp / "home" / "repro-result").exists()
+    calls = box.log.read_text()
+    assert "sudo" not in calls and "curl" not in calls and "git" not in calls and "diskutil" not in calls
+
+
+def test_the_guest_script_goes_on_inside_a_vm(box):
+    done = guest_box(box, in_vm=True)
+    assert done.returncode == 0, done.stderr
+    assert (box.tmp / "home" / "repro-result" / "machine.txt").exists()
+    # The stub curl installs no uv, so it stops there with a verdict that is not a pass.
+    assert (box.tmp / "home" / "repro-result" / "guest_verdict.txt").read_text().strip() == "setup_error_uv"

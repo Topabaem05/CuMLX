@@ -6,6 +6,11 @@
 # Each part writes to ~/repro-result. spikes/m6_vm_judge.py gives the verdict, by the rules in validation/m6-vm-limits.json. A failed part does not stop the next one.
 set -u
 COMMIT=${1:?the commit of CuMLX to test}
+# This script changes the machine it runs on, and it uses sudo with the guest's password. So it runs only inside a VM.
+if [ "$(sysctl -n kern.hv_vmm_present 2>/dev/null)" != 1 ]; then
+    echo "error: this is not a virtual machine, so nothing was done." >&2
+    exit 3
+fi
 OUT=$HOME/repro-result
 mkdir -p "$OUT"
 stage() { echo "[$(date +%H:%M:%S)] $1"; echo "$1" >"$OUT/stage.txt"; }
