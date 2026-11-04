@@ -75,7 +75,7 @@ def test_low_disk_is_refused_before_any_download(box):
 
 
 def test_memory_at_the_start_counts_the_vm(box):
-    (box.tmp / "vm_stat.txt").write_text(vm_stat_text(31.0))  # 6 GiB is 6.4e9 bytes, against 37 GB.
+    (box.tmp / "vm_stat.txt").write_text(vm_stat_text(33.0))  # 4 GiB is 4.3e9 bytes, against 37 GB.
     done = run(box, "start")
     assert done.returncode == 3 and "37 GB" in done.stderr
     assert "git" not in box.log.read_text()
@@ -86,7 +86,7 @@ def test_the_right_commit_is_built_and_the_window_opens(box):
     assert done.returncode == 0, done.stdout + done.stderr
     calls = box.log.read_text()
     assert f"checkout -q {COMMIT}" in calls
-    assert "tm up default --detach --cpus 8 --memory 6 --disk 80" in calls and "tm show default" in calls
+    assert "tm up default --detach --cpus 8 --memory 4 --disk 80" in calls and "tm show default" in calls
     assert (box.root / "setup_state.txt").read_text().strip() == "window_open"
     assert run(box, "status").returncode == 0
 

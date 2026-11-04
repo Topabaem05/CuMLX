@@ -60,7 +60,7 @@ uv venv -q --python 3.12 .venv || finish setup_error_venv
 uv pip install -q --python .venv/bin/python -e '.[dev,capture,diff,render,sim]' rsl-rl-lib==5.5.2 >"$OUT/install.txt" 2>&1 || finish setup_error_install
 uv pip freeze --python .venv/bin/python >"$OUT/freeze.txt" 2>&1
 PY=$PWD/.venv/bin/python
-# The fractions in sysmem are for a Mac with room to spare. This guest holds 6 GiB, and the host's watcher keeps the host's limits.
+# The fractions in sysmem are for a Mac with room to spare. A guest holds 4 or 6 GiB, so these sit above what it can use, and the host's watcher keeps the host's limits.
 CUMLX_MAX_USED_GB=${CUMLX_MAX_USED_GB:-6.3} CUMLX_START_USED_GB=${CUMLX_START_USED_GB:-5.6}
 export CUMLX_MAX_USED_GB CUMLX_START_USED_GB
 

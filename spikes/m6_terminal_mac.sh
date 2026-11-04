@@ -11,7 +11,7 @@
 set -u
 COMMIT=7009117f9e910c3dd4b4bd863e8bc331bd3c9d96
 REPO_URL=https://github.com/govijr/terminal-mac
-VM_MEMORY_GIB=6
+VM_MEMORY_GIB=${CUMLX_VM_MEMORY_GIB:-4}  # The least macOS takes. A busy Mac cannot start more under the limit below, and Genesis measured 2.16 GB at 4096 worlds.
 VM_CPUS=8
 VM_DISK_GIB=80
 MIN_FREE_START_GB=65
