@@ -10,7 +10,7 @@
 |---|---|---|
 | 하드웨어 | RTX 하드웨어의 GPU에서 렌더 시점에 시뮬레이션 | Apple GPU의 Metal 레이트레이싱 API. 아래 "하드웨어 레이트레이싱" 참고 |
 | 렌더러 | Omniverse RTX | Mitsuba 경로 추적. 이미지에 노이즈가 있고 디노이저를 켜지 않음 |
-| 재질 | 비가시 재질(Non-Visual Materials) 포함, 라이다 반환은 방사율과 반사율에 따라 달라짐 | Mitsuba BSDF만. USD와 MDL 재질을 읽지 않음 |
+| 재질 | 비가시 재질(Non-Visual Materials) 포함, 라이다 반환은 방사율과 반사율에 따라 달라짐 | Mitsuba BSDF. USD에서는 UsdPreviewSurface의 확산 색과 displayColor만 읽고, 반사 성분은 렌더링하지 않음. MDL을 읽지 않음 |
 | RGB | `rgb` annotator | 있음. 256×256에서 측정 |
 | 깊이 | `distance_to_camera`, `distance_to_image_plane` | 카메라 원점까지의 거리 하나. 이미지 평면 거리는 없음 |
 | 세그멘테이션 | `semantic_segmentation` | 도형 번호. 의미 라벨은 없음 |
@@ -18,7 +18,7 @@
 | 렌즈 왜곡 | OpenCV 핀홀, 피시아이 모델 | 없음. 이상적인 핀홀뿐 |
 | 라이다 | RTX Lidar: 프로필, 스캔 속도, 재질 응답, 여러 프레임에 걸친 스캔 | `cumlx.render.lidar`: 고정 패턴의 레이캐스트, 기하만. 프로필, 재질 응답, 잡음, 스캔 중 움직임 없음 |
 | 레이더, 음향 | RTX Radar, RTX Acoustic | 없음 |
-| 장면 | USD | Python 사전으로 만든 Mitsuba 장면. USD를 읽지 않음 |
+| 장면 | USD | Python 사전으로 만든 Mitsuba 장면, 또는 `cumlx.render.usd`로 읽은 USD의 작은 일부(메시, 원근 카메라 1개, RectLight, DistantLight). 그 밖의 prim은 거부함. 같은 장면의 Mitsuba 사전과 등급 B, [측정](../validation/m5-usd.json). 작은 장면 2개이며 다른 도구의 자산은 시험하지 않음. `Sensors`의 깊이와 세그멘테이션은 아직 이 경로를 쓰지 않음 |
 | 여러 환경 | Isaac Lab과 연결 | 한 번에 장면 하나. 병렬 환경 렌더링은 없음 |
 | 물리 연결 | Isaac Sim 내부 | 매 프레임 메시 꼭짓점을 옮기고 가속 구조를 다시 만듦. Genesis 정육면체 하나로 실행 |
 

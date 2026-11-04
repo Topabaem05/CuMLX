@@ -151,7 +151,7 @@ CLI는 stdout에 JSON 문서 하나만 내보내고, 오류마다 해결 명령�
 | `cumlx run`, `rundiff` | CUDA를 가정한 PyTorch 스크립트를 MPS에서 실행하고 비교 | 오픈소스 스크립트 4개가 V100 기준으로 등급 A 또는 B입니다 |
 | `cumlx kernel` | CUDA 커널 전처리, 번역기 연결, 값 비교 | 외부 커널은 번역과 컴파일까지입니다 |
 | `cumlx.sim` | Genesis, MuJoCo로 Isaac Lab 스타일 작업 학습 | cartpole, Go2 평지. Isaac Lab 작업을 읽지는 않습니다 |
-| `cumlx.render` | Mitsuba Metal RGB, 깊이, 세그멘테이션, 레이캐스트 | USD 장면은 아직입니다 |
+| `cumlx.render` | Mitsuba Metal RGB, 깊이, 세그멘테이션, 레이캐스트 | USD는 메시, 카메라, 조명 2종, 확산 색만 읽습니다. 작은 장면 2개로 시험했습니다 |
 | `cumlx doctor --stack --env PYTHON` | 여러 환경에 걸친 스택 점검 | 부품이 한 프로세스에서 함께 로드되는지는 보지 않습니다 |
 
 Isaac Sim과 Isaac Lab의 Mac 작업은 비공개 저장소 OrchardSim에 있습니다. **Isaac Sim은 Mac GPU를 쓰지 못합니다.** Linux 컨테이너에서 CPU PhysX만 돌고, 창은 검은 화면에서 멈춥니다. Isaac Lab은 warp-metal로 물리를 Metal에서 돌리고 Newton 뷰어와 버튼도 동작합니다.

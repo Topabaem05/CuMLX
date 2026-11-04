@@ -1,0 +1,392 @@
+{
+ "schema": "cumlx.m5_usd_record.v1",
+ "date": "2026-11-04",
+ "gate": "Not a completion gate of M5. It is the M5 item for USD scenes in cumlx.render.",
+ "limits": "validation/m5-usd-limits.json, committed before this run",
+ "verdict": "pass",
+ "grade": "B",
+ "machine": "Apple M5 Pro, with other jobs running",
+ "versions": {
+  "mitsuba": "3.9.1",
+  "usd_core": "26.11",
+  "variant": "metal_ad_rgb"
+ },
+ "first_run": "This is the first render through src/cumlx/render/usd.py. It passed, and no limit or scene changed.",
+ "process_gpu_seconds": 19.211903083,
+ "memory": {
+  "start_used_gb": 27.62,
+  "peak_used_gb": 28.0,
+  "stopped_for": null
+ },
+ "scenes": {
+  "cornell": {
+   "clean": {
+    "verdict": "ok",
+    "grade": "B",
+    "failures": [],
+    "worst_psnr_across_db": 58.77777871057259,
+    "worst_psnr_within_db": 58.7856056744006,
+    "mean_mse_across": 1.3031153558687138e-06,
+    "mean_mse_within": 1.2983208345455448e-06,
+    "mse_ratio": 1.003692863270462,
+    "channel_mean_difference": [
+     2.5480985641479492e-06,
+     4.023313522338867e-07,
+     1.817941665649414e-06
+    ],
+    "channel_mean_allowed": [
+     0.0013830920215696096,
+     0.0006662114756181836,
+     0.0002776367182377726
+    ],
+    "seeds": {
+     "golden": [
+      1,
+      2,
+      3
+     ],
+     "candidate": [
+      11,
+      12,
+      13
+     ]
+    },
+    "limits": {
+     "psnr_floor_db": 40.0,
+     "noise_ratio": 2.0,
+     "standard_errors": 3.0,
+     "rel_floor": 0.01,
+     "min_seeds": 3
+    }
+   },
+   "notes": [
+    "UsdPreviewSurface becomes a diffuse BSDF: its specular lobe is not rendered"
+   ],
+   "meshes": 7,
+   "lights": 1,
+   "faults": {
+    "wrong_transform": {
+     "verdict": "diverged",
+     "grade": null,
+     "failures": [
+      "worst PSNR across devices 34.49 dB is under 40.0 dB",
+      "MSE across devices is 275.23 times the MSE within a device, limit 2.0"
+     ],
+     "worst_psnr_across_db": 34.494108417235594,
+     "worst_psnr_within_db": 58.81070579811447,
+     "mean_mse_across": 0.0003551278787199408,
+     "mean_mse_within": 1.290292118483194e-06,
+     "mse_ratio": 275.230603700356,
+     "channel_mean_difference": [
+      0.0011643916368484497,
+      6.020069122314453e-06,
+      0.00018052011728286743
+     ],
+     "channel_mean_allowed": [
+      0.0013830920215696096,
+      0.0006662114756181836,
+      0.0002776367182377726
+     ],
+     "seeds": {
+      "golden": [
+       1,
+       2,
+       3
+      ],
+      "candidate": [
+       21,
+       22,
+       23
+      ]
+     },
+     "limits": {
+      "psnr_floor_db": 40.0,
+      "noise_ratio": 2.0,
+      "standard_errors": 3.0,
+      "rel_floor": 0.01,
+      "min_seeds": 3
+     }
+    },
+    "missing_mesh": {
+     "verdict": "diverged",
+     "grade": null,
+     "failures": [
+      "worst PSNR across devices 27.09 dB is under 40.0 dB",
+      "MSE across devices is 1527.88 times the MSE within a device, limit 2.0",
+      "R mean differs by 0.0132, allowed 0.00138",
+      "G mean differs by 0.00935, allowed 0.000666",
+      "B mean differs by 0.00365, allowed 0.000278"
+     ],
+     "worst_psnr_across_db": 27.09022613341045,
+     "worst_psnr_within_db": 58.8719372427384,
+     "mean_mse_across": 0.0019536192218462625,
+     "mean_mse_within": 1.278648312563746e-06,
+     "mse_ratio": 1527.878465603392,
+     "channel_mean_difference": [
+      0.013183921575546265,
+      0.009351588785648346,
+      0.003646496683359146
+     ],
+     "channel_mean_allowed": [
+      0.0013830920215696096,
+      0.0006662114756181836,
+      0.0002776367182377726
+     ],
+     "seeds": {
+      "golden": [
+       1,
+       2,
+       3
+      ],
+      "candidate": [
+       21,
+       22,
+       23
+      ]
+     },
+     "limits": {
+      "psnr_floor_db": 40.0,
+      "noise_ratio": 2.0,
+      "standard_errors": 3.0,
+      "rel_floor": 0.01,
+      "min_seeds": 3
+     }
+    },
+    "wrong_light_size": {
+     "verdict": "diverged",
+     "grade": null,
+     "failures": [
+      "worst PSNR across devices 28.19 dB is under 40.0 dB",
+      "MSE across devices is 980.25 times the MSE within a device, limit 2.0",
+      "R mean differs by 0.0268, allowed 0.00138",
+      "G mean differs by 0.0129, allowed 0.000666",
+      "B mean differs by 0.00536, allowed 0.000278"
+     ],
+     "worst_psnr_across_db": 28.192843188519397,
+     "worst_psnr_within_db": 57.33772334495846,
+     "mean_mse_across": 0.0015145706323285897,
+     "mean_mse_within": 1.5450791579496581e-06,
+     "mse_ratio": 980.2543931396021,
+     "channel_mean_difference": [
+      0.026778772473335266,
+      0.012911885976791382,
+      0.005358271300792694
+     ],
+     "channel_mean_allowed": [
+      0.0013830920215696096,
+      0.0006662114756181836,
+      0.0002776367182377726
+     ],
+     "seeds": {
+      "golden": [
+       1,
+       2,
+       3
+      ],
+      "candidate": [
+       21,
+       22,
+       23
+      ]
+     },
+     "limits": {
+      "psnr_floor_db": 40.0,
+      "noise_ratio": 2.0,
+      "standard_errors": 3.0,
+      "rel_floor": 0.01,
+      "min_seeds": 3
+     }
+    }
+   },
+   "seconds": 22.0
+  },
+  "boxes": {
+   "clean": {
+    "verdict": "ok",
+    "grade": "B",
+    "failures": [],
+    "worst_psnr_across_db": 68.47551337306201,
+    "worst_psnr_within_db": 68.5580177875455,
+    "mean_mse_across": 1.369210056938957e-07,
+    "mean_mse_within": 1.3639713832465836e-07,
+    "mse_ratio": 1.0038407504414821,
+    "channel_mean_difference": [
+     8.940696716308594e-08,
+     3.5762786865234375e-07,
+     9.5367431640625e-07
+    ],
+    "channel_mean_allowed": [
+     0.002746904967352748,
+     0.002570096403360367,
+     0.002045857487246394
+    ],
+    "seeds": {
+     "golden": [
+      1,
+      2,
+      3
+     ],
+     "candidate": [
+      11,
+      12,
+      13
+     ]
+    },
+    "limits": {
+     "psnr_floor_db": 40.0,
+     "noise_ratio": 2.0,
+     "standard_errors": 3.0,
+     "rel_floor": 0.01,
+     "min_seeds": 3
+    }
+   },
+   "notes": [
+    "UsdPreviewSurface becomes a diffuse BSDF: its specular lobe is not rendered"
+   ],
+   "meshes": 2,
+   "lights": 1,
+   "faults": {
+    "wrong_transform": {
+     "verdict": "diverged",
+     "grade": null,
+     "failures": [
+      "worst PSNR across devices 32.96 dB is under 40.0 dB",
+      "MSE across devices is 3812.66 times the MSE within a device, limit 2.0"
+     ],
+     "worst_psnr_across_db": 32.95535644442613,
+     "worst_psnr_within_db": 68.6333200591489,
+     "mean_mse_across": 0.0005060212117516332,
+     "mean_mse_within": 1.3272119758767076e-07,
+     "mse_ratio": 3812.663093379444,
+     "channel_mean_difference": [
+      0.0015136003494262695,
+      0.0012534856796264648,
+      0.0008465498685836792
+     ],
+     "channel_mean_allowed": [
+      0.002746904967352748,
+      0.002570096403360367,
+      0.002045857487246394
+     ],
+     "seeds": {
+      "golden": [
+       1,
+       2,
+       3
+      ],
+      "candidate": [
+       21,
+       22,
+       23
+      ]
+     },
+     "limits": {
+      "psnr_floor_db": 40.0,
+      "noise_ratio": 2.0,
+      "standard_errors": 3.0,
+      "rel_floor": 0.01,
+      "min_seeds": 3
+     }
+    },
+    "missing_mesh": {
+     "verdict": "diverged",
+     "grade": null,
+     "failures": [
+      "worst PSNR across devices 25.11 dB is under 40.0 dB",
+      "MSE across devices is 40322.94 times the MSE within a device, limit 2.0",
+      "R mean differs by 0.0192, allowed 0.00275",
+      "G mean differs by 0.00757, allowed 0.00257",
+      "B mean differs by 0.00874, allowed 0.00205"
+     ],
+     "worst_psnr_across_db": 25.109874855744586,
+     "worst_psnr_within_db": 68.6333200591489,
+     "mean_mse_across": 0.00308309492862059,
+     "mean_mse_within": 7.646006968305603e-08,
+     "mse_ratio": 40322.9416530838,
+     "channel_mean_difference": [
+      0.019205808639526367,
+      0.007574260234832764,
+      0.008736282587051392
+     ],
+     "channel_mean_allowed": [
+      0.002746904967352748,
+      0.002570096403360367,
+      0.002045857487246394
+     ],
+     "seeds": {
+      "golden": [
+       1,
+       2,
+       3
+      ],
+      "candidate": [
+       21,
+       22,
+       23
+      ]
+     },
+     "limits": {
+      "psnr_floor_db": 40.0,
+      "noise_ratio": 2.0,
+      "standard_errors": 3.0,
+      "rel_floor": 0.01,
+      "min_seeds": 3
+     }
+    },
+    "wrong_light_direction": {
+     "verdict": "diverged",
+     "grade": null,
+     "failures": [
+      "worst PSNR across devices 27.41 dB is under 40.0 dB",
+      "MSE across devices is 13843.62 times the MSE within a device, limit 2.0",
+      "R mean differs by 0.0356, allowed 0.00275",
+      "G mean differs by 0.0316, allowed 0.00257",
+      "B mean differs by 0.0226, allowed 0.00205"
+     ],
+     "worst_psnr_across_db": 27.407597879167966,
+     "worst_psnr_within_db": 68.6333200591489,
+     "mean_mse_across": 0.001816254742960963,
+     "mean_mse_within": 1.3119791949141776e-07,
+     "mse_ratio": 13843.624578816376,
+     "channel_mean_difference": [
+      0.03563152253627777,
+      0.031604960560798645,
+      0.022577553987503052
+     ],
+     "channel_mean_allowed": [
+      0.002746904967352748,
+      0.002570096403360367,
+      0.002045857487246394
+     ],
+     "seeds": {
+      "golden": [
+       1,
+       2,
+       3
+      ],
+      "candidate": [
+       21,
+       22,
+       23
+      ]
+     },
+     "limits": {
+      "psnr_floor_db": 40.0,
+      "noise_ratio": 2.0,
+      "standard_errors": 3.0,
+      "rel_floor": 0.01,
+      "min_seeds": 3
+     }
+    }
+   },
+   "seconds": 9.7
+  }
+ },
+ "not_shown": [
+  "Any USD asset from another tool, such as an Isaac asset. Both stages were written by spikes/m5_usd.py",
+  "Textures, subdivision, instancing, GeomSubsets, and every light but RectLight and DistantLight. The reader refuses most of these by name, and it renders a subdivision mesh as its control polygons, with a note",
+  "Agreement with Hydra or RTX. UsdPreviewSurface's specular lobe is dropped, and a comparison with Mitsuba itself cannot see that",
+  "A soft shadow from a DistantLight with an angle: it becomes a parallel light, with a note",
+  "cumlx.sim or the Sensors class reading these scenes: only the plain RGB render ran here"
+ ]
+}

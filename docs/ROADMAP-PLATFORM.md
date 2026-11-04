@@ -248,7 +248,7 @@ RTX가 필요하던 렌더링 경로를 Metal 레이트레이싱으로 대체합
 - `cumlx.sim`의 카메라 센서로 연결 (RGB, 깊이, 세그멘테이션)
 - LiDAR 같은 레이캐스트 센서를 Metal 레이트레이싱으로 구현
 
-**현재 상태 (2026-11-03):** `cumlx.render`는 Python 사전으로 만든 Mitsuba 장면에서 RGB, 깊이, 세그멘테이션을 만듭니다. USD 장면은 만들지 않았습니다. 완료 조건에는 없지만 위 항목이므로 미구현으로 적어 둡니다. `cumlx.sim` 카메라는 작업의 링크를 상자로 그려 물리 상태와 맞춥니다(21개 프레임 모두 통과, 처음 쓴 무게중심 기준은 실패, [기록](../validation/m4-sim.json)). 레이캐스트 센서는 `cumlx.render.lidar`에 있고, 빔 폭과 반사율, 잡음이 없는 기하 측정입니다. 정확한 거리와 최악 5.6e-6 m 차이입니다(허용 1e-3 m, 틀린 경우 3종은 실패, [기록](../validation/m5-lidar.json)). Mitsuba의 Metal 변형은 Metal 레이트레이싱 API를 씁니다. 이 GPU에서 그 API가 하드웨어로 가속된다는 부분은 Apple 문서의 내용이고, 카운터로 확인하지는 않았습니다.
+**현재 상태 (2026-11-04):** `cumlx.render`는 Python 사전으로 만든 Mitsuba 장면에서 RGB, 깊이, 세그멘테이션을 만듭니다. `cumlx.render.usd`는 USD의 작은 일부(메시, 원근 카메라 1개, RectLight, DistantLight, 확산 색)를 Mitsuba 장면으로 바꾸고, 그 밖의 것은 이름을 밝혀 거부합니다. 같은 장면을 Mitsuba로 직접 쓴 것과 Metal에서 비교해 두 장면 모두 등급 B입니다(최악 58.78 dB, 68.48 dB, MSE 비 1.004, 허용치는 M5 그대로, 일부러 넣은 결함 6건은 모두 실패, [기록](../validation/m5-usd.json)). 이 저장소에서 만든 작은 장면이고 다른 도구의 USD 자산은 돌려 보지 않았으며, Sensors나 `cumlx.sim`과는 아직 연결하지 않았습니다. `cumlx.sim` 카메라는 작업의 링크를 상자로 그려 물리 상태와 맞춥니다(21개 프레임 모두 통과, 처음 쓴 무게중심 기준은 실패, [기록](../validation/m4-sim.json)). 레이캐스트 센서는 `cumlx.render.lidar`에 있고, 빔 폭과 반사율, 잡음이 없는 기하 측정입니다. 정확한 거리와 최악 5.6e-6 m 차이입니다(허용 1e-3 m, 틀린 경우 3종은 실패, [기록](../validation/m5-lidar.json)). Mitsuba의 Metal 변형은 Metal 레이트레이싱 API를 씁니다. 이 GPU에서 그 API가 하드웨어로 가속된다는 부분은 Apple 문서의 내용이고, 카운터로 확인하지는 않았습니다.
 
 완료 조건:
 
