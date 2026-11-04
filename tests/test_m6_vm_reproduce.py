@@ -261,3 +261,34 @@ def test_the_guest_script_goes_on_inside_a_vm(box):
     assert (box.tmp / "home" / "repro-result" / "machine.txt").exists()
     # The stub curl installs no uv, so it stops there with a verdict that is not a pass.
     assert (box.tmp / "home" / "repro-result" / "guest_verdict.txt").read_text().strip() == "setup_error_uv"
+
+
+def test_attach_logs_in_with_the_account_it_is_given_and_writes_no_password_to_disk(box):
+    repo_with_git(box)
+    (box.tmp / "host_home").mkdir()
+    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text("pass\n")
+    box.stub("tm", "exit 0")
+    done = run(box, "--work-attach", "192.0.2.9", CUMLX_VM_TERMINAL_MAC=str(box.tmp / "stubs" / "tm"), CUMLX_VM_USER="someone", CUMLX_VM_PASSWORD="pw-for-a-test")
+    assert done.returncode == 0, done.stdout + done.stderr
+    calls = box.log.read_text()
+    assert "someone@192.0.2.9" in calls and "admin@" not in calls
+    assert "CUMLX_VM_PASSWORD='pw-for-a-test' nohup" in calls  # The guest script needs it for sudo.
+    for path in box.root.rglob("*"):
+        if path.is_file():
+            assert "pw-for-a-test" not in path.read_text(errors="replace"), path
+    assert "pw-for-a-test" not in done.stdout + done.stderr
+
+
+def test_a_password_with_a_quote_is_refused_before_anything_runs(box):
+    assert run(box, "attach", "192.0.2.9", CUMLX_VM_PASSWORD="a'b").returncode == 2
+    assert not box.log.exists() or "ssh" not in box.log.read_text()
+
+
+def test_the_askpass_script_reads_the_password_from_the_environment(box):
+    repo_with_git(box)
+    (box.tmp / "host_home").mkdir()
+    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text("pass\n")
+    box.stub("tm", "exit 0")
+    run(box, "--work-attach", "192.0.2.9", CUMLX_VM_TERMINAL_MAC=str(box.tmp / "stubs" / "tm"), CUMLX_VM_PASSWORD="pw-for-a-test")
+    said = subprocess.run(["sh", str(box.root / "askpass.sh")], env={"CUMLX_VM_PASSWORD": "pw-for-a-test"}, capture_output=True, text=True, check=True)
+    assert said.stdout.strip() == "pw-for-a-test"

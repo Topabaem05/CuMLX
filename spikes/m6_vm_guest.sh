@@ -15,7 +15,7 @@ OUT=$HOME/repro-result
 mkdir -p "$OUT"
 stage() { echo "[$(date +%H:%M:%S)] $1"; echo "$1" >"$OUT/stage.txt"; }
 finish() { echo "$1" >"$OUT/guest_verdict.txt"; stage "finished: $1"; exit 0; }
-PASSWORD=admin
+PASSWORD=${CUMLX_VM_PASSWORD:-admin}
 
 stage "1/9 what this machine is"
 {

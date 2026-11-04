@@ -5,7 +5,7 @@
 #   sh spikes/m6_vm_reproduce.sh status    # the state, and the verdict when it is done
 #   sh spikes/m6_vm_reproduce.sh stop      # stops the VM
 #   sh spikes/m6_vm_reproduce.sh clean     # deletes the VM and the image, and keeps the results
-#   sh spikes/m6_vm_reproduce.sh attach IP # the same work in a Mac that is already running, such as one from spikes/m6_terminal_mac.sh. It logs in as admin, password admin
+#   sh spikes/m6_vm_reproduce.sh attach IP # the same work in a Mac that is already running, such as one from spikes/m6_terminal_mac.sh. It logs in as CUMLX_VM_USER with CUMLX_VM_PASSWORD, which default to admin and admin
 #
 # It uses Tart (FSL-1.1-ALv2, third party, checked by SHA-256) and an image built by the Tart project. The image has user admin, password admin, on the VM's private network.
 # It stops the VM when this Mac's memory in use reaches 38 GB or its free disk falls to 15 GB. Those stops are never a pass.
@@ -25,6 +25,16 @@ MAX_USED_GB=38
 MAX_USED_AT_START_GB=37  # Memory in use now, plus the VM's memory.
 POLL=${CUMLX_VM_POLL:-30}
 LIMIT_SECONDS=${CUMLX_VM_LIMIT_SECONDS:-28800}
+VM_USER=${CUMLX_VM_USER:-admin}
+# Only the environment holds it: it reaches ssh through the askpass script, and the guest script through the command line in the guest.
+CUMLX_VM_PASSWORD=${CUMLX_VM_PASSWORD:-admin}
+export CUMLX_VM_PASSWORD
+case "$CUMLX_VM_PASSWORD" in
+*\'*)
+    echo "error: a password with a single quote is not supported" >&2
+    exit 2
+    ;;
+esac
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 REPO=$(dirname -- "$HERE")
 ROOT=${CUMLX_VM_ROOT:-$HOME/cumlx-vm}
@@ -54,11 +64,11 @@ verdict() {
     stage "verdict: $1"
 }
 ask_password() {
-    printf '#!/bin/sh\necho admin\n' >"$ROOT/askpass.sh"
+    printf '#!/bin/sh\necho "$CUMLX_VM_PASSWORD"\n' >"$ROOT/askpass.sh"
     chmod 700 "$ROOT/askpass.sh"
 }
 to_guest() {
-    SSH_ASKPASS="$ROOT/askpass.sh" SSH_ASKPASS_REQUIRE=force DISPLAY=:0 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o ConnectTimeout=10 -o LogLevel=ERROR "admin@$GUEST" "$@"
+    SSH_ASKPASS="$ROOT/askpass.sh" SSH_ASKPASS_REQUIRE=force DISPLAY=:0 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o ConnectTimeout=10 -o LogLevel=ERROR "$VM_USER@$GUEST" "$@"
 }
 stop_vm() {
     if [ "$MODE" = --work-attach ]; then
@@ -180,7 +190,7 @@ attach)
     fi
     ask_password
     if ! to_guest true 2>/dev/null; then
-        echo "error: cannot log in to admin@$GUEST. In the guest: an account admin with password admin, and Remote Login on." >&2
+        echo "error: cannot log in to $VM_USER@$GUEST. In the guest: that account, Remote Login on, and CUMLX_VM_USER and CUMLX_VM_PASSWORD set here." >&2
         exit 3
     fi
     nohup sh "$0" --work-attach "$GUEST" >"$ROOT/run.log" 2>&1 &
@@ -239,7 +249,7 @@ fi
 COMMIT=$(git -C "$REPO" rev-parse HEAD)
 stage "5/6 the guest script. The guest gets CuMLX $COMMIT from the public repository"
 to_guest 'cat > "$HOME/m6_vm_guest.sh"' <"$HERE/m6_vm_guest.sh" || { verdict setup_error_copy; stop_vm; exit 1; }
-to_guest "nohup caffeinate -ims sh \"\$HOME/m6_vm_guest.sh\" $COMMIT >\"\$HOME/guest.log\" 2>&1 </dev/null & echo started" || { verdict setup_error_guest; stop_vm; exit 1; }
+to_guest "CUMLX_VM_PASSWORD='$CUMLX_VM_PASSWORD' nohup caffeinate -ims sh \"\$HOME/m6_vm_guest.sh\" $COMMIT >\"\$HOME/guest.log\" 2>&1 </dev/null & echo started" || { verdict setup_error_guest; stop_vm; exit 1; }
 
 stage "6/6 running in the guest. Limits on this Mac: $MAX_USED_GB GB of memory, $MIN_FREE_GB GB of free disk"
 begin=$(date +%s)
