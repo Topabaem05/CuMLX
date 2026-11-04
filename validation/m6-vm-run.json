@@ -2,7 +2,9 @@
  "schema": "cumlx.m6_vm_run.v1",
  "date": "2026-11-04",
  "rules": "validation/m6-vm-limits.json, committed before any run and not changed",
- "cumlx_commit": "4e388a55f8da377d1d83592b5abd61f6e7b9ade9",
+ "cumlx_commit": "c5fa8cc2e9515e89b08bbcd3b43489cb375a1f00",
+ "cumlx_commit_at_run": "4e388a55f8da377d1d83592b5abd61f6e7b9ade9",
+ "cumlx_commit_note": "The guest fetched the commit at run. A history rewrite on 2026-11-05 gave it the other hash, and its tree 5490f34a46f8e5bd5cda041f3727612fe322e0b8 did not change.",
  "tool": {
   "name": "terminal-mac",
   "url": "https://github.com/govijr/terminal-mac",

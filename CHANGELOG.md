@@ -7,6 +7,7 @@
 - M6-1 ran in a real macOS 27.2 VM from `terminal-mac`, and the verdict is fail: `validation/m6-vm-run.json`. The public repository installs and its base passes, and the VM's paravirtual GPU cannot run F3, F4 or F5. So a VM cannot close M6-1. `CUMLX_VM_MEMORY_GIB`, `CUMLX_VM_USER`, `CUMLX_VM_PASSWORD` and `CUMLX_VM_PROXY` choose how it runs.
 - The separate repository OrchardSim is deleted, as of 2026-11-04: its Isaac Sim work could not easily be published under that licence. The records that the reports cite are in `validation/archive-orchardsim/`, and they cannot be measured again from here.
 - The repository is public as of 2026-11-04. `validation/m4-throughput.json` is a copy from the private repository OrchardSim, so that the M4 range can be read here.
+- The history of `main` after `4709604` was rewritten on 2026-11-05 to remove a server name from two commits. Only the one line in `validation/archive-orchardsim/isaac-sim-o5.json` changed, and the 13 commits have new hashes. `validation/m6-vm-run.json` gives the run's commit under both hashes. Other private details in older commits stay.
 - The history of `main` after `645450b` was rewritten on 2026-11-04, before the repository went public, to remove a local machine identity, a private ssh alias and a user name. Commit hashes after that point changed, and the references in the documents and records now use the new hashes. `tests/test_no_private_strings.py` keeps these strings out, by hash.
 
 ### Fixed
