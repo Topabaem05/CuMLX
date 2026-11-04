@@ -4,6 +4,7 @@
 
 ### Changed
 
+- The repository is public as of 2026-11-04. `validation/m4-throughput.json` is a copy from the private repository OrchardSim, so that the M4 range can be read here.
 - The history of `main` after `645450b` was rewritten on 2026-11-04, before the repository went public, to remove a local machine identity, a private ssh alias and a user name. Commit hashes after that point changed, and the references in the documents and records now use the new hashes. `tests/test_no_private_strings.py` keeps these strings out, by hash.
 
 ### Fixed
@@ -22,6 +23,7 @@
 
 ### Changed
 
+- The repository is public as of 2026-11-04. `validation/m4-throughput.json` is a copy from the private repository OrchardSim, so that the M4 range can be read here.
 - The Isaac Sim and Isaac Lab scripts moved to the private repository [OrchardSim](https://github.com/Topabaem05/OrchardSim). The `spikes/isaac_*` and `spikes/rsl_rl_golden.py` entries below describe files that are now there. The records stay in `validation/`, and the recipes name the new location.
 
 ### Added
@@ -60,6 +62,7 @@
 
 ### Changed
 
+- The repository is public as of 2026-11-04. `validation/m4-throughput.json` is a copy from the private repository OrchardSim, so that the M4 range can be read here.
 - Recipes: metalsplat, mps-flash-attn on torch 2.13, PyTorch sdpa on MPS and `torchvision.ops.deform_conv2d` now have `run` evidence, against the CPU or hand values, not CUDA. mps-bitsandbytes and the other `mps-*` packages failed on torch 2.15. `cumlx run` maps no package automatically, because none of them passed as a drop-in under the original name. `validation/m2-substitutes.json`.
 
 ### Fixed
@@ -123,6 +126,7 @@ The first release of the porting parity verifier. CUMLX does not convert models.
 
 ### Changed
 
+- The repository is public as of 2026-11-04. `validation/m4-throughput.json` is a copy from the private repository OrchardSim, so that the M4 range can be read here.
 - The kernel lab accepts MLX 0.32.2 and later 0.32.x. Its 35 GPU tests passed on Apple M5 Pro with 0.32.2 and 0.32.4.
 - The FP4 kernel lab moved to `docs/FP4-KERNEL-LAB.md`. The README is organized by use case.
 

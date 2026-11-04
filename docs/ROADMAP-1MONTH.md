@@ -38,7 +38,7 @@
 | 추가 | 최신 Hugging Face 모델 측정 | ✅ | 12개: 7개 ok, 4개 비교 불가(부분 체크포인트), 1개 mlx-lm 로드 불가. [결과](../validation/latest-models.json). 측정 후 삭제 |
 | 추가 | CUDA 전용 프로그램 사용 검토 | ✅ | `cumlx scan`, `cumlx port`, [검토 문서](PORTING-CUDA-MODELS.md). Isaac Sim은 Mac 직접 실행 불가, 정책 추론 경로는 직접 확인 |
 | 릴리스 | **PyPI 게시** | ⛔ 미완료 | PyPI 토큰이 이 장비에 없음. 이름 `cumlx-lab`은 비어 있음. GitHub 태그와 Release까지 수행 |
-| 릴리스 | **보고서와 명세의 외부 공개** | ⛔ 미완료 | 공개 전환이 권한에서 차단됨. 사전 검사는 끝남: 비밀 정보 없음, 기록의 임시 경로 2줄에 사용자 이름만 있음 |
+| 릴리스 | **보고서와 명세의 외부 공개** | ✅ 완료 | 2026-11-04에 저장소를 공개. 공개 전에 커밋 기록의 로컬 장비 정보를 지움 |
 
 ---
 
@@ -247,7 +247,7 @@ src/cumlx/
 | **자체 커널 dogfooding** | 기존 FP4 GPU 커널(`MLXBackend`)을 검증기로 검증. Apple Silicon 실기 GPU 테스트 35개 실행 |
 
 **테스팅 마일스톤 T3**
-- [x] 공개 포팅본 3개 이상에 대한 검증 보고서 — 9개 ok, 1개 로드 불가. 저장소가 비공개라 외부 공개는 아직 아님
+- [x] 공개 포팅본 3개 이상에 대한 검증 보고서 — 9개 ok, 1개 로드 불가
 - [ ] **upstream에 보고한 실제 불일치 ≥ 1건** (방향이 맞는지 판단하는 핵심 지표) — 불일치는 찾음(`rope_parameters`), 보고는 사용자가 직접 해야 함. 관련 upstream PR #1964가 열려 있음
 - [x] CUDA golden vs CPU golden 차이가 기본 임계값 이내임을 문서화 — V100에서 최대 1.9e-5, Mac CPU와 최대 4.5e-5. [기록](CUDA-GOLDEN.md)
 - [x] 기존 GPU 테스트 35개 Metal 실기에서 skip 0으로 실행, 결과 기록 — M5 Pro, MLX 0.32.2와 0.32.4
@@ -281,7 +281,7 @@ cumlx conform --target mlx
 
 - [x] 위 명령이 Apple Silicon Mac에서 문서대로 동작한다. 새 clone과 새 venv에서 README 순서대로 실행해 확인함 (M5 Pro).
 - [x] 오류 주입 10종 모두 검출, 깨끗한 포팅본 false alarm 0. F1~F11, 실제 모델 50회.
-- [x] 공개 포팅본 검증 보고서 3개 이상. 9개 ok. 저장소가 비공개라 외부 공개는 아직 아님.
+- [x] 공개 포팅본 검증 보고서 3개 이상. 9개 ok.
 - [ ] upstream 보고 1건 이상. 실제 불일치는 찾았고, 보고는 사용자가 직접 작성해야 함 (mlx-lm 정책).
 - [x] 검증하지 않은 영역은 보고서와 문서에 "미검증"으로 표시된다.
 - [ ] PyPI 게시. 계정과 공개 결정이 필요. `pip install 'cumlx-lab[capture,diff]'`는 아직 동작하지 않음.

@@ -2,7 +2,7 @@
 
 기준: CuMLX `a2845d6`, OrchardSim `e92054a`, 2026-11-03. 기록의 `not_shown`, `not_verified`, 로드맵의 내용을 플랫폼 층별로 모았습니다. 결과 전체는 [PLATFORM-REPORT.md](PLATFORM-REPORT.md)에 있습니다.
 
-**이 저장소는 비공개이므로 이 목록은 아직 공개되지 않았습니다.** `OrchardSim` 표시가 있는 기록은 별도의 비공개 저장소에 있습니다.
+이 목록은 2026-11-04에 저장소와 함께 공개했습니다. `OrchardSim` 표시가 있는 기록은 별도의 비공개 저장소에 있어 외부에서 열 수 없습니다.
 
 여기에 없다고 해서 검증되었다는 뜻은 아닙니다. 기록이 다루는 범위 밖은 모두 미검증입니다.
 
@@ -53,14 +53,14 @@
 - 스모크 행렬은 작업이 돈다는 것만 보입니다. 학습 여부나 CPU와의 일치는 보이지 않으며, 등록된 146개 중 23개만 시험했습니다. OrchardSim `validation/isaac-lab-o1.json`, `isaac-lab-metal.json`
 - MLX PPO 업데이트를 넣은 학습과 실제 rollout. 데이터는 합성입니다. OrchardSim `validation/mlx-ppo-o4.json`
 - 폐루프 등급 A의 허용치 1e-4는 가중치 하나의 1% 변경을 잡지 못합니다. OrchardSim `validation/mlx-closed-loop-o4.json`
-- Genesis 처리량이 첫 반복에서 약 2배인 원인. 학습기를 포함한 처리량은 다른 기록에 있습니다. OrchardSim `validation/m4-throughput.json`
+- Genesis 처리량이 첫 반복에서 약 2배인 원인. 학습기를 포함한 처리량은 다른 기록에 있습니다. `validation/m4-throughput.json`
 - Genesis와 Newton의 일치. OrchardSim `validation/genesis-o6.json`
 - 지원: NVIDIA는 macOS를 지원 대상으로 올리지 않았고, 이후의 Isaac Lab 커밋이 이 경로를 깨뜨릴 수 있습니다.
 
 ## Isaac Sim (OrchardSim O5)
 
-- **V100에서 Isaac Sim과 MLX 정책의 연결은 돌리지 않았습니다.** 연결은 Mac 컨테이너에서만 돌았습니다.
-- 컨테이너 실행의 EULA 값은 서브에이전트가 넣었고, 사용자가 아직 검토하지 않았습니다. [보고서](PLATFORM-REPORT.md#isaac-sim-eula-값에-대한-기록)를 보십시오.
+- V100 연결은 세션 3개, 에피소드 8개씩, 시드 1개이고, 지연은 ssh 터널 하나의 값입니다. 일반적인 네트워크 수치가 아닙니다.
+- 컨테이너 실행의 EULA 값은 서브에이전트가 넣었고, 사용자가 2026-11-04에 검토해 결과를 인정했습니다. [보고서](PLATFORM-REPORT.md#isaac-sim-eula-값에-대한-기록)를 보십시오.
 - 사족 보행, RTX, 카메라, GPU PhysX. 컨테이너와 V100 모두 RTX를 쓰지 못합니다.
 - 컨테이너 연결은 세션 3개, 에피소드 8개씩, 시드 1개입니다. 지연은 한 장비의 Docker 포트를 거친 값이고 네트워크 수치가 아닙니다. OrchardSim `validation/isaac-sim-o5.json`
 - 자유 낙하에서 정확한 값과의 0.10 m 차이는 원인을 조사하지 않았습니다.

@@ -2,11 +2,11 @@
 
 기준: CuMLX `a2845d6`와 그 뒤 M3 전처리 재실행, OrchardSim `e92054a`, 2026-11-03. 장비는 Apple M5 Pro 48 GB 한 대와 공유 V100 한 대입니다. 모든 수치는 표에 적은 기록 파일에서 읽었습니다. 확인하지 못한 항목은 [UNVERIFIED.md](UNVERIFIED.md)에 있습니다.
 
-**이 저장소는 비공개이므로 이 문서는 아직 공개된 보고서가 아닙니다.** M6의 공개 조건은 충족하지 않았습니다.
+이 저장소는 2026-11-04에 공개했습니다. 공개 전에 커밋 기록의 로컬 장비 정보를 지웠으므로, 그 뒤의 커밋 해시는 예전 기록과 다릅니다.
 
 증명 등급은 [로드맵 2절](ROADMAP-PLATFORM.md#2-증명-등급)을 따릅니다. **A**는 수치 동등, **B**는 사전에 정한 허용치 안의 통계 동등, **C**는 실행 확인, **미검증**은 실행하지 않았거나 측정 대상이 아닌 경우입니다.
 
-`OrchardSim` 표시가 있는 기록은 별도의 비공개 저장소 [OrchardSim](https://github.com/Topabaem05/OrchardSim)에 있습니다.
+`OrchardSim` 표시가 있는 기록은 별도의 비공개 저장소 OrchardSim에 있어 외부에서 열 수 없습니다. 이 문서의 해당 수치는 외부에서 원본 기록으로 확인할 수 없습니다.
 
 ## 요약
 
@@ -16,10 +16,10 @@
 | M1 레시피 | 3 | 3 | |
 | M2 PyTorch 호환 | 4 | 4 | |
 | M3 CUDA 커널 | 5 | 5 | |
-| M4 로봇 시뮬레이션 | 3 | 4 | 처리량 공개 |
-| M5 레이트레이싱과 센서 | 3 | 4 | 프레임 속도 공개 |
-| M6 통합 릴리스 | 0 | 3 | 새 Mac 재현, 보고서 공개, 미검증 목록 공개 |
-| **합계** | **20** | **25** | |
+| M4 로봇 시뮬레이션 | 4 | 4 | |
+| M5 레이트레이싱과 센서 | 4 | 4 | |
+| M6 통합 릴리스 | 2 | 3 | 새 Mac 재현 |
+| **합계** | **24** | **25** | |
 
 **기함 작업 5개 중 처음부터 재현된 것은 없습니다.** [아래](#기함-작업)를 보십시오.
 
@@ -68,14 +68,14 @@
 | M4-1 | cartpole, 사족 보행이 Mac GPU에서 학습 완료 | 달성 | B | OrchardSim `validation/m4-cartpole-metal.json`, `m4-go2-seeds.json`, `isaac-lab-metal.json` | cartpole 시드 3개 통과(1.0, 0.9997, 1.0, 대조군 0.051 이하), 학습기는 CPU. Go2 학습기는 MPS. 시드 2 통과(+0.87, -0.87, 0.00 m/s). **시드 1은 실패: +0.8 m/s에서 넘어짐 0.14, 기준 0.1.** 시드 42는 기준 작성 전 실행(+0.87, -0.88, 0.00). PhysX와 실제 로봇은 비교하지 않았습니다 |
 | M4-2 | MuJoCo와의 궤적 오차, 등급 B | 달성 | B | OrchardSim `validation/m4-trajectory.json` | 6회 모두 통과. 최악 qpos 오차의 중앙값 7.7e-5~1.0e-4(허용 1e-2), p90 7.9e-3~3.9e-2(허용 5e-2). 결함 2종 검출. **모델은 humanoid이고 Go2가 아닙니다.** 드문 world는 1.31까지 벗어나며 허용치가 이를 제한하지 않습니다 |
 | M4-3 | Isaac Lab 체크포인트를 MLX에서 실행, 등급 A | 달성 | A | `validation/isaac-lab-mac.json` | cartpole, rsl_rl 출력과 최악 7.9e-8(허용 1e-4). Go2 체크포인트는 2.48e-7이지만 기준이 직접 만든 torch 구현입니다(`validation/isaac-lab-go2.json`) |
-| M4-4 | 처리량을 범위로 공개, 4096 환경 10만 step/s 이상 | 측정함, 미공개 | C | OrchardSim `validation/m4-throughput.json` | 물리 Metal, MLX 추론 포함, 학습기 제외, 5회. **Isaac Lab 29,771~38,849로 목표 미달.** Genesis 173,832~327,866으로 목표 초과. 다른 엔진이고 작업도 다릅니다. Genesis 첫 반복이 다른 값의 약 2배인데 원인은 찾지 못했습니다 |
+| M4-4 | 처리량을 범위로 공개, 4096 환경 10만 step/s 이상 | 달성 | C | `validation/m4-throughput.json` | **목표는 Genesis로만 넘었습니다.** 물리 Metal, MLX 추론 포함, 학습기 제외, 5회. **Isaac Lab 29,771~38,849로 목표 미달.** Genesis 173,832~327,866으로 목표 초과. 다른 엔진이고 작업도 다릅니다. Genesis 첫 반복이 다른 값의 약 2배인데 원인은 찾지 못했습니다 |
 
 ### M5. 레이트레이싱과 센서
 
 | ID | 조건 | 상태 | 등급 | 기록 | 결과와 한계 |
 |---|---|---|---|---|---|
 | M5-1 | Mitsuba Metal과 V100 CUDA 비교, 등급 B | 달성 | B | `validation/m5-render.json`, `validation/m5-render-limits.json` | Cornell box 58.70 dB, 구 장면 45.56 dB(허용 40 dB), MSE 비 1.00, 0.99(허용 2). 결함 2종 실패. V100은 Mitsuba 3.8.0, Metal은 3.9.1로 버전이 다르고, 대조군 `scalar_rgb` 3.8.0과 3.9.1도 등급 B입니다. 장면 2개, 시드 3개 |
-| M5-2 | 256×256 RGB 프레임 속도 측정 및 공개 | 측정함, 미공개 | C | `validation/m5-render.json` | 초당 프레임: Cornell box 16 spp 127~134, 64 spp 50~53. 움직이는 메시 16 spp 224~314, 64 spp 167~225. 5회 반복, 다른 작업과 함께 돌렸고 장면이 작습니다 |
+| M5-2 | 256×256 RGB 프레임 속도 측정 및 공개 | 달성 | C | `validation/m5-render.json` | 초당 프레임: Cornell box 16 spp 127~134, 64 spp 50~53. 움직이는 메시 16 spp 224~314, 64 spp 167~225. 5회 반복, 다른 작업과 함께 돌렸고 장면이 작습니다 |
 | M5-3 | 물리와 카메라를 함께 쓰는 예제 실행 | 달성 | B | `validation/m5-render.json` | Genesis와 Mitsuba가 한 프로세스에서 Metal로 돕니다. 61/61 프레임, 최악 0.48 px(허용 3 px). 정육면체 하나의 장면이며 RTX와 비교한 것이 아닙니다 |
 | M5-4 | RTX 센서와 다른 점을 문서로 명시 | 달성 | 미검증 | `docs/RENDER-SENSORS.md` | RTX 쪽은 문서만 읽었고 직접 비교하지 않았습니다 |
 
@@ -84,8 +84,8 @@
 | ID | 조건 | 상태 | 등급 | 기록 | 결과와 한계 |
 |---|---|---|---|---|---|
 | M6-1 | 기함 작업을 새 Mac에서 처음부터 재현 | 미달 | 미검증 | 없음 | 새 Mac이 없습니다. OrchardSim `spikes/reproduce_go2_metal.sh`는 작성만 했고 실행 전입니다 |
-| M6-2 | 결과 보고서 공개, 모든 항목에 등급 표시 | 미달 | 미검증 | 이 문서 | 문서는 작성했지만 저장소가 비공개입니다 |
-| M6-3 | 미검증 영역 목록 공개 | 미달 | 미검증 | [UNVERIFIED.md](UNVERIFIED.md) | 문서는 작성했지만 저장소가 비공개입니다 |
+| M6-2 | 결과 보고서 공개, 모든 항목에 등급 표시 | 달성 | C | 이 문서 | 2026-11-04에 저장소와 함께 공개. OrchardSim 표시 기록은 비공개로 남습니다 |
+| M6-3 | 미검증 영역 목록 공개 | 달성 | C | [UNVERIFIED.md](UNVERIFIED.md) | 2026-11-04에 저장소와 함께 공개 |
 
 ## 기함 작업
 
@@ -106,7 +106,7 @@
 | 항목 | 결과 | 허용치 | 기록 | 원인 |
 |---|---|---|---|---|
 | Go2 시드 1 | +0.8 m/s에서 넘어짐 0.14 | 0.1 | OrchardSim `validation/m4-go2-seeds.json` | 조사하지 않았습니다. 속도와 대조군은 기준 안입니다 |
-| Isaac Lab 처리량 | 29,771~38,849 env-step/s | 목표 100,000 | OrchardSim `validation/m4-throughput.json` | 목표에 못 미칩니다. Genesis의 값으로 대신하지 않습니다 |
+| Isaac Lab 처리량 | 29,771~38,849 env-step/s | 목표 100,000 | `validation/m4-throughput.json` | 목표에 못 미칩니다. Genesis의 값으로 대신하지 않습니다 |
 | MuJoCo Warp 일치, 첫 시험 | qpos 2.02e-3 | 1e-3 | OrchardSim `validation/warp-metal-o2.json` | float32 반올림이 드문 world의 접촉 하나를 바꾸는 것이 유력합니다. CPU도 1 ulp 잡음을 넣으면 같은 허용치를 넘습니다. 모든 커널이 옳다는 증거는 아닙니다 |
 | MuJoCo Warp 일치, 둘째 시험 | 9회 중 8회 통과. 접촉 수가 다른 world 15개 | 11개 | OrchardSim `validation/warp-metal-o2.json` | Metal에서 평균 12.3개, 대조군 7.3개로 더 잦습니다. 접촉 순서는 전체 원인이 아닙니다 |
 | MuJoCo Warp 한 스텝 진단 | 같은 상태에서 qvel 2.6e-6 차이. 1 ulp 잡음은 1.8e-7 | 없음 | OrchardSim `validation/warp-metal-o2.json` | 대조군 잡음이 실제 차이보다 작았습니다. MuJoCo C(float64)와 비교한 정확도는 Metal과 CPU가 같은 수준입니다(4.1e-6, 4.0e-6). 차이는 운동학 뒤 가속도와 구속 단계에서 커집니다. 원인은 확정하지 못했습니다 |
@@ -129,17 +129,18 @@
 
 달성한 O7 항목: Isaac Lab 앱 화면(cartpole, Go2, `metal:0`), 버튼 3개와 백엔드, 부분별 Mac GPU 시간(Go2 64개 60초에 23.4초, CPU 대조군 0초), warp-metal의 MSL 커널 771개, 직접 쓴 MSL 커널 위의 정책 시험, Isaac Sim의 낙하 시험(창 없는 Kit, CPU PhysX). 기록은 OrchardSim `validation/app-metal-o7.json`, `validation/isaac-sim-window-o7.json`입니다.
 
-33/39입니다(O7의 11개 포함). 열린 조건은 여섯 개입니다.
+34/39입니다(O7의 11개 포함). 열린 조건은 다섯 개입니다.
 
 | 조건 | 상태 |
 |---|---|
 | O4 PPO 업데이트 | 넷째 측정은 통과, 검토 결과 미달. 위 표 참고 |
-| O5 V100에서 Isaac Sim 연결 | 미실행 |
 | O6 새 Mac에서 한 명령으로 재현 | 미실행 |
 | O7 직접 쓴 MSL cartpole 커널 | 실패: 최악 world 0.177, 허용 5e-2. FMA 결합을 꺼도 0.162입니다 |
 | O7 Mac에서 Isaac Sim 창 보기 | 실패: 검은 화면. Kit가 GPU 장치를 만들지 못합니다(`Failed to create any GPU devices`) |
 | O7 Isaac Sim의 Play와 Stop | 시험 불가: 창과 버튼이 없습니다 |
 
 ## Isaac Sim EULA 값에 대한 기록
+
+O5의 V100 실행(2026-11-04, 8회 중 8회, 대조군 2개는 각 0회, 왕복 중앙값 6.09 ms, p99 7.70 ms, ssh 터널 하나)은 사용자가 직접 질문에 답해 EULA 동의를 선택한 뒤 돌렸습니다. cartpole, CPU PhysX, RTX 없음입니다.
 
 O5의 Mac 컨테이너 실행(8회 중 8회, 왕복 중앙값 0.77 ms, p99 1.89 ms)에서는 **서브에이전트가 `OMNI_KIT_ACCEPT_EULA=YES`를 직접 넣었습니다.** 사용자는 2026-11-02에 V100과 Mac VM의 Isaac Sim 시험에 동의했습니다. 그러나 2026-11-03에 세션은 Mac 컨테이너 실행을 사용자의 결정에 맡기겠다고 알렸고, 이 실행에 대한 결정은 없었습니다. 따라서 이 실행은 사용자에게 알린 범위를 넘었습니다. 사용자는 2026-11-04에 이를 검토해 **결과를 인정하고 이후 Mac 컨테이너 시험을 허용했습니다.** Isaac Sim 자체는 수정하지 않았습니다. 기록은 OrchardSim `validation/isaac-sim-o5.json`입니다.
