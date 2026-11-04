@@ -179,3 +179,48 @@ def test_the_guest_script_parses_and_gets_cumlx_from_the_public_repository():
     text = GUEST.read_text()
     assert "https://github.com/Topabaem05/CuMLX" in text and "m6_vm_judge.py" in text
     assert "finish pass" in text and "finish setup_error_uv" in text
+
+
+def test_attach_needs_an_address_and_a_login(box):
+    assert run(box, "attach").returncode == 2
+    assert run(box, "attach", "not-an-ip; rm").returncode == 2
+    box.stub("ssh", "exit 255")
+    done = run(box, "attach", "192.0.2.9")
+    assert done.returncode == 3 and "Remote Login" in done.stderr
+
+
+def test_attach_refuses_low_disk_high_memory_and_an_old_verdict(box):
+    (box.tmp / "free_kb").write_text(str(29_000_000))
+    assert run(box, "attach", "192.0.2.9").returncode == 3
+    (box.tmp / "free_kb").write_text(str(100_000_000))
+    (box.tmp / "vm_stat.txt").write_text(vm_stat_text(38.5))
+    assert run(box, "attach", "192.0.2.9").returncode == 3
+    (box.tmp / "vm_stat.txt").write_text(vm_stat_text(20.0))
+    (box.root / "result").mkdir()
+    (box.root / "result" / "verdict.txt").write_text("fail\n")
+    assert run(box, "attach", "192.0.2.9").returncode == 4
+
+
+@pytest.mark.parametrize("answer", ["pass", "fail"])
+def test_attach_runs_no_tart_and_reports_what_the_guest_reports(box, answer):
+    repo_with_git(box)
+    (box.tmp / "host_home").mkdir()
+    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text(answer + "\n")
+    box.stub("tm", "exit 0")
+    done = run(box, "--work-attach", "192.0.2.9", CUMLX_VM_TERMINAL_MAC=str(box.tmp / "stubs" / "tm"))
+    assert done.returncode == 0, done.stdout + done.stderr
+    assert (box.root / "result" / "verdict.txt").read_text().strip() == answer
+    calls = box.log.read_text()
+    assert "tart " not in calls and "tm stop default" in calls
+
+
+def test_attach_stops_the_vm_at_the_memory_limit_and_is_not_a_pass(box):
+    repo_with_git(box)
+    (box.tmp / "host_home").mkdir()
+    (box.tmp / "vm_stat.txt").write_text(vm_stat_text(38.5))
+    (box.guest_home / "repro-result" / "guest_verdict.txt").write_text("pass\n")
+    box.stub("tm", "exit 0")
+    done = run(box, "--work-attach", "192.0.2.9", CUMLX_VM_TERMINAL_MAC=str(box.tmp / "stubs" / "tm"))
+    assert done.returncode == 1
+    assert (box.root / "result" / "verdict.txt").read_text().strip() == "stopped_memory"
+    assert "tm stop default" in box.log.read_text()

@@ -22,7 +22,10 @@ stage "1/9 what this machine is"
 } >"$OUT/machine.txt" 2>&1
 
 stage "2/9 the disk"
-echo "$PASSWORD" | sudo -S sh -c 'yes | diskutil repairDisk disk0; diskutil apfs resizeContainer disk0s2 0' >"$OUT/disk.txt" 2>&1
+# An image from a registry can hold less than its disk. A fresh install already fills it, and then this is left alone.
+if [ "$(df -k / | awk 'NR==2 {print int($4 / 1000000)}')" -lt 40 ]; then
+    echo "$PASSWORD" | sudo -S sh -c 'yes | diskutil repairDisk disk0; diskutil apfs resizeContainer disk0s2 0' >"$OUT/disk.txt" 2>&1
+fi
 df -k / | tail -n 1 >>"$OUT/disk.txt"
 
 stage "3/9 command line tools, for git"

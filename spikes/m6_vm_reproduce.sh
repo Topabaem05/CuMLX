@@ -5,6 +5,7 @@
 #   sh spikes/m6_vm_reproduce.sh status    # the state, and the verdict when it is done
 #   sh spikes/m6_vm_reproduce.sh stop      # stops the VM
 #   sh spikes/m6_vm_reproduce.sh clean     # deletes the VM and the image, and keeps the results
+#   sh spikes/m6_vm_reproduce.sh attach IP # the same work in a Mac that is already running, such as one from spikes/m6_terminal_mac.sh. It logs in as admin, password admin
 #
 # It uses Tart (FSL-1.1-ALv2, third party, checked by SHA-256) and an image built by the Tart project. The image has user admin, password admin, on the VM's private network.
 # It stops the VM when this Mac's memory in use reaches 38 GB or its free disk falls to 15 GB. Those stops are never a pass.
@@ -60,6 +61,10 @@ to_guest() {
     SSH_ASKPASS="$ROOT/askpass.sh" SSH_ASKPASS_REQUIRE=force DISPLAY=:0 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o ConnectTimeout=10 -o LogLevel=ERROR "admin@$GUEST" "$@"
 }
 stop_vm() {
+    if [ "$MODE" = --work-attach ]; then
+        "${CUMLX_VM_TERMINAL_MAC:-$ROOT/terminal-mac-src/dist/terminal-mac}" stop default >/dev/null 2>&1
+        return 0
+    fi
     "$TART" stop "$VM" >/dev/null 2>&1
     wait_pid=${RUN_PID:-}
     [ -n "$wait_pid" ] && kill "$wait_pid" 2>/dev/null
@@ -146,14 +151,56 @@ start)
     echo "See the state with: sh $0 status"
     exit 0
     ;;
---work) ;;
+attach)
+    GUEST=${2:-}
+    case "$GUEST" in
+    "" | *[!0-9.]*)
+        echo "usage: sh $0 attach IP. In the guest, ipconfig getifaddr en0 prints it." >&2
+        exit 2
+        ;;
+    esac
+    mkdir -p "$ROOT"
+    if running; then
+        echo "error: a run is going, pid $(cat "$ROOT/run.pid")" >&2
+        exit 4
+    fi
+    if [ -f "$RESULT/verdict.txt" ]; then
+        echo "error: $RESULT already holds a verdict. Move it away to run again." >&2
+        exit 4
+    fi
+    now=$(free_gb)
+    if [ "$now" -lt 30 ]; then
+        echo "error: needs 30 GB free, found $now GB" >&2
+        exit 3
+    fi
+    used=$(used_gb)
+    if at_least "$used" "$MAX_USED_GB"; then
+        echo "error: $used GB of memory is in use, at or over $MAX_USED_GB GB" >&2
+        exit 3
+    fi
+    ask_password
+    if ! to_guest true 2>/dev/null; then
+        echo "error: cannot log in to admin@$GUEST. In the guest: an account admin with password admin, and Remote Login on." >&2
+        exit 3
+    fi
+    nohup sh "$0" --work-attach "$GUEST" >"$ROOT/run.log" 2>&1 &
+    echo $! >"$ROOT/run.pid"
+    echo "Started, pid $(cat "$ROOT/run.pid"). Log: $ROOT/run.log"
+    echo "See the state with: sh $0 status"
+    exit 0
+    ;;
+--work | --work-attach) ;;
 *)
-    sed -n 2,11p "$0" >&2
+    sed -n 2,12p "$0" >&2
     exit 2
     ;;
 esac
 
 ask_password
+if [ "$MODE" = --work-attach ]; then
+    GUEST=$2
+    stage "a Mac that is already running, at $GUEST"
+else
 stage "1/6 Tart $TART_VERSION"
 get_tart || { verdict setup_error_tart; exit 1; }
 "$TART" --version
@@ -185,6 +232,7 @@ if [ -z "$GUEST" ]; then
     verdict setup_error_boot
     stop_vm
     exit 1
+fi
 fi
 
 COMMIT=$(git -C "$REPO" rev-parse HEAD)
