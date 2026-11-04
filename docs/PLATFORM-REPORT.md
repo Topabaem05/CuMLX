@@ -117,7 +117,7 @@
 | Newton 작은 장면 | 원뿔에서 4.9e-3 | 1e-3 | OrchardSim `validation/warp-metal-o2.json` | 찾지 못했습니다. 시작 위치에 따라 약 5e-6 또는 4.89e-3입니다. Newton 자체 충돌 경로는 패치한 복사본에서만 돌고, 공식판은 `fixedarray_t`로 실패합니다 |
 | MLX PPO 업데이트, 첫 시험 | 가중치 오차 0.0186, 0.0214(시드 3개 중 2개) | 0.01 | OrchardSim `validation/mlx-ppo-o4.json` | 서로게이트 클립이 기울기를 불연속으로 만듭니다. rsl_rl도 자기와 비교해 같은 허용치를 넘습니다(0.0102, 0.0110) |
 | MLX PPO, 자유 실행 측정 | 포트 결함 5건을 고치기 전 중앙값 9.8e-3, 고친 뒤 9.4e-4. 시드 10개 중 5개가 큼. 대조군은 4개 | 중앙값 2.2e-4 | OrchardSim `validation/mlx-ppo-o4.json` | 실패로 남습니다. 클립을 넘지 않는 경우는 1.7e-4(허용 1e-2)입니다 |
-| MLX PPO, 넷째 측정 | 시드 120개에서 통과: 1e-3 초과 54%, rsl_rl MPS 52%, 허용 72% | 사전 작성 규칙 | OrchardSim `validation/mlx-ppo-o4.json` | **검토 결과 게이트는 열어 둡니다.** actor 규칙은 수정 전 포트와 결함 2종(gradient clip 제거, value clip 제거)을 구분하지 못하고 critic 규칙만 잡습니다. 이 업데이트로 학습을 돌린 적이 없습니다 |
+| MLX PPO, 넷째 측정 | 시드 120개에서 통과: 1e-3 초과 54%, rsl_rl MPS 52%, 허용 72% | 사전 작성 규칙 | OrchardSim `validation/mlx-ppo-o4.json` | **검토 결과 이 측정으로는 게이트를 열어 두었습니다.** 게이트는 뒤의 float64 측정으로 달성했습니다. actor 규칙은 수정 전 포트와 결함 2종(gradient clip 제거, value clip 제거)을 구분하지 못하고 critic 규칙만 잡습니다. 이 업데이트로 학습을 돌린 적이 없습니다 |
 | MLX 기본 TF32로 PPO | 가중치 오차 0.40~0.43 | 0.01 | OrchardSim `validation/mlx-ppo-o4.json` | 이 M5에서 TF32를 켜면 업데이트가 틀립니다 |
 | Isaac Sim 연결 첫 실행 | 8회 중 0회 버팀 | 0.75 이상 | OrchardSim `validation/isaac-sim-o5.json` | 이 프로젝트의 관측 순서 오류. 고친 뒤 8회 중 8회입니다 |
 | Go2 rough, Metal | NaN 관측으로 종료, 23개 중 22개 실행 | 전부 | OrchardSim `validation/isaac-lab-metal.json` | 같은 설정이 CPU에서도 같은 오류를 냅니다 |
@@ -129,13 +129,13 @@
 
 달성한 O7 항목: Isaac Lab 앱 화면(cartpole, Go2, `metal:0`), 버튼 3개와 백엔드, 부분별 Mac GPU 시간(Go2 64개 60초에 23.4초, CPU 대조군 0초), warp-metal의 MSL 커널 771개, 직접 쓴 MSL 커널 위의 정책 시험, Isaac Sim의 낙하 시험(창 없는 Kit, CPU PhysX). 기록은 OrchardSim `validation/app-metal-o7.json`, `validation/isaac-sim-window-o7.json`입니다.
 
-34/39입니다(O7의 11개 포함). 열린 조건은 다섯 개입니다.
+36/39입니다(O7의 11개 포함). 열린 조건은 세 개입니다.
+
+2026-11-04에 달성한 조건: O5 V100 연결, 직접 쓴 MSL cartpole 커널(값마다 float 두 개를 쓰는 커널. float32 커널의 실패는 남습니다. 6개 시작 상태에서 최악 3.9e-9, 허용 5e-2), O4 PPO 업데이트(float64, CPU에서 시드 10개, 최악 1.35e-13, 허용 1e-8. 업데이트의 논리를 비교한 것이고 Mac GPU의 float32 비교가 아닙니다).
 
 | 조건 | 상태 |
 |---|---|
-| O4 PPO 업데이트 | 넷째 측정은 통과, 검토 결과 미달. 위 표 참고 |
 | O6 새 Mac에서 한 명령으로 재현 | 미실행 |
-| O7 직접 쓴 MSL cartpole 커널 | 실패: 최악 world 0.177, 허용 5e-2. FMA 결합을 꺼도 0.162입니다 |
 | O7 Mac에서 Isaac Sim 창 보기 | 실패: 검은 화면. Kit가 GPU 장치를 만들지 못합니다(`Failed to create any GPU devices`) |
 | O7 Isaac Sim의 Play와 Stop | 시험 불가: 창과 버튼이 없습니다 |
 

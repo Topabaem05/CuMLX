@@ -51,7 +51,7 @@
 - warp-metal의 모든 커널이 옳은지. 일치 실패가 커널 오류 없이 설명된다는 것만 보였고, 시험은 humanoid 60 step입니다.
 - Metal 반복 불일치의 전체 원인. 접촉 순서를 고정해도 반복이 일치하지 않습니다.
 - 스모크 행렬은 작업이 돈다는 것만 보입니다. 학습 여부나 CPU와의 일치는 보이지 않으며, 등록된 146개 중 23개만 시험했습니다. OrchardSim `validation/isaac-lab-o1.json`, `isaac-lab-metal.json`
-- MLX PPO 업데이트를 넣은 학습과 실제 rollout. 데이터는 합성입니다. OrchardSim `validation/mlx-ppo-o4.json`
+- MLX PPO 업데이트의 일치는 CPU의 float64에서 확인했습니다. Mac GPU의 float32에서 시드별로 같다는 뜻이 아닙니다. 학습 곡선 비교는 판정할 수 없었고, 비교 데이터는 합성입니다. OrchardSim `validation/mlx-ppo-o4.json`
 - 폐루프 등급 A의 허용치 1e-4는 가중치 하나의 1% 변경을 잡지 못합니다. OrchardSim `validation/mlx-closed-loop-o4.json`
 - Genesis 처리량이 첫 반복에서 약 2배인 원인. 학습기를 포함한 처리량은 다른 기록에 있습니다. `validation/m4-throughput.json`
 - Genesis와 Newton의 일치. OrchardSim `validation/genesis-o6.json`
