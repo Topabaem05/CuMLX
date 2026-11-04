@@ -18,7 +18,7 @@ FIXED_RAM = re.compile(r"(?m)^\s*\w*(MAX|LIMIT)\w*GB\w*\s*=\s*[0-9.]+\s*(#.*)?$"
 
 
 def _sources():
-    for folder in ('src/cumlx', 'scripts', 'spikes'):
+    for folder in ('src/cumlx', 'scripts', 'spikes', 'examples'):
         yield from sorted((REPO / folder).rglob('*.py'))
 
 

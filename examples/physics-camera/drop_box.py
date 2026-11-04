@@ -39,8 +39,8 @@ from cumlx.render.sensors import (  # noqa: E402
     check_frame,
     load_mitsuba,
     process_gpu_seconds,
-    system_used_gb,
 )
+from cumlx.sysmem import over_limit
 
 HALF_SIZE = 0.25
 START = (0.0, 0.0, 1.5)
@@ -54,7 +54,6 @@ CAMERA = Camera(origin=(4.0, -4.0, 2.5), target=(0.0, 0.0, 0.6))
 REST_HEIGHT_LIMIT = 0.02  # m, from half the side of the cube.
 REST_SPEED_LIMIT = 0.02  # m/s, the vertical speed over the last frame.
 CONTROL_PIXEL_LIMIT = 0.5  # The largest movement of the cube's pixels in the control, in pixels.
-MAX_SYSTEM_USED_GB = 43.0
 
 
 def as_array(tensor: Any) -> np.ndarray:
@@ -81,9 +80,9 @@ def run(gs: Any, scenario: str, out: Path | None) -> dict[str, Any]:
     first_pose = None
     for step in range(STEPS + 1):
         if step % STEPS_PER_FRAME == 0:
-            used = system_used_gb()
-            if used is not None and used > MAX_SYSTEM_USED_GB:
-                raise SystemExit(f'stopped: the system uses {used:.1f} GB, over the limit of {MAX_SYSTEM_USED_GB} GB')
+            over = over_limit()
+            if over:
+                raise SystemExit(over)
             position, quaternion = as_array(body.get_pos()), as_array(body.get_quat())
             if first_pose is None:
                 first_pose = (position.copy(), quaternion.copy())
