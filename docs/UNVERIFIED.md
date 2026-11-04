@@ -1,6 +1,6 @@
 # 미검증 영역
 
-기준: CuMLX `4580acf`, OrchardSim `e92054a`, 2026-11-03. 기록의 `not_shown`, `not_verified`, 로드맵의 내용을 플랫폼 층별로 모았습니다. 결과 전체는 [PLATFORM-REPORT.md](PLATFORM-REPORT.md)에 있습니다.
+기준: CuMLX `a2845d6`, OrchardSim `e92054a`, 2026-11-03. 기록의 `not_shown`, `not_verified`, 로드맵의 내용을 플랫폼 층별로 모았습니다. 결과 전체는 [PLATFORM-REPORT.md](PLATFORM-REPORT.md)에 있습니다.
 
 **이 저장소는 비공개이므로 이 목록은 아직 공개되지 않았습니다.** `OrchardSim` 표시가 있는 기록은 별도의 비공개 저장소에 있습니다.
 

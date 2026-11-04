@@ -92,6 +92,6 @@
   "Grade B cannot see a difference smaller than max(3 SE, 1 percent of the mean). 3 seeds",
   "Losses only: not saved models or samples",
   "All losses of a run form one stream, including the GAN two optimizers",
-  "The first attempt, on 2026-11-04, stopped at once on a build error from the PyTorch index, fixed in 80f9dac"
+  "The first attempt, on 2026-11-04, stopped at once on a build error from the PyTorch index, fixed in ee10559"
  ]
 }

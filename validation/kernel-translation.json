@@ -59,7 +59,7 @@
   "max_rel": 1e-05,
   "zero_atol": 1e-06
  },
- "limits_written_before_measuring": "commit f93ac26, before the first CUDA or Metal output of these kernels was compared",
+ "limits_written_before_measuring": "commit 3072384, before the first CUDA or Metal output of these kernels was compared",
  "golden_count": {
   "lab_kernels": 8,
   "lab_cases": 29,

@@ -64,7 +64,7 @@
   }
  },
  "limits_written_before_measuring": {
-  "kernel": "rel_l2 <= 1e-5, max_rel <= 1e-5, integers exact: unchanged from commit f93ac26"
+  "kernel": "rel_l2 <= 1e-5, max_rel <= 1e-5, integers exact: unchanged from commit 3072384"
  },
  "denied_here": {
   "install_of_metal_woof": "The auto mode classifier denied it once: [Code from External]. It was not retried. The user can run: sh spikes/m3_kernels.sh",
@@ -278,7 +278,7 @@
    "reason": "texture_kernel cannot be ported: ?: template-specialization; ?: template-specialization; ?: template-specialization; __float_as_int: unknown-builtin; __int_as_float: unknown-builtin; __frcp_rz: rounding-mode and 18 more."
   }
  },
- "preprocess_results_note": "Rerun on 2026-11-03 with commit 745b014. Every prepared hash is unchanged. Each nvdiffrast file loses two false reasons of this layer and gains none. The `?` tokens are 3 full specializations of zero_value in nvdiffrast's common.h: they are real, this layer does not handle them, and Metal itself could. All 4 files are still refused, and each holds __match_any_sync, which is a real warp-level refusal.",
+ "preprocess_results_note": "Rerun on 2026-11-03 with commit b70cf81. Every prepared hash is unchanged. Each nvdiffrast file loses two false reasons of this layer and gains none. The `?` tokens are 3 full specializations of zero_value in nvdiffrast's common.h: they are real, this layer does not handle them, and Metal itself could. All 4 files are still refused, and each holds __match_any_sync, which is a real warp-level refusal.",
  "preprocess_results_before_745b014": {
   "nvdiffrast.interpolate": {
    "prepared": false,

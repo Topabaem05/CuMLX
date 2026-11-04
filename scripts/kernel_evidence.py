@@ -98,7 +98,7 @@ def main() -> None:
         'golden_source': golden.source, 'golden_floating_point': golden.floating_point,
         'metal': {'machine': platform.machine(), 'system': platform.platform(), **mlx.describe()},
         'limits': KERNEL_THRESHOLDS,
-        'limits_written_before_measuring': 'commit f93ac26, before the first CUDA or Metal output of these kernels was compared',
+        'limits_written_before_measuring': 'commit 3072384, before the first CUDA or Metal output of these kernels was compared',
         'golden_count': {'lab_kernels': len({c.kernel for c in golden.cases}), 'lab_cases': len(golden.cases),
                          'test_kernels': len({c.kernel for c in OpGolden(FIXTURES).cases}), 'm3_gate_needs': 20},
         'hand_written_metal_against_v100': {
