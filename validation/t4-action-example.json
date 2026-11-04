@@ -2,8 +2,8 @@
  "schema": "cumlx.validation.t4-action-example.v1",
  "date": "2026-11-04",
  "gate": "T4: the GitHub Action on an example repository fails an injected-fault pull request and passes a clean one",
- "verdict": "open. The verdicts are right on GitHub, but only through manual runs. Pull request events start no run",
- "repository": "private, Topabaem05/CuMLX-port-ci-example. It copies the action and the wheel into .cumlx-action, because Actions access on CuMLX is none, so it does not test uses: Topabaem05/CuMLX@<sha>",
+ "verdict": "pass on 2026-11-04. Pull request events start a run: the clean pull request passes, and the injected-fault pull request fails at the first divergent module",
+ "repository": "private, Topabaem05/CuMLX-port-ci-example. Since 2026-11-04 it uses the public action: uses: Topabaem05/CuMLX@34624d9639dba1a515401802af1455f2b54434dc. Before that it held a copy in .cumlx-action",
  "runs_workflow_dispatch": {
   "main": {
    "run": 41754864804,
@@ -18,13 +18,34 @@
    "result": "failure, diverged: first divergence at model.layers.1.self_attn (isolated, high)"
   }
  },
- "pull_request_events": "None started a run, on 3 pull requests, on opening, on reopening and on new commits. A push to main started none either. No github-actions check suite appears on those commits, and it does appear on CuMLX. The workflow is active, Actions is enabled, and each pull request is MERGEABLE and CLEAN.",
- "tried": [
+ "cause": "not found. The order above is what was observed. It does not show why the repository started no runs before, or that the contents API commit is the cause and not a coincidence",
+ "runs_pull_request": {
+  "clean-change, pull request 1": {
+   "run": 41778583203,
+   "head": "4e711bc",
+   "result": "success, verdict ok"
+  },
+  "injected-fault, pull request 2": {
+   "run": 41778587034,
+   "head": "a943830",
+   "result": "failure, diverged: 50 pass, 8 fail, 0 unverified, 6 skipped, 16 chain drift; first divergence at model.layers.1.self_attn (isolated, high)"
+  }
+ },
+ "runs_push": {
+  "main": {
+   "run": 41778576998,
+   "head": "f8ec14f",
+   "result": "success"
+  }
+ },
+ "earlier_gap": "None started a run, on 3 pull requests, on opening, on reopening and on new commits. A push to main started none either. No github-actions check suite appears on those commits, and it does appear on CuMLX. The workflow is active, Actions is enabled, and each pull request is MERGEABLE and CLEAN.",
+ "earlier_gap_tried": [
   "close and reopen",
   "disable and enable the workflow",
   "add workflow_dispatch",
   "new commits on the branches",
   "a new pull request"
  ],
- "cause": "not found"
+ "what_changed": "git pushes still started no run after the switch to the public action (f23afe8, e6a7114, 1b60a5a). A commit through the contents API that added a minimal workflow (908ba90) started runs, and every git push after it did too.",
+ "not_shown": "The repository is one small test model. The example repository is private, so these runs cannot be read from outside. A run on a fresh repository: this gap may return on one"
 }
