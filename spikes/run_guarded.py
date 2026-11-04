@@ -74,6 +74,8 @@ def main() -> int:
     stopped = False
     while process.poll() is None:
         time.sleep(args.interval)
+        if process.poll() is not None:
+            break  # It ended by itself, so no limit stopped it, whatever the readings are now.
         used = system_used_gb()
         mine = process_group_gb(process.pid)
         free = shutil.disk_usage(Path.home()).free / 2**30

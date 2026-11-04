@@ -420,7 +420,23 @@ GUARD = ROOT / 'spikes' / 'run_guarded.py'
 
 
 def test_guard_runs_a_command_under_its_limits_and_passes_on_its_exit_code(tmp_path):
-    done = subprocess.run([sys.executable, str(GUARD), '--stop-gb', '1000', '--start-gb', '1000', '--output', str(tmp_path / 'u.json'), '--',
+    done = subprocess.run([sys.executable, str(GUARD), '--stop-gb', '1000', '--start-gb', '1000', '--disk-gb', '0', '--output', str(tmp_path / 'u.json'), '--',
+                           sys.executable, '-c', 'raise SystemExit(7)'], capture_output=True, text=True, timeout=60, check=False)
+    assert done.returncode == 7
+    assert json.loads((tmp_path / 'u.json').read_text())['stopped_for'] is None
+
+
+def test_guard_stops_a_command_when_free_disk_is_under_its_limit(tmp_path):
+    done = subprocess.run([sys.executable, str(GUARD), '--stop-gb', '1000', '--start-gb', '1000', '--process-gb', '1000', '--disk-gb', '1000000000', '--interval', '0.1',
+                           '--output', str(tmp_path / 'u.json'), '--', sys.executable, '-c', 'import time; time.sleep(60)'],
+                          capture_output=True, text=True, timeout=50, check=False)
+    assert done.returncode == 76
+    assert 'of disk is free' in json.loads((tmp_path / 'u.json').read_text())['stopped_for']
+
+
+def test_guard_does_not_call_a_finished_command_stopped(tmp_path):
+    """Its exit code passes through even if a limit is broken at the moment that it ends."""
+    done = subprocess.run([sys.executable, str(GUARD), '--stop-gb', '0', '--start-gb', '1000', '--interval', '3', '--output', str(tmp_path / 'u.json'), '--',
                            sys.executable, '-c', 'raise SystemExit(7)'], capture_output=True, text=True, timeout=60, check=False)
     assert done.returncode == 7
     assert json.loads((tmp_path / 'u.json').read_text())['stopped_for'] is None
