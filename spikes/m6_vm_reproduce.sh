@@ -1,0 +1,239 @@
+#!/bin/sh
+# M6-1: reproduce the flagship work on a "new Mac": a fresh macOS 27 VM, on this Mac, from the public repository. One command, and it returns at once.
+#
+#   sh spikes/m6_vm_reproduce.sh start     # downloads Tart and a macOS image of about 30 GB, then runs for hours. It stops by itself
+#   sh spikes/m6_vm_reproduce.sh status    # the state, and the verdict when it is done
+#   sh spikes/m6_vm_reproduce.sh stop      # stops the VM
+#   sh spikes/m6_vm_reproduce.sh clean     # deletes the VM and the image, and keeps the results
+#
+# It uses Tart (FSL-1.1-ALv2, third party, checked by SHA-256) and an image built by the Tart project. The image has user admin, password admin, on the VM's private network.
+# It stops the VM when this Mac's memory in use reaches 38 GB or its free disk falls to 15 GB. Those stops are never a pass.
+# A VM is not a new machine: the GPU is Apple's paravirtual device on this same Mac. The results say so.
+set -u
+TART_VERSION=2.41.1
+TART_SHA256=e680a734febccfce7d4e910c1f7f13fc3b00f19a181c945e2d746de3214c32c2
+TART_URL=https://github.com/openai/tart/releases/download/$TART_VERSION/tart.tar.gz
+IMAGE=ghcr.io/cirruslabs/macos-golden-gate-vanilla:27.2
+VM=cumlx-repro
+VM_MEMORY_MB=${CUMLX_VM_MEMORY_MB:-6144}
+VM_CPUS=${CUMLX_VM_CPUS:-8}
+VM_DISK_GB=${CUMLX_VM_DISK_GB:-70}
+MIN_FREE_START_GB=65  # The image takes about 35 GB, the guest writes about 15 GB, and 15 GB stays free.
+MIN_FREE_GB=15
+MAX_USED_GB=38
+MAX_USED_AT_START_GB=37  # Memory in use now, plus the VM's memory.
+POLL=${CUMLX_VM_POLL:-30}
+LIMIT_SECONDS=${CUMLX_VM_LIMIT_SECONDS:-28800}
+HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+REPO=$(dirname -- "$HERE")
+ROOT=${CUMLX_VM_ROOT:-$HOME/cumlx-vm}
+TART_HOME=$ROOT/tart-home
+RESULT=$ROOT/result
+export TART_HOME
+TART=${CUMLX_VM_TART:-$ROOT/tart-dist/tart.app/Contents/MacOS/tart}
+
+used_gb() {
+    vm_stat | awk '/page size of/ {size=$8} /Pages active/ {a=$3} /Pages wired down/ {w=$4} /occupied by compressor/ {c=$5} END {printf "%.1f", (a+w+c)*size/1e9}'
+}
+free_gb() {
+    df -k "$ROOT" | awk 'NR==2 {print int($4 / 1000000)}'
+}
+at_least() {
+    awk -v a="$1" -v b="$2" 'BEGIN {exit !(a >= b)}'
+}
+running() {
+    [ -f "$ROOT/run.pid" ] && kill -0 "$(cat "$ROOT/run.pid")" 2>/dev/null
+}
+stage() {
+    echo "[$(date +%H:%M:%S)] $1"
+}
+verdict() {
+    mkdir -p "$RESULT"
+    echo "$1" >"$RESULT/verdict.txt"
+    stage "verdict: $1"
+}
+ask_password() {
+    printf '#!/bin/sh\necho admin\n' >"$ROOT/askpass.sh"
+    chmod 700 "$ROOT/askpass.sh"
+}
+to_guest() {
+    SSH_ASKPASS="$ROOT/askpass.sh" SSH_ASKPASS_REQUIRE=force DISPLAY=:0 ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o PreferredAuthentications=password -o ConnectTimeout=10 -o LogLevel=ERROR "admin@$GUEST" "$@"
+}
+stop_vm() {
+    "$TART" stop "$VM" >/dev/null 2>&1
+    wait_pid=${RUN_PID:-}
+    [ -n "$wait_pid" ] && kill "$wait_pid" 2>/dev/null
+    return 0
+}
+fetch_result() {
+    mkdir -p "$RESULT/guest"
+    to_guest 'tar czf - -C "$HOME" repro-result' >"$ROOT/result.tgz" 2>/dev/null && tar xzf "$ROOT/result.tgz" -C "$RESULT/guest"
+}
+get_tart() {
+    [ -n "${CUMLX_VM_TART:-}" ] && return 0
+    if [ ! -x "$TART" ]; then
+        mkdir -p "$ROOT/tart-dist"
+        curl -fsSL -m 300 -o "$ROOT/tart-dist/tart.tar.gz" "$TART_URL" || return 1
+    fi
+    if [ -f "$ROOT/tart-dist/tart.tar.gz" ]; then
+        found=$(python3 -c 'import hashlib, sys; print(hashlib.sha256(open(sys.argv[1], "rb").read()).hexdigest())' "$ROOT/tart-dist/tart.tar.gz")
+        if [ "$found" != "$TART_SHA256" ]; then
+            echo "error: Tart's SHA-256 is $found, expected $TART_SHA256"
+            return 1
+        fi
+        tar xzf "$ROOT/tart-dist/tart.tar.gz" -C "$ROOT/tart-dist" || return 1
+    fi
+    [ -x "$TART" ]
+}
+
+MODE=${1:-}
+case "$MODE" in
+status)
+    if running; then echo "running, pid $(cat "$ROOT/run.pid")"; else echo "not running"; fi
+    [ -f "$ROOT/run.log" ] && tail -n 6 "$ROOT/run.log"
+    if [ -f "$RESULT/verdict.txt" ]; then
+        echo "verdict: $(cat "$RESULT/verdict.txt")"
+        [ "$(cat "$RESULT/verdict.txt")" = pass ]
+        exit $?
+    fi
+    exit 5
+    ;;
+stop)
+    "$TART" stop "$VM" 2>/dev/null
+    running && kill "$(cat "$ROOT/run.pid")" 2>/dev/null
+    echo "Stopped."
+    exit 0
+    ;;
+clean)
+    if running; then
+        echo "error: the run is still going. Stop it first." >&2
+        exit 4
+    fi
+    "$TART" delete "$VM" 2>/dev/null
+    "$TART" delete "$IMAGE" 2>/dev/null
+    [ -d "$TART_HOME" ] && rm -rf "$TART_HOME"
+    echo "Deleted the VM and the image. The results stay in $RESULT"
+    exit 0
+    ;;
+start)
+    if [ "$(uname -sm)" != "Darwin arm64" ]; then
+        echo "error: this needs an Apple Silicon Mac, found $(uname -sm)" >&2
+        exit 3
+    fi
+    mkdir -p "$ROOT"
+    if running; then
+        echo "error: a run is going, pid $(cat "$ROOT/run.pid")" >&2
+        exit 4
+    fi
+    if [ -f "$RESULT/verdict.txt" ]; then
+        echo "error: $RESULT already holds a verdict. Move it away to run again." >&2
+        exit 4
+    fi
+    now=$(free_gb)
+    if [ "$now" -lt "$MIN_FREE_START_GB" ] && [ ! -d "$TART_HOME/vms/$VM" ]; then
+        echo "error: needs $MIN_FREE_START_GB GB free, found $now GB" >&2
+        exit 3
+    fi
+    used=$(used_gb)
+    vm_gb=$(awk -v m="$VM_MEMORY_MB" 'BEGIN {printf "%.1f", m * 1048576 / 1e9}')
+    if at_least "$(awk -v a="$used" -v b="$vm_gb" 'BEGIN {print a + b}')" "$MAX_USED_AT_START_GB"; then
+        echo "error: $used GB of memory is in use, and the VM adds $vm_gb GB. That reaches $MAX_USED_AT_START_GB GB. Try again when this Mac is less busy." >&2
+        exit 3
+    fi
+    nohup sh "$0" --work >"$ROOT/run.log" 2>&1 &
+    echo $! >"$ROOT/run.pid"
+    echo "Started, pid $(cat "$ROOT/run.pid"). Log: $ROOT/run.log"
+    echo "See the state with: sh $0 status"
+    exit 0
+    ;;
+--work) ;;
+*)
+    sed -n 2,11p "$0" >&2
+    exit 2
+    ;;
+esac
+
+ask_password
+stage "1/6 Tart $TART_VERSION"
+get_tart || { verdict setup_error_tart; exit 1; }
+"$TART" --version
+
+stage "2/6 the image $IMAGE"
+"$TART" pull "$IMAGE" || { verdict setup_error_pull; exit 1; }
+if [ "$(free_gb)" -le "$MIN_FREE_GB" ]; then
+    verdict stopped_disk
+    exit 1
+fi
+
+stage "3/6 the VM"
+"$TART" clone "$IMAGE" "$VM" || { verdict setup_error_clone; exit 1; }
+"$TART" set "$VM" --cpu "$VM_CPUS" --memory "$VM_MEMORY_MB" --disk-size "$VM_DISK_GB" || { verdict setup_error_set; exit 1; }
+"$TART" run --no-graphics "$VM" >"$ROOT/vm.log" 2>&1 &
+RUN_PID=$!
+
+stage "4/6 waiting for the VM"
+GUEST=
+tries=0
+while [ "$tries" -lt 120 ]; do
+    GUEST=$("$TART" ip "$VM" --wait 5 2>/dev/null || true)
+    [ -n "$GUEST" ] && to_guest true 2>/dev/null && break
+    GUEST=
+    tries=$((tries + 1))
+    sleep "$POLL"
+done
+if [ -z "$GUEST" ]; then
+    verdict setup_error_boot
+    stop_vm
+    exit 1
+fi
+
+COMMIT=$(git -C "$REPO" rev-parse HEAD)
+stage "5/6 the guest script. The guest gets CuMLX $COMMIT from the public repository"
+to_guest 'cat > "$HOME/m6_vm_guest.sh"' <"$HERE/m6_vm_guest.sh" || { verdict setup_error_copy; stop_vm; exit 1; }
+to_guest "nohup sh \"\$HOME/m6_vm_guest.sh\" $COMMIT >\"\$HOME/guest.log\" 2>&1 </dev/null & echo started" || { verdict setup_error_guest; stop_vm; exit 1; }
+
+stage "6/6 running in the guest. Limits on this Mac: $MAX_USED_GB GB of memory, $MIN_FREE_GB GB of free disk"
+begin=$(date +%s)
+last=
+peak=0
+while :; do
+    used=$(used_gb)
+    at_least "$used" "$peak" && peak=$used
+    if at_least "$used" "$MAX_USED_GB"; then
+        fetch_result
+        verdict stopped_memory
+        echo "memory in use reached $used GB" >"$RESULT/stop_reason.txt"
+        stop_vm
+        exit 1
+    fi
+    if [ "$(free_gb)" -le "$MIN_FREE_GB" ]; then
+        fetch_result
+        verdict stopped_disk
+        echo "free disk fell to $(free_gb) GB" >"$RESULT/stop_reason.txt"
+        stop_vm
+        exit 1
+    fi
+    if [ $(($(date +%s) - begin)) -gt "$LIMIT_SECONDS" ]; then
+        fetch_result
+        verdict stopped_time
+        stop_vm
+        exit 1
+    fi
+    now=$(to_guest 'cat "$HOME/repro-result/stage.txt" 2>/dev/null' 2>/dev/null || true)
+    if [ -n "$now" ] && [ "$now" != "$last" ]; then
+        stage "guest: $now"
+        last=$now
+    fi
+    answer=$(to_guest 'cat "$HOME/repro-result/guest_verdict.txt" 2>/dev/null' 2>/dev/null || true)
+    if [ -n "$answer" ]; then
+        break
+    fi
+    sleep "$POLL"
+done
+fetch_result
+echo "$peak" >"$RESULT/host_memory_peak_gb.txt"
+echo "$COMMIT" >"$RESULT/cumlx_commit.txt"
+echo "$IMAGE" >"$RESULT/image.txt"
+verdict "$answer"
+stop_vm
+exit 0

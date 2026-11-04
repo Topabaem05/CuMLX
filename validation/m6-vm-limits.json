@@ -1,0 +1,13 @@
+{
+ "schema": "cumlx.m6_vm_limits.v1",
+ "date": "2026-11-04",
+ "committed_before_any_measurement": "These rules are in the commit before the first run in a VM. They do not change after a result.",
+ "scope": "A fresh macOS 27.2 VM stands in for a new Mac, on the owner's decision. The VM is on the same Mac, and its GPU is Apple's paravirtual device. A pass here says that the public repository installs and runs from nothing in that VM. It is not a run on other hardware.",
+ "covers": ["F3 custom kernels, through the hand-written Metal kernels against the V100 goldens", "F4 quadruped through cumlx.sim on Genesis, not Isaac Lab", "F5 camera sensor, render only, with no comparison against CUDA"],
+ "does_not_cover": ["F1 and F2: they have no reproduced run on any machine yet, so M6-1 stays open whatever this says"],
+ "base": {"doctor_exit": 0, "selftest_exit": 0, "tests": "pytest -m 'not gpu' exits 0, with at least 100 passed"},
+ "f3": {"tests": "tests/test_kernel_gpu.py exits 0, with at least 5 passed and no test skipped"},
+ "f4": {"train": "go2_flat, genesis, 4096 envs, 300 iterations, seed 1, exit 0", "command_speed_tolerance": 0.2, "near_zero_speed": 0.1, "max_falls_per_world": 0.1, "runs": {"fwd": 0.8, "back": -0.8, "stop": 0.0, "zero": null}, "source": "The same rule as spikes/m4_sim_record.py"},
+ "f5": {"render": "metal_ad_rgb, seeds 11,12,13, summary status rendered, exit 0"},
+ "not_a_pass": "A part with no output, a stop for memory or disk, and a setup error. The host stops the VM at 38 GB of memory in use or at 15 GB of free disk."
+}
