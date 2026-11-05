@@ -21,7 +21,7 @@
 | M6 통합 릴리스 | 2 | 3 | 새 Mac 재현 |
 | **합계** | **24** | **25** | |
 
-**기함 작업 5개 중 처음부터 재현된 것은 없습니다.** [아래](#기함-작업)를 보십시오.
+**기함 작업 5개 중 새 Mac에서 처음부터 재현된 것은 없습니다.** F3, F4, F5의 규칙에 정한 부분은 같은 Mac에서 빈 환경으로 다시 돌려 통과했습니다([기록](../validation/m6-same-mac-run.json)). [아래](#기함-작업)를 보십시오.
 
 ## 완료 조건
 
@@ -83,7 +83,7 @@
 
 | ID | 조건 | 상태 | 등급 | 기록 | 결과와 한계 |
 |---|---|---|---|---|---|
-| M6-1 | 기함 작업을 새 Mac에서 처음부터 재현 | 미달 | 미검증 | 없음 | 새 Mac 대신 최근 macOS VM으로 재현하기로 2026-11-04에 정했고, [`terminal-mac`](https://github.com/govijr/terminal-mac)의 macOS 27.2 VM에서 실제로 돌렸습니다. **판정은 fail입니다.** 공개 저장소 설치, doctor, 자체 테스트, GPU 없는 테스트는 통과했지만 F3, F4, F5는 VM의 준가상화 GPU를 라이브러리가 거부해 돌지 못했습니다([기록](../validation/m6-vm-run.json)). 이 VM으로는 이 칸을 채울 수 없고, F1, F2도 남아 있습니다 |
+| M6-1 | 기함 작업을 새 Mac에서 처음부터 재현 | 미달 | 미검증 | 없음 | 새 Mac 대신 최근 macOS VM으로 재현하기로 2026-11-04에 정했고, [`terminal-mac`](https://github.com/govijr/terminal-mac)의 macOS 27.2 VM에서 실제로 돌렸습니다. **판정은 fail입니다.** 공개 저장소 설치, doctor, 자체 테스트, GPU 없는 테스트는 통과했지만 F3, F4, F5는 VM의 준가상화 GPU를 라이브러리가 거부해 돌지 못했습니다([기록](../validation/m6-vm-run.json)). 이 VM으로는 이 칸을 채울 수 없고, F1, F2도 남아 있습니다. 실제 Mac이 한 대뿐이라 2026-11-05에 같은 Mac에서 공개 저장소와 빈 홈 폴더로 다시 돌렸고, 같은 규칙으로 **판정은 pass입니다**([기록](../validation/m6-same-mac-run.json)). 같은 Mac이므로 이 칸은 채우지 않습니다 |
 | M6-2 | 결과 보고서 공개, 모든 항목에 등급 표시 | 달성 | C | 이 문서 | 2026-11-04에 저장소와 함께 공개. 보관 기록은 다시 측정할 수 없습니다 |
 | M6-3 | 미검증 영역 목록 공개 | 달성 | C | [UNVERIFIED.md](UNVERIFIED.md) | 2026-11-04에 저장소와 함께 공개 |
 
@@ -95,9 +95,9 @@
 |---|---|---|---|---|---|---|
 | F1 | FlashAttention + bitsandbytes로 LLM 추론 | A | 재현 안 됨 | 미검증 | `validation/m2-substitutes.json`, `validation/cuda-golden-v100.json` | 두 패키지를 쓰는 프로그램을 돌린 기록이 없습니다. mps-flash-attn은 torch 2.13의 float32에서 CPU sdpa와 최악 4.6e-7(허용 1e-4)이지만, torch 2.15에는 설치되지 않고 `flash_attn_func`가 없어 그대로 대체하지 못합니다. mps-bitsandbytes는 검사 프로세스가 exit -11로 끝나 실패입니다. 별개로 Qwen2.5-0.5B의 bf16 MLX 포트는 V100 golden과 isolated 최악 9.8e-6(허용 1e-4)로 일치합니다. 이것은 이 작업을 재현한 기록이 아닙니다 |
 | F2 | 3D Gaussian Splatting 학습 | B | 재현 안 됨 | 미검증 | `validation/m2-substitutes.json` | metalsplat은 손 계산과 비교한 렌더링 검사를 통과했지만(최고점 오차 0 px) 학습은 돌리지 않았고 `rasterization`이 없어 gsplat을 그대로 대체하지 못합니다. msplat은 학습은 돌았지만(held-out 35.96 dB) 시점 오차 3.14 px로 허용 3 px를 넘어 실패입니다. CUDA 비교는 없습니다 |
-| F3 | CuPy 또는 커스텀 `.cu` 커널 앱 | A | 재현 안 됨 | 미검증 | `validation/kernel-translation.json`, `validation/kernel-m3.json`, `src/cumlx/verify/recipes.json` | 앱을 돌린 기록이 없습니다. 이 저장소의 커널 8개는 직접 쓴 Metal로 V100과 등급 A입니다. 외부 커널 13개는 woof 번역과 V100 비교까지 했지만 앱은 아닙니다. woof의 CuPy 파사드는 `asarray`, `asnumpy`, 커널 실행만 돌린 등급 C입니다 |
-| F4 | Isaac Lab 사족 보행 정책 학습과 추론 | 추론 A, 물리 B | 일부 달성, 다른 경로 | 추론 A, 물리 B(일부) | `validation/archive-orchardsim/mlx-closed-loop-o4.json`, `isaac-lab-metal.json`, `m4-go2-seeds.json`, `m4-trajectory.json`, `warp-metal-o2.json`, `validation/m4-sim.json` | 보관 기록의 경로는 Isaac Lab, warp-metal, 런타임 패치이고 스크립트는 공개되어 있지 않습니다. 로드맵의 `cumlx.sim` 경로는 Isaac Lab이 아닌 Genesis의 Go2 작업으로 따로 돌렸습니다(`validation/m4-sim.json`). 시드 1개에서 +0.81, -0.86, 0.00 m/s이고 MLX 정책은 rsl_rl과 최악 6.1e-7, Genesis와 MuJoCo 비교는 1초 동안 통과입니다. 추론은 폐루프 1000 step에서 rsl_rl과 최악 2.70e-7(허용 1e-4)이고, 가중치 하나의 1% 변경은 이 허용치로 잡히지 않습니다. Go2의 CPU와 Metal 비교는 통과(속도 차이 0.002 m/s, 허용 0.05)했지만 MuJoCo Warp 일치 시험은 실패입니다. 새 Mac 재현은 없습니다 |
-| F5 | 물리 기반 카메라 센서 | B | 일부 달성 | B(Metal과 V100 CUDA, 버전 다름) | `validation/m5-render.json`, `validation/m4-sim.json`, `validation/m5-lidar.json`, `docs/RENDER-SENSORS.md` | `cumlx.render`로 RGB, 깊이, 세그멘테이션을 만들고 예제가 물리 상태와 일치합니다. Metal과 V100 CUDA 렌더는 장면 2개에서 등급 B입니다(Mitsuba 3.9.1, 3.8.0). 센서 전체를 CUDA와 비교하지는 않았습니다. `cumlx.sim` 카메라는 cartpole의 상자 링크로 두 엔진에서 21개 프레임 모두 통과했고(`validation/m4-sim.json`), 레이캐스트 센서는 정확한 거리와 최악 5.6e-6 m입니다(`validation/m5-lidar.json`). USD는 메시, 카메라, 조명 2종, 확산 색만 읽으며, 작은 장면 2개가 같은 장면의 Mitsuba 사전과 등급 B입니다(`validation/m5-usd.json`). 다른 도구의 자산은 시험하지 않았습니다 |
+| F3 | CuPy 또는 커스텀 `.cu` 커널 앱 | A | 재현 안 됨 | 미검증 | `validation/kernel-translation.json`, `validation/kernel-m3.json`, `src/cumlx/verify/recipes.json` | 앱을 돌린 기록이 없습니다. `tests/test_kernel_gpu.py`는 같은 Mac의 빈 환경에서 30개 통과했습니다(`validation/m6-same-mac-run.json`). 이 저장소의 커널 8개는 직접 쓴 Metal로 V100과 등급 A입니다. 외부 커널 13개는 woof 번역과 V100 비교까지 했지만 앱은 아닙니다. woof의 CuPy 파사드는 `asarray`, `asnumpy`, 커널 실행만 돌린 등급 C입니다 |
+| F4 | Isaac Lab 사족 보행 정책 학습과 추론 | 추론 A, 물리 B | 일부 달성, 다른 경로 | 추론 A, 물리 B(일부) | `validation/archive-orchardsim/mlx-closed-loop-o4.json`, `isaac-lab-metal.json`, `m4-go2-seeds.json`, `m4-trajectory.json`, `warp-metal-o2.json`, `validation/m4-sim.json` | 보관 기록의 경로는 Isaac Lab, warp-metal, 런타임 패치이고 스크립트는 공개되어 있지 않습니다. 로드맵의 `cumlx.sim` 경로는 Isaac Lab이 아닌 Genesis의 Go2 작업으로 따로 돌렸습니다(`validation/m4-sim.json`). 시드 1개에서 +0.81, -0.86, 0.00 m/s이고 MLX 정책은 rsl_rl과 최악 6.1e-7, Genesis와 MuJoCo 비교는 1초 동안 통과입니다. 추론은 폐루프 1000 step에서 rsl_rl과 최악 2.70e-7(허용 1e-4)이고, 가중치 하나의 1% 변경은 이 허용치로 잡히지 않습니다. Go2의 CPU와 Metal 비교는 통과(속도 차이 0.002 m/s, 허용 0.05)했지만 MuJoCo Warp 일치 시험은 실패입니다. `cumlx.sim` 경로는 같은 Mac의 빈 환경에서 다시 학습해 M4 기록과 값이 정확히 같았습니다(`validation/m6-same-mac-run.json`). 새 Mac 재현은 없습니다 |
+| F5 | 물리 기반 카메라 센서 | B | 일부 달성 | B(Metal과 V100 CUDA, 버전 다름) | `validation/m5-render.json`, `validation/m4-sim.json`, `validation/m5-lidar.json`, `docs/RENDER-SENSORS.md` | `cumlx.render`로 RGB, 깊이, 세그멘테이션을 만들고 예제가 물리 상태와 일치합니다. Metal과 V100 CUDA 렌더는 장면 2개에서 등급 B입니다(Mitsuba 3.9.1, 3.8.0). 센서 전체를 CUDA와 비교하지는 않았습니다. `cumlx.sim` 카메라는 cartpole의 상자 링크로 두 엔진에서 21개 프레임 모두 통과했고(`validation/m4-sim.json`), 레이캐스트 센서는 정확한 거리와 최악 5.6e-6 m입니다(`validation/m5-lidar.json`). USD는 메시, 카메라, 조명 2종, 확산 색만 읽으며, 작은 장면 2개가 같은 장면의 Mitsuba 사전과 등급 B입니다(`validation/m5-usd.json`). 다른 도구의 자산은 시험하지 않았습니다. 렌더링은 같은 Mac의 빈 환경에서 시드 3개를 다시 돌렸고, 이 실행에서는 CUDA와 비교하지 않았습니다(`validation/m6-same-mac-run.json`) |
 
 ## 실패와 미달
 

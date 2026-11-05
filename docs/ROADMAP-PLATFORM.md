@@ -265,7 +265,7 @@ RTX가 필요하던 렌더링 경로를 Metal 레이트레이싱으로 대체합
 
 완료 조건:
 
-- [ ] 기함 작업을 새 Mac에서 처음부터 재현. **VM 판정 fail:** 새 Mac 대신 최근 macOS VM으로 재현하기로 2026-11-04에 정했고, `terminal-mac`의 macOS 27.2 VM에서 [실행](../spikes/m6_vm_reproduce.sh)했습니다. 공개 저장소 설치와 GPU 없는 부분은 통과했지만, VM의 준가상화 GPU는 PyTorch MPS, Genesis Metal, Mitsuba Metal이 거부해 F3, F4, F5가 돌지 못했습니다([기록](../validation/m6-vm-run.json)). **이 조건을 채우려면 실제 다른 Mac이 필요합니다.** 지금까지의 기록은 [보고서의 기함 작업 표](PLATFORM-REPORT.md#기함-작업)에 있고, 처음부터 재현된 작업은 없습니다
+- [ ] 기함 작업을 새 Mac에서 처음부터 재현. **VM 판정 fail:** 새 Mac 대신 최근 macOS VM으로 재현하기로 2026-11-04에 정했고, `terminal-mac`의 macOS 27.2 VM에서 [실행](../spikes/m6_vm_reproduce.sh)했습니다. 공개 저장소 설치와 GPU 없는 부분은 통과했지만, VM의 준가상화 GPU는 PyTorch MPS, Genesis Metal, Mitsuba Metal이 거부해 F3, F4, F5가 돌지 못했습니다([기록](../validation/m6-vm-run.json)). **이 조건을 채우려면 실제 다른 Mac이 필요합니다.** 실제 Mac이 한 대뿐이라 2026-11-05에 같은 Mac에서 공개 저장소와 빈 홈 폴더로 [다시 돌렸고](../spikes/m6_same_mac.sh), 같은 규칙으로 F3, F4, F5의 범위가 통과했습니다([기록](../validation/m6-same-mac-run.json)). 같은 Mac이고 F1, F2가 남아 있어 체크하지 않습니다. 지금까지의 기록은 [보고서의 기함 작업 표](PLATFORM-REPORT.md#기함-작업)에 있습니다
 - [x] 결과 보고서 공개, 모든 항목에 증명 등급 표시. [보고서](PLATFORM-REPORT.md)를 2026-11-04에 저장소와 함께 공개했습니다. `validation/archive-orchardsim/`의 기록은 다시 측정할 수 없습니다
 - [x] 미검증 영역 목록 공개. [목록](UNVERIFIED.md)을 2026-11-04에 저장소와 함께 공개했습니다
 

@@ -251,3 +251,13 @@ def test_the_rules_are_the_same_as_in_the_vm():
         assert here[part] == vm[part], part
     assert "not a run on a new Mac" in here["scope"]
     assert any("does not tick M6-1" in line for line in here["does_not_cover"])
+
+
+def test_the_record_keeps_m6_1_open_and_names_no_private_path():
+    text = (REPO / "validation" / "m6-same-mac-run.json").read_text()
+    record = json.loads(text)
+    assert record["verdict"] == "pass" and record["ticks_m6_1"] is False
+    assert set(record["parts"]) == {"base", "f3", "f4", "f5"}
+    assert all(part["state"] == "pass" for part in record["parts"].values())
+    assert re.fullmatch(r"[0-9a-f]{40}", record["cumlx_commit"])
+    assert "/Users/" not in text and "local" not in text.split('"what_this_shows"')[0]

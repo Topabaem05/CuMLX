@@ -1,0 +1,135 @@
+{
+ "schema": "cumlx.m6_same_mac_run.v1",
+ "date": "2026-11-05",
+ "rules": "validation/m6-same-mac-limits.json, committed before any run and not changed",
+ "cumlx_commit": "687a6b3f6cdc4fe09c021fb3cf36bd01ee277a1a",
+ "run": "spikes/m6_same_mac.sh start, from the public repository, with an empty HOME, uv 0.12.19, its own Python and caches, no sudo and no setting changed",
+ "machine": {
+  "chip": "Apple M5 Pro",
+  "memory_bytes": 51539607552,
+  "macos": "27.0.1",
+  "metal": "Metal 4",
+  "same_mac_as_the_earlier_records": true,
+  "other_jobs_ran": true
+ },
+ "versions": {
+  "python": "3.12.14",
+  "drjit": "1.5.0",
+  "genesis-world": "1.4.5",
+  "mitsuba": "3.9.1",
+  "mlx": "0.32.4",
+  "rsl-rl-lib": "5.5.2",
+  "torch": "2.15.0"
+ },
+ "verdict": "pass",
+ "parts": {
+  "base": {
+   "state": "pass",
+   "reasons": []
+  },
+  "f3": {
+   "state": "pass",
+   "reasons": []
+  },
+  "f4": {
+   "state": "pass",
+   "reasons": []
+  },
+  "f5": {
+   "state": "pass",
+   "reasons": []
+  }
+ },
+ "ticks_m6_1": false,
+ "measured": {
+  "peak_memory_used_gb": 33.3,
+  "base": {
+   "doctor_exit": 0,
+   "selftest": "11 passed, 0 failed, 0 skipped",
+   "tests": "816 passed, 44 skipped, 76 deselected"
+  },
+  "f3": {
+   "tests": "30 passed",
+   "what": "tests/test_kernel_gpu.py: hand-written Metal kernels against recorded V100 goldens. No application ran"
+  },
+  "f4": {
+   "train": {
+    "task": "go2_flat",
+    "engine": "genesis",
+    "physics": "metal",
+    "learner": "mps",
+    "envs": 4096,
+    "iterations": 300,
+    "seed": 1,
+    "seconds": 299.92,
+    "env_steps_per_second": 98331
+   },
+   "eval": {
+    "fwd": {
+     "controller": "mlx",
+     "forward_command": 0.8,
+     "mean_forward_speed": 0.8103420344326231,
+     "mean_velocity_error": 0.07617016433841653,
+     "falls_per_world": 0.0,
+     "worst_rel_l2_against_rsl_rl": 4.968663628349502e-07,
+     "worst_rel_l2_wrong_activation": 0.8596933052035719,
+     "largest_absolute_error": 1.6689300537109375e-06,
+     "mlx_ms_per_step": 0.229
+    },
+    "back": {
+     "controller": "mlx",
+     "forward_command": -0.8,
+     "mean_forward_speed": -0.8644054352574878,
+     "mean_velocity_error": 0.09436037678581972,
+     "falls_per_world": 0.0,
+     "worst_rel_l2_against_rsl_rl": 4.279477422722186e-07,
+     "worst_rel_l2_wrong_activation": 0.9580600640394338,
+     "largest_absolute_error": 9.5367431640625e-07,
+     "mlx_ms_per_step": 0.225
+    },
+    "stop": {
+     "controller": "mlx",
+     "forward_command": 0.0,
+     "mean_forward_speed": 0.00013698142067242872,
+     "mean_velocity_error": 0.00016572422745816262,
+     "falls_per_world": 0.0,
+     "worst_rel_l2_against_rsl_rl": 4.430973448127032e-07,
+     "worst_rel_l2_wrong_activation": 0.9617118129390619,
+     "largest_absolute_error": 4.76837158203125e-07,
+     "mlx_ms_per_step": 0.225
+    },
+    "zero": {
+     "controller": "zero",
+     "forward_command": 0.8,
+     "mean_forward_speed": 0.0011795688022729993,
+     "mean_velocity_error": 0.7988204419612884,
+     "falls_per_world": 0.0
+    }
+   },
+   "limit_rel_l2": 0.0001,
+   "limit_absolute": 1e-05
+  },
+  "f5": {
+   "status": "rendered",
+   "variant": "metal_ad_rgb",
+   "mitsuba": "3.9.1",
+   "process_gpu_seconds": 8.66650575,
+   "what": "Three seeds rendered. This run did not compare them against CUDA"
+  }
+ },
+ "against_the_m4_record": "The speed, velocity error, reward and falls of all four evaluations equal validation/m4-sim.json exactly, as floating-point values. So seed 1 trains to the same result on this chip, from nothing. It says nothing about another machine.",
+ "earlier_attempts_not_counted": [
+  "First start: ended before any stage, because the launcher's HOME moved the default folder. Script bug, fixed in the commit after it.",
+  "Second: verdict not_run. The base, F3 and F5 passed, and F4 trained, but the four evaluations passed a flag that spikes/m4_sim.py does not have. Script bug, and the VM never reached those lines. The rules did not change."
+ ],
+ "what_this_shows": [
+  "The public repository installs and runs from nothing on this Mac, with its real GPU",
+  "The kernels and policy in the rules run on Metal under the rules that the VM could not reach"
+ ],
+ "what_this_does_not_show": [
+  "A new Mac: macOS, the Metal driver, the GPU, git, curl and the Python that started the run are this Mac's",
+  "Other Apple chips or macOS versions",
+  "F1 and F2, which have no reproduced run on any machine",
+  "An application using custom kernels for F3, Isaac Lab for F4, or a CUDA comparison for F5 in this run"
+ ]
+}
