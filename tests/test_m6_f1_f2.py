@@ -19,6 +19,7 @@ def good(out: Path) -> Path:
     for name in ("f1_port", "f1_port8", "f1_program_install", "f1_program", "f2_install", "f2_program"):
         (out / f"{name}.exit").write_text("0\n")
     (out / "f1_bad.exit").write_text("1\n")
+    (out / "f1_bad.json").write_text(json.dumps({"status": "diverged"}))
     (out / "f1_program.json").write_text(json.dumps({"generated_tokens": 20}))
     (out / "f2_program.json").write_text(json.dumps({"first_loss": 0.5, "last_loss": 0.1}))
     (out / "f2_right.json").write_text(json.dumps({"device": "mps", "heldout_psnr_start": 12.0, "heldout_psnr_end": 30.0}))
@@ -74,6 +75,50 @@ def test_a_part_with_no_output_is_not_a_pass(tmp_path, name, part):
 def test_a_refused_install_is_a_failure_and_not_a_skip(tmp_path):
     (tmp_path / "f1_program_install.exit").write_text("1")
     assert j.f1_original(tmp_path)["state"] == "fail"
+
+
+def test_exit_1_with_no_diff_result_is_not_a_rejected_port(tmp_path):
+    good(tmp_path)
+    (tmp_path / "f1_bad.json").unlink()
+    result = j.f1_mac_port(tmp_path)
+    assert result["state"] == "fail" and "diverged" in result["reasons"][0]
+
+
+def test_exit_1_with_another_status_is_not_a_rejected_port(tmp_path):
+    good(tmp_path)
+    change(tmp_path, "f1_bad", status="error")
+    assert j.f1_mac_port(tmp_path)["state"] == "fail"
+
+
+def run_work_with_stubs(tmp_path: Path, fault_exit: int) -> tuple[Path, str]:
+    """The script with its .venv and uv as stubs. It finds them by its working folder and by PATH, so no real program runs."""
+    bin_dir = tmp_path / ".venv" / "bin"
+    bin_dir.mkdir(parents=True)
+    tools = tmp_path / "tools"
+    tools.mkdir()
+    calls = tmp_path / "calls"
+    (bin_dir / "cumlx").write_text(f'#!/bin/sh\necho "cumlx $1" >>"{calls}"\n[ "$1" = diff ] && exit 1\nexit 0\n')
+    (bin_dir / "python").write_text(f'#!/bin/sh\necho "python $1" >>"{calls}"\ncase "$1" in *m6_f1_fault.py) exit {fault_exit} ;; esac\nexit 0\n')
+    (tools / "uv").write_text("#!/bin/sh\nexit 1\n")
+    for stub in (bin_dir / "cumlx", bin_dir / "python", tools / "uv"):
+        stub.chmod(0o755)
+    out = tmp_path / "out"
+    out.mkdir()
+    subprocess.run(["/bin/sh", str(WORK), str(out)], cwd=tmp_path, env={"HOME": str(tmp_path / "home"), "PATH": f"{tools}:/usr/bin:/bin"}, check=True, capture_output=True)
+    return out, calls.read_text()
+
+
+def test_the_script_reaches_the_diff_when_the_wrong_port_exists(tmp_path):
+    out, calls = run_work_with_stubs(tmp_path, 0)
+    assert "cumlx port" in calls and "cumlx diff" in calls
+    assert (out / "f1_bad.exit").read_text().strip() == "1"
+
+
+def test_a_failed_fault_script_leaves_no_result_for_the_judge(tmp_path):
+    out, calls = run_work_with_stubs(tmp_path, 1)
+    assert "cumlx port" in calls and "cumlx diff" not in calls
+    assert not (out / "f1_bad.exit").exists()
+    assert j.f1_mac_port(out)["state"] != "pass"
 
 
 def cli_flags(command: str) -> set[str]:

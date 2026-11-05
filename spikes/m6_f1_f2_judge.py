@@ -38,8 +38,9 @@ def f1_mac_port(out: Path) -> dict[str, Any]:
         reasons.append(f'port exit {port}')
     if port8 != 0:
         reasons.append(f'8-bit port exit {port8}')
-    if bad != 1:
-        reasons.append(f'a wrong port gave exit {bad}, and 1 is needed')
+    status = (read_json(out, 'f1_bad') or {}).get('status')
+    if bad != 1 or status != 'diverged':
+        reasons.append(f'a wrong port gave exit {bad} and status {status}, and exit 1 with status diverged is needed')
     return part(reasons, None in (port, port8, bad))
 
 

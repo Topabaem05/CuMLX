@@ -7,7 +7,7 @@
   "model": "Qwen/Qwen2.5-0.5B",
   "revision": "060db6499f32faf8b98477b0a26969ef7d8b9987",
   "original_program": {"what": "spikes/m6_f1_program.py: an ordinary Transformers program with flash_attention_2, 8-bit bitsandbytes and a CUDA device, unmodified, through cumlx run --substitute", "pass": "Install succeeds, exit 0, and it generates 20 tokens. That is grade C at most, because no value is compared"},
-  "mac_port": {"what": "cumlx port at bf16, and with --q-bits 8. Neither uses flash_attn or bitsandbytes", "pass": "Both exit 0, and one weight scaled by 1.01 in a copy of the port makes cumlx diff exit 1", "reference": "The golden comes from the original on this Mac's CPU, not from CUDA"}
+  "mac_port": {"what": "cumlx port at bf16, and with --q-bits 8. Neither uses flash_attn or bitsandbytes", "pass": "Both exit 0, and one weight scaled by 1.01 in a copy of the port makes cumlx diff exit 1 with status diverged", "reference": "The golden comes from the original on this Mac's CPU, not from CUDA"}
  },
  "f2": {
   "metalsplat_commit": "84e8c3a433f71c107e9387d3f72a765436c11f6e",

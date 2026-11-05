@@ -18,9 +18,11 @@ say "F1 port with 8-bit weights"
 .venv/bin/cumlx port "$MODEL" --revision "$REVISION" --q-bits 8 -o "$WORK/port8" --format json >"$OUT/f1_port8.json" 2>"$OUT/f1_port8.err"
 echo "$?" >"$OUT/f1_port8.exit"
 say "F1 a wrong port must fail"
-.venv/bin/python spikes/m6_f1_fault.py "$WORK/port/mlx" "$WORK/port-bad" >"$OUT/f1_fault.txt" 2>&1 \
-    && .venv/bin/cumlx diff "$WORK/port/golden" "$WORK/port-bad" -o "$WORK/bad-report" --format json >"$OUT/f1_bad.json" 2>"$OUT/f1_bad.err"
-echo "$?" >"$OUT/f1_bad.exit"
+# With no wrong port, nothing was rejected. So a failed copy writes no f1_bad.exit, and the judge reads this part as not run.
+if .venv/bin/python spikes/m6_f1_fault.py "$WORK/port/mlx" "$WORK/port-bad" >"$OUT/f1_fault.txt" 2>&1; then
+    .venv/bin/cumlx diff "$WORK/port/golden" "$WORK/port-bad" -o "$WORK/bad-report" --format json >"$OUT/f1_bad.json" 2>"$OUT/f1_bad.err"
+    echo "$?" >"$OUT/f1_bad.exit"
+fi
 
 say "F1 the original program"
 uv venv -q --python 3.14 "$WORK/f1-venv" >"$OUT/f1_program_install.txt" 2>&1
