@@ -68,6 +68,7 @@ cumlx run train.py --report run-report.json -- --lr 1e-3    # 스크립트 인�
 cumlx run --module my.pkg.train -- --epochs 1
 cumlx run train.py --target cpu                             # MPS가 없는 Linux 등
 cumlx run train.py --substitute flash_attn=mps_flash_attn   # 패키지 대체를 직접 지정
+cumlx run train.py --substitute gsplat=cumlx.compat.gsplat_metalsplat   # gsplat.rasterization만, 핀홀과 RGB. 나머지 옵션은 오류. metalsplat 설치 필요
 ```
 
 **스크립트가 받는 값.** `torch.cuda.is_available()`은 True입니다. `get_device_name()`은 `MPS (cumlx run)`을 돌려주며, NVIDIA 이름을 쓰지 않습니다. `cumlx run` 없이는 torch에 아무 변화가 없습니다.

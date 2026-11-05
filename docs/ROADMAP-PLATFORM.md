@@ -170,7 +170,7 @@ cumlx run train.py --target mps --report run-report.json
 
 - 첫 작업: M0에서 실행하지 않은 `mps-*`, metalsplat, msplat, mlx3D를 실행해 레시피에 넣을지 결정. **실행했습니다(2026-11-03).** 레시피에 넣은 것은 metalsplat, torch 2.13의 mps-flash-attn, torch 자체 sdpa와 torchvision의 `deform_conv2d`입니다. 기준은 CPU와 손 계산이며 CUDA와는 비교하지 않았습니다. `validation/m2-substitutes.json`
 - `.cuda()`, `device="cuda"`, `torch.cuda.*`, `autocast("cuda")`를 MPS로 연결
-- `flash_attn`, `bitsandbytes`, `pytorch3d`, `gsplat` 등의 import 연결은 `--substitute`로 직접 지정할 때만 합니다. **자동 연결은 하지 않기로 했습니다.** 평가한 후보 중 원래 패키지의 API를 그대로 제공하는 것이 없습니다
+- `flash_attn`, `bitsandbytes`, `pytorch3d`, `gsplat` 등의 import 연결은 `--substitute`로 직접 지정할 때만 합니다. **자동 연결은 하지 않기로 했습니다.** 평가한 후보 중 원래 패키지의 API를 그대로 제공하는 것이 없습니다. `gsplat.rasterization`은 2026-11-05에 CuMLX의 어댑터 `cumlx.compat.gsplat_metalsplat`로 제공하며, 이것도 직접 지정해야 합니다
 - 바꾼 호출을 모두 `run-report.json`에 기록
 - MPS에 없는 연산은 조용히 CPU로 넘기지 않고 오류 또는 명시적 허용
 
@@ -265,7 +265,7 @@ RTX가 필요하던 렌더링 경로를 Metal 레이트레이싱으로 대체합
 
 완료 조건:
 
-- [ ] 기함 작업을 새 Mac에서 처음부터 재현. **VM 판정 fail:** 새 Mac 대신 최근 macOS VM으로 재현하기로 2026-11-04에 정했고, `terminal-mac`의 macOS 27.2 VM에서 [실행](../spikes/m6_vm_reproduce.sh)했습니다. 공개 저장소 설치와 GPU 없는 부분은 통과했지만, VM의 준가상화 GPU는 PyTorch MPS, Genesis Metal, Mitsuba Metal이 거부해 F3, F4, F5가 돌지 못했습니다([기록](../validation/m6-vm-run.json)). **이 조건을 채우려면 실제 다른 Mac이 필요합니다.** 실제 Mac이 한 대뿐이라 2026-11-05에 같은 Mac에서 공개 저장소와 빈 홈 폴더로 [다시 돌렸고](../spikes/m6_same_mac.sh), 같은 규칙으로 F3, F4, F5의 범위가 통과했습니다([기록](../validation/m6-same-mac-run.json)). F1, F2도 같은 방법으로 시험했고 **판정은 fail입니다**([기록](../validation/m6-f1-f2-run.json)). `cumlx port`와 metalsplat 자체 API 학습은 통과했지만, 원본 프로그램 두 개는 대체 패키지의 API가 모자라 멈췄습니다. 같은 Mac이고 F1, F2가 재현되지 않아 체크하지 않습니다. 지금까지의 기록은 [보고서의 기함 작업 표](PLATFORM-REPORT.md#기함-작업)에 있습니다
+- [ ] 기함 작업을 새 Mac에서 처음부터 재현. **VM 판정 fail:** 새 Mac 대신 최근 macOS VM으로 재현하기로 2026-11-04에 정했고, `terminal-mac`의 macOS 27.2 VM에서 [실행](../spikes/m6_vm_reproduce.sh)했습니다. 공개 저장소 설치와 GPU 없는 부분은 통과했지만, VM의 준가상화 GPU는 PyTorch MPS, Genesis Metal, Mitsuba Metal이 거부해 F3, F4, F5가 돌지 못했습니다([기록](../validation/m6-vm-run.json)). **이 조건을 채우려면 실제 다른 Mac이 필요합니다.** 실제 Mac이 한 대뿐이라 2026-11-05에 같은 Mac에서 공개 저장소와 빈 홈 폴더로 [다시 돌렸고](../spikes/m6_same_mac.sh), 같은 규칙으로 F3, F4, F5의 범위가 통과했습니다([기록](../validation/m6-same-mac-run.json)). F1, F2도 같은 방법으로 시험했고 **판정은 fail입니다**([기록](../validation/m6-f1-f2-run.json)). `cumlx port`와 metalsplat 자체 API 학습은 통과했지만, 원본 프로그램 두 개는 대체 패키지의 API가 모자라 멈췄습니다. 이후 gsplat 어댑터로 F2 원본 프로그램은 돌게 됐지만([기록](../validation/m6-f2-adapter-run.json)) CUDA 비교가 없어 등급 C입니다. 같은 Mac이고 F1과 F2의 목표 등급이 재현되지 않아 체크하지 않습니다. 지금까지의 기록은 [보고서의 기함 작업 표](PLATFORM-REPORT.md#기함-작업)에 있습니다
 - [x] 결과 보고서 공개, 모든 항목에 증명 등급 표시. [보고서](PLATFORM-REPORT.md)를 2026-11-04에 저장소와 함께 공개했습니다. `validation/archive-orchardsim/`의 기록은 다시 측정할 수 없습니다
 - [x] 미검증 영역 목록 공개. [목록](UNVERIFIED.md)을 2026-11-04에 저장소와 함께 공개했습니다
 

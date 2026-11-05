@@ -164,3 +164,23 @@ def test_the_rules_say_that_nothing_here_ticks_m6_1():
     assert "nothing here ticks M6-1" in j.LIMITS["scope"]
     assert j.LIMITS["metalsplat_commit"] in WORK.read_text()
     assert j.LIMITS["adapter"] in WORK.read_text()
+
+
+def test_the_record_agrees_with_the_rules_and_ticks_nothing():
+    record = json.loads((REPO / "validation" / "m6-f2-adapter-run.json").read_text())
+    assert record["ticks_m6_1"] is False and record["verdict"] == "pass" and record["grade"]["f2"] == "C"
+    assert {part["state"] for part in record["parts"].values()} == {"pass"}
+    rule = j.LIMITS["conformance"]
+    for scene in record["measured"]["conformance"].values():
+        assert scene["image_rel_l2"] <= rule["image_rel_l2_at_most"] and scene["alpha_rel_l2"] <= rule["alpha_rel_l2_at_most"] and scene["peak_error_px"] == 0 and scene["device"] == rule["device"]
+    assert set(record["measured"]["controls"]) == set(j.LIMITS["controls"]["must_fail"]) and all(item["caught"] for item in record["measured"]["controls"].values())
+    assert all(item["relative_error"] <= j.LIMITS["gradients"]["relative_error_at_most"] for item in record["measured"]["gradients"].values())
+    train, limits = record["measured"]["training"], j.LIMITS["training"]
+    assert train["right"]["heldout_psnr_end"] >= limits["heldout_psnr_at_least_db"] and train["frozen"]["heldout_psnr_end"] < limits["frozen_control_below_db"]
+    assert train["right"]["heldout_psnr_end"] - train["wrong_cameras"]["heldout_psnr_end"] >= limits["wrong_cameras_at_least_db_below_right"]
+
+
+def test_an_earlier_fail_stays_on_record():
+    earlier = json.loads((REPO / "validation" / "m6-f1-f2-run.json").read_text())
+    assert earlier["verdict"] == "fail" and earlier["parts"]["f2_original_program"]["state"] == "fail"
+

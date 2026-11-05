@@ -999,6 +999,16 @@
    ],
    "options": [
     {
+     "name": "cumlx.compat.gsplat_metalsplat",
+     "how": "cumlx run train.py --substitute gsplat=cumlx.compat.gsplat_metalsplat. An unmodified program that calls gsplat.rasterization runs on metalsplat",
+     "install": "pip install git+https://github.com/tchauffi/metalsplat@84e8c3a",
+     "license": "MIT",
+     "evidence": "run",
+     "source": "validation/m6-f2-adapter-run.json",
+     "grade": "C",
+     "limits": "Not compared with gsplat on CUDA. Equal to a NumPy hand render of the documented formula within 2.8e-6 on six scenes. Pinhole and RGB only: SH colors, depth modes and covars raise an error, and gsplat.strategy does not exist, so a densifying program stops. One synthetic scene"
+    },
+    {
      "name": "msplat",
      "how": "Train with msplat",
      "install": "pip install msplat",
@@ -1011,7 +1021,7 @@
     },
     {
      "name": "metalsplat",
-     "how": "Use its own API. It has no gsplat.rasterization, so it does not replace gsplat by import",
+     "how": "Use its own API. It has no gsplat.rasterization, so an unmodified gsplat program needs the adapter option",
      "install": "pip install git+https://github.com/tchauffi/metalsplat@84e8c3a",
      "license": "MIT",
      "evidence": "run",
@@ -1022,7 +1032,7 @@
    ],
    "verify": "Compare rendered views with PSNR",
    "limits": "",
-   "checked": "2026-11-03"
+   "checked": "2026-11-05"
   },
   {
    "id": "nvdiffrast",

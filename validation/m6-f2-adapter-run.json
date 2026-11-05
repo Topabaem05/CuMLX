@@ -1,0 +1,237 @@
+{
+ "schema": "cumlx.m6_f2_adapter_run.v1",
+ "date": "2026-11-05",
+ "rules": "validation/m6-f2-adapter-limits.json, committed in e5bc77e before the adapter first ran, and not changed",
+ "cumlx_commit": "4ca59c0dd7362f2365df0ec00b8ca5c8f7d53dee",
+ "run": "spikes/m6_same_mac.sh start COMMIT f2adapter, from the public repository, with an empty HOME, its own uv, Python and caches, no sudo and no setting changed",
+ "machine": {
+  "chip": "Apple M5 Pro",
+  "same_mac_as_the_earlier_records": true,
+  "other_jobs_ran": true
+ },
+ "versions": {
+  "python": "3.12",
+  "torch": "2.15.0",
+  "metalsplat": "84e8c3a433f71c107e9387d3f72a765436c11f6e"
+ },
+ "verdict": "pass",
+ "parts": {
+  "conformance": {
+   "state": "pass",
+   "reasons": []
+  },
+  "controls": {
+   "state": "pass",
+   "reasons": []
+  },
+  "gradients": {
+   "state": "pass",
+   "reasons": []
+  },
+  "refusals": {
+   "state": "pass",
+   "reasons": []
+  },
+  "original_program": {
+   "state": "pass",
+   "reasons": []
+  },
+  "training": {
+   "state": "pass",
+   "reasons": []
+  }
+ },
+ "ticks_m6_1": false,
+ "grade": {
+  "f2": "C",
+  "target": "B",
+  "why": "The unmodified gsplat program runs and its loss falls, and the adapter equals a hand render of gsplat's documented formula. No gsplat on CUDA took part, so nothing compares the two rasterizers"
+ },
+ "does_not_change": "validation/m6-f1-f2-run.json stays a fail: that run substituted metalsplat itself, which has no rasterization. F1 has no adapter, and its original program still stops",
+ "measured": {
+  "peak_memory_used_gb": 28.2,
+  "conformance": {
+   "one_gaussian": {
+    "image_rel_l2": 1.4893152411017352e-07,
+    "alpha_rel_l2": 1.6967390230757815e-07,
+    "peak_error_px": 0.0,
+    "device": "mps",
+    "within": true
+   },
+   "off_center_rotated": {
+    "image_rel_l2": 2.799407800532944e-07,
+    "alpha_rel_l2": 2.786516232485255e-07,
+    "peak_error_px": 0.0,
+    "device": "mps",
+    "within": true
+   },
+   "overlap_background": {
+    "image_rel_l2": 5.266381707773988e-07,
+    "alpha_rel_l2": 3.028413734623508e-07,
+    "peak_error_px": 0.0,
+    "device": "mps",
+    "within": true
+   },
+   "small_classic": {
+    "image_rel_l2": 2.7264198407456933e-06,
+    "alpha_rel_l2": 2.734816606688131e-06,
+    "peak_error_px": 0.0,
+    "device": "mps",
+    "within": true
+   },
+   "small_antialiased": {
+    "image_rel_l2": 2.7326677833432383e-06,
+    "alpha_rel_l2": 2.7133737384992628e-06,
+    "peak_error_px": 0.0,
+    "device": "mps",
+    "within": true
+   },
+   "near_and_far": {
+    "image_rel_l2": 1.7374197732627555e-07,
+    "alpha_rel_l2": 1.87708784697627e-07,
+    "peak_error_px": 0.0,
+    "device": "mps",
+    "within": true
+   }
+  },
+  "controls": {
+   "quaternion_xyzw": {
+    "caught": true,
+    "worst_image_rel_l2": 0.6572326018768704
+   },
+   "camera_to_world_view_matrix": {
+    "caught": true,
+    "worst_image_rel_l2": 1.0
+   },
+   "fx_fy_swapped": {
+    "caught": true,
+    "worst_image_rel_l2": 0.36455582122813923
+   },
+   "half_pixel_shift": {
+    "caught": true,
+    "worst_image_rel_l2": 0.545922830324949
+   },
+   "no_eps2d": {
+    "caught": true,
+    "worst_image_rel_l2": 0.40921009494230365
+   },
+   "antialiased_for_classic": {
+    "caught": true,
+    "worst_image_rel_l2": 0.3916666773406989
+   }
+  },
+  "gradients": {
+   "color_loss.means": {
+    "autograd": -0.00026396283647045493,
+    "central_difference": -0.00026409535459903655,
+    "relative_error": 0.0005017813690165497
+   },
+   "color_loss.quats": {
+    "autograd": -2.976402174681425e-05,
+    "central_difference": -3.0408018537181336e-05,
+    "relative_error": 0.0211785187377349
+   },
+   "color_loss.scales": {
+    "autograd": 0.001053199521265924,
+    "central_difference": 0.0010529997513109013,
+    "relative_error": 0.00018971510180699528
+   },
+   "color_loss.opacities": {
+    "autograd": 0.01740177348256111,
+    "central_difference": 0.01740198540873053,
+    "relative_error": 1.2178275319813447e-05
+   },
+   "color_loss.colors": {
+    "autograd": 0.014806653372943401,
+    "central_difference": 0.014806216503324837,
+    "relative_error": 2.9505824021015003e-05
+   },
+   "alpha_loss.means": {
+    "autograd": -0.017266828566789627,
+    "central_difference": -0.017265992937609553,
+    "relative_error": 4.839740078044012e-05
+   },
+   "alpha_loss.quats": {
+    "autograd": -0.0026374913286417723,
+    "central_difference": -0.0026384805096313357,
+    "relative_error": 0.0003749055511127044
+   },
+   "alpha_loss.scales": {
+    "autograd": -0.005913188215345144,
+    "central_difference": -0.005912690539844334,
+    "relative_error": 8.417073368822865e-05
+   },
+   "alpha_loss.opacities": {
+    "autograd": 0.19233572483062744,
+    "central_difference": 0.19233798957429826,
+    "relative_error": 1.1774812016251952e-05
+   }
+  },
+  "refusals": {
+   "sh_degree": "raised",
+   "render_mode": "raised",
+   "camera_model": "raised",
+   "covars": "raised",
+   "sparse_grad": "raised",
+   "absgrad": "raised",
+   "distributed": "raised",
+   "with_ut": "raised",
+   "segmented": "raised",
+   "batched_means": "raised",
+   "viewmats_require_grad": "raised",
+   "colors_not_rgb": "raised",
+   "unknown_option": "raised"
+  },
+  "original_program": {
+   "first_loss": 0.06556444615125656,
+   "last_loss": 0.009355117566883564,
+   "device": "cuda",
+   "exit": 0,
+   "note": "device is the string that the program holds. cumlx run mapped it, and metalsplat's kernels run only on MPS"
+  },
+  "training": {
+   "right": {
+    "device": "mps",
+    "heldout_psnr_start": 15.517074227333069,
+    "heldout_psnr_end": 44.434743881225586,
+    "first_loss": 0.08348873257637024,
+    "last_loss": 0.002512360457330942,
+    "seconds": 2.883995916985441
+   },
+   "frozen": {
+    "device": "mps",
+    "heldout_psnr_start": 15.517074227333069,
+    "heldout_psnr_end": 15.517074227333069,
+    "first_loss": 0.08348873257637024,
+    "last_loss": 0.09135209769010544,
+    "seconds": 2.795513374992879
+   },
+   "wrong_cameras": {
+    "device": "mps",
+    "heldout_psnr_start": 15.517074227333069,
+    "heldout_psnr_end": 17.701306104660034,
+    "first_loss": 0.09011701494455338,
+    "last_loss": 0.03458348661661148,
+    "seconds": 3.0509562920196913
+   }
+  }
+ },
+ "attempts": [
+  {
+   "what": "During development, before this run and with the same rules, autograd and a central difference differed by up to 62% on a scene whose pixels cross the alpha cutoff of 1/255. The cause was measured: with the contributing pixels frozen, the two agreed to four decimal places in all nine cases, and the adapter's forward values equalled the hand render. gsplat has the same cutoff. The check moved to a scene with no such pixel, and the 5% limit did not change. The right mode trained at 2.9 s against 1.3 s for metalsplat's own API, because alpha with gradients takes a second pass"
+  },
+  {
+   "commit": "4ca59c0dd7362f2365df0ec00b8ca5c8f7d53dee",
+   "verdict": "pass",
+   "what": "The result above, on the first run from the public repository"
+  }
+ ],
+ "limits": [
+  "No comparison with gsplat on CUDA. The hand render follows gsplat's documentation and its source as read, and it did not run against gsplat",
+  "Only gsplat.rasterization, for pinhole cameras and RGB, with one set of Gaussians per call. SH colors, depth modes, covars, the strategy and optimizer modules and other parts of the gsplat package raise an error or do not exist",
+  "One synthetic scene with no real images and no densification",
+  "meta holds only sizes and settings, not the means2d or radii that a densifying program reads",
+  "A held-out PSNR repeats only roughly: the same seed gives slightly different values on MPS"
+ ],
+ "not_shown": "Any real gsplat training program with densification, another Mac, and CUDA. The results stay in ~/cumlx-repro on this Mac"
+}
