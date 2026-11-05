@@ -482,9 +482,24 @@ def _self(*argv: str) -> dict:
         raise CumlxError('E_INTERNAL', f'`cumlx {argv[0]}` gave no JSON result (exit {p.returncode})') from None
 
 
+PORT_SNAPSHOT_FILES = ['*.json', 'model*.safetensors', '*.py', 'tokenizer.model', '*.tiktoken', 'tiktoken.model', '*.txt', '*.jsonl', '*.jinja']  # as mlx-lm downloads
+
+
 def _step(doc: dict) -> dict:
     return {'exit_code': doc.get('exit_code'), 'status': doc.get('status'), 'summary': doc.get('summary'),
             'errors': doc.get('errors', []), 'warnings': [w.get('code') for w in doc.get('warnings', [])]}
+
+
+def _pinned_source(model: str, revision: str | None) -> str:
+    """What mlx_lm convert reads. Its command line has no revision flag, so a pinned hub model reaches it as a local snapshot."""
+    if not revision or Path(model).exists():
+        return model
+    from huggingface_hub import snapshot_download
+    try:
+        return snapshot_download(model, revision=revision, allow_patterns=PORT_SNAPSHOT_FILES)
+    except Exception as e:
+        raise CumlxError('E_MODEL_LOAD', f'cannot fetch {model} at revision {revision}: {e}',
+                         hint='check the revision and the network, before any conversion') from None
 
 
 def run_port(args) -> Result:
@@ -522,15 +537,15 @@ def run_port(args) -> Result:
                    data={'dry_run': True, 'plan': plan})
         r.suggest(f"cumlx port {_q(args.model)} -o {_q(args.output)}", 'run it')
         return r
+    source = _pinned_source(args.model, args.revision)
     out = prepare_output_dir(args.output, overwrite=args.overwrite, marker='port.json')
     mlx_dir = out / 'mlx'
-    convert = [sys.executable, '-m', 'mlx_lm', 'convert', '--hf-path', args.model, '--mlx-path', str(mlx_dir)]
+    convert = [sys.executable, '-m', 'mlx_lm', 'convert', '--hf-path', source, '--mlx-path', str(mlx_dir)]
     if args.dtype:
         convert += ['--dtype', args.dtype]
     if args.q_bits:
         convert += ['-q', '--q-bits', str(args.q_bits)]
-    if args.revision:
-        convert += ['--revision', args.revision]
+    revision = ['--revision', args.revision] if args.revision else []
     log('converting with mlx-lm')
     done = subprocess.run(convert, capture_output=True, text=True, check=False)
     if done.returncode != 0:
@@ -538,13 +553,12 @@ def run_port(args) -> Result:
                          hint='this is the converter, before any verification; check the message and the mlx-lm version')
     steps = {'convert': {'exit_code': 0, 'status': 'ok', 'summary': f'mlx-lm wrote {mlx_dir}'}}
     log('comparing weights')
-    weights = _self('weights', args.model, str(mlx_dir), '-o', str(out / 'weights.json'))
+    weights = _self('weights', args.model, str(mlx_dir), '-o', str(out / 'weights.json'), *revision)
     steps['weights'] = _step(weights)
     golden = ['capture', args.model, *inputs, '-o', str(out / 'golden')]
     if args.q_bits:
         golden += ['--weights-from-mlx', str(mlx_dir)]
-    if args.revision:
-        golden += ['--revision', args.revision]
+    golden += revision
     log('recording the golden')
     captured = _self(*golden)
     steps['capture'] = _step(captured)

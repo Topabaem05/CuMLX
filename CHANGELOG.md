@@ -4,6 +4,7 @@
 
 ### Changed
 
+- `cumlx port --revision` failed on every use, because the mlx-lm command line has no such flag. The converter now reads a local snapshot of that revision, and the weight comparison uses that revision too, where it used the default branch.
 - `spikes/m6_f1_f2_work.sh` tries F1 and F2 on the one real Mac, by the original programs and by the Mac routes, under `validation/m6-f1-f2-limits.json`. No CUDA run takes part, so it cannot reach their target grades.
 - The run on the one real Mac passed: `validation/m6-same-mac-run.json`. The base, F3, F4 and F5 passed under the VM's rules, from an empty home folder. The F4 values equal the M4 record exactly. M6-1 stays open, because this is the same Mac and F1 and F2 remain.
 - `spikes/m6_same_mac.sh` repeats the VM's work on the one real Mac, from the public repository, with an empty home folder and no sudo. The rules are in `validation/m6-same-mac-limits.json`, and they are the VM's. A pass does not tick M6-1, because that condition names a new Mac.
