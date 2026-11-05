@@ -1,0 +1,15 @@
+{
+ "schema": "cumlx.m6_f4_limits.v1",
+ "date": "2026-11-06",
+ "committed_before_any_measurement": "These rules are in the commit before this F4 run. Every limit is one that was written before an earlier run, and none changes here.",
+ "question": "Do training, inference and physics of the quadruped task repeat from nothing, all in one run? This is F4 at its target grades: inference A, physics B.",
+ "route": "cumlx.sim on Genesis (Metal) with MLX inference, the route of docs/ROADMAP-PLATFORM.md. The tasks are in the style of Isaac Lab and are not Isaac Lab, its assets or PhysX",
+ "parts": {
+  "train": "go2_flat, genesis, 4096 envs, 300 iterations, seed 1, exit 0: the rule of validation/m6-same-mac-limits.json",
+  "commands": "With the trained policy in MLX, 128 envs, 1000 steps, seed 7: mean forward speed within 0.2 m/s of +0.8 and -0.8, within 0.1 m/s of 0 for the stop command and for the no-action control, and falls at most 0.1 per world: the rule of validation/m6-same-mac-limits.json",
+  "inference": "In each of the three evaluations with the policy: the largest absolute difference of the MLX policy from rsl_rl's own actor at most 1e-5, and the same weights with ReLU above it: the absolute rule of validation/m4-sim-limits.json (training.policy_in_mlx.absolute_rule)",
+  "physics": "go2_flat trajectories of Genesis on Metal against MuJoCo C, seeds 101, 102 and 103, 64 worlds, 50 control steps: median at most 0.1 and p90 at most 0.2 for each seed, and drive stiffness 0.5 times must fail each seed: the rule of validation/m4-sim-limits.json (trajectory.go2_flat). The 4 times smaller MuJoCo time step is reported beside it, as there"
+ },
+ "grade": "inference A and physics B when every part passes",
+ "not_a_pass": "A part with no output, a stop for memory, disk or time, and a setup error. The run stops at 38 GB of memory in use or at 15 GB of free disk."
+}

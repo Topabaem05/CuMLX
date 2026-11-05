@@ -6,6 +6,7 @@
 #   sh spikes/m6_same_mac.sh start COMMIT f2adapter  # the gsplat adapter work in spikes/m6_f2_adapter_work.sh in place of the rest, under validation/m6-f2-adapter-limits.json
 #   sh spikes/m6_same_mac.sh start COMMIT f2cuda  # the Mac side of the gsplat comparison with CUDA, spikes/m6_f2_cuda_work.sh, under validation/m6-f2-cuda-limits.json. spikes/m6_f2_cuda_judge.py gives the verdict
 #   sh spikes/m6_same_mac.sh start COMMIT f1  # the Mac side of F1 against CUDA, spikes/m6_f1_work.sh, under validation/m6-f1-limits.json. CUMLX_F1_GOLDEN names the CUDA golden
+#   sh spikes/m6_same_mac.sh start COMMIT m6  # the base, then the Mac sides of F2, F3, F4, F5 and F1 against CUDA, each in its own folder. spikes/m6_finish.sh runs this
 #   sh spikes/m6_same_mac.sh status          # the state, and the verdict when it is done. Exit 0 pass, 1 not a pass, 5 no verdict yet
 #   sh spikes/m6_same_mac.sh stop            # stops the run
 #   sh spikes/m6_same_mac.sh clean           # deletes the run's home folder, and keeps the results
@@ -148,7 +149,7 @@ start)
     ;;
 --work) ;;
 *)
-    sed -n 2,13p "$0" >&2
+    sed -n 2,14p "$0" >&2
     exit 2
     ;;
 esac
@@ -213,6 +214,24 @@ if [ "$PART" = f2adapter ]; then
     wait_for_room f2adapter
     sh spikes/m6_f2_adapter_work.sh "$OUT" >"$OUT/f2adapter.log" 2>&1
     finish "$(cat "$OUT/f2adapter_verdict.txt" 2>/dev/null || echo not_run_no_verdict)"
+fi
+if [ "$PART" = m6 ]; then
+    stage "m6: the base"
+    sh spikes/m6_base_work.sh "$OUT/base" >"$OUT/base.log" 2>&1
+    for item in f2cuda f3 f4 f5 f1; do
+        stage "m6: $item"
+        wait_for_room "$item"
+        script=spikes/m6_${item}_work.sh
+        [ "$item" = f2cuda ] && script=spikes/m6_f2_cuda_work.sh
+        sh "$script" "$OUT/$item" >"$OUT/$item.log" 2>&1
+        echo "$?" >"$OUT/$item.exit"
+    done
+    # Each work script writes its marker at its end. A part that stopped early has none, and then the run is not done.
+    done_all=mac_done
+    for marker in base/tests.exit f2cuda/f2cuda_mac_done.txt f3/f3_mac_done.txt f4/f4_done.txt f5/f5_mac_done.txt f1/f1_mac_done.txt; do
+        [ -f "$OUT/$marker" ] || done_all=mac_incomplete
+    done
+    finish "$done_all"
 fi
 if [ "$PART" = f1 ]; then
     stage "the Mac side of F1 against CUDA"

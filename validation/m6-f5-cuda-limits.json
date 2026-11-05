@@ -1,0 +1,23 @@
+{
+ "schema": "cumlx.m6_f5_cuda_limits.v1",
+ "date": "2026-11-06",
+ "committed_before_any_measurement": "These rules are in the commit before spikes/m6_f5_sensors.py first runs on either machine. They do not change after a result. A fix to a program bug is allowed, and each attempt is recorded.",
+ "question": "Does the camera sensor of cumlx.render give on Metal what it gives on CUDA, for RGB, depth and segmentation together? This is F5 at its target grade B.",
+ "versions": "The V100 runs Mitsuba 3.8.0 cuda_ad_rgb and the Mac 3.9.1 metal_ad_rgb: Mitsuba 3.9 refuses a GPU under compute capability 7.5 and 3.8.0 has no Metal variant, as in validation/m5-render.json. So the comparison covers a version difference too",
+ "scenes": "spikes/m6_f5_sensors.py: box_scene of cumlx.render.sensors (a cube over a floor under a constant light), the cube at three poses, seen by two cameras: six views at 256 x 256",
+ "rgb": {"what": "Sensors.rgb at 1024 samples per pixel, seeds 1, 2, 3 on CUDA and 11, 12, 13 on the Mac, each view compared by cumlx.render.compare.compare_images", "pass": "verdict ok for each view", "source": "The M5 rule of validation/m5-render-limits.json: PSNR floor 40 dB, MSE across devices at most twice the MSE within a device, channel means within max(3 standard errors, 1%)"},
+ "depth_and_segmentation": {
+  "what": "Sensors.depth_segmentation with one sample at each pixel centre (a stratified sampler without jitter), against the exact depth and label of the pixel-centre ray in float64, on each machine, and between the machines",
+  "depth_limit_m": 0.001,
+  "label_mismatch_limit": 0.001,
+  "measure": "depth: the largest absolute difference over the pixels where both sides hit the same shape. label: the fraction of pixels whose shape differs, a miss counted as a shape",
+  "source": "The limits of validation/m5-lidar-limits.json: 1 mm for a float32 ray, and one ray in a thousand for the edges of shapes"
+ },
+ "controls": {
+  "what": "the Mac side with spikes/m6_f5_sensors.py --fault: each must fail on at least one view",
+  "box_5cm": "the cube drawn 5 cm off its pose: depth and segmentation against the exact values",
+  "light_2pct": "the light 2% stronger: RGB against CUDA. The same fault failed against CUDA in validation/m5-render.json"
+ },
+ "grade": "B when every part passes on the first complete run of both machines",
+ "not_a_pass": "A part with no output, a missing variant, a stop for memory, disk or time, and a run that started while the GPU was busy."
+}

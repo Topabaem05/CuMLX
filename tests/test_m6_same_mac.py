@@ -197,6 +197,13 @@ def test_the_f1_part_replaces_the_rest_and_a_missing_result_is_not_a_pass(box):
     assert "test_kernel_gpu" not in box.log.read_text()
 
 
+def test_the_m6_part_runs_its_items_and_is_incomplete_when_they_did_not_run(box):
+    # The stub git leaves none of the work scripts, so no item writes its marker.
+    assert run(box, "start", "abc123", "m6").returncode == 0
+    assert verdict(box) == "mac_incomplete"
+    assert "test_kernel_gpu" not in box.log.read_text()
+
+
 def test_a_commit_that_is_not_public_is_a_setup_error(box):
     (box.tmp / "not_public").write_text("")
     assert run(box, "start", "abc123").returncode == 0

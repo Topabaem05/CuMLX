@@ -1,0 +1,22 @@
+{
+ "schema": "cumlx.m6_f3_limits.v1",
+ "date": "2026-11-06",
+ "committed_before_any_measurement": "These rules are in the commit before the app first runs on either machine. They do not change after a result. A fix to a program bug is allowed, and each attempt is recorded.",
+ "question": "Does a custom .cu kernel app give on a Mac, through cumlx kernel port, the same result as on CUDA? This is F3 at its target grade A.",
+ "app": "SAM2's connected components (sam2/csrc/connected_components.cu at the commit and sha256 of validation/kernel-cases-m3/sources.json, Apache-2.0): a host function, get_connected_componnets, and six kernels that it launches per image. SAM2 uses it to post-process masks. Only the file is fetched; it is not copied into this repository",
+ "cuda": "spikes/m6_f3_app.py cuda on the V100: the original file built as a torch extension with nvcc 12.0 and torch 2.10.0+cu128, and its host function called on each batch. Nothing in the file is changed",
+ "mac": "cumlx kernel port of the same file with --translator woof (metal-woof 1.1.5.2, installed by the run in its own environment), then spikes/m6_f3_app.py mac: the six translated kernels through cumlx's woof engine, in the order and with the launch geometry of the host function. The host function is C++ with ATen and does not run on the Mac, so this driver is its port, written from the source",
+ "masks": "spikes/m6_f3_app.py mask_set: sizes 32x32, 64x64, 128x96 and 256x256, each with a dense random mask, a sparse one, ellipses, a spiral with long arms, an empty one and a full one: 24 masks",
+ "parts": {
+  "translate": "cumlx kernel port exits 0 and writes connected_components.metal and its port.json",
+  "cuda_vs_mac": "For each mask, the labels and the counts on the Mac equal CUDA's exactly. The union in merge links each root to the smaller index with atomicMin, so the labels do not depend on the order in which threads run",
+  "reference": "For each mask, CUDA's result and the Mac's give the same partition of the pixels and the same counts as the serial NumPy version of spikes/m3_kernels.py. Partitions, not labels, because the serial version is checked only against the algorithm, not against the bits of the labels"
+ },
+ "controls": {
+  "what": "spikes/m6_f3_app.py mac --fault: each must fail cuda_vs_mac on at least one mask",
+  "must_fail": ["skip_compression", "half_grid", "swapped_wh"],
+  "limit": "These are faults of the driver. A fault inside a translated kernel was shown to fail in validation/kernel-m3.json (vector_add, plus becomes minus), and it is not repeated here"
+ },
+ "grade": "A when every part passes on the first complete run of both machines",
+ "not_a_pass": "A part with no output, a build failure, a translation failure, a stop for memory, disk or time, and a run that started while the GPU was busy."
+}
