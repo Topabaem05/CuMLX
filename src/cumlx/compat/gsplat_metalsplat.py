@@ -2,7 +2,9 @@
 
     cumlx run train.py --substitute gsplat=cumlx.compat.gsplat_metalsplat
 
-This takes the activated values that gsplat takes, and it calls metalsplat's own kernels. An option that this does not implement raises NotImplementedError, because a program that lost one in silence would get a wrong result. It covers pinhole cameras, RGB, and the classic and antialiased modes, and nothing else in the gsplat package. The rules and results are in validation/m6-f2-adapter-limits.json and validation/m6-f2-adapter-run.json. It has not been compared with gsplat on CUDA.
+This takes the activated values that gsplat takes, and it calls metalsplat's own kernels. An option that this does not implement raises NotImplementedError, because a program that lost one in silence would get a wrong result. It covers pinhole cameras, RGB, and the classic and antialiased modes, and nothing else in the gsplat package. The rules and results are in validation/m6-f2-adapter-limits.json and validation/m6-f2-adapter-run.json, and the comparison with gsplat on CUDA is under validation/m6-f2-cuda-limits.json.
+
+metalsplat clamps each alpha at 0.99, and gsplat 1.5.3 at 0.999 (RasterizeToPixels3DGSFwd.cu). So the first call compiles metalsplat's rasterize kernels again with gsplat's clamp, and metalsplat.ops.rasterize then uses that library in this process. If metalsplat's source no longer has the two lines that this changes, the call stops with an error.
 """
 
 from __future__ import annotations
@@ -15,6 +17,34 @@ _ONLY_DEFAULT = {
     'sh_degree': None, 'render_mode': 'RGB', 'camera_model': 'pinhole', 'radius_clip': 0.0, 'sparse_grad': False, 'absgrad': False, 'distributed': False,
     'segmented': False, 'covars': None, 'with_ut': False, 'with_eval3d': False, 'return_normals': False, 'global_z_order': True, 'rays': None,
 }
+
+
+# gsplat 1.5.3: `min(0.999f, opac * __expf(-sigma))`, and no gradient flows through the clamp. metalsplat 0.2.0 at the pinned commit has 0.99 in the same two places.
+GSPLAT_ALPHA_MAX = 0.999
+_CLAMP_LINES = (('return min(0.99, opacity * exp(power));', 'return min(0.999, opacity * exp(power));'),
+                ('if (raw >= 0.99) d_alpha_raw = 0.0;', 'if (raw >= 0.999) d_alpha_raw = 0.0;'))
+
+
+def gsplat_rasterize_source(text: str) -> str:
+    """metalsplat's rasterize.metal with gsplat's alpha clamp. Each line must appear once, or this raises."""
+    for old, new in _CLAMP_LINES:
+        found = text.count(old)
+        if found != 1:
+            raise RuntimeError(f'cumlx.compat.gsplat_metalsplat expects the line {old!r} once in metalsplat\'s rasterize.metal and found it {found} times, '
+                               'so it cannot set gsplat\'s alpha clamp of 0.999. This metalsplat is not the pinned one')
+        text = text.replace(old, new)
+    return text
+
+
+def _use_gsplat_alpha_clamp(rasterize_module: Any) -> None:
+    if getattr(rasterize_module, '_cumlx_alpha_max', None) == GSPLAT_ALPHA_MAX:
+        return
+    from metalsplat.kernels import _loader
+
+    library = torch.mps.compile_shader(gsplat_rasterize_source(_loader.source('rasterize.metal')))
+    metalsplat_load = rasterize_module.load_kernel
+    rasterize_module.load_kernel = lambda name: library if name == 'rasterize' else metalsplat_load(name)
+    rasterize_module._cumlx_alpha_max = GSPLAT_ALPHA_MAX
 
 
 def _refuse(what: str) -> NotImplementedError:
@@ -47,9 +77,12 @@ def rasterization(means: torch.Tensor, quats: torch.Tensor, scales: torch.Tensor
         raise _refuse(f'rasterize_mode={rasterize_mode!r}')
     _, cameras = _check_shapes(means, opacities, colors, viewmats, Ks)
 
+    from metalsplat.ops import rasterize as metalsplat_rasterize
     from metalsplat.ops.project import project_gaussians
-    from metalsplat.ops.rasterize import rasterize_gaussians
     from metalsplat.ops.tiling import DEFAULT_TILE_SIZE
+
+    _use_gsplat_alpha_clamp(metalsplat_rasterize)
+    rasterize_gaussians = metalsplat_rasterize.rasterize_gaussians
 
     tiles = DEFAULT_TILE_SIZE if tile_size is None else tile_size
     unit_quats = quats / quats.norm(dim=-1, keepdim=True).clamp_min(1e-8)

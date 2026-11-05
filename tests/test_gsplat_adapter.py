@@ -37,7 +37,7 @@ def kernels(monkeypatch):
         image = colors[0] * torch.ones(height, width, 3)
         return (image, None, torch.full((height, width), 0.75)) if return_aux else image
 
-    for name, fields in {"metalsplat": {}, "metalsplat.ops": {}, "metalsplat.ops.project": {"project_gaussians": project_gaussians}, "metalsplat.ops.rasterize": {"rasterize_gaussians": rasterize_gaussians}, "metalsplat.ops.tiling": {"DEFAULT_TILE_SIZE": 16}}.items():
+    for name, fields in {"metalsplat": {}, "metalsplat.ops": {}, "metalsplat.ops.project": {"project_gaussians": project_gaussians}, "metalsplat.ops.rasterize": {"rasterize_gaussians": rasterize_gaussians, "_cumlx_alpha_max": adapter.GSPLAT_ALPHA_MAX}, "metalsplat.ops.tiling": {"DEFAULT_TILE_SIZE": 16}}.items():
         module = ModuleType(name)
         module.__dict__.update(fields)
         monkeypatch.setitem(sys.modules, name, module)
@@ -140,3 +140,36 @@ def test_on_the_real_kernels_it_equals_the_hand_render(tmp_path):
     for name, scene in conformance.conformance(rule).items():
         assert scene["within"], name
     assert all(item["caught"] for item in conformance.controls(rule, LIMITS["controls"]["must_fail"]).values())
+
+
+METALSPLAT_LINES = "inline float a() {\n    return min(0.99, opacity * exp(power));\n}\n// clamped at 0.99\n    if (raw >= 0.99) d_alpha_raw = 0.0;\n"
+
+
+def test_the_clamp_becomes_that_of_gsplat():
+    text = adapter.gsplat_rasterize_source(METALSPLAT_LINES)
+    assert "min(0.999, opacity * exp(power))" in text and "if (raw >= 0.999) d_alpha_raw = 0.0;" in text
+    assert "min(0.99," not in text and "raw >= 0.99)" not in text
+    assert "// clamped at 0.99" in text
+
+
+@pytest.mark.parametrize("text", [METALSPLAT_LINES.replace("min(0.99,", "min(0.98,"), METALSPLAT_LINES + METALSPLAT_LINES, METALSPLAT_LINES.replace("raw >= 0.99", "raw > 0.99")])
+def test_a_metalsplat_without_those_lines_stops(text):
+    with pytest.raises(RuntimeError, match="not the pinned one"):
+        adapter.gsplat_rasterize_source(text)
+
+
+def test_only_the_rasterize_library_is_replaced_and_only_once(monkeypatch):
+    compiled = []
+    loader = ModuleType("metalsplat.kernels._loader")
+    loader.source = lambda name: METALSPLAT_LINES if name == "rasterize.metal" else pytest.fail(name)
+    kernels_package = ModuleType("metalsplat.kernels")
+    kernels_package._loader = loader
+    for name, module in {"metalsplat": ModuleType("metalsplat"), "metalsplat.kernels": kernels_package, "metalsplat.kernels._loader": loader}.items():
+        monkeypatch.setitem(sys.modules, name, module)
+    monkeypatch.setattr(torch.mps, "compile_shader", lambda text: compiled.append(text) or "gsplat library", raising=False)
+    module = SimpleNamespace(load_kernel=lambda name: f"metalsplat {name}")
+    adapter._use_gsplat_alpha_clamp(module)
+    adapter._use_gsplat_alpha_clamp(module)
+    assert len(compiled) == 1 and "min(0.999," in compiled[0]
+    assert module.load_kernel("rasterize") == "gsplat library"
+    assert module.load_kernel("project") == "metalsplat project"

@@ -1,0 +1,53 @@
+{
+ "schema": "cumlx.m6_f2_cuda_limits.v1",
+ "date": "2026-11-06",
+ "committed_before_any_measurement": "These rules are in the commit before gsplat first runs on the V100 and before the adapter first runs these scenes. They do not change after a result. A fix to a program bug is allowed, and each attempt is recorded.",
+ "question": "Does an unmodified gsplat program on a Mac, through cumlx.compat.gsplat_metalsplat, do what the same program does with gsplat itself on CUDA? This is F2 at its target grade B.",
+ "scope": "gsplat on one V100 against the adapter on one Mac. The Mac side runs from the public repository with an empty home folder, through spikes/m6_same_mac.sh. Synthetic scenes and one synthetic training task, no densification, no spherical harmonics, no real dataset.",
+ "before_the_rules": "Reading gsplat 1.5.3's source (RasterizeToPixels3DGSFwd.cu) showed that it clamps alpha at 0.999, where metalsplat and the hand render had 0.99. The adapter and the hand render were changed to 0.999 before this file. On the Mac, the changed adapter and the hand render with 0.999 agree to 1.7e-7 on one opaque test scene, and the old clamp was 5.6e-4 away. That scene is not one of the scenes below.",
+ "cuda": {
+  "machine": "the shared V100 (CUMLX_GPU_HOST), driver 580.178.04, nvcc 12.0",
+  "torch": "the machine's python3 torch 2.10.0+cu128, in a new venv with system site packages, so nothing outside the work folder changes",
+  "gsplat": "1.5.3 from PyPI, compiled by its own JIT on the V100",
+  "start_only_when_idle": "The launcher refuses to start while another process is on the GPU"
+ },
+ "mac": {"adapter": "cumlx.compat.gsplat_metalsplat", "metalsplat_commit": "84e8c3a433f71c107e9387d3f72a765436c11f6e", "device": "mps", "run": "cumlx run --substitute gsplat=cumlx.compat.gsplat_metalsplat"},
+ "renders": {
+  "what": "spikes/m6_f2_cuda_record.py on both machines: the six scenes of spikes/m6_f2_conformance.py, opaque_wall (each pixel above the clamp), and learned_like from a training view and a held-out view (200 Gaussians, some outside the frame, opacities 0.05 to 0.999)",
+  "between_machines": {"image_rel_l2_at_most": 0.001, "alpha_rel_l2_at_most": 0.001, "peak_error_px_at_most": 0, "scenes": "all nine. The peak applies to the six scenes of spikes/m6_f2_conformance.py only: opaque_wall is flat and learned_like has many Gaussians, so their brightest pixel is a near tie and says nothing"},
+  "against_the_hand_render": {"image_rel_l2_at_most": 0.001, "alpha_rel_l2_at_most": 0.001, "peak_error_px_at_most": 0, "scenes": "the seven that are not learned_like, on each machine, with the peak on the six only. learned_like has Gaussians outside the frame, where the hand render has no 1.3 x field-of-view clamp"},
+  "measure": "rel_l2 is the norm of the difference over the norm of the reference minus its background, as in spikes/m6_f2_conformance.py. The reference between machines is gsplat on CUDA",
+  "source": "The adapter was at most 2.8e-6 from the hand render in validation/m6-f2-adapter-run.json. 1e-3 leaves room for gsplat's fast exp and another order of sums. It is 15 times narrower than the 1.5% of the adapter rules, because 1.5% cannot see the alpha clamp"
+ },
+ "gradients": {
+  "what": "The gradients of one loss (squared error to a fixed random image, plus the mean alpha) for means, quats, scales, opacities and colors, on the covering scene of spikes/m6_f2_conformance.py and on learned_like at 64 x 64",
+  "rel_l2_at_most": 0.05,
+  "reference": "gsplat's autograd on CUDA",
+  "source": "The 5% gradient rule of validation/m6-f2-adapter-limits.json"
+ },
+ "controls": {
+  "what": "spikes/m6_f2_fault_gsplat.py on the Mac: each fault must fail the comparison between machines, in at least one scene, or the pass of the right adapter says nothing",
+  "renders_must_fail": ["quaternion_xyzw", "camera_to_world_view_matrix", "fx_fy_swapped", "half_pixel_shift", "no_eps2d", "antialiased_for_classic", "alpha_clamp_0.99"],
+  "gradients_must_fail": ["means_gradient_1.1"]
+ },
+ "original_program": {
+  "what": "spikes/m6_f2_gsplat_program.py, not changed, with gsplat on CUDA",
+  "pass": "Exit 0 and a loss that falls"
+ },
+ "training": {
+  "what": "spikes/m6_f2_gsplat_train.py, not changed, 1500 iterations, seeds 0 to 4, modes right, frozen and wrong_cameras, on both machines. The two machines draw other random numbers from the same seed, so the comparison is over seeds",
+  "each_machine": "For each seed: right held-out PSNR at least 25 dB and at least 3 dB above its start, frozen below 25 dB, wrong_cameras at least 3 dB below right. These are the rules of validation/m6-f2-adapter-limits.json",
+  "equivalence": {
+   "measure": "The mean over the five seeds of the right mode's final held-out PSNR on each machine",
+   "limit": "|mean on the Mac - mean on CUDA| at most max(3 x sqrt(se_mac^2 + se_cuda^2), 0.01 x mean on CUDA), where se is the standard error of a mean over the seeds",
+   "source": "The grade B rule of validation/m2-rundiff.json: three standard errors or 1% of the mean, whichever is larger"
+  },
+  "must_fail_equivalence": {
+   "wrong_cameras": "the Mac's wrong_cameras mode against CUDA's right mode",
+   "colors_gradient_zero": "the Mac's right mode through spikes/m6_f2_fault_gsplat.py with colors_gradient_zero, five seeds"
+  },
+  "limit_of_the_controls": "These two controls show that the equivalence test can fail. They are coarse. The renders and gradients above are the test for small faults"
+ },
+ "grade": "B when every part passes on the first complete run of both machines. The training is not repeatable to the bit on either machine and the random streams differ, so this is not grade A",
+ "not_a_pass": "A part with no output, a stop for memory, disk or time, a setup error, a build failure of gsplat, and a run that started while the GPU was busy. The Mac run stops at 38 GB of memory in use or at 15 GB of free disk."
+}
