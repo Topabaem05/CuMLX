@@ -39,7 +39,7 @@ def recorded(monkeypatch, tmp_path):
 
     monkeypatch.setattr(commands, "subprocess", SimpleNamespace(run=fake_run))  # only in this module, because the test below runs the real converter
     monkeypatch.setattr(commands, "_self", fake_self)
-    monkeypatch.setattr("huggingface_hub.snapshot_download", fake_snapshot)
+    monkeypatch.setitem(sys.modules, "huggingface_hub", SimpleNamespace(snapshot_download=fake_snapshot))  # the base install has no such package
     return calls
 
 
@@ -75,7 +75,7 @@ def test_a_revision_that_cannot_be_fetched_is_an_error_and_writes_nothing(monkey
     def refuse(*_, **__):
         raise OSError("no such revision")
 
-    monkeypatch.setattr("huggingface_hub.snapshot_download", refuse)
+    monkeypatch.setitem(sys.modules, "huggingface_hub", SimpleNamespace(snapshot_download=refuse))
     with pytest.raises(CumlxError) as caught:
         commands.run_port(port_args(tmp_path))
     assert caught.value.code == "E_MODEL_LOAD" and REVISION in str(caught.value)

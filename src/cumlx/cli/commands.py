@@ -494,8 +494,8 @@ def _pinned_source(model: str, revision: str | None) -> str:
     """What mlx_lm convert reads. Its command line has no revision flag, so a pinned hub model reaches it as a local snapshot."""
     if not revision or Path(model).exists():
         return model
-    from huggingface_hub import snapshot_download
     try:
+        from huggingface_hub import snapshot_download
         return snapshot_download(model, revision=revision, allow_patterns=PORT_SNAPSHOT_FILES)
     except Exception as e:
         raise CumlxError('E_MODEL_LOAD', f'cannot fetch {model} at revision {revision}: {e}',
