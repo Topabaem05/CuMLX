@@ -82,4 +82,6 @@
 
 - 기함 작업 5개 전체의 재현. [보고서](PLATFORM-REPORT.md#기함-작업)를 보십시오.
 - 복잡한 USD 자산. cartpole 하나만 시험했습니다.
+- `cumlx.compat.flash_attn_sdpa`와 `cumlx.compat.bitsandbytes_int8`가 CUDA와 같은 값을 내는지. 이 Mac에서 Qwen2.5-0.5B로 텍스트를 생성했을 뿐 비교는 아직 없습니다(`validation/m6-f1-limits.json`). 다른 모델, 4비트, 학습, FlashAttention-2 바이너리 자체는 시험하지 않습니다.
+- 2026-11-06에 규칙을 커밋한 F1~F5의 CUDA 비교(`spikes/m6_finish.sh`). 실행 전입니다.
 - README는 V100 결과가 나온 뒤에 다시 씁니다. 아직 쓰지 않았습니다.

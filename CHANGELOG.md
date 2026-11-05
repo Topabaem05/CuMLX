@@ -2,8 +2,15 @@
 
 ## Unreleased
 
+### Added
+
+- `cumlx.compat.flash_attn_sdpa` and `cumlx.compat.bitsandbytes_int8` let an unmodified Transformers program with `flash_attention_2` and `BitsAndBytesConfig(load_in_8bit=True)` run on a Mac: `cumlx run infer.py --substitute flash_attn=cumlx.compat.flash_attn_sdpa --substitute bitsandbytes=cumlx.compat.bitsandbytes_int8`. The first is exact attention in float32 with FlashAttention-2's bottom-right causal mask. The second follows the int8 arithmetic of bitsandbytes 0.50.2 on CUDA, with an exact int8 product. Both refuse what they do not implement. A local run generated text with Qwen2.5-0.5B. No comparison with CUDA has run.
+- `cumlx run` reports a distribution for these two adapters when `--substitute` names them (`flash-attn 2.8.3+cumlx`, `bitsandbytes 0.50.2+cumlx`), so that a library that checks a version finds one, and it records each answer in the run report. Other substitutes get none.
+- The rules for F1 to F5 at their target grades are committed before any run: `validation/m6-f1-limits.json`, `m6-f2-cuda-limits.json`, `m6-f3-limits.json`, `m6-f4-limits.json` and `m6-f5-cuda-limits.json`. `sh spikes/m6_finish.sh start` runs the CUDA parts on the V100 when its GPU is idle and the Mac parts from nothing on this Mac, and writes the five verdicts. Nothing has run yet.
+
 ### Changed
 
+- `cumlx.compat.gsplat_metalsplat` clamps each alpha at 0.999, as gsplat 1.5.3 does, where metalsplat has 0.99. It compiles metalsplat's rasterize kernels again with that value, and it stops if metalsplat's source lacks the two lines. No scene of `validation/m6-f2-adapter-run.json` had an alpha above 0.9.
 - `cumlx.compat.gsplat_metalsplat` runs an unmodified program that calls `gsplat.rasterization` on metalsplat: `cumlx run train.py --substitute gsplat=cumlx.compat.gsplat_metalsplat`. It covers pinhole cameras and RGB, and any other option raises an error. Its run passed: `validation/m6-f2-adapter-run.json`. It equals a hand render of the documented formula, and no comparison with gsplat on CUDA exists, so F2 is at grade C against a target of B.
 - F1 and F2 ran on the one real Mac, and the verdict is fail: `validation/m6-f1-f2-run.json`. `cumlx port` and training with the metalsplat API passed. The original programs stopped, because mps-bitsandbytes and metalsplat do not give the API that they need. No CUDA run took part, and M6-1 stays open.
 - `cumlx port --revision` failed on every use, because the mlx-lm command line has no such flag. The converter now reads a local snapshot of that revision, and the weight comparison uses that revision too, where it used the default branch.
