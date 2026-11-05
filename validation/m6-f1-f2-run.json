@@ -1,0 +1,161 @@
+{
+ "schema": "cumlx.m6_f1_f2_run.v1",
+ "date": "2026-11-05",
+ "rules": "validation/m6-f1-f2-limits.json, committed before any run and not changed after a result",
+ "cumlx_commit": "2279aeaeb8a870f2fd0b17c68c123ad6209df56f",
+ "run": "spikes/m6_same_mac.sh start COMMIT f1f2, from the public repository, with an empty HOME, its own uv, Python and caches, no sudo and no setting changed",
+ "machine": {
+  "chip": "Apple M5 Pro",
+  "same_mac_as_the_earlier_records": true,
+  "other_jobs_ran": true
+ },
+ "versions": {
+  "main": {
+   "torch": "2.15.0",
+   "transformers": "5.22.1",
+   "mlx": "0.32.4",
+   "mlx-lm": "0.32.2"
+  },
+  "f1_program": {
+   "python": "3.14",
+   "torch": "2.13.0",
+   "transformers": "5.22.1",
+   "mps-flash-attn": "0.6.3",
+   "mps-bitsandbytes": "0.7.0"
+  },
+  "f2": {
+   "python": "3.12",
+   "torch": "2.15.0",
+   "metalsplat": "84e8c3a433f71c107e9387d3f72a765436c11f6e"
+  }
+ },
+ "verdict": "fail",
+ "parts": {
+  "f1_original_program": {
+   "state": "fail",
+   "reasons": [
+    "exit 4"
+   ]
+  },
+  "f1_mac_port": {
+   "state": "pass",
+   "reasons": []
+  },
+  "f2_original_program": {
+   "state": "fail",
+   "reasons": [
+    "exit 4"
+   ]
+  },
+  "f2_mac_training": {
+   "state": "pass",
+   "reasons": []
+  }
+ },
+ "ticks_m6_1": false,
+ "grades": {
+  "f1": "unverified, target A",
+  "f2": "unverified, target B",
+  "why": "No CUDA run took part, and neither original program ran"
+ },
+ "measured": {
+  "peak_memory_used_gb": 29.3,
+  "f1_mac_port": {
+   "reference": "A golden from the original on this CPU, not from CUDA",
+   "bf16": {
+    "exit": 0,
+    "summary": "ok: weights ok; ok: 586 pass, 0 fail, 0 unverified, 50 skipped, 285 chain drift",
+    "steps": {
+     "convert": 0,
+     "weights": 0,
+     "capture": 0,
+     "diff": 0
+    },
+    "native_output": {
+     "positions": 5,
+     "top1_matches": 4
+    }
+   },
+   "q8": {
+    "exit": 0,
+    "summary": "ok: weights ok; ok: 586 pass, 0 fail, 0 unverified, 50 skipped, 323 chain drift",
+    "steps": {
+     "convert": 0,
+     "weights": 0,
+     "capture": 0,
+     "diff": 0
+    },
+    "native_output": {
+     "positions": 5,
+     "top1_matches": 5
+    }
+   },
+   "wrong_port": {
+    "fault": "model.layers.0.mlp.up_proj.weight scaled by 1.01",
+    "exit": 1,
+    "status": "diverged",
+    "first_divergence": "model.layers.0.mlp.up_proj",
+    "basis": "isolated",
+    "confidence": "high",
+    "rel_l2": 0.007692718829403054
+   }
+  },
+  "f1_original_program": {
+   "exit": 4,
+   "summary": "The script failed on mps: ImportError: Using `bitsandbytes` 8-bit quantization requires bitsandbytes: `pip install -U bitsandbytes>=0.46.1`",
+   "why": "transformers 5.22.1 asks for the bitsandbytes distribution before it loads the model. mps-bitsandbytes 0.7.0 is another distribution, and it has no Linear8bitLt or Int8Params. The substitute does not give the API that this program needs",
+   "not_reached": "The program stopped before attention ran, so this run says nothing about mps-flash-attn. That package has no flash_attn_func or flash_attn_varlen_func"
+  },
+  "f2_mac_training": {
+   "right": {
+    "device": "mps",
+    "heldout_psnr_start": 16.951722860336304,
+    "heldout_psnr_end": 43.49188947677612,
+    "first_loss": 0.06721345335245132,
+    "last_loss": 0.0025867458898574114,
+    "seconds": 1.3306724170106463
+   },
+   "frozen": {
+    "device": "mps",
+    "heldout_psnr_start": 16.951722860336304,
+    "heldout_psnr_end": 16.951722860336304,
+    "first_loss": 0.06721345335245132,
+    "last_loss": 0.07405472546815872,
+    "seconds": 1.2067020000249613
+   },
+   "wrong_cameras": {
+    "device": "mps",
+    "heldout_psnr_start": 16.951722860336304,
+    "heldout_psnr_end": 19.69686198234558,
+    "first_loss": 0.07239124178886414,
+    "last_loss": 0.015343592502176762,
+    "seconds": 1.30446679200395
+   },
+   "limit": "The target images come from metalsplat itself, so this does not check the renderer against an independent one. Both attempts used seed 0, and held-out PSNR differed (42.67 dB, 43.49 dB), so the training on MPS does not repeat exactly. seconds covers the training loop only"
+  },
+  "f2_original_program": {
+   "exit": 4,
+   "summary": "The script failed on mps: AttributeError: module 'metalsplat' has no attribute 'rasterization'",
+   "why": "metalsplat has no rasterization, the function that a gsplat program calls"
+  }
+ },
+ "attempts": [
+  {
+   "commit": "bbf6c4e2a6d2b7204cd4567f3654053852af5573",
+   "verdict": "fail",
+   "parts": {
+    "f1_original_program": "fail",
+    "f1_mac_port": "not_run",
+    "f2_original_program": "fail",
+    "f2_mac_training": "pass"
+   },
+   "what": "cumlx port --revision failed with exit 4 on each use, because the mlx_lm convert command line has no such flag. The wrong port was then not made, so that part was not_run. Fixed in 2279aea, with the rules unchanged. The original programs and the training gave the same result in both attempts, except for the PSNR above"
+  },
+  {
+   "commit": "2279aeaeb8a870f2fd0b17c68c123ad6209df56f",
+   "verdict": "fail",
+   "what": "The result above"
+  }
+ ],
+ "not_shown": "A port on another Mac, any comparison with CUDA for this run, and any run of the original programs to the end. The results stay in ~/cumlx-repro on this Mac"
+}

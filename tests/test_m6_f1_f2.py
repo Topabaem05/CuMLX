@@ -152,3 +152,18 @@ def test_the_rules_say_that_nothing_here_ticks_m6_1():
     assert "nothing here ticks M6-1" in j.LIMITS["scope"]
     assert j.LIMITS["f1"]["revision"] in WORK.read_text()
     assert j.LIMITS["f2"]["metalsplat_commit"] in WORK.read_text()
+
+
+def test_the_record_agrees_with_the_rules_and_ticks_nothing():
+    record = json.loads((REPO / "validation" / "m6-f1-f2-run.json").read_text())
+    assert record["ticks_m6_1"] is False
+    assert record["verdict"] == "fail"
+    assert {name: part["state"] for name, part in record["parts"].items()} == {
+        "f1_original_program": "fail", "f1_mac_port": "pass", "f2_original_program": "fail", "f2_mac_training": "pass"}
+    rule = j.LIMITS["f2"]["mac_training"]
+    training = record["measured"]["f2_mac_training"]
+    assert training["right"]["heldout_psnr_end"] >= rule["heldout_psnr_at_least_db"]
+    assert training["frozen"]["heldout_psnr_end"] < rule["frozen_control_below_db"]
+    assert training["right"]["heldout_psnr_end"] - training["wrong_cameras"]["heldout_psnr_end"] >= rule["wrong_cameras_at_least_db_below_right"]
+    assert record["measured"]["f1_mac_port"]["wrong_port"]["status"] == "diverged"
+    assert record["cumlx_commit"] != record["attempts"][0]["commit"] and record["attempts"][-1]["commit"] == record["cumlx_commit"]
