@@ -82,8 +82,8 @@ def test_a_revision_that_cannot_be_fetched_is_an_error_and_writes_nothing(monkey
     assert recorded.convert is None and not (tmp_path / "out").exists()
 
 
-def test_each_flag_exists_in_the_real_converter(recorded, tmp_path):
-    pytest.importorskip("mlx_lm")
+@pytest.mark.e2e
+def test_each_flag_exists_in_the_real_converter(e2e, recorded, tmp_path):
     commands.run_port(port_args(tmp_path))
     help_text = subprocess.check_output([sys.executable, "-m", "mlx_lm", "convert", "--help"], text=True)
     known = set(re.findall(r"--?[a-z][\w-]*", help_text))
