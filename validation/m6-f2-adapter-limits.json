@@ -1,0 +1,43 @@
+{
+ "schema": "cumlx.m6_f2_adapter_limits.v1",
+ "date": "2026-11-05",
+ "committed_before_any_measurement": "These rules are in the commit before the adapter first runs. They do not change after a result. A fix to a program bug is allowed, and each attempt is recorded.",
+ "scope": "One real Mac, from the public repository, with an empty home folder. The adapter gives gsplat.rasterization on metalsplat. No gsplat on CUDA takes part, so the most that this run can show is grade C for F2, whose target is B, and nothing here ticks M6-1. A pass here is not the F2 result of validation/m6-f1-f2-run.json changing: that run stays fail, and this is new work on top of it.",
+ "adapter": "cumlx.compat.gsplat_metalsplat",
+ "metalsplat_commit": "84e8c3a433f71c107e9387d3f72a765436c11f6e",
+ "independent_reference": "spikes/m6_f2_hand_render.py: NumPy only, written from the documented formula of gsplat (world-to-camera view matrix, wxyz quaternion, pixel centers at +0.5, covariance J R diag(s^2) R^T J^T + eps2d, alpha min(0.99, opacity exp(-d^T cov^-1 d / 2)), alpha below 1/255 skipped, front to back). It uses no metalsplat code",
+ "conformance": {
+  "what": "spikes/m6_f2_conformance.py: the adapter against the hand render, on scenes with an off-center camera, rotated anisotropic Gaussians, overlap, a background, and the antialiased mode",
+  "image_rel_l2_at_most": 0.015,
+  "alpha_rel_l2_at_most": 0.015,
+  "peak_error_px_at_most": 0,
+  "device": "mps",
+  "source": "1.5% and 0 px are the limits that metalsplat met against a hand computation in validation/m2-substitutes.json"
+ },
+ "controls": {
+  "what": "Each wrong convention, on the same scenes and with the same limit, must fail in at least one scene, or a pass of the right one says nothing",
+  "must_fail": ["quaternion_xyzw", "camera_to_world_view_matrix", "fx_fy_swapped", "half_pixel_shift", "no_eps2d", "antialiased_for_classic"]
+ },
+ "gradients": {
+  "what": "For means, quats, scales, opacities and colors: autograd against a central difference along one random direction, on a loss through the adapter",
+  "relative_error_at_most": 0.05,
+  "source": "New. metalsplat's own backward kernel was within 0.85% in validation/m2-substitutes.json, and this one goes through the activated values"
+ },
+ "refusals": {
+  "what": "An option that the adapter does not implement must raise an error. It must not be ignored, because then a program gets a wrong result in silence",
+  "must_raise": ["sh_degree", "render_mode", "camera_model", "covars", "sparse_grad", "absgrad", "distributed", "with_ut", "segmented", "batched_means", "viewmats_require_grad", "colors_not_rgb", "unknown_option"]
+ },
+ "original_program": {
+  "what": "spikes/m6_f2_gsplat_program.py, not changed, through cumlx run --substitute gsplat=cumlx.compat.gsplat_metalsplat",
+  "pass": "Exit 0 and a loss that falls: the rule in validation/m6-f1-f2-limits.json"
+ },
+ "training": {
+  "what": "spikes/m6_f2_gsplat_train.py: a training program that calls only gsplat.rasterization, with no Mac-specific line, through cumlx run. Its target images come from the hand render. 48 true Gaussians, 200 learned, 24 training views, 8 held-out, 128x128, 1500 iterations, seed 0",
+  "heldout_psnr_at_least_db": 25,
+  "heldout_psnr_rise_at_least_db": 3,
+  "frozen_control_below_db": 25,
+  "wrong_cameras_at_least_db_below_right": 3,
+  "source": "The rules of F2 mac_training in validation/m6-f1-f2-limits.json, on targets that metalsplat did not draw"
+ },
+ "not_a_pass": "A part with no output, a stop for memory, disk or time, and a setup error. The run stops at 38 GB of memory in use or at 15 GB of free disk."
+}
