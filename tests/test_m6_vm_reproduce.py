@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 import subprocess
+import time
 
 import pytest
 
@@ -327,9 +328,15 @@ def test_attach_with_a_proxy_opens_a_tunnel_and_the_record_says_so(box):
     assert "CUMLX_VM_PROXY=http://127.0.0.1:3128" in calls
     assert "proxy" in (box.root / "result" / "network.txt").read_text()
     # The run ended, so its tunnel has ended too. A tunnel left behind holds the guest's port against the next run.
+    # The exit trap sends SIGTERM, and the stub can take a moment to end and be reaped, so this waits for it.
     tunnel = int((box.tmp / "tunnel_pid").read_text())
+    deadline = time.monotonic() + 10
     with pytest.raises(ProcessLookupError):
-        os.kill(tunnel, 0)
+        while True:
+            os.kill(tunnel, 0)
+            if time.monotonic() > deadline:
+                break
+            time.sleep(0.05)
 
 
 def test_attach_with_no_proxy_opens_no_tunnel_and_records_none(box):
