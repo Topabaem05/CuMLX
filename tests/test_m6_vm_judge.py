@@ -58,3 +58,10 @@ def test_an_empty_folder_is_not_a_pass(tmp_path):
 def test_the_verdict_says_what_it_does_not_cover(tmp_path):
     result = j.judge(good(tmp_path))
     assert "paravirtual" in result["scope"] and any("F1" in item for item in result["does_not_cover"])
+
+
+def test_the_same_mac_rules_name_their_own_scope(tmp_path):
+    limits = json.loads((Path(__file__).resolve().parent.parent / "validation" / "m6-same-mac-limits.json").read_text())
+    result = j.judge(good(tmp_path), limits)
+    assert result["verdict"] == "pass"
+    assert "not a run on a new Mac" in result["scope"]

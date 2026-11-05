@@ -2,6 +2,7 @@
 """Judge one run of spikes/m6_vm_guest.sh from its output folder. The rules are in validation/m6-vm-limits.json, written before the first run.
 
     python spikes/m6_vm_judge.py OUT       # writes OUT/verdict.json. Exit 0 pass, 1 fail, 5 a part has no output.
+    python spikes/m6_vm_judge.py OUT --limits validation/m6-same-mac-limits.json   # the same parts, for spikes/m6_same_mac.sh
 
 A part with no output is 'not_run', which is not a pass.
 """
@@ -63,8 +64,7 @@ def judge_f3(out: Path) -> dict[str, Any]:
     return part(reasons, code is None)
 
 
-def judge_f4(out: Path) -> dict[str, Any]:
-    rule = LIMITS['f4']
+def judge_f4(out: Path, rule: dict[str, Any]) -> dict[str, Any]:
     train = read_exit(out, 'f4_train')
     reasons, missing = [], train is None
     if train not in (0, None):
@@ -96,18 +96,19 @@ def judge_f5(out: Path) -> dict[str, Any]:
     return part(reasons, False)
 
 
-def judge(out: Path) -> dict[str, Any]:
-    parts = {'base': judge_base(out), 'f3': judge_f3(out), 'f4': judge_f4(out), 'f5': judge_f5(out)}
+def judge(out: Path, limits: dict[str, Any] = LIMITS) -> dict[str, Any]:
+    parts = {'base': judge_base(out), 'f3': judge_f3(out), 'f4': judge_f4(out, limits['f4']), 'f5': judge_f5(out)}
     states = [item['state'] for item in parts.values()]
     verdict = 'pass' if all(s == 'pass' for s in states) else ('fail' if 'fail' in states else 'not_run')
-    return {'schema': 'cumlx.m6_vm_verdict.v1', 'verdict': verdict, 'parts': parts, 'scope': LIMITS['scope'], 'does_not_cover': LIMITS['does_not_cover']}
+    return {'schema': 'cumlx.m6_vm_verdict.v1', 'verdict': verdict, 'parts': parts, 'scope': limits['scope'], 'does_not_cover': limits['does_not_cover']}
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('out', type=Path)
+    parser.add_argument('--limits', type=Path, help='the rules to name in the verdict, by default validation/m6-vm-limits.json')
     args = parser.parse_args()
-    result = judge(args.out)
+    result = judge(args.out, json.loads(args.limits.read_text()) if args.limits else LIMITS)
     (args.out / 'verdict.json').write_text(json.dumps(result, indent=1))
     print(json.dumps(result, indent=1))
     return {'pass': 0, 'fail': 1}.get(result['verdict'], 5)

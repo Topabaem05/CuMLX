@@ -1,0 +1,14 @@
+{
+ "schema": "cumlx.m6_same_mac_limits.v1",
+ "date": "2026-11-05",
+ "committed_before_any_measurement": "These rules are in the commit before the first run on this Mac. They do not change after a result. The rules for each part are the same as in validation/m6-vm-limits.json.",
+ "scope": "The owner has one real Mac, so this run uses it again, on the owner's decision. It starts from the public repository with an empty home folder, its own uv and Python, and no setting changed. A pass says that the work repeats from nothing on the Mac and macOS where it was built. It is not a run on a new Mac or on other hardware.",
+ "what_stays_from_this_mac": ["macOS and its Metal driver", "the Apple GPU", "git and curl from the Command Line Tools", "the Python that starts the run"],
+ "covers": ["F3 custom kernels, through the hand-written Metal kernels against the V100 goldens", "F4 quadruped through cumlx.sim on Genesis, not Isaac Lab", "F5 camera sensor, render only, with no comparison against CUDA"],
+ "does_not_cover": ["F1 and F2: they have no reproduced run on any machine yet, so M6-1 stays open whatever this says", "A new Mac: a pass does not tick M6-1, because that condition names a new Mac"],
+ "base": {"doctor_exit": 0, "selftest_exit": 0, "tests": "pytest -m 'not gpu' exits 0, with at least 100 passed"},
+ "f3": {"tests": "tests/test_kernel_gpu.py exits 0, with at least 5 passed and no test skipped"},
+ "f4": {"train": "go2_flat, genesis, 4096 envs, 300 iterations, seed 1, exit 0", "command_speed_tolerance": 0.2, "near_zero_speed": 0.1, "max_falls_per_world": 0.1, "runs": {"fwd": 0.8, "back": -0.8, "stop": 0.0, "zero": null}, "source": "The same rule as spikes/m4_sim_record.py"},
+ "f5": {"render": "metal_ad_rgb, seeds 11,12,13, summary status rendered, exit 0"},
+ "not_a_pass": "A part with no output, a stop for memory, disk or time, and a setup error. The run stops at 38 GB of memory in use or at 15 GB of free disk. A heavy part starts at 33 GB or less."
+}

@@ -4,6 +4,7 @@
 
 ### Changed
 
+- `spikes/m6_same_mac.sh` repeats the VM's work on the one real Mac, from the public repository, with an empty home folder and no sudo. The rules are in `validation/m6-same-mac-limits.json`, and they are the VM's. A pass does not tick M6-1, because that condition names a new Mac.
 - M6-1 ran in a real macOS 27.2 VM from `terminal-mac`, and the verdict is fail: `validation/m6-vm-run.json`. The public repository installs and its base passes, and the VM's paravirtual GPU cannot run F3, F4 or F5. So a VM cannot close M6-1. `CUMLX_VM_MEMORY_GIB`, `CUMLX_VM_USER`, `CUMLX_VM_PASSWORD` and `CUMLX_VM_PROXY` choose how it runs.
 - The separate repository OrchardSim is deleted, as of 2026-11-04: its Isaac Sim work could not easily be published under that licence. The records that the reports cite are in `validation/archive-orchardsim/`, and they cannot be measured again from here.
 - The repository is public as of 2026-11-04. `validation/m4-throughput.json` is a copy from the private repository OrchardSim, so that the M4 range can be read here.
