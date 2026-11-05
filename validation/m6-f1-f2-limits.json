@@ -1,0 +1,18 @@
+{
+ "schema": "cumlx.m6_f1_f2_limits.v1",
+ "date": "2026-11-05",
+ "committed_before_any_measurement": "These rules are in the commit before the first run. They do not change after a result. A fix to a program bug is allowed, and each attempt is recorded.",
+ "scope": "One real Mac, from the public repository, with an empty home folder. No V100 and no CUDA run takes part. So no part here can reach the target grade of F1 (A) or F2 (B) on its own, and nothing here ticks M6-1.",
+ "f1": {
+  "model": "Qwen/Qwen2.5-0.5B",
+  "revision": "060db6499f32faf8b98477b0a26969ef7d8b9987",
+  "original_program": {"what": "spikes/m6_f1_program.py: an ordinary Transformers program with flash_attention_2, 8-bit bitsandbytes and a CUDA device, unmodified, through cumlx run --substitute", "pass": "Install succeeds, exit 0, and it generates 20 tokens. That is grade C at most, because no value is compared"},
+  "mac_port": {"what": "cumlx port at bf16, and with --q-bits 8. Neither uses flash_attn or bitsandbytes", "pass": "Both exit 0, and one weight scaled by 1.01 in a copy of the port makes cumlx diff exit 1", "reference": "The golden comes from the original on this Mac's CPU, not from CUDA"}
+ },
+ "f2": {
+  "metalsplat_commit": "84e8c3a433f71c107e9387d3f72a765436c11f6e",
+  "original_program": {"what": "spikes/m6_f2_gsplat_program.py: an ordinary gsplat training program, unmodified, through cumlx run --substitute gsplat=metalsplat", "pass": "Exit 0 and a loss that falls. That is grade C at most"},
+  "mac_training": {"what": "spikes/m6_f2_train.py: 3D Gaussian Splatting on a synthetic scene with metalsplat's own API, 1500 iterations, seed 0, on MPS", "heldout_psnr_at_least_db": 25, "heldout_psnr_rise_at_least_db": 3, "frozen_control_below_db": 25, "wrong_cameras_at_least_db_below_right": 3, "source": "25 dB and 3 dB are the rules for msplat in spikes/m2_substitutes.py. The controls are new.", "limit": "The target images come from metalsplat itself, so this does not check the renderer against an independent one. spikes/m2_substitutes.py compared it with a hand computation"}
+ },
+ "not_a_pass": "A part with no output, a stop for memory, disk or time, and a setup error. The run stops at 38 GB of memory in use or at 15 GB of free disk."
+}

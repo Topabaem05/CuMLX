@@ -2,6 +2,7 @@
 # M6-1 on the one Mac that there is: the VM's work again, from the public repository, with an empty home folder. One command, and it returns at once.
 #
 #   sh spikes/m6_same_mac.sh start [COMMIT]  # by default the commit of this checkout, which must be public
+#   sh spikes/m6_same_mac.sh start COMMIT f1f2  # the F1 and F2 work in spikes/m6_f1_f2_work.sh in place of the rest, under validation/m6-f1-f2-limits.json
 #   sh spikes/m6_same_mac.sh status          # the state, and the verdict when it is done. Exit 0 pass, 1 not a pass, 5 no verdict yet
 #   sh spikes/m6_same_mac.sh stop            # stops the run
 #   sh spikes/m6_same_mac.sh clean           # deletes the run's home folder, and keeps the results
@@ -113,7 +114,7 @@ start)
     rm -rf "${ROOT:?}/home"
     mkdir -p "$RESULT" "$ROOT/home"
     # macOS's python3 writes a cache under HOME, so even the launcher gets the run's own.
-    HOME=$ROOT/home CUMLX_REPRO_ROOT=$ROOT nohup python3 -c 'import os, sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1:])' sh "$0" --work "$COMMIT" >"$ROOT/run.log" 2>&1 &
+    HOME=$ROOT/home CUMLX_REPRO_ROOT=$ROOT nohup python3 -c 'import os, sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1:])' sh "$0" --work "$COMMIT" "${3:-flagship}" >"$ROOT/run.log" 2>&1 &
     echo $! >"$ROOT/run.pid"
     nohup sh "$0" --watch >"$ROOT/watch.log" 2>&1 &
     echo "Started at $COMMIT, pid $(cat "$ROOT/run.pid"). See the state with: sh $0 status"
@@ -144,12 +145,13 @@ start)
     ;;
 --work) ;;
 *)
-    sed -n 2,10p "$0" >&2
+    sed -n 2,11p "$0" >&2
     exit 2
     ;;
 esac
 
 COMMIT=${2:?the commit of CuMLX to test}
+PART=${3:-flagship}
 OUT=$RESULT
 # From here on, nothing of this person's environment reaches the run.
 HOME=$ROOT/home
@@ -202,6 +204,13 @@ uv venv -q --python 3.12 .venv || finish setup_error_venv
 uv pip install -q --python .venv/bin/python -e '.[dev,capture,diff,render,sim]' rsl-rl-lib==5.5.2 >"$OUT/install.txt" 2>&1 || finish setup_error_install
 uv pip freeze --python .venv/bin/python >"$OUT/freeze.txt" 2>&1
 PY=$PWD/.venv/bin/python
+
+if [ "$PART" = f1f2 ]; then
+    stage "F1 and F2"
+    wait_for_room f1f2
+    sh spikes/m6_f1_f2_work.sh "$OUT" >"$OUT/f1f2.log" 2>&1
+    finish "$(cat "$OUT/f1f2_verdict.txt" 2>/dev/null || echo not_run_no_verdict)"
+fi
 
 stage "4/7 the base: doctor, self test, tests without a GPU"
 .venv/bin/cumlx doctor --require capture,diff --format json >"$OUT/doctor.json" 2>"$OUT/doctor.err"
