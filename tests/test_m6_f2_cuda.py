@@ -13,7 +13,8 @@ sys.path.insert(0, str(REPO / "spikes"))
 import m6_f2_cuda_judge as j  # noqa: E402
 
 WORK = (REPO / "spikes" / "m6_f2_cuda_work.sh").read_text()
-V100 = (REPO / "spikes" / "m6_f2_cuda_v100.sh").read_text()
+V100 = (REPO / "spikes" / "remote" / "m6_f2.sh").read_text()
+LAUNCHER = (REPO / "spikes" / "m6_cuda_v100.sh").read_text()
 FAULT_MODULE = (REPO / "spikes" / "m6_f2_fault_gsplat.py").read_text()
 
 
@@ -148,6 +149,6 @@ def test_the_scripts_run_every_control_and_seed_that_the_rules_name():
 
 
 def test_the_v100_launcher_refuses_a_busy_gpu_and_keeps_to_its_folder():
-    assert "--query-compute-apps=pid" in V100 and "Nothing was started" in V100
-    assert "TORCH_EXTENSIONS_DIR=$PWD/torch_extensions" in V100 and "--target pkgs" in V100
-    assert "pip install" not in V100.replace("uv pip install -q --python python3 --target pkgs", "")
+    assert "--query-compute-apps=pid" in LAUNCHER and "Nothing was started" in LAUNCHER
+    assert "TORCH_EXTENSIONS_DIR=$WORK/torch_extensions" in V100 and '--target "$WORK/pkgs"' in V100
+    assert V100.count("pip install") == 1

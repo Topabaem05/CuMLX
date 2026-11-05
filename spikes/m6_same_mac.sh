@@ -5,6 +5,7 @@
 #   sh spikes/m6_same_mac.sh start COMMIT f1f2  # the F1 and F2 work in spikes/m6_f1_f2_work.sh in place of the rest, under validation/m6-f1-f2-limits.json
 #   sh spikes/m6_same_mac.sh start COMMIT f2adapter  # the gsplat adapter work in spikes/m6_f2_adapter_work.sh in place of the rest, under validation/m6-f2-adapter-limits.json
 #   sh spikes/m6_same_mac.sh start COMMIT f2cuda  # the Mac side of the gsplat comparison with CUDA, spikes/m6_f2_cuda_work.sh, under validation/m6-f2-cuda-limits.json. spikes/m6_f2_cuda_judge.py gives the verdict
+#   sh spikes/m6_same_mac.sh start COMMIT f1  # the Mac side of F1 against CUDA, spikes/m6_f1_work.sh, under validation/m6-f1-limits.json. CUMLX_F1_GOLDEN names the CUDA golden
 #   sh spikes/m6_same_mac.sh status          # the state, and the verdict when it is done. Exit 0 pass, 1 not a pass, 5 no verdict yet
 #   sh spikes/m6_same_mac.sh stop            # stops the run
 #   sh spikes/m6_same_mac.sh clean           # deletes the run's home folder, and keeps the results
@@ -147,7 +148,7 @@ start)
     ;;
 --work) ;;
 *)
-    sed -n 2,12p "$0" >&2
+    sed -n 2,13p "$0" >&2
     exit 2
     ;;
 esac
@@ -212,6 +213,12 @@ if [ "$PART" = f2adapter ]; then
     wait_for_room f2adapter
     sh spikes/m6_f2_adapter_work.sh "$OUT" >"$OUT/f2adapter.log" 2>&1
     finish "$(cat "$OUT/f2adapter_verdict.txt" 2>/dev/null || echo not_run_no_verdict)"
+fi
+if [ "$PART" = f1 ]; then
+    stage "the Mac side of F1 against CUDA"
+    wait_for_room f1
+    sh spikes/m6_f1_work.sh "$OUT/f1" >"$OUT/f1.log" 2>&1
+    finish "$( [ -f "$OUT/f1/f1_mac_done.txt" ] && echo mac_done || echo not_run_no_verdict)"
 fi
 if [ "$PART" = f2cuda ]; then
     stage "the Mac side of the gsplat comparison with CUDA"

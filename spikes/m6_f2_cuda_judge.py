@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Judge F2 against gsplat on CUDA, from the V100's output folder and the Mac's. The rules are in validation/m6-f2-cuda-limits.json, written before either ran.
 
-    python spikes/m6_f2_cuda_judge.py --cuda ~/cumlx-m6-f2-cuda --mac ~/cumlx-repro/result --output verdict.json
+    python spikes/m6_f2_cuda_judge.py --cuda ~/cumlx-m6-cuda/f2 --mac ~/cumlx-repro/result/f2cuda --output verdict.json
     Exit 0 pass (grade B), 1 fail, 5 a part has no output.
 """
 from __future__ import annotations

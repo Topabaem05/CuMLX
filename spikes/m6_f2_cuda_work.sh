@@ -1,6 +1,6 @@
 #!/bin/sh
 # The Mac side of validation/m6-f2-cuda-limits.json, inside spikes/m6_same_mac.sh, which gives it an empty home folder, a public checkout with .venv, and the limits.
-# A failed part does not stop the next one. spikes/m6_f2_cuda_judge.py compares the result with the V100's, from spikes/m6_f2_cuda_v100.sh.
+# A failed part does not stop the next one. spikes/m6_f2_cuda_judge.py compares the result with the V100's, from spikes/m6_cuda_v100.sh (its f2 folder).
 #
 #   sh spikes/m6_same_mac.sh start COMMIT f2cuda
 set -u

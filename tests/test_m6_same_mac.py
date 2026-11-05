@@ -190,6 +190,13 @@ def test_the_cuda_comparison_part_replaces_the_rest_and_a_missing_verdict_is_not
     assert "test_kernel_gpu" not in box.log.read_text()
 
 
+def test_the_f1_part_replaces_the_rest_and_a_missing_result_is_not_a_pass(box):
+    # The stub git leaves no spikes/m6_f1_work.sh, so the part ends with no result.
+    assert run(box, "start", "abc123", "f1").returncode == 0
+    assert verdict(box) == "not_run_no_verdict"
+    assert "test_kernel_gpu" not in box.log.read_text()
+
+
 def test_a_commit_that_is_not_public_is_a_setup_error(box):
     (box.tmp / "not_public").write_text("")
     assert run(box, "start", "abc123").returncode == 0

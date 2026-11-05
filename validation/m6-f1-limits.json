@@ -1,0 +1,36 @@
+{
+ "schema": "cumlx.m6_f1_limits.v1",
+ "date": "2026-11-06",
+ "committed_before_any_measurement": "These rules are in the commit before the adapters first run on the golden and before the golden is recorded. They do not change after a result. A fix to a program bug is allowed, and each attempt is recorded. A local smoke run of the adapters on this Mac came first: it loaded the model and generated text, and it compared nothing.",
+ "question": "Does the unmodified F1 program (FlashAttention-2, 8-bit bitsandbytes, a CUDA device) compute on a Mac, through cumlx run and the two adapters, what it computes on CUDA? This is F1 at its target grade A.",
+ "what_grade_a_means_here": "The program computes in bfloat16, because Transformers 5.22.1 takes the checkpoint's dtype, and its 8-bit layers quantize to int8. So equal here means equal at the rounding of bfloat16, module by module on the same inputs, against a golden from CUDA. It is not equality at the float32 level, and a chain of 24 layers is not expected to give the same bits",
+ "program": "spikes/m6_f1_program.py, not changed. Qwen/Qwen2.5-0.5B at revision 060db6499f32faf8b98477b0a26969ef7d8b9987, the prompt 'The capital of France is', 20 greedy tokens",
+ "cuda": {
+  "machine": "the shared V100 (CUMLX_GPU_HOST), driver 580.178.04",
+  "packages": "torch 2.10.0+cu128 of the machine's python3. transformers 5.22.1, accelerate 1.15.0 and bitsandbytes 0.50.2 from PyPI in a --target folder of the work folder",
+  "flash_attn": "FlashAttention-2 needs compute capability 8.0 and the V100 has 7.0, so the CUDA run also uses cumlx.compat.flash_attn_sdpa. No FlashAttention-2 binary runs anywhere in this test. Attention is judged against exact attention in float64, which is what FlashAttention-2 computes",
+  "start_only_when_idle": "The launcher refuses to start while another process is on the GPU"
+ },
+ "mac": {
+  "packages": "Python 3.12, torch 2.15.0, transformers 5.22.1, accelerate 1.15.0. Neither bitsandbytes nor flash-attn is installed",
+  "substitutes": "--substitute flash_attn=cumlx.compat.flash_attn_sdpa --substitute bitsandbytes=cumlx.compat.bitsandbytes_int8",
+  "run": "from the public repository with an empty home folder, through spikes/m6_same_mac.sh"
+ },
+ "record": "spikes/m6_f1_record.py capture on CUDA records the inputs and outputs of each Linear8bitLt (168), each decoder layer (24), the final norm and lm_head, on one prefill of the prompt, and the q, k, v and output of each attention call of the prefill (24) and of the first three decode steps (72). It also records each layer's int8 weights (CB) and scales (SCB). replay on the Mac feeds each recorded input to the Mac's module",
+ "parts": {
+  "program_cuda": "The program through cumlx run --target cuda exits 0 and generates 20 tokens",
+  "program_mac": "The program through cumlx run on the Mac exits 0 and generates 20 tokens. Its run report lists both substitutes and the two distributions that cumlx run reported (flash-attn 2.8.3+cumlx, bitsandbytes 0.50.2+cumlx)",
+  "first_token": "The first generated token is the same on both machines. The other 19 are reported and not judged: bfloat16 rounding along the chain can change a later choice between close logits",
+  "leaves": {"what": "each Linear8bitLt on its golden input, against the golden output", "rel_l2_at_most": 0.002, "source": "New. One bfloat16 rounding on every element gives about 1.6e-3 (bfloat16's step is 2^-8 to 2^-7 of a value). Both machines run the same steps on the same input and the int8 product is exact, so only single roundings (__fdividef, one fused multiply-add) are expected on a few elements. A defect larger than one rounding fails, and the activation scale fault (1/128, 7.8e-3) is above it"},
+  "weights": {"what": "each layer's int8 weights and scales, quantized on each machine from the same checkpoint", "scb": "equal to the bit", "cb_step_at_most": 1, "cb_differ_fraction_at_most": 0.001, "source": "CUDA takes 127 / absmax with __fdividef, which can be 2 ulp from a division, so a weight can round to the next int8 step where val * 127 / absmax lies that close to a half"},
+  "layers": {"what": "each decoder layer on its golden inputs (hidden states, position embeddings and the other arguments recorded), the final norm and lm_head", "rel_l2_at_most": 0.015, "source": "The bfloat16 isolated limit of THRESHOLD_PROFILES in src/cumlx/verify/metrics.py (measured leaf error 4.7e-3)"},
+  "attention": {"what": "each recorded call: the Mac's flash_attn_func on the golden q, k and v, against exact attention in float64 with FlashAttention-2's bottom-right causal mask. CUDA's own outputs are held to the same limit", "rel_l2_at_most": 0.015, "source": "The bfloat16 isolated limit, as above"}
+ },
+ "controls": {
+  "what": "spikes/m6_f1_record.py replay --fault patches one adapter function in the Mac's process. Each fault must fail at least one comparison of the parts above, or the pass of the right adapters says nothing",
+  "must_fail": {"no_outlier_split": "leaves", "activation_scale_128": "leaves", "bias_dropped": "leaves", "causal_top_left": "attention", "no_softmax_scale": "attention"}
+ },
+ "reported_not_judged": ["the prefill logits of the Mac's own chain against CUDA's, and their top-1 positions", "how many of the 20 tokens are equal", "the fraction of elements equal to the bit in each comparison"],
+ "grade": "A when every part and every control passes on the first complete run of both machines",
+ "not_a_pass": "A part with no output, a stop for memory, disk or time, a setup error, a module that the replay cannot feed, and a run that started while the GPU was busy. The Mac run stops at 38 GB of memory in use or at 15 GB of free disk."
+}

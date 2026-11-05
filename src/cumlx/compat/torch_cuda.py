@@ -450,6 +450,37 @@ def _seed_python(offset: int) -> None:
     numpy.random.seed(0)
 
 
+# The distribution that importlib.metadata reports for a CUMLX adapter given to --substitute, so that a library that checks a version
+# finds one. The local label +cumlx says that it is not the original package. Each answer is recorded in the run report. A module
+# that is not in this table gets no distribution, as before.
+ADAPTER_DISTRIBUTIONS = {
+    'cumlx.compat.flash_attn_sdpa': ('flash-attn', '2.8.3+cumlx', 'flash_attn'),
+    'cumlx.compat.bitsandbytes_int8': ('bitsandbytes', '0.50.2+cumlx', 'bitsandbytes'),
+}
+
+
+def _normal_name(name: str) -> str:
+    return name.replace('_', '-').replace('.', '-').lower()
+
+
+def _adapter_distribution(name: str, version: str, top_level: str, module: str) -> Any:
+    import importlib.metadata as metadata
+
+    class _AdapterDistribution(metadata.Distribution):
+        def read_text(self, filename: str) -> str | None:
+            if filename in ('METADATA', 'PKG-INFO'):
+                return (f'Metadata-Version: 2.1\nName: {name}\nVersion: {version}\n'
+                        f'Summary: {module}, a CUMLX adapter given to cumlx run --substitute. It is not {name}.\n')
+            if filename == 'top_level.txt':
+                return f'{top_level}\n'
+            return None
+
+        def locate_file(self, path: Any) -> Any:
+            return None
+
+    return _AdapterDistribution()
+
+
 class _AliasLoader(importlib.abc.Loader):
     """Serve a module under another name, for an explicit --substitute."""
 
@@ -485,6 +516,23 @@ class _Hooks(importlib.abc.MetaPathFinder):
             self.recorder.call('substituted', name, real)
             return importlib.machinery.ModuleSpec(name, _AliasLoader(real))
         return None
+
+    def find_distributions(self, context: Any = None) -> Any:
+        """importlib.metadata asks each finder for distributions. This answers only for a CUMLX adapter that --substitute names."""
+        wanted = getattr(context, 'name', None)
+        found = []
+        for root, real in self.substitutes.items():
+            known = ADAPTER_DISTRIBUTIONS.get(real)
+            if known is None:
+                continue
+            name, version, top_level = known
+            if top_level != root:
+                continue
+            if wanted is not None and _normal_name(wanted) not in (_normal_name(name), _normal_name(root)):
+                continue
+            self.recorder.call('distribution', name, f'{real} {version}')
+            found.append(_adapter_distribution(name, version, top_level, real))
+        return iter(found)
 
     def _torch_spec(self) -> Any:
         sys.meta_path.remove(self)
