@@ -3,6 +3,7 @@
 #
 #   sh spikes/m6_same_mac.sh start [COMMIT]  # by default the commit of this checkout, which must be public
 #   sh spikes/m6_same_mac.sh start COMMIT f1f2  # the F1 and F2 work in spikes/m6_f1_f2_work.sh in place of the rest, under validation/m6-f1-f2-limits.json
+#   sh spikes/m6_same_mac.sh start COMMIT f2adapter  # the gsplat adapter work in spikes/m6_f2_adapter_work.sh in place of the rest, under validation/m6-f2-adapter-limits.json
 #   sh spikes/m6_same_mac.sh status          # the state, and the verdict when it is done. Exit 0 pass, 1 not a pass, 5 no verdict yet
 #   sh spikes/m6_same_mac.sh stop            # stops the run
 #   sh spikes/m6_same_mac.sh clean           # deletes the run's home folder, and keeps the results
@@ -205,6 +206,12 @@ uv pip install -q --python .venv/bin/python -e '.[dev,capture,diff,render,sim]' 
 uv pip freeze --python .venv/bin/python >"$OUT/freeze.txt" 2>&1
 PY=$PWD/.venv/bin/python
 
+if [ "$PART" = f2adapter ]; then
+    stage "the gsplat adapter"
+    wait_for_room f2adapter
+    sh spikes/m6_f2_adapter_work.sh "$OUT" >"$OUT/f2adapter.log" 2>&1
+    finish "$(cat "$OUT/f2adapter_verdict.txt" 2>/dev/null || echo not_run_no_verdict)"
+fi
 if [ "$PART" = f1f2 ]; then
     stage "F1 and F2"
     wait_for_room f1f2
