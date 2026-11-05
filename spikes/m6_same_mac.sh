@@ -223,10 +223,10 @@ wait_for_room f4
 echo "$?" >"$OUT/f4_train.exit"
 CK=$HOME/f4/model_299.pt
 if [ -f "$CK" ]; then
-    "$PY" spikes/m4_sim.py eval --task go2_flat --engine genesis --envs 128 --steps 1000 --seed 7 --checkpoint "$CK" --controller mlx --forward 0.8 --output "$OUT/f4_fwd.json" >"$OUT/f4_fwd.txt" 2>&1
-    "$PY" spikes/m4_sim.py eval --task go2_flat --engine genesis --envs 128 --steps 1000 --seed 7 --checkpoint "$CK" --controller mlx --forward -0.8 --output "$OUT/f4_back.json" >"$OUT/f4_back.txt" 2>&1
-    "$PY" spikes/m4_sim.py eval --task go2_flat --engine genesis --envs 128 --steps 1000 --seed 7 --checkpoint "$CK" --controller mlx --forward 0 --output "$OUT/f4_stop.json" >"$OUT/f4_stop.txt" 2>&1
-    "$PY" spikes/m4_sim.py eval --task go2_flat --engine genesis --envs 128 --steps 1000 --seed 7 --controller zero --forward 0.8 --output "$OUT/f4_zero.json" >"$OUT/f4_zero.txt" 2>&1
+    "$PY" spikes/m4_sim.py eval --task go2_flat --engine genesis --envs 128 --steps 1000 --seed 7 --checkpoint "$CK" --forward 0.8 --output "$OUT/f4_fwd.json" >"$OUT/f4_fwd.txt" 2>&1
+    "$PY" spikes/m4_sim.py eval --task go2_flat --engine genesis --envs 128 --steps 1000 --seed 7 --checkpoint "$CK" --forward -0.8 --output "$OUT/f4_back.json" >"$OUT/f4_back.txt" 2>&1
+    "$PY" spikes/m4_sim.py eval --task go2_flat --engine genesis --envs 128 --steps 1000 --seed 7 --checkpoint "$CK" --forward 0 --output "$OUT/f4_stop.json" >"$OUT/f4_stop.txt" 2>&1
+    "$PY" spikes/m4_sim.py eval --task go2_flat --engine genesis --envs 128 --steps 1000 --seed 7 --forward 0.8 --output "$OUT/f4_zero.json" >"$OUT/f4_zero.txt" 2>&1
 fi
 
 stage "7/7 F5: render on Metal"

@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+import re
 import subprocess
 import time
 
@@ -217,6 +218,30 @@ def work_lines(path: Path) -> list[str]:
 def test_the_work_is_the_same_as_in_the_vm():
     assert work_lines(SCRIPT) == work_lines(GUEST)
     assert len(work_lines(SCRIPT)) >= 12
+
+
+def m4_flags(command: str) -> set[str]:
+    """The flags that spikes/m4_sim.py accepts for one command, from its source, so that this needs none of its packages."""
+    source = (REPO / "spikes" / "m4_sim.py").read_text()
+    common = source[source.index("def add(name"):source.index("sub = add('smoke'")]
+    start = source.index(f"sub = add('{command}'")
+    own = source[start:source.index("sub = add(", start + 1)] if "sub = add(" in source[start + 1:] else source[start:]
+    return set(re.findall(r"add_argument\('(--[\w-]+)'", common + own))
+
+
+@pytest.mark.parametrize("script", [SCRIPT, GUEST], ids=["same_mac", "vm"])
+def test_each_m4_sim_line_uses_only_flags_that_exist(script):
+    """The first run on a real GPU ended here: four lines passed a flag that spikes/m4_sim.py never had, and no earlier run had reached them."""
+    lines = [line for line in script.read_text().splitlines() if "spikes/m4_sim.py" in line]
+    assert len(lines) == 5
+    for line in lines:
+        command = line.split("spikes/m4_sim.py", 1)[1].split()[0]
+        assert set(re.findall(r"(?<=\s)--[\w-]+", line)) <= m4_flags(command), line
+
+
+def test_the_flag_check_can_fail():
+    assert "--checkpoint" in m4_flags("eval")
+    assert "--controller" not in m4_flags("eval")
 
 
 def test_the_rules_are_the_same_as_in_the_vm():

@@ -13,6 +13,7 @@
 
 ### Fixed
 
+- `spikes/m6_vm_guest.sh` passed a flag that `spikes/m4_sim.py eval` does not have, so the F4 evaluations could never run. No earlier run had reached them. A test now checks each such line against the flags in the source.
 - `spikes/m6_vm_reproduce.sh` no longer reads a verdict that an earlier run left in the guest, and ends its proxy tunnel with the run. `spikes/m6_terminal_mac.sh` holds its limits during the install, and survives a failed first boot.
 - `spikes/run_all.sh` and `spikes/m3_kernels.sh` failed partway when `uv` was missing. They now end with exit 3 and the install link before they start.
 - `spikes/t4_action_example.sh` used `sed -i ''`, which only BSD sed reads, and it failed late without `.venv`. The edit is now `spikes/t4_edit_workflow.py`, which refuses a workflow without the expected lines, and a missing `.venv` is exit 3 with the fix.
