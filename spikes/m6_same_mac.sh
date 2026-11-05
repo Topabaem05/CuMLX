@@ -53,7 +53,7 @@ status)
     [ -f "$RESULT/stage.txt" ] && echo "stage: $(cat "$RESULT/stage.txt")"
     [ -f "$RESULT/peak_used_gb.txt" ] && echo "peak memory in use: $(cat "$RESULT/peak_used_gb.txt") GB"
     if [ ! -f "$RESULT/verdict.txt" ]; then
-        echo "no verdict yet"
+        if running; then echo "no verdict yet"; else echo "no verdict: the run ended without one, and that is not a pass. See $ROOT/run.log"; fi
         exit 5
     fi
     verdict=$(cat "$RESULT/verdict.txt")
@@ -113,7 +113,7 @@ start)
     rm -rf "${ROOT:?}/home"
     mkdir -p "$RESULT" "$ROOT/home"
     # macOS's python3 writes a cache under HOME, so even the launcher gets the run's own.
-    HOME=$ROOT/home nohup python3 -c 'import os, sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1:])' sh "$0" --work "$COMMIT" >"$ROOT/run.log" 2>&1 &
+    HOME=$ROOT/home CUMLX_REPRO_ROOT=$ROOT nohup python3 -c 'import os, sys; os.setsid(); os.execvp(sys.argv[1], sys.argv[1:])' sh "$0" --work "$COMMIT" >"$ROOT/run.log" 2>&1 &
     echo $! >"$ROOT/run.pid"
     nohup sh "$0" --watch >"$ROOT/watch.log" 2>&1 &
     echo "Started at $COMMIT, pid $(cat "$ROOT/run.pid"). See the state with: sh $0 status"

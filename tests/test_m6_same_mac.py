@@ -155,6 +155,19 @@ def test_a_heavy_part_that_finds_no_room_does_not_start(box):
     assert "test_kernel_gpu" not in box.log.read_text()
 
 
+def test_the_default_folder_works_too(box):
+    env = {key: value for key, value in box.env.items() if key != "CUMLX_REPRO_ROOT"}
+    started = subprocess.run(["sh", str(SCRIPT), "start", "abc123"], env=env, capture_output=True, text=True, timeout=60, check=False)
+    assert started.returncode == 0, started.stderr
+    result = box.tmp / "person" / "cumlx-repro" / "result"
+    try:
+        assert wait_for(lambda: (result / "verdict.txt").exists()), (result.parent / "run.log").read_text()
+        assert (result / "verdict.txt").read_text().strip() == "pass"
+        assert not (result.parent / "home" / "cumlx-repro").exists()
+    finally:
+        subprocess.run(["sh", str(SCRIPT), "stop"], env=env, capture_output=True, timeout=60, check=False)
+
+
 def test_a_commit_that_is_not_public_is_a_setup_error(box):
     (box.tmp / "not_public").write_text("")
     assert run(box, "start", "abc123").returncode == 0
