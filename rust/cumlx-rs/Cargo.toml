@@ -1,0 +1,17 @@
+[package]
+name = "cumlx-rs"
+description = "Command line of the Rust CUMLX core: tracediff, weights and describe, with the cumlx.result.v1 contract"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "cumlx-rs"
+path = "src/main.rs"
+
+[dependencies]
+cumlx = { path = "../cumlx" }
+serde_json.workspace = true

@@ -10,6 +10,7 @@ def pytest_addoption(parser):
     parser.addoption('--backend',default=os.environ.get('CUMLX_TEST_BACKEND','metal'),choices=['metal','cuda'])
     parser.addoption('--require-e2e',action='store_true',default=False,help='Fail, do not skip, if torch/transformers/mlx/mlx-lm are missing')
     parser.addoption('--require-tf4',action='store_true',default=False,help='Fail, do not skip, if CUMLX_TF4_SITE does not hold transformers 4')
+    parser.addoption('--require-rust',action='store_true',default=False,help='Fail, do not skip, if the cumlx-rs binary is not built or MLX is missing for the weight parity tests')
 
 
 @pytest.fixture(scope='session')

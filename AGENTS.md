@@ -73,6 +73,23 @@ On `exit_code == 5`, some parametrized modules were not compared. Map them with
 `--mapping rules.json` (`{"rules": [{"match": REGEX, "replace": STR}], "ignore": [REGEX]}`)
 or ignore them explicitly. Never report `incomplete` as success.
 
+### The Rust binary `cumlx-rs`
+
+`rust/` holds the core that needs neither torch nor MLX: the library crate `cumlx` (envelope, error codes, trace
+format, safetensors, metrics and threshold profiles) and the binary `cumlx-rs`. Build it with
+`cargo build --release --manifest-path rust/Cargo.toml`.
+
+- `cumlx-rs tracediff A B` and `cumlx-rs weights ORIGINAL PORT` give the same document, exit code, error codes,
+  verdicts and numbers (within 1e-12) as the Python commands. `cumlx-rs describe` lists every command with
+  `implemented: true` or `false`.
+- Every other command ends with exit 3 and `E_PYTHON_ONLY`; `errors[].hint` is the Python command. Run that.
+- `cumlx-rs weights` reads the port's `model*.safetensors` as stored. It refuses a quantized port, `--mapping`,
+  `--loader python:...` and a Hugging Face id (`E_PYTHON_ONLY`), and marks a channels-last convolution weight
+  `unverified`. It does not prove that mlx-lm loads the port.
+- A change to `metrics.py`, `weights.py`, `trace.py`, `trace_compare.py` or `ERROR_CODES` needs the same change in
+  `rust/`. Then run `python scripts/rust_vectors.py` and `python -m pytest tests/test_rust_parity.py --require-rust`.
+  See `rust/README.md`.
+
 `cumlx selftest` proves within seconds that the verifier works in the
 current environment: a clean port passes and 11 injected faults are located.
 
@@ -87,6 +104,8 @@ python -m pytest -q -m 'not gpu'                        # e2e tests skip without
 python -m pytest -q -m e2e --require-e2e                # e2e must run (CI verifier job)
 python -m ruff check . && python scripts/generate_kernels.py && git diff --exit-code -- src/cumlx/kernels
 python scripts/dogfood_real_model.py -o evidence.json   # real checkpoints; needs network and disk (L2)
+cd rust && cargo fmt --all --check && cargo clippy --locked --all-targets -- -D warnings && cargo test --locked && cd ..
+cargo build --release --manifest-path rust/Cargo.toml && python -m pytest -q tests/test_rust_parity.py --require-rust --require-e2e
 ```
 
 `MLXBackend` accepts MLX 0.32.2 and later 0.32.x. The GPU tests ran on 0.32.2 and 0.32.4; another 0.32.x gives a warning.

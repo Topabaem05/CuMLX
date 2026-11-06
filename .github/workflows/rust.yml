@@ -1,0 +1,101 @@
+name: Rust
+
+# The Rust core in rust/: format, lint and unit tests, and the proof that cumlx-rs gives the same results as the
+# Python cumlx on the same inputs (tests/test_rust_parity.py). A skip in the parity job is a failure.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rust-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: never
+  CARGO_INCREMENTAL: '0'
+
+jobs:
+  cargo:
+    name: cargo ${{ matrix.lint && 'fmt, clippy and test' || 'test' }} (Rust ${{ matrix.toolchain }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-24.04, toolchain: '1.99.1', lint: true}
+          - {os: ubuntu-24.04, toolchain: '1.85.1', lint: false}  # rust-version in rust/Cargo.toml
+          - {os: macos-15, toolchain: '1.99.1', lint: false}
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - name: Toolchain
+        run: |
+          rustup toolchain install ${{ matrix.toolchain }} --profile minimal --component clippy,rustfmt
+          rustup override set ${{ matrix.toolchain }}
+          cargo --version
+      - name: Format
+        if: matrix.lint
+        run: cargo fmt --all --check
+      - name: Clippy (warnings are errors)
+        if: matrix.lint
+        run: cargo clippy --locked --all-targets -- -D warnings
+      - name: Unit tests and the Python test vectors
+        run: cargo test --locked
+
+  parity:
+    name: Rust and Python give the same results (PyTorch CPU + MLX CPU)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Build cumlx-rs
+        working-directory: rust
+        run: |
+          rustup toolchain install 1.99.1 --profile minimal
+          rustup override set 1.99.1
+          cargo build --release --locked
+      - name: Install CPU-only PyTorch, then the capture and diff extras
+        run: |
+          python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -e '.[dev,capture,diff]'
+      - name: The test vectors that cargo test reads are current
+        run: python scripts/rust_vectors.py --check
+      - name: Parity tests (a skip is a failure here)
+        env:
+          CUMLX_RS_BIN: ${{ github.workspace }}/rust/target/release/cumlx-rs
+        run: |
+          mkdir -p ci-results
+          python -m pytest -q tests/test_rust_parity.py --require-rust --require-e2e --junitxml=ci-results/rust-parity.xml
+          python - <<'EOF'
+          import xml.etree.ElementTree as ET
+          suite = ET.parse('ci-results/rust-parity.xml').getroot().find('testsuite')
+          skipped, tests = int(suite.get('skipped')), int(suite.get('tests'))
+          print(f'{tests} parity tests, {skipped} skipped')
+          raise SystemExit(1 if skipped or tests < 40 else 0)
+          EOF
+      - name: Publish parity evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: rust-parity
+          path: ci-results/
+          if-no-files-found: error
+          retention-days: 14
