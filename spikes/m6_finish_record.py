@@ -88,7 +88,7 @@ def main() -> int:
         'f5': {'target': 'B', **brief(v5), 'mitsuba': v5.get('mitsuba')},
         'grades': {'f1': 'A at attempt 3, after a fix that attempt 2\'s failure showed; attempt 2 is a fail', 'f2': v2.get('grade'), 'f3': v3.get('grade'), 'f4': v4.get('grade'), 'f5': v5.get('grade')},
         'ticks_m6_1': False,
-        'why_not_ticked': 'The condition of M6-1 names a new Mac, and every part ran on the one Mac that there is. Only the owner can change that condition',
+        'why_not_ticked': 'The condition of M6-1 names a new Mac, and every part ran on the one Mac that there is. On 2026-11-06 the owner decided to keep M6-1 unticked on this result',
         'does_not_show': ['Another Mac or another Apple GPU generation', 'FlashAttention-2 itself: it needs compute capability 8.0 and the V100 has 7.0, so F1 judges attention against exact attention in float64',
                           'Other GPU generations for the __fdividef table', 'Real datasets, densification or spherical harmonics in F2', 'Isaac Lab, PhysX or a real robot in F4', 'An RTX sensor in F5'],
     }
