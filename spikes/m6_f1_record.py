@@ -101,7 +101,7 @@ def recording_hook(save: Any, in_key: str, out_key: str) -> Any:
     return hook
 
 
-def capture(output: Path) -> int:
+def capture(output: Path, prompt: str = PROMPT) -> int:
     import torch
     output.mkdir(parents=True, exist_ok=False)
     recorder = AttentionRecorder()
@@ -145,7 +145,7 @@ def capture(output: Path) -> int:
     for key, module in (('norm', model.model.norm), ('lm_head', model.lm_head)):
         hooks.append(module.register_forward_hook(recording_hook(save, f'{key}_in', f'{key}_out')))
 
-    inputs = tokenizer(PROMPT, return_tensors='pt').to('cuda')
+    inputs = tokenizer(prompt, return_tensors='pt').to('cuda')
     recorder.active = True
     with torch.no_grad():
         logits = model(**inputs, use_cache=False).logits
@@ -193,7 +193,7 @@ def capture(output: Path) -> int:
     import bitsandbytes
     import flash_attn
     import transformers
-    summary = {'schema': 'cumlx.m6_f1_golden.v1', 'model': MODEL, 'revision': REVISION, 'prompt': PROMPT, 'input_ids': inputs['input_ids'][0].tolist(), 'tokens': tokens,
+    summary = {'schema': 'cumlx.m6_f1_golden.v1', 'model': MODEL, 'revision': REVISION, 'prompt': prompt, 'input_ids': inputs['input_ids'][0].tolist(), 'tokens': tokens,
                'text': tokenizer.decode(tokens), 'device': str(logits.device), 'dtype': str(model.dtype), 'prefill_attention_calls': prefill_calls,
                'decode_attention_calls': len(recorder.calls) - prefill_calls, 'varlen_calls': recorder.varlen_calls, 'cb_sha256': hashes,
                'bitsandbytes': {'module': bitsandbytes.__name__, 'version': getattr(bitsandbytes, '__version__', None)},
@@ -285,7 +285,8 @@ def replay(golden: Path, output: Path, fault: str | None) -> int:
         return torch.tensor(tensors[key], device=device).to(getattr(torch, dtypes[key]))
 
     # One forward, so that each Linear8bitLt moves its int8 weights into its state, as in the golden run.
-    inputs = tokenizer(PROMPT, return_tensors='pt').to('cuda')
+    # The golden's own prompt: the rules' prompt by default, or another one for a check that the rules do not judge.
+    inputs = tokenizer(summary.get('prompt', PROMPT), return_tensors='pt').to('cuda')
     with torch.no_grad():
         logits = model(**inputs, use_cache=False).logits
     result: dict[str, Any] = {'schema': 'cumlx.m6_f1_replay.v1', 'fault': fault, 'device': str(device), 'dtype': str(model.dtype),
@@ -337,12 +338,13 @@ def main() -> int:
     sub = parser.add_subparsers(dest='mode', required=True)
     c = sub.add_parser('capture')
     c.add_argument('--output', required=True, type=Path)
+    c.add_argument('--prompt', default=PROMPT, help='another prompt, for a check outside validation/m6-f1-limits.json, which names its own')
     r = sub.add_parser('replay')
     r.add_argument('--golden', required=True, type=Path)
     r.add_argument('--output', required=True, type=Path)
     r.add_argument('--fault', choices=FAULTS)
     args = parser.parse_args()
-    return capture(args.output) if args.mode == 'capture' else replay(args.golden, args.output, args.fault)
+    return capture(args.output, args.prompt) if args.mode == 'capture' else replay(args.golden, args.output, args.fault)
 
 
 if __name__ == '__main__':

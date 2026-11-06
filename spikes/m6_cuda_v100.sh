@@ -123,6 +123,10 @@ rssh "grep -q busy_at_start $REMOTE/run.sh" || { echo "error: run.sh did not rea
 rssh "bash -lc '(cd $REMOTE && exec nohup bash run.sh) > $REMOTE/run.log 2>&1 < /dev/null & echo \$! > $REMOTE/run.pid'" || exit 3
 sleep 2
 if ! rssh "kill -0 \$(cat $REMOTE/run.pid) 2>/dev/null"; then
+    if rssh "test -f $REMOTE/out/done.txt"; then
+        echo "Ran $PARTS on $HOST at $COMMIT, and it has finished already. Fetch it with: sh $0 fetch"
+        exit 0
+    fi
     echo "error: the run stopped at once:" >&2
     rssh "cat $REMOTE/run.log" >&2
     exit 1
