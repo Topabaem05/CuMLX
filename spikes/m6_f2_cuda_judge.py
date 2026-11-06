@@ -63,11 +63,12 @@ def compare(image: np.ndarray, alpha: np.ndarray, want_image: np.ndarray, want_a
 
 def within(metrics: dict[str, float], rule: dict[str, Any], scene: str) -> list[str]:
     out = []
-    if metrics['image_rel_l2'] > rule['image_rel_l2_at_most']:
+    # `not x <= limit`, so that a NaN fails: NaN > limit is False.
+    if not metrics['image_rel_l2'] <= rule['image_rel_l2_at_most']:
         out.append(f'{scene}: image {metrics["image_rel_l2"]:.3g}')
-    if metrics['alpha_rel_l2'] > rule['alpha_rel_l2_at_most']:
+    if not metrics['alpha_rel_l2'] <= rule['alpha_rel_l2_at_most']:
         out.append(f'{scene}: alpha {metrics["alpha_rel_l2"]:.3g}')
-    if scene in PEAK_SCENES and metrics['peak_error_px'] > rule['peak_error_px_at_most']:
+    if scene in PEAK_SCENES and not metrics['peak_error_px'] <= rule['peak_error_px_at_most']:
         out.append(f'{scene}: peak {metrics["peak_error_px"]:.0f} px')
     return out
 
@@ -164,13 +165,15 @@ def equivalent(candidate: list[float | None], reference: list[float | None]) -> 
 
 def judge(cuda: Path, mac: Path) -> dict[str, Any]:
     parts: dict[str, Any] = {}
-    setup = []
+    setup, absent = [], []
     for side, out, names in (('cuda', cuda, ('install', 'build', 'record')), ('mac', mac, ('install', 'record'))):
         for name in names:
             code = read_exit(out, name)
-            if code != 0:
+            if code is None:
+                absent.append(f'{side} {name} did not run')
+            elif code != 0:
                 setup.append(f'{side} {name} exit {code}')
-    parts['setup'] = part(setup)
+    parts['setup'] = part(setup + absent, bool(absent) and not setup)
     cuda_record, mac_record = read_npz(cuda, 'record'), read_npz(mac, 'record')
     background = backgrounds(read_json(cuda, 'record'))
     if cuda_record is None or mac_record is None:
@@ -215,7 +218,7 @@ def judge(cuda: Path, mac: Path) -> dict[str, Any]:
     states = [item['state'] for item in parts.values()]
     verdict = 'pass' if all(s == 'pass' for s in states) else ('not_run' if 'not_run' in states and 'fail' not in states else 'fail')
     return {'schema': 'cumlx.m6_f2_cuda_verdict.v1', 'rules': 'validation/m6-f2-cuda-limits.json', 'verdict': verdict, 'grade': 'B' if verdict == 'pass' else None,
-            'cuda_versions': read_json(cuda, 'versions'), 'cuda_commit': _text(cuda / 'cumlx_commit.txt'), 'mac_commit': _text(mac / 'cumlx_commit.txt'), 'parts': parts}
+            'cuda_versions': read_json(cuda, 'versions'), 'cuda_commit': _text(cuda / 'cumlx_commit.txt'), 'mac_commit': _text(mac / 'cumlx_commit.txt') or _text(mac.parent / 'cumlx_commit.txt'), 'parts': parts}
 
 
 def _text(path: Path) -> str | None:

@@ -22,6 +22,8 @@ if [ -z "$HOST" ]; then
 fi
 REMOTE=cumlx-m6
 REPO=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+# spikes/m6_finish.sh runs a snapshot of this script, so the git checkout and the commit can be given.
+GIT_REPO=${CUMLX_V100_GIT:-$REPO}
 LOCAL=${CUMLX_M6_CUDA:-$HOME/cumlx-m6-cuda}
 
 case "${1:-start}" in
@@ -36,8 +38,15 @@ fetch)
         echo "error: $HOST has no finished results yet" >&2
         exit 1
     fi
-    mkdir -p "$LOCAL"
-    ssh "$HOST" "cd $REMOTE/out && tar -c ." | tar -x -C "$LOCAL" || exit 1
+    if [ -e "$LOCAL" ]; then
+        echo "error: $LOCAL exists" >&2
+        exit 4
+    fi
+    # Into a side folder first, and then one rename, so that nothing reads a half-copied result.
+    rm -rf "$LOCAL.partial"
+    mkdir -p "$LOCAL.partial"
+    ssh "$HOST" "cd $REMOTE/out && tar -c ." | tar -x -C "$LOCAL.partial" || exit 1
+    mv "$LOCAL.partial" "$LOCAL" || exit 1
     echo "Copied to $LOCAL"
     exit 0
     ;;
@@ -64,14 +73,22 @@ if ssh "$HOST" "test -f $REMOTE/run.pid && kill -0 \$(cat $REMOTE/run.pid) 2>/de
     echo "error: a run is going on $HOST" >&2
     exit 4
 fi
-COMMIT=$(git -C "$REPO" rev-parse HEAD)
+COMMIT=${CUMLX_V100_COMMIT:-$(git -C "$GIT_REPO" rev-parse HEAD)}
 ssh "$HOST" "rm -rf $REMOTE/CuMLX $REMOTE/out && mkdir -p $REMOTE/CuMLX $REMOTE/out $REMOTE/work" || exit 3
-git -C "$REPO" archive HEAD spikes src/cumlx ':(glob)validation/m6-*.json' validation/kernel-cases-m3 | ssh "$HOST" "tar -x -C $REMOTE/CuMLX" || exit 3
+git -C "$GIT_REPO" archive "$COMMIT" spikes src/cumlx ':(glob)validation/m6-*.json' validation/kernel-cases-m3 | ssh "$HOST" "tar -x -C $REMOTE/CuMLX" || exit 3
 echo "$COMMIT" | ssh "$HOST" "cat > $REMOTE/out/cumlx_commit.txt" || exit 3
 ssh "$HOST" "cat > $REMOTE/run.sh" <<EOF
 #!/bin/bash
 cd "\$(dirname "\$0")"
 { nvidia-smi; nvidia-smi --query-compute-apps=pid,used_memory --format=csv; nvcc --version; python3 --version; } > out/machine_start.txt 2>&1
+# The launcher looked a moment ago. If another process took the GPU since, this run is not a pass, so it stops here.
+BUSY=\$(nvidia-smi --query-compute-apps=pid --format=csv,noheader)
+if [ -n "\$BUSY" ]; then
+    echo "\$BUSY" > out/busy_at_start.txt
+    echo busy_at_start > out/stage.txt
+    date -u +%Y-%m-%dT%H:%M:%SZ > out/done.txt
+    exit 0
+fi
 for part in $PARTS; do
     echo "\$part" > out/stage.txt
     bash CuMLX/spikes/remote/m6_\$part.sh "\$PWD/CuMLX" "\$PWD/out/\$part" "\$PWD/work/\$part" > out/\$part.log 2>&1

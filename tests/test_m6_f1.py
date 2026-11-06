@@ -133,3 +133,20 @@ def test_the_program_and_the_record_load_the_model_alike():
     for text in ("attn_implementation='flash_attention_2'", "BitsAndBytesConfig(load_in_8bit=True)", "device_map={'': 0}"):
         assert text in program and text in source
     assert record.PROMPT in program
+
+
+def test_the_capture_hooks_save_and_leave_each_output_as_it_is():
+    torch = pytest.importorskip("torch")
+    saved = {}
+    layer = torch.nn.Linear(4, 3)
+    x = torch.randn(2, 4)
+    want = layer(x)
+    layer.register_forward_hook(record.recording_hook(lambda key, value: saved.__setitem__(key, value), "in", "out"))
+    got = layer(x)
+    assert torch.equal(got, want)
+    assert torch.equal(saved["in"], x) and torch.equal(saved["out"], want)
+
+
+def test_no_forward_hook_in_the_recorder_is_a_lambda():
+    source = (REPO / "spikes" / "m6_f1_record.py").read_text()
+    assert "register_forward_hook(lambda" not in source

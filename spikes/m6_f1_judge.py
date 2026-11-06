@@ -142,9 +142,11 @@ JUDGES = {'leaves': leaves, 'weights': weights, 'layers': layers, 'attention': a
 
 def judge(cuda: Path, mac: Path) -> dict[str, Any]:
     parts: dict[str, Any] = {}
-    setup = [f'{side} {name} exit {code}' for side, out, names in (('cuda', cuda, ('install', 'capture')), ('mac', mac, ('install', 'clean', 'replay')))
-             for name in names if (code := read_exit(out, name)) != 0]
-    parts['setup'] = part(setup)
+    steps = [(f'{side} {name}', read_exit(out, name)) for side, out, names in (('cuda', cuda, ('install', 'capture')), ('mac', mac, ('install', 'clean', 'replay')))
+             for name in names]
+    failed = [f'{label} exit {code}' for label, code in steps if code is not None and code != 0]
+    absent = [f'{label} did not run' for label, code in steps if code is None]
+    parts['setup'] = part(failed + absent, bool(absent) and not failed)
     parts['program_cuda'], cuda_tokens = program(cuda, 'cuda')
     parts['program_mac'], mac_tokens = program(mac, 'mac')
     if cuda_tokens and mac_tokens:

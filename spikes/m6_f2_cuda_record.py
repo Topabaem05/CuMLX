@@ -47,8 +47,9 @@ def conformance_scenes() -> dict[str, dict]:
         'small_antialiased': dict(means=[[0.031, -0.017, 3.0]], quats=[[1.0, 0.0, 0.0, 0.0]], scales=[[0.016, 0.016, 0.016]], opacities=[0.9], colors=[[1.0, 1.0, 1.0]], viewmat=np.eye(4), K=plain_K, width=128, height=128, antialiased=True),
         'near_and_far': dict(means=[[0.2, 0.1, 0.05], [0.0, 0.0, 3.0], [-0.3, 0.2, 9.0]], quats=[[1.0, 0.0, 0.0, 0.0]] * 3, scales=[[0.2, 0.2, 0.2]] * 3, opacities=[0.9, 0.7, 0.9], colors=[[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], viewmat=np.eye(4), K=plain_K, width=128, height=128, near_plane=0.5, far_plane=6.0),
     }
-    # One Gaussian far wider than the frame, at opacity 1, in front of white: each pixel has an alpha above 0.99, so the clamp sets the image.
-    scenes['opaque_wall'] = dict(means=[[0.0, 0.0, 3.0]], quats=[[1.0, 0.0, 0.0, 0.0]], scales=[[20.0, 20.0, 0.5]], opacities=[1.0], colors=[[0.0, 0.0, 0.0]], viewmat=np.eye(4), K=plain_K, width=128, height=128, background=[1.0, 1.0, 1.0])
+    # One Gaussian far wider than the frame, at opacity 1, in front of white: each pixel's raw alpha is above 0.999 (the corner's is about
+    # 0.99938), so the clamp sets the whole image. The first form had scales 20 and only 28% of its pixels above 0.999 (review, 2026-11-06).
+    scenes['opaque_wall'] = dict(means=[[0.0, 0.0, 3.0]], quats=[[1.0, 0.0, 0.0, 0.0]], scales=[[60.0, 60.0, 0.5]], opacities=[1.0], colors=[[0.0, 0.0, 0.0]], viewmat=np.eye(4), K=plain_K, width=128, height=128, background=[1.0, 1.0, 1.0])
     return scenes
 
 

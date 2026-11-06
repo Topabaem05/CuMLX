@@ -6,19 +6,18 @@
 #   sh spikes/m6_finish.sh status    # the state, and the verdicts when they are written. Exit 0 all five pass, 1 not, 5 not done
 #   sh spikes/m6_finish.sh stop      # stops the waiting here and the Mac run. A V100 run that started goes on: see spikes/m6_cuda_v100.sh
 #
-# The Mac run is spikes/m6_same_mac.sh start COMMIT m6, with its memory and disk limits. It starts as soon as this Mac has room, and
-# its F1 part waits for the V100's golden. The V100 run is spikes/m6_cuda_v100.sh, which refuses a busy GPU, so this tries again
-# every 10 minutes for up to 30 hours. Results: ~/cumlx-m6-cuda (V100), ~/cumlx-repro/result (Mac), ~/cumlx-m6-finish (verdicts).
+# The work runs from a snapshot of the commit in ~/cumlx-m6-finish/code, so that a later change to this checkout cannot change it.
+# The Mac run is spikes/m6_same_mac.sh start COMMIT m6, with its memory and disk limits, and its F1 part waits for the V100's golden.
+# The V100 run is spikes/m6_cuda_v100.sh at the same commit; it refuses a busy GPU, so this tries again every 10 minutes for up to
+# 30 hours. Results: ~/cumlx-m6-cuda (V100), ~/cumlx-repro/result (Mac), ~/cumlx-m6-finish (verdicts).
 set -u
-REPO=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 ROOT=${CUMLX_FINISH_ROOT:-$HOME/cumlx-m6-finish}
 CUDA_DIR=${CUMLX_M6_CUDA:-$HOME/cumlx-m6-cuda}
 REPRO=${CUMLX_REPRO_ROOT:-$HOME/cumlx-repro}
 WAIT_GPU_SECONDS=${CUMLX_FINISH_GPU_WAIT_SECONDS:-108000}
+CUDA_RUN_SECONDS=${CUMLX_FINISH_CUDA_RUN_SECONDS:-86400}
 POLL=${CUMLX_FINISH_POLL:-600}
-SAME_MAC=${CUMLX_FINISH_SAME_MAC:-$REPO/spikes/m6_same_mac.sh}
-V100=${CUMLX_FINISH_V100:-$REPO/spikes/m6_cuda_v100.sh}
-PY=${CUMLX_FINISH_PYTHON:-$REPO/.venv/bin/python}
+SHORT_POLL=${CUMLX_FINISH_SHORT_POLL:-120}
 
 running() {
     [ -f "$ROOT/run.pid" ] && kill -0 "$(cat "$ROOT/run.pid")" 2>/dev/null
@@ -39,11 +38,12 @@ stop)
         kill "$(cat "$ROOT/run.pid")" 2>/dev/null
         echo stopped_by_person >"$ROOT/stage.txt"
     fi
-    sh "$SAME_MAC" stop
-    echo "Stopped here. A run on the V100 goes on until it ends; see: sh $V100 status"
+    sh "${CUMLX_FINISH_SAME_MAC:-$ROOT/code/spikes/m6_same_mac.sh}" stop
+    echo "Stopped here. A run on the V100 goes on until it ends; see: sh spikes/m6_cuda_v100.sh status"
     exit 0
     ;;
 start)
+    REPO=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
     if running; then
         echo "error: already running, pid $(cat "$ROOT/run.pid")" >&2
         exit 4
@@ -58,35 +58,52 @@ start)
         echo "error: $COMMIT is not on origin/main, and the Mac run fetches it from the public repository" >&2
         exit 2
     fi
-    if [ -e "$CUDA_DIR" ]; then
+    if [ -e "$CUDA_DIR" ] || [ -e "$CUDA_DIR.partial" ]; then
         echo "error: $CUDA_DIR exists. Move it away first, so that an earlier run cannot be read as this one." >&2
         exit 4
     fi
     mkdir -p "$ROOT"
-    rm -f "$ROOT/summary.txt" "$ROOT"/f*.json
-    nohup sh "$0" --work "$COMMIT" >"$ROOT/run.log" 2>&1 &
+    rm -rf "$ROOT/code" "$ROOT/summary.txt" "$ROOT/cuda_ready.txt" "$ROOT"/f*.json "$ROOT"/f*.err
+    mkdir -p "$ROOT/code"
+    git -C "$REPO" archive "$COMMIT" spikes src validation | tar -x -C "$ROOT/code" || { echo "error: could not take a snapshot of $COMMIT" >&2; exit 3; }
+    CUMLX_FINISH_REPO=$REPO nohup sh "$ROOT/code/spikes/m6_finish.sh" --work "$COMMIT" >"$ROOT/run.log" 2>&1 &
     echo $! >"$ROOT/run.pid"
     echo "Started at $COMMIT, pid $(cat "$ROOT/run.pid"). See the state with: sh $0 status"
     exit 0
     ;;
 --work) ;;
 *)
-    sed -n 2,12p "$0" >&2
+    sed -n 2,13p "$0" >&2
     exit 2
     ;;
 esac
 
 COMMIT=${2:?the commit}
-cd "$REPO" || exit 1
+REPO=${CUMLX_FINISH_REPO:?the git checkout}
+CODE=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+SAME_MAC=${CUMLX_FINISH_SAME_MAC:-$CODE/spikes/m6_same_mac.sh}
+V100=${CUMLX_FINISH_V100:-$CODE/spikes/m6_cuda_v100.sh}
+PY=${CUMLX_FINISH_PYTHON:-$REPO/.venv/bin/python}
+READY=$ROOT/cuda_ready.txt
+cd "$CODE" || exit 1
+NOTES=""
+note() { NOTES="$NOTES$1
+"; }
 
 say "starting the Mac run"
+mac_started=no
 waited=0
 while :; do
-    CUMLX_F1_GOLDEN=$CUDA_DIR/f1/golden CUMLX_F1_WAIT_SECONDS=$WAIT_GPU_SECONDS CUMLX_REPRO_LIMIT_SECONDS=$((WAIT_GPU_SECONDS + 28800)) sh "$SAME_MAC" start "$COMMIT" m6
+    CUMLX_F1_GOLDEN=$CUDA_DIR/f1/golden CUMLX_F1_READY=$READY CUMLX_F1_WAIT_SECONDS=$((WAIT_GPU_SECONDS + CUDA_RUN_SECONDS)) \
+        CUMLX_REPRO_LIMIT_SECONDS=$((WAIT_GPU_SECONDS + CUDA_RUN_SECONDS + 28800)) sh "$SAME_MAC" start "$COMMIT" m6
     code=$?
-    [ "$code" = 0 ] && break
+    if [ "$code" = 0 ]; then
+        mac_started=yes
+        break
+    fi
     if [ "$code" != 3 ] || [ "$waited" -ge 7200 ]; then
         say "the Mac run did not start, exit $code"
+        note "mac run: not started, exit $code"
         break
     fi
     sleep 300
@@ -96,7 +113,7 @@ done
 say "waiting for the V100's GPU to be idle"
 waited=0
 while :; do
-    sh "$V100" start "f1 f2 f3 f5"
+    CUMLX_V100_GIT=$REPO CUMLX_V100_COMMIT=$COMMIT CUMLX_M6_CUDA=$CUDA_DIR sh "$V100" start "f1 f2 f3 f5"
     code=$?
     [ "$code" = 0 ] && break
     if [ "$code" != 3 ] || [ "$waited" -ge "$WAIT_GPU_SECONDS" ]; then
@@ -106,34 +123,64 @@ while :; do
     sleep "$POLL"
     waited=$((waited + POLL))
 done
+cuda=none
 # Exit 1 can also mean that the run ended before the launcher looked, so both codes follow the run on the GPU machine.
 if [ "$code" = 0 ] || [ "$code" = 1 ]; then
     say "the V100 run is going"
+    waited=0
     while :; do
         state=$(sh "$V100" status 2>&1)
         if [ $? = 0 ]; then
-            sh "$V100" fetch
-            say "the V100 run is done, and its results are in $CUDA_DIR"
+            if CUMLX_M6_CUDA=$CUDA_DIR sh "$V100" fetch; then
+                cuda=fetched
+                say "the V100 run is done, and its results are in $CUDA_DIR"
+            else
+                say "the V100 run is done, and its results could not be fetched"
+            fi
             break
         fi
         if echo "$state" | grep -q '^not running'; then
             say "the V100 run ended without finishing: $(echo "$state" | tr '\n' ' ')"
             break
         fi
-        sleep 120
+        if [ "$waited" -ge "$CUDA_RUN_SECONDS" ]; then
+            say "the V100 run passed its time limit"
+            break
+        fi
+        sleep "$SHORT_POLL"
+        waited=$((waited + SHORT_POLL))
     done
 fi
+[ "$cuda" = fetched ] || note "cuda: no results"
+[ -f "$CUDA_DIR/busy_at_start.txt" ] && note "cuda: another process took the GPU before the run began: $(cat "$CUDA_DIR/busy_at_start.txt" | tr '\n' ' ')"
+[ "$cuda" = fetched ] && [ "$(cat "$CUDA_DIR/cumlx_commit.txt" 2>/dev/null)" != "$COMMIT" ] && note "cuda: ran $(cat "$CUDA_DIR/cumlx_commit.txt" 2>/dev/null), not $COMMIT"
+# The Mac's F1 part waits for this file, so it is written whether or not there are results.
+echo "$cuda" >"$READY"
 
-say "waiting for the Mac run"
-while [ ! -f "$REPRO/result/verdict.txt" ]; do
-    sleep 120
-done
 MAC=$REPRO/result
+if [ "$mac_started" = yes ]; then
+    say "waiting for the Mac run"
+    while [ ! -f "$MAC/verdict.txt" ]; do
+        state=$(sh "$SAME_MAC" status 2>&1)
+        if echo "$state" | grep -q '^not running' && [ ! -f "$MAC/verdict.txt" ]; then
+            note "mac run: ended with no verdict"
+            break
+        fi
+        sleep "$SHORT_POLL"
+    done
+    [ "$(cat "$MAC/cumlx_commit.txt" 2>/dev/null)" = "$COMMIT" ] || note "mac run: ran $(cat "$MAC/cumlx_commit.txt" 2>/dev/null), not $COMMIT"
+fi
+
 say "judging"
 {
     echo "commit: $COMMIT"
-    echo "mac run: $(cat "$MAC/verdict.txt")"
+    echo "mac run: $( [ "$mac_started" = yes ] && cat "$MAC/verdict.txt" 2>/dev/null || echo not_started)"
+    printf '%s' "$NOTES"
     for f in f1 f2 f3 f4 f5; do
+        if [ "$mac_started" != yes ]; then
+            echo "$f: not_run"
+            continue
+        fi
         case $f in
         f1) "$PY" spikes/m6_f1_judge.py --cuda "$CUDA_DIR/f1" --mac "$MAC/f1" --output "$ROOT/f1.json" >/dev/null 2>"$ROOT/f1.err" ;;
         f2) "$PY" spikes/m6_f2_cuda_judge.py --cuda "$CUDA_DIR/f2" --mac "$MAC/f2cuda" --output "$ROOT/f2.json" >/dev/null 2>"$ROOT/f2.err" ;;
@@ -148,7 +195,7 @@ say "judging"
         esac
     done
 } >"$ROOT/summary.partial"
-if [ "$(grep -c ': pass$' "$ROOT/summary.partial")" = 5 ] && grep -q '^mac run: mac_done$' "$ROOT/summary.partial"; then
+if [ "$(grep -c '^f[1-5]: pass$' "$ROOT/summary.partial")" = 5 ] && grep -q '^mac run: mac_done$' "$ROOT/summary.partial" && [ -z "$NOTES" ]; then
     echo "all: pass" >>"$ROOT/summary.partial"
 else
     echo "all: not a pass" >>"$ROOT/summary.partial"

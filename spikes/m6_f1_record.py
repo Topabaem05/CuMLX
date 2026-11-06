@@ -89,6 +89,18 @@ class AttentionRecorder:
         flash_attn.flash_attn_varlen_func = counting
 
 
+def recording_hook(save: Any, in_key: str, out_key: str) -> Any:
+    """A forward hook that saves the module's first input and its output, and returns None.
+
+    torch replaces a module's output with whatever a forward hook returns when that is not None. The first form of this script used
+    lambdas that returned a tuple, which turned each layer's output into (None, None) (found by review before any run, 2026-11-06).
+    """
+    def hook(module: Any, args: Any, out: Any) -> None:
+        save(in_key, args[0])
+        save(out_key, out)
+    return hook
+
+
 def capture(output: Path) -> int:
     import torch
     output.mkdir(parents=True, exist_ok=False)
@@ -104,7 +116,7 @@ def capture(output: Path) -> int:
 
     for name, module in int8_layers(model).items():
         meta['leaves'].append(name)
-        hooks.append(module.register_forward_hook(lambda mod, args, out, name=name: (save(f'leaf_in/{name}', args[0]), save(f'leaf_out/{name}', out))))
+        hooks.append(module.register_forward_hook(recording_hook(save, f'leaf_in/{name}', f'leaf_out/{name}')))
     for index, layer in enumerate(model.model.layers):
         name = f'model.layers.{index}'
         meta['layers'].append(name)
@@ -131,7 +143,7 @@ def capture(output: Path) -> int:
             meta['layer_kwargs'][name] = plain
         hooks.append(layer.register_forward_hook(layer_hook, with_kwargs=True))
     for key, module in (('norm', model.model.norm), ('lm_head', model.lm_head)):
-        hooks.append(module.register_forward_hook(lambda mod, args, out, key=key: (save(f'{key}_in', args[0]), save(f'{key}_out', out))))
+        hooks.append(module.register_forward_hook(recording_hook(save, f'{key}_in', f'{key}_out')))
 
     inputs = tokenizer(PROMPT, return_tensors='pt').to('cuda')
     recorder.active = True

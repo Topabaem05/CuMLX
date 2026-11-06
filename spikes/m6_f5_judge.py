@@ -59,8 +59,10 @@ def images(record: dict[str, np.ndarray], view: str) -> dict[int, np.ndarray]:
 
 def judge(cuda: Path, mac: Path) -> dict[str, Any]:
     parts: dict[str, Any] = {}
-    parts['setup'] = part([f'{side} {name} exit {code}' for side, out, names in (('cuda', cuda, ('install', 'sensors')), ('mac', mac, ('install', 'sensors')))
-                           for name in names if (code := read_exit(out, name)) != 0])
+    steps = [(f'{side} {name}', read_exit(out, name)) for side, out, names in (('cuda', cuda, ('install', 'sensors')), ('mac', mac, ('install', 'sensors'))) for name in names]
+    failed = [f'{label} exit {code}' for label, code in steps if code is not None and code != 0]
+    absent = [f'{label} did not run' for label, code in steps if code is None]
+    parts['setup'] = part(failed + absent, bool(absent) and not failed)
     c, m = read_npz(cuda / 'sensors' / 'sensors.npz'), read_npz(mac / 'sensors' / 'sensors.npz')
     if c is None or m is None:
         for name in ('rgb', 'geometry_cuda', 'geometry_mac', 'geometry_between', 'controls'):

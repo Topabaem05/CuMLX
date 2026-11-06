@@ -37,12 +37,15 @@ say "the Mac's own golden, for the chain that is reported"
 "$CUMLX" run spikes/m6_f1_record.py $SUBS --report "$OUT/capture.run-report.json" --format json -- capture --output "$OUT/mac-golden" >"$OUT/capture.json" 2>"$OUT/capture.txt"
 echo "$?" >"$OUT/capture.exit"
 GOLDEN=${CUMLX_F1_GOLDEN:-}
-# spikes/m6_finish.sh starts this run before the V100 has finished, so the golden may arrive later. CUMLX_F1_WAIT_SECONDS says how long to wait for it.
+# spikes/m6_finish.sh starts this run before the V100 has finished, so the golden may arrive later. It writes CUMLX_F1_READY when the
+# V100's results are in place, or when the V100 side has ended without them. CUMLX_F1_WAIT_SECONDS bounds the wait.
+READY=${CUMLX_F1_READY:-}
 waited=0
-while [ -n "$GOLDEN" ] && [ ! -f "$GOLDEN/summary.json" ] && [ "$waited" -lt "${CUMLX_F1_WAIT_SECONDS:-0}" ]; do
+while [ -n "$READY" ] && [ ! -f "$READY" ] && [ "$waited" -lt "${CUMLX_F1_WAIT_SECONDS:-0}" ]; do
     sleep 60
     waited=$((waited + 60))
 done
+[ -n "$READY" ] && echo "ready: $(cat "$READY" 2>/dev/null || echo "none after $waited s")" >"$OUT/ready.txt"
 if [ -n "$GOLDEN" ] && [ -f "$GOLDEN/summary.json" ]; then
     say "replay of the CUDA golden"
     "$CUMLX" run spikes/m6_f1_record.py $SUBS --report "$OUT/replay.run-report.json" --format json -- replay --golden "$GOLDEN" --output "$OUT/replay.json" >"$OUT/replay.result.json" 2>"$OUT/replay.txt"

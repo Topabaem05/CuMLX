@@ -24,18 +24,19 @@ say "renders and gradients through the adapter"
 echo "$?" >"$OUT/record.exit"
 for fault in quaternion_xyzw camera_to_world_view_matrix fx_fy_swapped half_pixel_shift no_eps2d antialiased_for_classic alpha_clamp_0.99 means_gradient_1.1; do
     say "control: $fault"
-    CUMLX_F2_FAULT=$fault "$CUMLX" run spikes/m6_f2_cuda_record.py --substitute gsplat=m6_f2_fault_gsplat --format json -- --output "$OUT/fault_$fault.npz" --no-hand >"$OUT/fault_$fault.txt" 2>&1
+    CUMLX_F2_FAULT=$fault "$CUMLX" run spikes/m6_f2_cuda_record.py --substitute gsplat=m6_f2_fault_gsplat --report "$OUT/fault_$fault.run-report.json" --format json -- --output "$OUT/fault_$fault.npz" --no-hand >"$OUT/fault_$fault.txt" 2>&1
     echo "$?" >"$OUT/fault_$fault.exit"
 done
 for seed in 0 1 2 3 4; do
     for mode in right frozen wrong_cameras; do
         say "training $mode seed $seed"
-        "$CUMLX" run spikes/m6_f2_gsplat_train.py --substitute "gsplat=$ADAPTER" --format json -- --mode $mode --seed $seed --output "$OUT/train_${mode}_$seed.json" >"$OUT/train_${mode}_$seed.txt" 2>&1
+        "$CUMLX" run spikes/m6_f2_gsplat_train.py --substitute "gsplat=$ADAPTER" --report "$OUT/train_${mode}_$seed.run-report.json" --format json -- --mode $mode --seed $seed --output "$OUT/train_${mode}_$seed.json" >"$OUT/train_${mode}_$seed.txt" 2>&1
         echo "$?" >"$OUT/train_${mode}_$seed.exit"
     done
     say "control: colors_gradient_zero seed $seed"
-    CUMLX_F2_FAULT=colors_gradient_zero "$CUMLX" run spikes/m6_f2_gsplat_train.py --substitute gsplat=m6_f2_fault_gsplat --format json -- --mode right --seed $seed --output "$OUT/train_colors_gradient_zero_$seed.json" >"$OUT/train_colors_gradient_zero_$seed.txt" 2>&1
+    CUMLX_F2_FAULT=colors_gradient_zero "$CUMLX" run spikes/m6_f2_gsplat_train.py --substitute gsplat=m6_f2_fault_gsplat --report "$OUT/train_colors_gradient_zero_$seed.run-report.json" --format json -- --mode right --seed $seed --output "$OUT/train_colors_gradient_zero_$seed.json" >"$OUT/train_colors_gradient_zero_$seed.txt" 2>&1
     echo "$?" >"$OUT/train_colors_gradient_zero_$seed.exit"
 done
+cp "$OUT/../cumlx_commit.txt" "$OUT/cumlx_commit.txt" 2>/dev/null
 date -u +%Y-%m-%dT%H:%M:%SZ >"$OUT/f2cuda_mac_done.txt"
 echo mac_done >"$OUT/f2cuda_verdict.txt"

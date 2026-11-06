@@ -93,9 +93,11 @@ def same_partition(candidate: dict[str, np.ndarray], reference: dict[str, np.nda
 
 def judge(cuda: Path, mac: Path) -> dict[str, Any]:
     parts: dict[str, Any] = {}
-    setup = [f'{side} {name} exit {code}' for side, out, names in (('cuda', cuda, ('fetch', 'cuda')), ('mac', mac, ('install', 'fetch', 'mac', 'reference')))
-             for name in names if (code := read_exit(out, name)) != 0]
-    parts['setup'] = part(setup)
+    steps = [(f'{side} {name}', read_exit(out, name)) for side, out, names in (('cuda', cuda, ('fetch', 'cuda')), ('mac', mac, ('install', 'fetch', 'mac', 'reference')))
+             for name in names]
+    failed = [f'{label} exit {code}' for label, code in steps if code is not None and code != 0]
+    absent = [f'{label} did not run' for label, code in steps if code is None]
+    parts['setup'] = part(failed + absent, bool(absent) and not failed)
     translated = read_exit(mac, 'translate') == 0 and (mac / 'connected_components.metal').exists() and (mac / 'connected_components.port.json').exists()
     parts['translate'] = part([] if translated else [f'cumlx kernel port exit {read_exit(mac, "translate")}'])
     cuda_record, mac_record, reference = read_npz(cuda / 'cuda.npz'), read_npz(mac / 'mac.npz'), read_npz(mac / 'reference.npz')
@@ -110,7 +112,9 @@ def judge(cuda: Path, mac: Path) -> dict[str, Any]:
         parts['reference'] = part([f'cuda: {r}' for r in same_partition(cuda_record, reference)] + [f'mac: {r}' for r in same_partition(mac_record, reference)],
                                   labels_equal_to_the_bit=not exact(cuda_record, reference))
     control_reasons, caught = [], {}
-    for fault in FAULTS:
+    if cuda_record is None:
+        parts['controls'] = part([], True)
+    for fault in FAULTS if cuda_record is not None else ():
         record = read_npz(mac / f'fault_{fault}.npz') if read_exit(mac, f'fault_{fault}') == 0 else None
         if record is None or cuda_record is None:
             control_reasons.append(f'{fault}: no output')
@@ -119,7 +123,8 @@ def judge(cuda: Path, mac: Path) -> dict[str, Any]:
         caught[fault] = {'caught': bool(failed), 'by': failed[:3]}
         if not failed:
             control_reasons.append(f'{fault} was not caught')
-    parts['controls'] = part(control_reasons, caught=caught)
+    if cuda_record is not None:
+        parts['controls'] = part(control_reasons, caught=caught)
     states = [item['state'] for item in parts.values()]
     verdict = 'pass' if all(s == 'pass' for s in states) else ('not_run' if 'not_run' in states and 'fail' not in states else 'fail')
     return {'schema': 'cumlx.m6_f3_verdict.v1', 'rules': 'validation/m6-f3-limits.json', 'verdict': verdict, 'grade': 'A' if verdict == 'pass' else None, 'parts': parts}
