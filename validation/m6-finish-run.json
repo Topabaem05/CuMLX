@@ -1,0 +1,581 @@
+{
+ "schema": "cumlx.m6_finish_run.v1",
+ "date": "2026-11-06",
+ "rules": [
+  "validation/m6-f1-limits.json",
+  "validation/m6-f2-cuda-limits.json",
+  "validation/m6-f3-limits.json",
+  "validation/m6-f4-limits.json",
+  "validation/m6-f5-cuda-limits.json"
+ ],
+ "how": "spikes/m6_finish.sh: the CUDA parts on the shared V100 through spikes/m6_cuda_v100.sh with an idle GPU, the Mac parts from the public repository with an empty home folder through spikes/m6_same_mac.sh part m6, and the judges spikes/m6_f*_judge.py. This file was written by spikes/m6_finish_record.py, which reruns the judges on the folders below",
+ "machines": {
+  "cuda": "Tesla V100-SXM2-16GB, driver 580.178.04, nvcc 12.0, sm70, python 3.12 with torch 2.10.0+cu128",
+  "mac": "the one Apple M5 Pro, 48 GB, macOS 27, the same Mac as every earlier record"
+ },
+ "versions": {
+  "f1": {
+   "torch": "2.10.0+cu128",
+   "cuda": "12.8",
+   "transformers": "5.22.1",
+   "accelerate": "1.15.0",
+   "bitsandbytes": "0.50.2",
+   "gpu": "Tesla V100-SXM2-16GB",
+   "capability": [
+    7,
+    0
+   ]
+  },
+  "f2": {
+   "torch": "2.10.0+cu128",
+   "cuda": "12.8",
+   "numpy": "2.4.2",
+   "gsplat": "1.5.3",
+   "gpu": "Tesla V100-SXM2-16GB"
+  }
+ },
+ "attempts": [
+  {
+   "attempt": 1,
+   "commit": "840c43c",
+   "verdict": "setup errors, nothing measured",
+   "what": "F1 on the V100: uv found a Python 3.11 for --python python3. F2: gsplat 1.5.3 with packed=True rejects [C, 3] backgrounds, and the Mac work made no folder. F3: no ninja on the V100, no cmake on the clean Mac PATH. F5: Mitsuba 3.8 transforms cannot be deep-copied. The launcher held ssh open and fetched nothing. Fixed in 28f2143 and 4bf9b41 with the rules unchanged; a review of five readers and two skeptics per finding found the rest before attempt 2"
+  },
+  {
+   "attempt": 2,
+   "commit": "4bf9b41",
+   "verdict": "f1 fail, f2 f3 f4 f5 pass",
+   "the_first_complete_run": true,
+   "cuda_commit": "4bf9b41ae5e603dcfc69829a1d40c63cff57a1a1",
+   "mac_commit": "4bf9b41ae5e603dcfc69829a1d40c63cff57a1a1",
+   "gpu_busy_at_start": false,
+   "mac_peak_memory_gb": "35.1",
+   "mac_verdict": "mac_done",
+   "base": {
+    "doctor": "0",
+    "selftest": "0",
+    "tests": "0"
+   }
+  },
+  {
+   "attempt": 3,
+   "commit": "d1717d6",
+   "parts": "F1 only: a clean Mac run of the F1 part against attempt 2's CUDA golden, which did not change",
+   "verdict": "pass",
+   "mac_commit": "d1717d6abe0d980925adb83731e3e7522efd2f33",
+   "what_changed": "cumlx.compat.bitsandbytes_int8 takes the row scale 127/absmax from a table of CUDA __fdividef values measured on the V100 (validation/bnb-fdividef-sm70.json), where it divided exactly. The limits did not change"
+  }
+ ],
+ "f1": {
+  "target": "A",
+  "attempt_2": {
+   "verdict": "fail",
+   "grade": null,
+   "parts": {
+    "setup": {
+     "state": "pass",
+     "reasons": []
+    },
+    "program_cuda": {
+     "state": "pass",
+     "reasons": [],
+     "text": " Paris. It is the largest city in Europe and the second largest in the world. It is also",
+     "device": "cuda:0"
+    },
+    "program_mac": {
+     "state": "pass",
+     "reasons": [],
+     "text": " Paris. It is the largest city in Europe and the 13th largest in the world.",
+     "device": "mps:0"
+    },
+    "first_token": {
+     "state": "pass",
+     "reasons": [],
+     "equal_tokens": 11,
+     "of": 20
+    },
+    "leaves": {
+     "state": "fail",
+     "reasons": [
+      "model.layers.14.self_attn.o_proj: 0.00248"
+     ],
+     "worst_rel_l2": 0.002476280900743359,
+     "least_equal_fraction": 0.778125
+    },
+    "weights": {
+     "state": "pass",
+     "reasons": [],
+     "most_differ_fraction": 0.00027029854910714287
+    },
+    "layers": {
+     "state": "pass",
+     "reasons": [],
+     "worst_rel_l2": 0.01051892353464962
+    },
+    "attention": {
+     "state": "pass",
+     "reasons": [],
+     "worst_mac": 0.0019010393579898743,
+     "worst_cuda": 0.0019010393579898743
+    },
+    "controls": {
+     "state": "pass",
+     "reasons": []
+    }
+   }
+  },
+  "attempt_3": {
+   "verdict": "pass",
+   "grade": "A",
+   "parts": {
+    "setup": {
+     "state": "pass",
+     "reasons": []
+    },
+    "program_cuda": {
+     "state": "pass",
+     "reasons": [],
+     "text": " Paris. It is the largest city in Europe and the second largest in the world. It is also",
+     "device": "cuda:0"
+    },
+    "program_mac": {
+     "state": "pass",
+     "reasons": [],
+     "text": " Paris. It is the largest city in Europe and the second largest in the world. It is also",
+     "device": "mps:0"
+    },
+    "first_token": {
+     "state": "pass",
+     "reasons": [],
+     "equal_tokens": 20,
+     "of": 20
+    },
+    "leaves": {
+     "state": "pass",
+     "reasons": [],
+     "worst_rel_l2": 1.6515894063119937e-07,
+     "least_equal_fraction": 0.9997767857142857
+    },
+    "weights": {
+     "state": "pass",
+     "reasons": [],
+     "most_differ_fraction": 0.0
+    },
+    "layers": {
+     "state": "pass",
+     "reasons": [],
+     "worst_rel_l2": 0.00011122767875202182
+    },
+    "attention": {
+     "state": "pass",
+     "reasons": [],
+     "worst_mac": 0.0019010393579898743,
+     "worst_cuda": 0.0019010393579898743
+    },
+    "controls": {
+     "state": "pass",
+     "reasons": []
+    }
+   }
+  },
+  "cause_of_attempt_2": "bitsandbytes takes 127/absmax with the approximate __fdividef, 1 ulp from the quotient for 29% of fp16 inputs. Of 840 rows of the 168 int8 layers, 835 were equal to CUDA to the bit; in 4 more, 9 activations within 6e-5 of a rounding half went to the other int8 step; 1 element differed in the bfloat16 outlier sum. One such activation at row 2 of model.layers.14.self_attn.o_proj (-63.500004 on the Mac, -63.499996 on CUDA) moved 58% of that row by one bfloat16 step",
+  "second_prompt": {
+   "what": "A second CUDA golden with the prompt \"Water boils at a lower temperature on a mountain because\", recorded at d1717d6 after the fix, and its replay in a clean Mac run. The rules name one prompt, so this is reported and not judged. Its judge verdict is not_run only because this golden has no CUDA run of the original program",
+   "result": {
+    "verdict": "not_run",
+    "grade": null,
+    "parts": {
+     "setup": {
+      "state": "pass",
+      "reasons": []
+     },
+     "program_cuda": {
+      "state": "not_run",
+      "reasons": []
+     },
+     "program_mac": {
+      "state": "pass",
+      "reasons": [],
+      "text": " Paris. It is the largest city in Europe and the second largest in the world. It is also",
+      "device": "mps:0"
+     },
+     "first_token": {
+      "state": "not_run",
+      "reasons": []
+     },
+     "leaves": {
+      "state": "pass",
+      "reasons": [],
+      "worst_rel_l2": 1.2829069399572774e-05,
+      "least_equal_fraction": 0.99921875
+     },
+     "weights": {
+      "state": "pass",
+      "reasons": [],
+      "most_differ_fraction": 0.0
+     },
+     "layers": {
+      "state": "pass",
+      "reasons": [],
+      "worst_rel_l2": 0.006403208824052737
+     },
+     "attention": {
+      "state": "pass",
+      "reasons": [],
+      "worst_mac": 0.0023569851070686276,
+      "worst_cuda": 0.0023569850847459453
+     },
+     "controls": {
+      "state": "pass",
+      "reasons": []
+     }
+    }
+   }
+  }
+ },
+ "f2": {
+  "target": "B",
+  "verdict": "pass",
+  "grade": "B",
+  "parts": {
+   "setup": {
+    "state": "pass",
+    "reasons": []
+   },
+   "renders_between": {
+    "state": "pass",
+    "reasons": []
+   },
+   "hand_cuda": {
+    "state": "pass",
+    "reasons": []
+   },
+   "hand_mac": {
+    "state": "pass",
+    "reasons": []
+   },
+   "gradients": {
+    "state": "pass",
+    "reasons": []
+   },
+   "controls": {
+    "state": "pass",
+    "reasons": []
+   },
+   "original_program": {
+    "state": "pass",
+    "reasons": [],
+    "device": "cuda"
+   },
+   "training_cuda": {
+    "state": "pass",
+    "reasons": [],
+    "right": [
+     44.04586982727051,
+     44.163944244384766,
+     41.60143804550171,
+     42.518006801605225,
+     45.16692399978638
+    ]
+   },
+   "training_mac": {
+    "state": "pass",
+    "reasons": [],
+    "right": [
+     44.64717197418213,
+     43.30195331573486,
+     40.18167781829834,
+     42.59243726730347,
+     45.007336139678955
+    ]
+   },
+   "equivalence": {
+    "state": "pass",
+    "reasons": [],
+    "mean_candidate": 43.14611530303955,
+    "mean_reference": 43.49923658370972,
+    "difference": -0.353121280670166,
+    "tolerance": 3.2117045889222373
+   },
+   "equivalence_controls": {
+    "state": "pass",
+    "reasons": []
+   }
+  },
+  "numbers": {
+   "renders_between_worst_image_rel_l2": 3.578109940263962e-07,
+   "renders_between_worst_alpha_rel_l2": 1.9986593729968005e-07,
+   "gradients_worst_rel_l2": 2.6091937096305155e-06,
+   "controls_caught": {
+    "quaternion_xyzw": true,
+    "camera_to_world_view_matrix": true,
+    "fx_fy_swapped": true,
+    "half_pixel_shift": true,
+    "no_eps2d": true,
+    "antialiased_for_classic": true,
+    "alpha_clamp_0.99": true,
+    "means_gradient_1.1": true
+   },
+   "training_right_psnr": {
+    "cuda": [
+     44.04586982727051,
+     44.163944244384766,
+     41.60143804550171,
+     42.518006801605225,
+     45.16692399978638
+    ],
+    "mac": [
+     44.64717197418213,
+     43.30195331573486,
+     40.18167781829834,
+     42.59243726730347,
+     45.007336139678955
+    ]
+   },
+   "equivalence": {
+    "mean_candidate": 43.14611530303955,
+    "mean_reference": 43.49923658370972,
+    "difference": -0.353121280670166,
+    "tolerance": 3.2117045889222373
+   },
+   "equivalence_controls": {
+    "wrong_cameras": {
+     "difference": -24.903841638565062,
+     "tolerance": 2.0784017607878673,
+     "within": false
+    },
+    "colors_gradient_zero": {
+     "difference": -11.41508593559265,
+     "tolerance": 2.1752174171120306,
+     "within": false
+    }
+   }
+  }
+ },
+ "f3": {
+  "target": "A",
+  "verdict": "pass",
+  "grade": "A",
+  "parts": {
+   "setup": {
+    "state": "pass",
+    "reasons": []
+   },
+   "translate": {
+    "state": "pass",
+    "reasons": []
+   },
+   "cuda_vs_mac": {
+    "state": "pass",
+    "reasons": [],
+    "masks": 24
+   },
+   "reference": {
+    "state": "pass",
+    "reasons": [],
+    "labels_equal_to_the_bit": true
+   },
+   "controls": {
+    "state": "pass",
+    "reasons": []
+   }
+  }
+ },
+ "f4": {
+  "target": "inference A, physics B",
+  "verdict": "pass",
+  "grade": {
+   "inference": "A",
+   "physics": "B"
+  },
+  "parts": {
+   "train": {
+    "state": "pass",
+    "reasons": []
+   },
+   "commands": {
+    "state": "pass",
+    "reasons": []
+   },
+   "inference": {
+    "state": "pass",
+    "reasons": []
+   },
+   "physics": {
+    "state": "pass",
+    "reasons": []
+   }
+  }
+ },
+ "f5": {
+  "target": "B",
+  "verdict": "pass",
+  "grade": "B",
+  "parts": {
+   "setup": {
+    "state": "pass",
+    "reasons": []
+   },
+   "rgb": {
+    "state": "pass",
+    "reasons": []
+   },
+   "geometry_cuda": {
+    "state": "pass",
+    "reasons": []
+   },
+   "geometry_mac": {
+    "state": "pass",
+    "reasons": []
+   },
+   "geometry_between": {
+    "state": "pass",
+    "reasons": []
+   },
+   "controls": {
+    "state": "pass",
+    "reasons": []
+   }
+  },
+  "mitsuba": {
+   "cuda": "3.8.0",
+   "mac": "3.9.1"
+  }
+ },
+ "grades": {
+  "f1": "A at attempt 3, after a fix that attempt 2's failure showed; attempt 2 is a fail",
+  "f2": "B",
+  "f3": "A",
+  "f4": {
+   "inference": "A",
+   "physics": "B"
+  },
+  "f5": "B"
+ },
+ "ticks_m6_1": false,
+ "why_not_ticked": "The condition of M6-1 names a new Mac, and every part ran on the one Mac that there is. Only the owner can change that condition",
+ "does_not_show": [
+  "Another Mac or another Apple GPU generation",
+  "FlashAttention-2 itself: it needs compute capability 8.0 and the V100 has 7.0, so F1 judges attention against exact attention in float64",
+  "Other GPU generations for the __fdividef table",
+  "Real datasets, densification or spherical harmonics in F2",
+  "Isaac Lab, PhysX or a real robot in F4",
+  "An RTX sensor in F5"
+ ],
+ "independent_recompute": {
+  "what": "spikes/m6_finish_check.py: the key numbers again, from the raw files, with code that imports no judge",
+  "result": {
+   "commits": {
+    "cumlx-m6-cuda/cumlx_commit.txt": "4bf9b41",
+    "cumlx-repro/result-20261106-101702/cumlx_commit.txt": "4bf9b41",
+    "cumlx-m6-cuda/f1/cumlx_commit.txt": "4bf9b41",
+    "cumlx-m6-cuda/f2/cumlx_commit.txt": "4bf9b41",
+    "cumlx-m6-cuda/f3/cumlx_commit.txt": "4bf9b41",
+    "cumlx-m6-cuda/f5/cumlx_commit.txt": "4bf9b41"
+   },
+   "gpu_at_start": [
+    "|    0   N/A  N/A            1350      G   /usr/lib/xorg/Xorg                        4MiB |",
+    "pid, used_gpu_memory [MiB]"
+   ],
+   "mac_peak_gb": "35.1",
+   "base_exits": {
+    "doctor": "0",
+    "selftest": "0",
+    "tests": "0"
+   },
+   "base_tests_tail": "1069 passed, 60 skipped, 78 deselected in 377.05s (0:06:17)",
+   "f2": {
+    "renders_worst_rel_l2": 3.578109940263962e-07,
+    "gradients_worst_rel_l2": 2.6091937096305155e-06,
+    "psnr_mean_cuda": 43.49923658370972,
+    "psnr_mean_mac": 43.14611530303955,
+    "tolerance": 3.211704588922237,
+    "devices": [
+     "cuda",
+     "mps"
+    ]
+   },
+   "f3": {
+    "cuda_mac_reference_all_equal": true,
+    "masks": 24,
+    "components_per_batch": {
+     "labels/32x32": 25,
+     "labels/64x64": 84,
+     "labels/128x96": 232,
+     "labels/256x256": 1151
+    },
+    "faults_differ": {
+     "fault_half_grid": true,
+     "fault_swapped_wh": true,
+     "fault_skip_compression": true
+    },
+    "mac_engine": "woof",
+    "cuda_source_sha256": "926c277e24f4"
+   },
+   "f4": {
+    "101": {
+     "genesis_vs_mujoco": [
+      0.0243,
+      0.0379
+     ],
+     "fault_kp": [
+      0.8879,
+      1.0083
+     ]
+    },
+    "102": {
+     "genesis_vs_mujoco": [
+      0.0236,
+      0.0461
+     ],
+     "fault_kp": [
+      0.8797,
+      1.0238
+     ]
+    },
+    "103": {
+     "genesis_vs_mujoco": [
+      0.0239,
+      0.0389
+     ],
+     "fault_kp": [
+      0.8777,
+      1.0121
+     ]
+    },
+    "speeds": {
+     "fwd": 0.81,
+     "back": -0.864,
+     "stop": 0.0,
+     "zero": 0.001
+    },
+    "mlx_abs_error": {
+     "fwd": 1.6689300537109375e-06,
+     "back": 9.5367431640625e-07,
+     "stop": 4.76837158203125e-07
+    }
+   },
+   "f5": {
+    "worst_psnr_across_db": 45.65,
+    "worst_depth_vs_exact_m": 3.431281096055727e-05,
+    "worst_label_mismatch": 0.0,
+    "box_pixel_fraction_per_view": [
+     0.812,
+     0.75,
+     0.831,
+     0.942,
+     0.905,
+     0.937
+    ]
+   },
+   "f1_attempt3": {
+    "worst_leaf": 1.6515894063119937e-07,
+    "leaves": 168,
+    "cb_differ_max": 0.0,
+    "worst_layer": 0.00011122767875202182,
+    "worst_attention_vs_exact": 0.0019010393579898743,
+    "tokens_equal": 20
+   }
+  }
+ }
+}
