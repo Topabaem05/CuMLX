@@ -25,6 +25,17 @@ credentials, and 10-minute job timeouts. No deployment or PyPI publication occur
   Real checkpoints and Metal run through `scripts/dogfood_real_model.py` on a developer Mac (roadmap L2);
   no workflow runs them yet. See [the validation report](../validation/REPORT.md).
 
+## Rust workflow
+
+The `Rust` workflow (`.github/workflows/rust.yml`) has the same triggers and permissions.
+
+- `cargo fmt --all --check` and `cargo clippy --locked --all-targets -- -D warnings` with Rust 1.99.1.
+- `cargo test --locked` on Ubuntu with Rust 1.99.1 and 1.85.1 (the `rust-version`), and on macOS 15. It includes
+  the comparison with the Python results in `rust/cumlx/tests/data/python-vectors.json`.
+- `parity`: build `cumlx-rs`, install CPU-only PyTorch and MLX CPU, check that the vectors are current
+  (`scripts/rust_vectors.py --check`), and run `tests/test_rust_parity.py --require-rust --require-e2e`. The job
+  fails on any skipped test and stores the JUnit report.
+
 ## Physical GPU tests (separate, manual)
 
 Register a trusted self-hosted runner with its physical-backend label `metal` or

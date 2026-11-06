@@ -10,3 +10,6 @@ build/
 dist/
 benchmark*.json
 ci-results/
+
+# Rust build output
+rust/target/

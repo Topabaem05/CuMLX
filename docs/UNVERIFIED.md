@@ -15,6 +15,12 @@
 - 다른 Mac에서 처음부터 재현한 적이 없습니다. 같은 Mac에서는 빈 환경으로 F3, F4, F5의 규칙 범위가 통과했지만([기록](../validation/m6-same-mac-run.json)), macOS, Metal 드라이버, GPU가 같으므로 다른 칩이나 macOS 버전의 결과가 아닙니다. macOS 27.2 VM에서는 공개 저장소 설치와 GPU 없는 부분만 통과했습니다([기록](../validation/m6-vm-run.json)). VM의 `Apple Paravirtual device`는 `apple5`와 `mac2`까지만 지원해 PyTorch MPS, Genesis Metal, Mitsuba Metal이 거부하므로, F3, F4, F5는 VM에서 검증할 수 없습니다. Tart는 돌리지 않았고, 같은 프레임워크라 같은 제약이 예상될 뿐 측정하지는 않았습니다.
 - `cumlx doctor --stack`은 패키지와 장치가 있는지만 봅니다. nvcc와 NVIDIA 장비는 찾지 않고, Genesis, warp-metal, 번역기는 import하지 않습니다.
 
+## Rust 코어 (`cumlx-rs`)
+
+- Python과 같다는 비교는 작은 입력에서만 했습니다. 합성 trace, selftest의 tiny Llama, 작은 Llama, Mixtral, Qwen3 MoE 체크포인트입니다. 실제 크기의 체크포인트와 큰 trace는 Rust로 돌리지 않았고, 속도와 메모리도 재지 않았습니다.
+- `weights`는 포팅본 파일을 저장된 그대로 읽습니다. mlx-lm이 그 포팅본을 로드하는지는 보지 않고, 양자화 포팅본은 비교하지 않고 거부합니다.
+- Windows에서는 빌드하거나 실행하지 않았습니다. CI는 Ubuntu와 macOS에서 돌립니다.
+
 ## 모델 검증기
 
 - V100 기준은 모델 하나와 V100 한 대입니다. 다른 NVIDIA 세대와 `torch.backends.cuda.matmul.allow_tf32=True`는 측정하지 않았습니다. `validation/cuda-golden-v100.json`

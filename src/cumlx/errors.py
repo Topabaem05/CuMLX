@@ -36,6 +36,7 @@ ERROR_CODES: dict[str, tuple[ExitCode, str]] = {
     'E_OUTPUT_EXISTS': (ExitCode.USAGE, 'Output path already exists; pass --overwrite to replace it.'),
     'E_DEP_MISSING': (ExitCode.ENVIRONMENT, 'An optional Python dependency is not installed.'),
     'E_BACKEND_UNAVAILABLE': (ExitCode.ENVIRONMENT, 'The requested compute backend is not available.'),
+    'E_PYTHON_ONLY': (ExitCode.ENVIRONMENT, 'Only the Python cumlx runs this command or option; cumlx-rs (Rust) does not. errors[].hint gives the Python command.'),
     'E_INPUT_NOT_FOUND': (ExitCode.INPUT, 'An input path does not exist.'),
     'E_INPUT_INVALID': (ExitCode.INPUT, 'An input file is corrupt or does not match its schema.'),
     'E_MODEL_LOAD': (ExitCode.INPUT, 'The model could not be loaded.'),

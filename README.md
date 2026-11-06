@@ -107,6 +107,18 @@ assert report['verdict'] == 'ok', report
 
 `ok`만 통과합니다. 불일치와 `incomplete`는 job을 실패시키고, job summary에 처음 달라진 모듈이 표시됩니다. [예제](examples/port-ci/)가 있고, `scripts/create_example_repo.sh`는 이를 별도 저장소로 만듭니다.
 
+### Rust에서 쓴다
+
+torch와 MLX가 필요 없는 부분은 Rust로도 있습니다. [rust/](rust/README.md)의 `cumlx-rs`는 `tracediff`와 `weights`를 실행하고, 같은 JSON 문서(`cumlx.result.v1`), 같은 종료 코드와 오류 코드를 냅니다. 라이브러리 crate `cumlx`는 trace 형식, safetensors, 지표와 임계값 profile을 Rust에서 쓰게 합니다.
+
+```bash
+cargo build --release --manifest-path rust/Cargo.toml
+rust/target/release/cumlx-rs tracediff golden-cuda/ golden-cpu/
+rust/target/release/cumlx-rs weights ./original ./port-mlx
+```
+
+`capture`, `diff`, `run`, `kernel` 같은 나머지 명령은 실행하지 않고 종료 코드 3과 `E_PYTHON_ONLY`로 끝나며, `hint`에 Python `cumlx` 명령을 적습니다. `weights`는 양자화하지 않은 로컬 포팅본만 읽고, 양자화한 포팅본은 거부합니다. 두 구현이 같은 입력에서 같은 판정과 1e-12 이내의 같은 숫자를 내는지 [tests/test_rust_parity.py](tests/test_rust_parity.py)가 확인합니다.
+
 ### AI 에이전트에게 맡긴다
 
 CLI는 stdout에 JSON 문서 하나만 내보내고, 오류마다 해결 명령을 붙이고, 다음 명령을 제안합니다. `cumlx-mcp`는 같은 명령을 MCP 도구로 제공합니다. [에이전트 스킬](skills/cumlx-verifier/SKILL.md)과 [AGENTS.md](AGENTS.md)를 보십시오.
@@ -173,5 +185,6 @@ Isaac Sim과 Isaac Lab의 Mac 작업은 라이선스 조건 때문에 오픈소�
 | [1개월 로드맵](docs/ROADMAP-1MONTH.md) | 검증기 마일스톤 진행 상태 |
 | [FP4 커널 lab](docs/FP4-KERNEL-LAB.md) | 실험용 NVFP4/MXFP4 Metal·CUDA 커널 |
 | [CI](docs/CI.md) | 자동 검사와 GPU 검증 경계 |
+| [Rust 코어](rust/README.md) | `cumlx-rs`: 옮긴 것, 옮기지 않은 것, Python과 같다는 증명 |
 
 CUMLX는 Apple 또는 NVIDIA의 공식 프로젝트가 아닙니다. MIT 라이선스입니다.
