@@ -50,6 +50,9 @@ def load_port(path: str, loader: str = 'mlx_lm'):
         except ImportError:
             raise missing_dependency('mlx_lm', 'diff', purpose='loading mlx-lm ports') from None
         p = Path(path)
+        if not p.exists() and str(path).startswith(('/', '.', '~')):  # a local path, not a Hub id
+            raise CumlxError('E_INPUT_NOT_FOUND', f'MLX port directory not found: {path}',
+                             hint='pass an existing directory, or a Hugging Face id such as mlx-community/<name>')
         try:
             if not p.exists():
                 p = Path(mlx_lm_utils.snapshot_download(path))
@@ -223,6 +226,47 @@ def replay_experts(module, x, indices, scores):
     """Run MoE experts with the golden routing and combine them as the original does."""
     y = module(x[None], indices[None])
     return (y * scores[None, ..., None]).sum(axis=-2)
+
+
+# Mixtral names its expert projections w1 (gate), w3 (up), w2 (down) in transformers 4.
+EXPERT_PROJ = {'w1': 'gate_proj', 'w3': 'up_proj', 'w2': 'down_proj'}
+_ONE_EXPERT = re.compile(r'^(.*\.switch_mlp)\.(\d+)(?:\.(\w+))?$')
+
+
+def expert_target(name: str, mods: dict) -> tuple[str, int, str | None] | None:
+    """Resolve one expert of a transformers 4 ``ModuleList`` to the port's stacked experts.
+
+    ``name`` is already mapped, so ``mlp.experts.3.up_proj`` reads ``mlp.switch_mlp.3.up_proj``. Returns
+    (switch module name, expert index, projection or None for the whole expert), or None if the port has no such
+    expert. The port stacks every expert in one ``switch_mlp``, so expert 3 is index 3 of each stacked weight.
+    """
+    m = _ONE_EXPERT.match(name)
+    if not m or m.group(1) not in mods:
+        return None
+    switch, index, proj = m.group(1), int(m.group(2)), m.group(3)
+    if proj is not None:
+        proj = EXPERT_PROJ.get(proj, proj)
+        if f'{switch}.{proj}' not in mods:
+            return None
+    linear = mods.get(f'{switch}.{proj or "gate_proj"}')
+    count = getattr(linear, 'num_experts', None)
+    if count is None or index >= count:
+        return None
+    return switch, index, proj
+
+
+def replay_one_expert(mods: dict, target: tuple[str, int, str | None], x):
+    """Run expert ``index`` alone on the tokens the original routed to it, without a routing weight.
+
+    A transformers 4 expert returns its output before the routing weight is applied, so the comparison is exact.
+    """
+    mx, _ = mlx()
+    switch, index, proj = target
+    indices = mx.full((*x.shape[:-1], 1), index, dtype=mx.uint32)
+    if proj is None:
+        return replay_experts(mods[switch], x, indices, mx.ones(indices.shape, dtype=x.dtype))
+    y = mods[f'{switch}.{proj}'](mx.expand_dims(x, (-2, -3)), indices)  # the layout SwitchGLU passes
+    return y.reshape(*x.shape[:-1], y.shape[-1])
 
 
 NO_RECORDED_MASK = object()

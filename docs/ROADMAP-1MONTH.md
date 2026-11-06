@@ -21,6 +21,8 @@
 | W2 | 양자화 기대 오차 oracle | ✅ | `--weights-from-mlx`. 모든 dtype에 임계값 1e-4 |
 | W2 | 정적 가중치 diff | ✅ | `cumlx weights`. 0.5B 모델 약 3.3초 |
 | W2 | MoE | ✅ | 라우터·expert 분리 판정, expert별 scale, F9. 작은 Mixtral 공개 모델 2개와 tiny random 모델. 대형 MoE는 미실행 |
+| W2 보강 | transformers 4 expert별 `ModuleList` 재생 | ✅ (2026-11-03) | 이전에는 `unverified`. tiny Qwen3-MoE·Mixtral(transformers 4.57.6)에서 커버리지 100%, 한 expert 결함과 F4·F9·F10 지목. CI가 transformers 4를 별도 디렉터리에 설치해 실행 |
+| W2 보강 | 학습된 실제 MoE (Granite 3.1 1B-A400M) | ⏳ 중단 | 체크포인트 다운로드와 `weights`까지 실행: 218개 중 170 통과, 48 `unverified`(라우터와 expert의 모듈 경계 차이로 추정, 원인 미확인). capture·diff는 하지 않음 |
 | W2 | 임계값 보정 | ✅ | 깨끗한 포팅 10종 측정. 실행별 중앙값 기반 |
 | W3 | 공개 포팅본 3~5개 | ✅ | 10개 실행, 9개 ok, 1개 로드 불가. Dory NVFP4 repack 비교 |
 | W3 | `conform --checkpoint` | ✅ | 실제 Dory NVFP4, 텐서 288개 일치 |
