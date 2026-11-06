@@ -48,6 +48,21 @@ def test_it_retries_a_busy_gpu_runs_both_sides_and_judges_five(box):
     assert "all: pass" in summary and summary.count(": pass") == 6
 
 
+def test_a_run_that_ended_before_the_launcher_looked_is_still_fetched(box):
+    tmp, env, log = box
+    v100 = stub(tmp / "v100.sh", f'echo "v100 $*" >> "{log}"\n[ "$1" = start ] && exit 1\n[ "$1" = fetch ] && mkdir -p "{tmp / 'cuda'}/f1"\nexit 0\n')
+    assert run({**env, "CUMLX_FINISH_V100": str(v100)}).returncode == 0
+    assert "v100 fetch" in log.read_text()
+
+
+def test_a_run_that_died_is_not_waited_for_forever(box):
+    tmp, env, log = box
+    v100 = stub(tmp / "v100.sh", f'echo "v100 $*" >> "{log}"\n[ "$1" = start ] && exit 0\n[ "$1" = status ] && {{ echo "not running"; exit 5; }}\nexit 0\n')
+    done = run({**env, "CUMLX_FINISH_V100": str(v100)})
+    assert done.returncode == 0
+    assert "v100 fetch" not in log.read_text() and "ended without finishing" in done.stdout
+
+
 def test_one_failed_judge_is_not_a_pass(box):
     tmp, env, _ = box
     assert run(env, JUDGE_EXIT="1").returncode == 0

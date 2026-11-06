@@ -12,7 +12,6 @@ centre in float64 from spikes/m5_lidar.py's ray tests. spikes/m6_f5_judge.py com
 from __future__ import annotations
 
 import argparse
-import copy
 import json
 from pathlib import Path
 import sys
@@ -64,7 +63,10 @@ def main() -> int:
             rgb = Sensors(scene, args.variant, camera)
             for seed in seeds:
                 arrays[f'rgb/{key}/{seed}'] = rgb.rgb(spp=SPP, seed=seed)
-            centred = copy.deepcopy(scene)
+            # A new dict, because Mitsuba 3.8's transforms cannot be deep-copied (attempt 1, 2026-11-06).
+            centred = box_scene(mi, camera, HALF, placed)
+            if args.fault == 'light_2pct':
+                centred['light']['radiance']['value'] = [0.8 * 1.02] * 3
             centred['sensor']['sampler'] = {'type': 'stratified', 'sample_count': 1, 'jitter': False}
             sensor = Sensors(centred, args.variant, camera)
             depth, segmentation = sensor.depth_segmentation(seed=0)

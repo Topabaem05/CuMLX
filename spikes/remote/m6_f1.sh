@@ -12,9 +12,12 @@ stage "install transformers 5.22.1, accelerate 1.15.0 and bitsandbytes 0.50.2"
 rm -rf "$WORK/pkgs"
 printf 'transformers==5.22.1\naccelerate==1.15.0\nbitsandbytes==0.50.2\n' > "$WORK/req.in"
 # torch and what it needs are the machine's own, so the resolved list leaves them out.
-{ uv pip compile -q --python python3 "$WORK/req.in" -o "$WORK/req.txt" &&
+# uv's --python python3 can find a Python that uv manages, of another version, so the path is the one that runs the parts below.
+PY=$(command -v python3)
+{ echo "python: $PY $("$PY" --version 2>&1)" &&
+  uv pip compile -q --python "$PY" "$WORK/req.in" -o "$WORK/req.txt" &&
   grep -viE '^(torch|nvidia-|triton|numpy|sympy|mpmath|networkx|jinja2|markupsafe|setuptools|typing-extensions|cuda-)' "$WORK/req.txt" > "$WORK/req-no-torch.txt" &&
-  uv pip install -q --python python3 --target "$WORK/pkgs" --no-deps -r "$WORK/req-no-torch.txt"; } > "$OUT/install.txt" 2>&1
+  uv pip install -q --python "$PY" --target "$WORK/pkgs" --no-deps -r "$WORK/req-no-torch.txt"; } > "$OUT/install.txt" 2>&1
 echo $? > "$OUT/install.exit"
 cp "$WORK/req.txt" "$OUT/req.txt" 2>/dev/null
 python3 -c 'import torch, transformers, accelerate, bitsandbytes, json; print(json.dumps({"torch": torch.__version__, "cuda": torch.version.cuda, "transformers": transformers.__version__, "accelerate": accelerate.__version__, "bitsandbytes": bitsandbytes.__version__, "gpu": torch.cuda.get_device_name(0), "capability": torch.cuda.get_device_capability(0)}))' > "$OUT/versions.json" 2>> "$OUT/install.txt"

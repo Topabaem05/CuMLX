@@ -3,8 +3,12 @@
 #   bash m6_f3.sh REPO OUT WORK
 REPO=$1 OUT=$2 WORK=$3
 mkdir -p "$OUT" "$WORK"
-export TORCH_EXTENSIONS_DIR=$WORK/torch_extensions TORCH_CUDA_ARCH_LIST=7.0 PYTHONUNBUFFERED=1 PYTHONPATH=$REPO/src
+export TORCH_EXTENSIONS_DIR=$WORK/torch_extensions TORCH_CUDA_ARCH_LIST=7.0 PYTHONUNBUFFERED=1 PYTHONPATH=$REPO/src PATH=$WORK/pkgs/bin:$PATH
 stage() { echo "[$(date +%H:%M:%S)] f3: $1"; echo "f3: $1" > "$OUT/stage.txt"; }
+stage "install ninja, which torch's extension build needs"
+rm -rf "$WORK/pkgs"
+uv pip install -q --python "$(command -v python3)" --target "$WORK/pkgs" --no-deps ninja > "$OUT/install.txt" 2>&1
+echo $? > "$OUT/install.exit"
 stage "fetch sam2's file at its pinned commit"
 python3 "$REPO/spikes/m6_f3_app.py" fetch --out "$WORK/src" > "$OUT/fetch.json" 2> "$OUT/fetch.txt"
 echo $? > "$OUT/fetch.exit"

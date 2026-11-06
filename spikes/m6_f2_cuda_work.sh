@@ -8,7 +8,7 @@ OUT=${1:?the result folder}
 METALSPLAT=84e8c3a433f71c107e9387d3f72a765436c11f6e
 ADAPTER=cumlx.compat.gsplat_metalsplat
 WORK=$HOME/f2cuda
-mkdir -p "$WORK"
+mkdir -p "$OUT" "$WORK"
 say() { echo "[$(date +%H:%M:%S)] $1"; }
 
 say "installing metalsplat"

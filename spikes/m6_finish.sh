@@ -106,13 +106,22 @@ while :; do
     sleep "$POLL"
     waited=$((waited + POLL))
 done
-if [ "$code" = 0 ]; then
+# Exit 1 can also mean that the run ended before the launcher looked, so both codes follow the run on the GPU machine.
+if [ "$code" = 0 ] || [ "$code" = 1 ]; then
     say "the V100 run is going"
-    until sh "$V100" status >/dev/null 2>&1; do
+    while :; do
+        state=$(sh "$V100" status 2>&1)
+        if [ $? = 0 ]; then
+            sh "$V100" fetch
+            say "the V100 run is done, and its results are in $CUDA_DIR"
+            break
+        fi
+        if echo "$state" | grep -q '^not running'; then
+            say "the V100 run ended without finishing: $(echo "$state" | tr '\n' ' ')"
+            break
+        fi
         sleep 120
     done
-    sh "$V100" fetch
-    say "the V100 run is done, and its results are in $CUDA_DIR"
 fi
 
 say "waiting for the Mac run"

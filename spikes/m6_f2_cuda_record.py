@@ -8,6 +8,9 @@ On the V100 that is gsplat itself. On a Mac it is the adapter, through cumlx run
     CUMLX_F2_FAULT=no_eps2d cumlx run spikes/m6_f2_cuda_record.py --substitute gsplat=m6_f2_fault_gsplat -- --output fault.npz
 
 It has no Mac-specific line. The rules are in validation/m6-f2-cuda-limits.json, and spikes/m6_f2_cuda_judge.py compares two outputs.
+
+It passes packed=False, which chooses gsplat's memory layout and not its result. gsplat 1.5.3 with the default packed=True takes the image
+size from the packed means2d in rasterize_to_pixels, and so rejects the [C, 3] backgrounds that its own docstring asks for (attempt 1, 2026-11-06).
 """
 from __future__ import annotations
 
@@ -89,7 +92,7 @@ def draw(scene: dict, leaves: dict[str, torch.Tensor] | None = None):
     backgrounds = None if scene.get('background') is None else tensor(scene['background'])[None]
     image, alpha, _ = gsplat.rasterization(values['means'], values['quats'], values['scales'], values['opacities'], values['colors'], tensor(scene['viewmat'])[None], tensor(scene['K'])[None],
                                            scene['width'], scene['height'], near_plane=scene.get('near_plane', 0.01), far_plane=scene.get('far_plane', 1e10), backgrounds=backgrounds,
-                                           rasterize_mode='antialiased' if scene.get('antialiased') else 'classic')
+                                           rasterize_mode='antialiased' if scene.get('antialiased') else 'classic', packed=False)
     return image, alpha
 
 

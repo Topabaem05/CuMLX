@@ -7,7 +7,8 @@ export PYTHONPATH=$WORK/pkgs PATH=$WORK/pkgs/bin:$PATH TORCH_EXTENSIONS_DIR=$WOR
 stage() { echo "[$(date +%H:%M:%S)] f2: $1"; echo "f2: $1" > "$OUT/stage.txt"; }
 stage "install gsplat 1.5.3"
 rm -rf "$WORK/pkgs" "$WORK/torch_extensions"
-uv pip install -q --python python3 --target "$WORK/pkgs" --no-deps gsplat==1.5.3 ninja jaxtyping wadler-lindig > "$OUT/install.txt" 2>&1
+# uv's --python python3 can find a Python that uv manages, of another version, so the path is the one that runs the parts below.
+uv pip install -q --python "$(command -v python3)" --target "$WORK/pkgs" --no-deps gsplat==1.5.3 ninja jaxtyping wadler-lindig > "$OUT/install.txt" 2>&1
 echo $? > "$OUT/install.exit"
 python3 -c 'import torch, numpy, gsplat, json; print(json.dumps({"torch": torch.__version__, "cuda": torch.version.cuda, "numpy": numpy.__version__, "gsplat": gsplat.__version__, "gpu": torch.cuda.get_device_name(0)}))' > "$OUT/versions.json" 2>> "$OUT/install.txt"
 stage "build gsplat's CUDA code"

@@ -81,7 +81,8 @@ nvidia-smi --query-compute-apps=pid,used_memory --format=csv > out/machine_end.t
 echo done > out/stage.txt
 date -u +%Y-%m-%dT%H:%M:%SZ > out/done.txt
 EOF
-ssh "$HOST" "bash -lc 'cd $REMOTE && nohup bash run.sh > run.log 2>&1 < /dev/null & echo \$! > $REMOTE/run.pid'" || exit 3
+# The redirection is on the whole background job, so that it holds none of ssh's streams and ssh returns at once.
+ssh "$HOST" "bash -lc '(cd $REMOTE && exec nohup bash run.sh) > $REMOTE/run.log 2>&1 < /dev/null & echo \$! > $REMOTE/run.pid'" || exit 3
 sleep 2
 if ! ssh "$HOST" "kill -0 \$(cat $REMOTE/run.pid) 2>/dev/null"; then
     echo "error: the run stopped at once:" >&2

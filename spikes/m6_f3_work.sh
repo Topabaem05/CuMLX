@@ -11,11 +11,14 @@ say() { echo "[$(date +%H:%M:%S)] f3: $1"; }
 
 say "installing metal-woof 1.1.5.2 in its own environment"
 uv venv -q --python 3.12 "$WORK/venv" >"$OUT/install.txt" 2>&1
-uv pip install -q --python "$WORK/venv/bin/python" -e . metal-woof==1.1.5.2 'libclang>=18.1' 'mlx>=0.29' 'nanobind>=3.0,<3.2' >>"$OUT/install.txt" 2>&1
+# woof builds its Metal launcher with cmake, which this run's PATH lacks, so the environment has its own.
+uv pip install -q --python "$WORK/venv/bin/python" -e . metal-woof==1.1.5.2 'libclang>=18.1' 'mlx>=0.29' 'nanobind>=3.0,<3.2' cmake >>"$OUT/install.txt" 2>&1
 echo "$?" >"$OUT/install.exit"
 [ "$(cat "$OUT/install.exit")" = 0 ] || exit 0
 uv pip freeze --python "$WORK/venv/bin/python" >"$OUT/freeze.txt" 2>&1
 PY=$WORK/venv/bin/python
+PATH=$WORK/venv/bin:$PATH
+export PATH
 say "fetch sam2's file at its pinned commit"
 "$PY" spikes/m6_f3_app.py fetch --out "$WORK/src" >"$OUT/fetch.json" 2>"$OUT/fetch.txt"
 echo "$?" >"$OUT/fetch.exit"
