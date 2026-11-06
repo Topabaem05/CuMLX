@@ -80,14 +80,36 @@ def test_a_run_that_ended_before_the_launcher_looked_is_still_fetched(box):
     assert "v100 fetch" in log.read_text() and "all: pass" in summary(tmp)
 
 
-def test_a_run_that_died_is_not_waited_for_forever_and_the_mac_hears_of_it(box):
+def test_a_run_that_died_is_fetched_as_incomplete_and_is_not_a_pass(box):
     tmp, env, log = box
     v100 = v100_stub(tmp, log, start="exit 0", status='echo "not running"; exit 5')
     done = run({**env, "CUMLX_FINISH_V100": str(v100)})
-    assert done.returncode == 0 and "ended without finishing" in done.stdout
-    assert "v100 fetch" not in log.read_text()
+    assert done.returncode == 0 and "did not finish" in done.stdout
+    assert "v100 fetch --incomplete" in log.read_text()
+    assert (tmp / "finish" / "cuda_ready.txt").read_text().strip() == "incomplete"
+    assert "cuda: incomplete" in summary(tmp) and "all: not a pass" in summary(tmp)
+
+
+def test_a_run_that_died_with_nothing_to_fetch_tells_the_mac_so(box):
+    tmp, env, log = box
+    v100 = stub(tmp / "v100c.sh", f'echo "v100 $*" >> "{log}"\n[ "$1" = status ] && {{ echo "not running"; exit 5; }}\n[ "$1" = fetch ] && exit 1\nexit 0\n')
+    done = run({**env, "CUMLX_FINISH_V100": str(v100)})
+    assert done.returncode == 0
+    assert log.read_text().count("v100 fetch --incomplete") == 5
     assert (tmp / "finish" / "cuda_ready.txt").read_text().strip() == "none"
-    assert "cuda: no results" in summary(tmp) and "all: not a pass" in summary(tmp)
+    assert "cuda: none" in summary(tmp)
+
+
+def test_a_gpu_taken_before_the_run_began_is_waited_for_again(box):
+    tmp, env, log = box
+    cuda = tmp / "cuda"
+    v100 = stub(tmp / "v100d.sh", f'echo "v100 $*" >> "{log}"\n'
+                                  f'if [ "$1" = fetch ]; then mkdir -p "{cuda}/f1" && echo abc123 > "{cuda}/cumlx_commit.txt"; '
+                                  f'[ "$(grep -c "v100 fetch" "{log}")" = 1 ] && echo 4242 > "{cuda}/busy_at_start.txt"; fi\nexit 0\n')
+    done = run({**env, "CUMLX_FINISH_V100": str(v100)})
+    assert done.returncode == 0
+    assert log.read_text().count("v100 start") == 2 and (tmp / "cuda.busy-1" / "busy_at_start.txt").exists()
+    assert "all: pass" in summary(tmp)
 
 
 def test_results_of_another_commit_are_not_a_pass(box):
@@ -124,7 +146,9 @@ def test_start_refuses_earlier_cuda_results(box):
 def test_the_v100_launcher_pins_the_commit_fetches_in_one_step_and_checks_the_gpu_again():
     text = (REPO / "spikes" / "m6_cuda_v100.sh").read_text()
     assert 'git -C "$GIT_REPO" archive "$COMMIT"' in text and "CUMLX_V100_COMMIT" in text
-    assert 'tar -x -C "$LOCAL.partial"' in text and 'mv "$LOCAL.partial" "$LOCAL"' in text
+    assert '>"$LOCAL.partial.tar" ||' in text and 'tar -x -f "$LOCAL.partial.tar"' in text and 'mv "$LOCAL.partial" "$LOCAL"' in text
+    assert "ServerAliveInterval" in text and 'ssh "$HOST"' not in text.replace('ssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=60 -o ServerAliveCountMax=5 "$HOST"', '')
+    assert 'grep -q busy_at_start $REMOTE/run.sh' in text and "$REMOTE/run.sh &&" in text
     assert "busy_at_start.txt" in text
     assert "(cd $REMOTE && exec nohup bash run.sh) > $REMOTE/run.log 2>&1 < /dev/null &" in text
 
@@ -132,3 +156,29 @@ def test_the_v100_launcher_pins_the_commit_fetches_in_one_step_and_checks_the_gp
 def test_the_f1_part_waits_for_the_ready_marker_not_for_a_file_of_the_golden():
     text = (REPO / "spikes" / "m6_f1_work.sh").read_text()
     assert 'while [ -n "$READY" ] && [ ! -f "$READY" ]' in text and "CUMLX_F1_READY" in text
+
+
+@pytest.mark.parametrize("copy, want_exit", [("exit 255", 1), ("tar -c -C {src} f1", 1), ("tar -c -C {src} .", 0)], ids=["ssh_fails", "short_copy", "whole_copy"])
+def test_the_real_fetch_fails_when_the_copy_fails_or_is_short(tmp_path, copy, want_exit):
+    # The stub answers each remote command by its text and never runs that text. It must come first on PATH.
+    src = tmp_path / "remote_out"
+    (src / "f1").mkdir(parents=True)
+    (src / "f1" / "a.txt").write_text("a")
+    (src / "cumlx_commit.txt").write_text("abc123")
+    (src / "done.txt").write_text("done")
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    stub(bin_dir / "ssh", 'last=""; for a in "$@"; do last=$a; done\n'
+                          'case "$last" in\n'
+                          '  *"test -f"*) exit 0 ;;\n'
+                          f'  *"find . -type f"*) echo 3 ;;\n'
+                          f'  *"tar -c ."*) {copy.format(src=src)} ;;\n'
+                          '  *) exit 9 ;;\n'
+                          'esac\n')
+    env = {**os.environ, "PATH": f"{bin_dir}:{os.environ['PATH']}", "CUMLX_GPU_HOST": "stub-host", "CUMLX_M6_CUDA": str(tmp_path / "cuda")}
+    assert subprocess.run(["sh", "-c", "command -v ssh"], env=env, capture_output=True, text=True).stdout.strip() == str(bin_dir / "ssh")
+    done = subprocess.run(["sh", str(REPO / "spikes" / "m6_cuda_v100.sh"), "fetch"], env=env, capture_output=True, text=True, timeout=60, check=False)
+    assert done.returncode == want_exit, done.stdout + done.stderr
+    assert (tmp_path / "cuda").exists() == (want_exit == 0)
+    if want_exit == 0:
+        assert (tmp_path / "cuda" / "f1" / "a.txt").read_text() == "a"

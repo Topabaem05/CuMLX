@@ -25,16 +25,21 @@ REPO=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 # spikes/m6_finish.sh runs a snapshot of this script, so the git checkout and the commit can be given.
 GIT_REPO=${CUMLX_V100_GIT:-$REPO}
 LOCAL=${CUMLX_M6_CUDA:-$HOME/cumlx-m6-cuda}
+# No prompt, a limit on connecting, and keepalives, so that a dead link fails in minutes and not after TCP's two hours.
+rssh() { ssh -o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=60 -o ServerAliveCountMax=5 "$HOST" "$@"; }
 
 case "${1:-start}" in
 status)
-    ssh "$HOST" "if [ -f $REMOTE/run.pid ] && kill -0 \$(cat $REMOTE/run.pid) 2>/dev/null; then echo running; else echo not running; fi; cat $REMOTE/out/stage.txt 2>/dev/null; test -f $REMOTE/out/done.txt && echo done"
-    ssh "$HOST" "test -f $REMOTE/out/done.txt"
+    rssh "if [ -f $REMOTE/run.pid ] && kill -0 \$(cat $REMOTE/run.pid) 2>/dev/null; then echo running; else echo not running; fi; cat $REMOTE/out/stage.txt 2>/dev/null; test -f $REMOTE/out/done.txt && echo done"
+    rssh "test -f $REMOTE/out/done.txt"
     [ $? = 0 ] && exit 0
     exit 5
     ;;
 fetch)
-    if ! ssh "$HOST" "test -f $REMOTE/out/done.txt"; then
+    # fetch --incomplete takes what a run that did not finish left, and marks it with incomplete.txt.
+    INCOMPLETE=no
+    [ "${2:-}" = --incomplete ] && INCOMPLETE=yes
+    if [ "$INCOMPLETE" = no ] && ! rssh "test -f $REMOTE/out/done.txt"; then
         echo "error: $HOST has no finished results yet" >&2
         exit 1
     fi
@@ -42,11 +47,25 @@ fetch)
         echo "error: $LOCAL exists" >&2
         exit 4
     fi
-    # Into a side folder first, and then one rename, so that nothing reads a half-copied result.
-    rm -rf "$LOCAL.partial"
+    # A file first, so that a failed ssh is a failed fetch (a pipe would report the local tar), then a side folder, then one rename.
+    rm -rf "$LOCAL.partial" "$LOCAL.partial.tar"
+    expected=$(rssh "cd $REMOTE/out && find . -type f | wc -l") || { echo "error: could not list the results on $HOST" >&2; exit 1; }
+    rssh "cd $REMOTE/out && tar -c ." >"$LOCAL.partial.tar" || { rm -f "$LOCAL.partial.tar"; echo "error: the copy from $HOST failed" >&2; exit 1; }
     mkdir -p "$LOCAL.partial"
-    ssh "$HOST" "cd $REMOTE/out && tar -c ." | tar -x -C "$LOCAL.partial" || exit 1
+    tar -x -f "$LOCAL.partial.tar" -C "$LOCAL.partial" || { echo "error: the copy from $HOST is not a whole archive" >&2; exit 1; }
+    found=$(cd "$LOCAL.partial" && find . -type f | wc -l)
+    if [ "$INCOMPLETE" = no ] && [ "$(echo $found)" != "$(echo $expected)" ]; then
+        echo "error: $found files arrived, and $HOST has $expected" >&2
+        exit 1
+    fi
+    [ -f "$LOCAL.partial/cumlx_commit.txt" ] || { echo "error: the copy has no cumlx_commit.txt" >&2; exit 1; }
+    if [ "$INCOMPLETE" = yes ]; then
+        date -u +%Y-%m-%dT%H:%M:%SZ >"$LOCAL.partial/incomplete.txt"
+    else
+        [ -f "$LOCAL.partial/done.txt" ] || { echo "error: the copy has no done.txt" >&2; exit 1; }
+    fi
     mv "$LOCAL.partial" "$LOCAL" || exit 1
+    rm -f "$LOCAL.partial.tar"
     echo "Copied to $LOCAL"
     exit 0
     ;;
@@ -61,7 +80,7 @@ PARTS=${2:-f1 f2 f3 f5}
 for part in $PARTS; do
     [ -f "$REPO/spikes/remote/m6_$part.sh" ] || { echo "error: no part $part (spikes/remote/m6_$part.sh)" >&2; exit 2; }
 done
-BUSY=$(ssh "$HOST" "nvidia-smi --query-compute-apps=pid --format=csv,noheader") || {
+BUSY=$(rssh "nvidia-smi --query-compute-apps=pid --format=csv,noheader") || {
     echo "error: could not reach $HOST or read its GPU" >&2
     exit 3
 }
@@ -69,15 +88,15 @@ if [ -n "$BUSY" ]; then
     echo "error: another process is on the GPU on $HOST, pid $BUSY. Nothing was started." >&2
     exit 3
 fi
-if ssh "$HOST" "test -f $REMOTE/run.pid && kill -0 \$(cat $REMOTE/run.pid) 2>/dev/null"; then
+if rssh "test -f $REMOTE/run.pid && kill -0 \$(cat $REMOTE/run.pid) 2>/dev/null"; then
     echo "error: a run is going on $HOST" >&2
     exit 4
 fi
 COMMIT=${CUMLX_V100_COMMIT:-$(git -C "$GIT_REPO" rev-parse HEAD)}
-ssh "$HOST" "rm -rf $REMOTE/CuMLX $REMOTE/out && mkdir -p $REMOTE/CuMLX $REMOTE/out $REMOTE/work" || exit 3
-git -C "$GIT_REPO" archive "$COMMIT" spikes src/cumlx ':(glob)validation/m6-*.json' validation/kernel-cases-m3 | ssh "$HOST" "tar -x -C $REMOTE/CuMLX" || exit 3
-echo "$COMMIT" | ssh "$HOST" "cat > $REMOTE/out/cumlx_commit.txt" || exit 3
-ssh "$HOST" "cat > $REMOTE/run.sh" <<EOF
+rssh "rm -rf $REMOTE/CuMLX $REMOTE/out $REMOTE/run.sh && mkdir -p $REMOTE/CuMLX $REMOTE/out $REMOTE/work" || exit 3
+git -C "$GIT_REPO" archive "$COMMIT" spikes src/cumlx ':(glob)validation/m6-*.json' validation/kernel-cases-m3 | rssh "tar -x -C $REMOTE/CuMLX" || exit 3
+echo "$COMMIT" | rssh "cat > $REMOTE/out/cumlx_commit.txt" || exit 3
+rssh "cat > $REMOTE/run.sh" <<EOF || exit 3
 #!/bin/bash
 cd "\$(dirname "\$0")"
 { nvidia-smi; nvidia-smi --query-compute-apps=pid,used_memory --format=csv; nvcc --version; python3 --version; } > out/machine_start.txt 2>&1
@@ -98,12 +117,14 @@ nvidia-smi --query-compute-apps=pid,used_memory --format=csv > out/machine_end.t
 echo done > out/stage.txt
 date -u +%Y-%m-%dT%H:%M:%SZ > out/done.txt
 EOF
+# An earlier run.sh must not run in place of this one.
+rssh "grep -q busy_at_start $REMOTE/run.sh" || { echo "error: run.sh did not reach $HOST" >&2; exit 3; }
 # The redirection is on the whole background job, so that it holds none of ssh's streams and ssh returns at once.
-ssh "$HOST" "bash -lc '(cd $REMOTE && exec nohup bash run.sh) > $REMOTE/run.log 2>&1 < /dev/null & echo \$! > $REMOTE/run.pid'" || exit 3
+rssh "bash -lc '(cd $REMOTE && exec nohup bash run.sh) > $REMOTE/run.log 2>&1 < /dev/null & echo \$! > $REMOTE/run.pid'" || exit 3
 sleep 2
-if ! ssh "$HOST" "kill -0 \$(cat $REMOTE/run.pid) 2>/dev/null"; then
+if ! rssh "kill -0 \$(cat $REMOTE/run.pid) 2>/dev/null"; then
     echo "error: the run stopped at once:" >&2
-    ssh "$HOST" "cat $REMOTE/run.log" >&2
+    rssh "cat $REMOTE/run.log" >&2
     exit 1
 fi
-echo "Started $PARTS on $HOST at $COMMIT, pid $(ssh "$HOST" "cat $REMOTE/run.pid"). See the state with: sh $0 status"
+echo "Started $PARTS on $HOST at $COMMIT, pid $(rssh "cat $REMOTE/run.pid"). See the state with: sh $0 status"
