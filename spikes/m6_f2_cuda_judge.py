@@ -187,19 +187,25 @@ def judge(cuda: Path, mac: Path) -> dict[str, Any]:
             parts[side] = part(reasons, measured=measured)
         reasons, measured = gradients(mac_record, cuda_record)
         parts['gradients'] = part(reasons, measured=measured)
-        control_reasons, caught = [], {}
+        control_reasons, absent, caught = [], [], {}
         for fault in RENDER_FAULTS + GRADIENT_FAULTS:
-            record = read_npz(mac, f'fault_{fault}') if read_exit(mac, f'fault_{fault}') == 0 else None
+            code = read_exit(mac, f'fault_{fault}')
+            if code is None:
+                absent.append(f'{fault}: did not run')
+                continue
+            record = read_npz(mac, f'fault_{fault}') if code == 0 else None
             if record is None:
-                control_reasons.append(f'{fault}: no output')
+                control_reasons.append(f'{fault}: exit {code}, no output')
                 continue
             failed = (between(record, cuda_record, background)[0] if fault in RENDER_FAULTS else gradients(record, cuda_record)[0])
             caught[fault] = {'caught': bool(failed), 'by': failed[:3]}
             if not failed:
                 control_reasons.append(f'{fault} was not caught')
-        parts['controls'] = part(control_reasons, caught=caught)
+        parts['controls'] = part(control_reasons + absent, bool(absent) and not control_reasons, caught=caught)
     program, code = read_json(cuda, 'program'), read_exit(cuda, 'program')
-    if code != 0 or program is None:
+    if code is None:
+        parts['original_program'] = part([], True)
+    elif code != 0 or program is None:
         parts['original_program'] = part([f'exit {code}'])
     else:
         parts['original_program'] = part([] if program['last_loss'] < program['first_loss'] else ['the loss did not fall'], first_loss=program['first_loss'], last_loss=program['last_loss'], device=program['device'])
@@ -214,7 +220,9 @@ def judge(cuda: Path, mac: Path) -> dict[str, Any]:
     parts['equivalence'] = part([] if test.get('within') else ['not measured' if not test['measured'] else f'difference {test["difference"]:.3f} dB, tolerance {test["tolerance"]:.3f} dB'], not test['measured'], **test)
     zero = [None if r is None else r['heldout_psnr_end'] for r in training_runs(mac, 'colors_gradient_zero').values()]
     must_fail = {'wrong_cameras': equivalent(parts['training_mac'].get('wrong_cameras', [None] * len(SEEDS)), right_cuda), 'colors_gradient_zero': equivalent(zero, right_cuda)}
-    parts['equivalence_controls'] = part([f'{name} was not caught' if item['measured'] else f'{name} has no result' for name, item in must_fail.items() if not item['measured'] or item['within']], **must_fail)
+    not_caught = [f'{name} was not caught' for name, item in must_fail.items() if item['measured'] and item['within']]
+    unmeasured = [f'{name} has no result' for name, item in must_fail.items() if not item['measured']]
+    parts['equivalence_controls'] = part(not_caught + unmeasured, bool(unmeasured) and not not_caught, **must_fail)
     states = [item['state'] for item in parts.values()]
     verdict = 'pass' if all(s == 'pass' for s in states) else ('not_run' if 'not_run' in states and 'fail' not in states else 'fail')
     return {'schema': 'cumlx.m6_f2_cuda_verdict.v1', 'rules': 'validation/m6-f2-cuda-limits.json', 'verdict': verdict, 'grade': 'B' if verdict == 'pass' else None,

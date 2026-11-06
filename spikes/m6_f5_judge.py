@@ -100,24 +100,30 @@ def judge(cuda: Path, mac: Path) -> dict[str, Any]:
             if not within(metrics):
                 reasons.append(f'{view}: depth {metrics["depth_worst_m"]:.3g} m, labels {metrics["label_mismatch"]:.2e}')
         parts['geometry_between'] = part(reasons, measured=measured)
-        control_reasons, caught = [], {}
-        box = read_npz(mac / 'fault_box_5cm' / 'sensors.npz') if read_exit(mac, 'fault_box_5cm') == 0 else None
-        if box is None:
-            control_reasons.append('box_5cm: no output')
+        control_reasons, absent, caught = [], [], {}
+        box_code = read_exit(mac, 'fault_box_5cm')
+        box = read_npz(mac / 'fault_box_5cm' / 'sensors.npz') if box_code == 0 else None
+        if box_code is None:
+            absent.append('box_5cm: did not run')
+        elif box is None:
+            control_reasons.append(f'box_5cm: exit {box_code}, no output')
         else:
             failed = [v for v in VIEWS if not within(geometry(box[f'depth/{v}'], box[f'segmentation/{v}'], c[f'exact_depth/{v}'], c[f'exact_label/{v}']))]
             caught['box_5cm'] = {'caught': bool(failed), 'views': failed}
             if not failed:
                 control_reasons.append('box_5cm was not caught')
-        light = read_npz(mac / 'fault_light_2pct' / 'sensors.npz') if read_exit(mac, 'fault_light_2pct') == 0 else None
-        if light is None:
-            control_reasons.append('light_2pct: no output')
+        light_code = read_exit(mac, 'fault_light_2pct')
+        light = read_npz(mac / 'fault_light_2pct' / 'sensors.npz') if light_code == 0 else None
+        if light_code is None:
+            absent.append('light_2pct: did not run')
+        elif light is None:
+            control_reasons.append(f'light_2pct: exit {light_code}, no output')
         else:
             failed = [v for v in VIEWS if compare_images(images(c, v), images(light, v))['verdict'] == 'diverged']
             caught['light_2pct'] = {'caught': bool(failed), 'views': failed}
             if not failed:
                 control_reasons.append('light_2pct was not caught')
-        parts['controls'] = part(control_reasons, caught=caught)
+        parts['controls'] = part(control_reasons + absent, bool(absent) and not control_reasons, caught=caught)
     states = [item['state'] for item in parts.values()]
     verdict = 'pass' if all(s == 'pass' for s in states) else ('not_run' if 'not_run' in states and 'fail' not in states else 'fail')
     versions = {side: json.loads((out / 'sensors' / 'summary.json').read_text()).get('mitsuba') if (out / 'sensors' / 'summary.json').exists() else None for side, out in (('cuda', cuda), ('mac', mac))}

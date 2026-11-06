@@ -165,17 +165,21 @@ def judge(cuda: Path, mac: Path) -> dict[str, Any]:
             parts['setup']['state'] = 'fail'
         for name, run in JUDGES.items():
             parts[name] = run(replay, golden)
-    control_reasons, caught = [], {}
+    control_reasons, absent, caught = [], [], {}
     for fault, where in LIMITS['controls']['must_fail'].items():
-        result = read_json(mac / f'fault_{fault}.json') if read_exit(mac, f'fault_{fault}') == 0 else None
-        if result is None or golden is None:
-            control_reasons.append(f'{fault}: no output')
+        code = read_exit(mac, f'fault_{fault}')
+        if code is None or golden is None:
+            absent.append(f'{fault}: did not run')
+            continue
+        result = read_json(mac / f'fault_{fault}.json') if code == 0 else None
+        if result is None:
+            control_reasons.append(f'{fault}: exit {code}, no output')
             continue
         verdict = JUDGES[where](result, golden)
         caught[fault] = {'by': where, 'caught': verdict['state'] == 'fail', 'reasons': verdict['reasons'][:3]}
         if verdict['state'] != 'fail':
             control_reasons.append(f'{fault} was not caught by {where}')
-    parts['controls'] = part(control_reasons, caught=caught)
+    parts['controls'] = part(control_reasons + absent, bool(absent) and not control_reasons, caught=caught)
     states = [item['state'] for item in parts.values()]
     verdict = 'pass' if all(s == 'pass' for s in states) else ('not_run' if 'not_run' in states and 'fail' not in states else 'fail')
     reported = {'prefill_chain': (replay or {}).get('prefill_chain'), 'cuda_text': (read_json(cuda / 'program.json') or {}).get('text'),

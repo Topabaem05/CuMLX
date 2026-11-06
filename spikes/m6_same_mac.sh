@@ -134,7 +134,8 @@ start)
         peak=$(awk -v a="$used" -v b="$peak" 'BEGIN {print (a > b) ? a : b}')
         echo "$peak" >"$RESULT/peak_used_gb.txt"
         reason=
-        at_least "$used" "$MAX_USED_GB" && reason="stopped_memory_$used"
+        # A part that only waits (F1 for the V100's golden) marks idle.txt: then memory in use is the person's, not the run's.
+        [ -f "$RESULT/idle.txt" ] || { at_least "$used" "$MAX_USED_GB" && reason="stopped_memory_$used"; }
         [ "$(free_gb)" -le "$MIN_FREE_GB" ] && reason=stopped_disk
         [ $(($(date +%s) - start)) -ge "$LIMIT_SECONDS" ] && reason=stopped_time
         if [ -n "$reason" ]; then

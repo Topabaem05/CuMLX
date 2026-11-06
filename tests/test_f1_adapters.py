@@ -256,3 +256,25 @@ def test_a_known_adapter_under_another_import_name_gets_none():
 def test_the_rules_name_the_versions_that_the_adapters_report():
     limits = json.loads((REPO / "validation" / "m6-f1-limits.json").read_text())
     assert "flash-attn 2.8.3+cumlx" in limits["parts"]["program_mac"] and "bitsandbytes 0.50.2+cumlx" in limits["parts"]["program_mac"]
+
+
+def test_the_scale_table_is_the_measured_file_and_stays_within_one_ulp_of_division():
+    import hashlib
+    record = json.loads((REPO / "validation" / "bnb-fdividef-sm70.json").read_text())
+    assert hashlib.sha256(F.SCALE_TABLE.read_bytes()).hexdigest() == record["sha256"]
+    bits = np.arange(65536, dtype=np.uint16)
+    h = np.abs(bits.view(np.float16).astype(np.float32))
+    table = np.frombuffer(F.SCALE_TABLE.read_bytes(), dtype="<f4")
+    ok = np.isfinite(h) & (h > 0)
+    with np.errstate(divide="ignore"):
+        exact = (np.float32(127.0) / h[ok]).astype(np.float32)
+    assert np.abs(table[ok].view(np.int32).astype(np.int64) - exact.view(np.int32).astype(np.int64)).max() <= 1
+    assert np.isinf(table[0])
+
+
+def test_the_activation_of_f1_attempt_2_rounds_as_on_cuda():
+    # Row 2 of model.layers.14.self_attn.o_proj: absmax 2.34375, and -1.171875 * __fdividef(127, 2.34375) = -63.499996, which rounds to -63.
+    A = torch.tensor([[2.34375, -1.171875, 0.5]], dtype=torch.float16)
+    out, stats, _ = F.int8_vectorwise_quant(A)
+    assert out[0].tolist()[:2] == [127, -63]
+    assert float(F.cuda_row_scale(stats)[0]) == float(np.float32(54.186665))

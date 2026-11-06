@@ -110,28 +110,42 @@ while :; do
     waited=$((waited + 300))
 done
 
-say "waiting for the V100's GPU to be idle"
-waited=0
-while :; do
-    CUMLX_V100_GIT=$REPO CUMLX_V100_COMMIT=$COMMIT CUMLX_M6_CUDA=$CUDA_DIR sh "$V100" start "f1 f2 f3 f5"
-    code=$?
-    [ "$code" = 0 ] && break
-    if [ "$code" != 3 ] || [ "$waited" -ge "$WAIT_GPU_SECONDS" ]; then
-        say "the V100 run did not start, exit $code"
-        break
-    fi
-    sleep "$POLL"
-    waited=$((waited + POLL))
-done
+fetch() {
+    # Up to five tries, two minutes apart: one dropped ssh at the end of a long run must not lose its results.
+    tries=0
+    while [ "$tries" -lt 5 ]; do
+        CUMLX_M6_CUDA=$CUDA_DIR sh "$V100" fetch "$@" && return 0
+        [ -e "$CUDA_DIR" ] && return 1
+        tries=$((tries + 1))
+        sleep "$SHORT_POLL"
+    done
+    return 1
+}
+
 cuda=none
-# Exit 1 can also mean that the run ended before the launcher looked, so both codes follow the run on the GPU machine.
-if [ "$code" = 0 ] || [ "$code" = 1 ]; then
+gpu_waited=0
+busy_tries=0
+while :; do
+    say "waiting for the V100's GPU to be idle"
+    while :; do
+        CUMLX_V100_GIT=$REPO CUMLX_V100_COMMIT=$COMMIT CUMLX_M6_CUDA=$CUDA_DIR sh "$V100" start "f1 f2 f3 f5"
+        code=$?
+        [ "$code" = 0 ] && break
+        if [ "$code" != 3 ] || [ "$gpu_waited" -ge "$WAIT_GPU_SECONDS" ]; then
+            say "the V100 run did not start, exit $code"
+            break
+        fi
+        sleep "$POLL"
+        gpu_waited=$((gpu_waited + POLL))
+    done
+    # Exit 1 can also mean that the run ended before the launcher looked, so both codes follow the run on the GPU machine.
+    [ "$code" = 0 ] || [ "$code" = 1 ] || break
     say "the V100 run is going"
     waited=0
     while :; do
         state=$(sh "$V100" status 2>&1)
         if [ $? = 0 ]; then
-            if CUMLX_M6_CUDA=$CUDA_DIR sh "$V100" fetch; then
+            if fetch; then
                 cuda=fetched
                 say "the V100 run is done, and its results are in $CUDA_DIR"
             else
@@ -139,21 +153,33 @@ if [ "$code" = 0 ] || [ "$code" = 1 ]; then
             fi
             break
         fi
-        if echo "$state" | grep -q '^not running'; then
-            say "the V100 run ended without finishing: $(echo "$state" | tr '\n' ' ')"
-            break
-        fi
-        if [ "$waited" -ge "$CUDA_RUN_SECONDS" ]; then
-            say "the V100 run passed its time limit"
+        if echo "$state" | grep -q '^not running' || [ "$waited" -ge "$CUDA_RUN_SECONDS" ]; then
+            # What finished stays useful: each judge decides its own part, and incomplete.txt keeps this from being a pass.
+            if fetch --incomplete; then
+                cuda=incomplete
+                say "the V100 run did not finish, and what it left is in $CUDA_DIR"
+            else
+                say "the V100 run did not finish, and nothing could be fetched"
+            fi
             break
         fi
         sleep "$SHORT_POLL"
         waited=$((waited + SHORT_POLL))
     done
-fi
-[ "$cuda" = fetched ] || note "cuda: no results"
+    # Another job took the GPU in the seconds between the launcher's check and the run's. Wait for the GPU again while there is time.
+    if [ -f "$CUDA_DIR/busy_at_start.txt" ] && [ "$gpu_waited" -lt "$WAIT_GPU_SECONDS" ] && [ "$busy_tries" -lt 5 ]; then
+        busy_tries=$((busy_tries + 1))
+        mv "$CUDA_DIR" "$CUDA_DIR.busy-$busy_tries"
+        note_busy="cuda: the GPU was taken before the run began $busy_tries time(s); those copies are in $CUDA_DIR.busy-N"
+        cuda=none
+        continue
+    fi
+    break
+done
+[ -n "${note_busy:-}" ] && say "$note_busy"
+[ "$cuda" = fetched ] || note "cuda: $cuda"
 [ -f "$CUDA_DIR/busy_at_start.txt" ] && note "cuda: another process took the GPU before the run began: $(cat "$CUDA_DIR/busy_at_start.txt" | tr '\n' ' ')"
-[ "$cuda" = fetched ] && [ "$(cat "$CUDA_DIR/cumlx_commit.txt" 2>/dev/null)" != "$COMMIT" ] && note "cuda: ran $(cat "$CUDA_DIR/cumlx_commit.txt" 2>/dev/null), not $COMMIT"
+[ "$cuda" != none ] && [ "$(cat "$CUDA_DIR/cumlx_commit.txt" 2>/dev/null)" != "$COMMIT" ] && note "cuda: ran $(cat "$CUDA_DIR/cumlx_commit.txt" 2>/dev/null), not $COMMIT"
 # The Mac's F1 part waits for this file, so it is written whether or not there are results.
 echo "$cuda" >"$READY"
 

@@ -3,19 +3,41 @@
 Each function names the bitsandbytes step that it follows. The int8 product is exact: it runs as float32 products in blocks of
 1024 along K, where no partial sum can pass 2^24, and the blocks are summed in int32. bitsandbytes on CUDA uses cuBLASLt there.
 
-Known differences from CUDA, each one rounding at most:
+The row scale 127 / absmax is the value that CUDA's __fdividef gives on a V100 (sm70), from a table of every fp16 absmax that
+spikes/remote/fdividef_127.cu measured (validation/bnb-fdividef-sm70.json). __fdividef is 1 ulp from the exact quotient for 29% of
+those inputs, and an exact division put an activation of F1's golden on the other side of a half (attempt 2, 2026-11-06). Other GPU
+generations were not measured.
 
-* CUDA takes 127 / absmax with __fdividef, which can be 2 ulp from the division here, so an activation or weight can round to the
-  next int8 step where val * 127 / absmax lies within that much of a half.
-* The CUDA dequant kernel uses one fused multiply-add for x * 6.200012e-05 + bias. Here it is a multiply and an add.
+Known differences left, each one rounding:
+
+* The outlier part of the mixed product is a short float32 sum that cuBLAS orders in its own way, so its bfloat16 result can be one
+  step away. In F1's golden that is 1 element of 840 rows with a float32 sum, and 2 elements with a float64 sum, so float32 stays.
+* The CUDA dequant kernel uses one fused multiply-add for x * 6.200012e-05 + bias, and here it is a multiply and an add. A bfloat16
+  bias, as in Transformers 5.22.1's checkpoints, is added after the kernel on CUDA too, so it does not take part.
 """
 from __future__ import annotations
+
+from pathlib import Path
 
 import torch
 
 MM_DEQUANT_CONST = 6.200012e-05  # csrc/kernels.cu, 1 / (127 * 127)
 DEQUANT_RECIPROCAL = 7.874015718698502e-3  # _ops.py int8_vectorwise_dequant, 1 / 127
 EXACT_BLOCK = 1024  # 1024 * 127 * 127 = 16,516,096 < 2^24 = 16,777,216
+SCALE_TABLE = Path(__file__).with_name('fdividef_127_sm70.bin')  # 65536 little-endian float32, indexed by the 16 bits of an fp16
+_tables: dict[str, torch.Tensor] = {}
+
+
+def cuda_row_scale(absmax: torch.Tensor) -> torch.Tensor:
+    """__fdividef(127.0f, absmax) as a V100 computes it, for float32 values that are each the float of an fp16."""
+    key = str(absmax.device)
+    if key not in _tables:
+        data = SCALE_TABLE.read_bytes()
+        if len(data) != 65536 * 4:
+            raise RuntimeError(f'{SCALE_TABLE} has {len(data)} bytes, not {65536 * 4}')
+        _tables[key] = torch.frombuffer(bytearray(data), dtype=torch.float32).to(absmax.device)
+    index = absmax.to(torch.float16).view(torch.int16).to(torch.int64) & 0xFFFF
+    return _tables[key][index]
 
 
 def int8_vectorwise_quant(A: torch.Tensor, threshold: float = 0.0) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor | None]:
@@ -37,7 +59,7 @@ def int8_vectorwise_quant(A: torch.Tensor, threshold: float = 0.0) -> tuple[torc
         outlier_cols = torch.argwhere(outliers.any(dim=0)).view(-1)
         kept = rows.masked_fill(outliers, 0.0)
     row_stats = kept.abs().amax(dim=1).to(torch.float32)
-    scale = 127.0 / row_stats
+    scale = cuda_row_scale(row_stats)
     # A row of zeros gives 0 * inf. CUDA's __float2int_rn turns that NaN into 0, and torch leaves NaN to int8 undefined.
     product = torch.nan_to_num(kept.to(torch.float32) * scale.unsqueeze(-1), nan=0.0)
     out = torch.round(product).to(torch.int8)

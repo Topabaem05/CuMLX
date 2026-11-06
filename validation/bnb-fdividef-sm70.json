@@ -1,0 +1,16 @@
+{
+ "schema": "cumlx.bnb_fdividef_table.v1",
+ "date": "2026-11-06",
+ "what": "__fdividef(127.0f, |h|) for each of the 65536 fp16 bit patterns h, the row scale of bitsandbytes kInt8VectorQuant (csrc/kernels.cu), as 65536 little-endian float32 values indexed by the bits of h",
+ "file": "src/cumlx/compat/bitsandbytes_int8/fdividef_127_sm70.bin",
+ "sha256": "b86806f200571948d1da04900cc675e04c8e6c3242044057e7f93e726eaa9540",
+ "program": "spikes/remote/fdividef_127.cu, built with nvcc -O3 -arch=sm_70 by spikes/remote/m6_fdiv.sh through spikes/m6_cuda_v100.sh start fdiv",
+ "program_sha256": "529b64597072fe7a0860e863c1e635d8eb9cfbff732f526bfc30769a9cad297a",
+ "cumlx_commit": "ab867f5",
+ "machine": "Tesla V100-SXM2-16GB, 580.178.04, 7.0",
+ "nvcc": "12.0, V12.0.140",
+ "compared_with_ieee": "Of 63486 finite nonzero inputs, 45116 equal the correctly rounded 127/|h|, 10976 are 1 ulp above and 7394 are 1 ulp below. Zero gives inf, inf gives 0, NaN gives NaN",
+ "why": "F1 attempt 2 (validation/m6-f1-limits.json) failed by one int8 layer at rel_l2 2.48e-3 against 2e-3. Every difference traced to activations within 6e-5 of a rounding half, where this scale and an exact division round to different int8 steps, and to one element of the bfloat16 outlier sum",
+ "limits": "Measured on one V100 (sm70). Other GPU generations, whose __fdividef may differ, were not measured",
+ "after": "With the table, a replay of attempt 2's golden on this Mac's CPU gave 839 of 840 rows equal to CUDA to the bit. The one left differs in one element of the bfloat16 outlier sum, whose order is cuBLAS's own. Without the table, 835 rows were equal, and flipping 9 activations within 6e-5 of a half made 4 more equal. This replay is of the same golden that showed the difference, so it is not an independent test of the table"
+}

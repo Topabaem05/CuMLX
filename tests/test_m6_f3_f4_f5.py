@@ -202,3 +202,15 @@ def test_f5_the_exact_depth_of_a_camera_looking_down_is_its_height():
     depth, label = sensors.exact(camera, (50.0, 50.0, 0.5), ["floor", "box"])
     rays = camera.ray_grid()
     assert np.allclose(depth, 3.0 / -rays[..., 2]) and (label == 0).all()
+
+
+@pytest.mark.parametrize("module, args", [("m6_f1_judge", ("cuda", "mac")), ("m6_f2_cuda_judge", ("cuda", "mac")), ("m6_f3_judge", ("cuda", "mac")), ("m6_f5_judge", ("cuda", "mac"))])
+def test_empty_folders_are_not_run_and_never_fail(tmp_path, module, args):
+    import importlib
+    judge = importlib.import_module(module)
+    folders = [tmp_path / name for name in args]
+    for folder in folders:
+        folder.mkdir()
+    result = judge.judge(*folders)
+    assert result["verdict"] == "not_run", {k: (v["state"], v["reasons"][:2]) for k, v in result["parts"].items()}
+    assert all(v["state"] == "not_run" for v in result["parts"].values())

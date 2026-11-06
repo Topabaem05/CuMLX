@@ -41,11 +41,24 @@ GOLDEN=${CUMLX_F1_GOLDEN:-}
 # V100's results are in place, or when the V100 side has ended without them. CUMLX_F1_WAIT_SECONDS bounds the wait.
 READY=${CUMLX_F1_READY:-}
 waited=0
+touch "$OUT/../idle.txt"
 while [ -n "$READY" ] && [ ! -f "$READY" ] && [ "$waited" -lt "${CUMLX_F1_WAIT_SECONDS:-0}" ]; do
     sleep 60
     waited=$((waited + 60))
 done
+rm -f "$OUT/../idle.txt"
 [ -n "$READY" ] && echo "ready: $(cat "$READY" 2>/dev/null || echo "none after $waited s")" >"$OUT/ready.txt"
+# The replay is heavy again, so it starts only with room, as each heavy part of spikes/m6_same_mac.sh does.
+used_gb() { vm_stat | awk '/page size of/ {size=$8} /Pages active/ {a=$3} /Pages wired down/ {w=$4} /occupied by compressor/ {c=$5} END {printf "%.1f", (a+w+c)*size/1e9}'; }
+room_waited=0
+while ! awk -v a="$(used_gb)" 'BEGIN {exit !(a <= 33)}' && [ "$room_waited" -lt 7200 ]; do
+    sleep 60
+    room_waited=$((room_waited + 60))
+done
+if ! awk -v a="$(used_gb)" 'BEGIN {exit !(a <= 33)}'; then
+    echo "stopped_memory_before_replay_$(used_gb)" >"$OUT/replay.txt"
+    GOLDEN=
+fi
 if [ -n "$GOLDEN" ] && [ -f "$GOLDEN/summary.json" ]; then
     say "replay of the CUDA golden"
     "$CUMLX" run spikes/m6_f1_record.py $SUBS --report "$OUT/replay.run-report.json" --format json -- replay --golden "$GOLDEN" --output "$OUT/replay.json" >"$OUT/replay.result.json" 2>"$OUT/replay.txt"
