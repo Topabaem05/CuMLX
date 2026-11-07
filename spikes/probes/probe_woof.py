@@ -4,9 +4,11 @@ CUMLX's kernels run on Metal and are compared with a NumPy float64 reference. A 
 Foreign files are only translated and compiled, and they are not checked for correct values. They see empty cuda_fp16.h and
 cuda_bf16.h files, because a missing header says nothing about the translator.
 """
+import atexit
 import json
 import os
 from pathlib import Path
+import shutil
 import sys
 import tempfile
 
@@ -86,6 +88,7 @@ run('fp4_decode', unit(defines, 'fp4_decode', 'const unsigned char* wq, const un
     'fp4_decode', ((n * k + 255) // 256,), (256,), (packed.ravel(), scales.ravel(), glob, np.zeros(n * k, np.float32)), expected.ravel())
 
 shim = tempfile.mkdtemp()
+atexit.register(shutil.rmtree, shim, ignore_errors=True)
 for header in ('cuda_fp16.h', 'cuda_bf16.h'):
     Path(shim, header).touch()
 for path in sys.argv[2:]:

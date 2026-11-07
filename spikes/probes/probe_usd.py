@@ -1,11 +1,15 @@
 """Does OpenUSD read and write a physics scene on this Mac? A real asset is the job of probe_usd_genesis.py."""
+import atexit
 import json
 import os
+import shutil
 import tempfile
 
 from pxr import Gf, Usd, UsdGeom, UsdPhysics
 
-path = os.path.join(tempfile.mkdtemp(), 'scene.usda')
+folder = tempfile.mkdtemp()
+atexit.register(shutil.rmtree, folder, ignore_errors=True)
+path = os.path.join(folder, 'scene.usda')
 stage = Usd.Stage.CreateNew(path)
 UsdGeom.Xform.Define(stage, '/World')
 box = UsdGeom.Cube.Define(stage, '/World/Box')

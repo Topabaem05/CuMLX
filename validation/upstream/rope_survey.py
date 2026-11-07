@@ -1,7 +1,9 @@
 # Save a tiny model with a non-default rope_theta through transformers 5, load it with mlx-lm, and run cumlx diff.
 
+import atexit
 import json
 import pathlib
+import shutil
 import tempfile
 
 from mlx_lm.utils import load_model
@@ -20,6 +22,7 @@ tok=[1,5,9,23,7,44,3,12]
 out={}
 for mt,extra in CASES.items():
     d=pathlib.Path(tempfile.mkdtemp())
+    atexit.register(shutil.rmtree,d,ignore_errors=True)
     try:
         cfg=AutoConfig.for_model(mt,**{**base,**extra})
         rp=getattr(cfg,'rope_parameters',None)

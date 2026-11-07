@@ -2,9 +2,11 @@
 
 transformers 5 writes rope_theta inside rope_parameters. Needs only mlx-lm, transformers and torch.
 """
+import atexit
 import json
 import os
 from pathlib import Path
+import shutil
 import tempfile
 
 os.environ.setdefault("MLX_ENABLE_TF32", "0")  # full float32, so the comparison has no matmul noise
@@ -25,6 +27,7 @@ for p in original.parameters():
         torch.nn.init.normal_(p, std=0.25)
 
 path = Path(tempfile.mkdtemp())
+atexit.register(shutil.rmtree, path, ignore_errors=True)
 original.save_pretrained(path)
 saved = json.load(open(path / "config.json"))
 print("saved config:", {k: v for k, v in saved.items() if k.startswith("rope")})

@@ -44,6 +44,8 @@ cumlx = ["kernels/*.metal", "kernels/*.cu", "kernels/*.h", "py.typed", "verify/r
 addopts = "-ra"
 testpaths = ["tests"]
 pythonpath = ["src"]
+# Keep tmp_path folders only for failed tests: a full run writes about 170 MB.
+tmp_path_retention_policy = "failed"
 markers = [
     "gpu: requires a real selected Metal or CUDA GPU",
     "e2e: needs the capture and diff extras (torch, transformers, mlx, mlx-lm)",
