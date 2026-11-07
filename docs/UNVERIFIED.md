@@ -21,6 +21,13 @@
 - `weights`는 포팅본 파일을 저장된 그대로 읽습니다. mlx-lm이 그 포팅본을 로드하는지는 보지 않고, 양자화 포팅본은 비교하지 않고 거부합니다.
 - Windows에서는 빌드하거나 실행하지 않았습니다. CI는 Ubuntu와 macOS에서 돌립니다.
 
+## bfloat16 커널 (`cumlx_bf16.h`)
+
+- 산술(`__hadd`, `__hsub`, `__hmul`, `__hfma`)은 PTX ISA의 `fma.rn.bf16` 모델과만 비교했습니다. NVIDIA GPU에서 돌린 적이 없습니다. CUDA 12.0은 sm70에 bf16 산술이 없고, sm80 이상의 GPU는 없습니다. CUDA 12.2 이후 sm70의 에뮬레이션은 float를 거쳐 두 번 반올림할 수 있으며, 이 헤더는 그것을 따르지 않습니다.
+- 변환은 `cuda_bf16.hpp`를 옮긴 모델과 2^32개 전부 같지만, V100 golden(`validation/kernel-cases-bf16`)은 GPU가 다른 작업으로 바빠 아직 기록하지 않았습니다.
+- 비교한 장치는 M5 Pro 하나입니다. 정수 산술이라 다른 Apple GPU에서도 같아야 하지만 측정하지 않았습니다. `__hdiv`, `__nv_bfloat162`, 정수에서 bf16으로의 변환(`__int2bfloat16_rn` 등)은 매핑하지 않았습니다. 2^24보다 큰 정수는 float를 거치므로 두 번 반올림됩니다.
+- woof 같은 실제 번역기가 `cumlx_bf16`와 `#include "cumlx_bf16.h"`를 그대로 넘기는지는 시험하지 않았습니다. 시험은 테스트용 stub 번역기로만 했습니다.
+
 ## 모델 검증기
 
 - V100 기준은 모델 하나와 V100 한 대입니다. 다른 NVIDIA 세대와 `torch.backends.cuda.matmul.allow_tf32=True`는 측정하지 않았습니다. `validation/cuda-golden-v100.json`

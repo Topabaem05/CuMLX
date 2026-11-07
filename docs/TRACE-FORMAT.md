@@ -135,7 +135,7 @@ A trace records a whole model. An op-level golden records one kernel: what it co
 | `cases[].repeat_identical` | Every repeat gave the same bytes, although the output memory was filled with a different pattern before each one. False means that the kernel leaves elements unwritten or depends on execution order |
 | `cases[].sha256` | SHA-256 of the case file. A reader must reject a mismatch |
 
-Each case file holds `in.<name>` and `out.<name>` for each tensor, in little-endian, with the dtype of the manifest. Output `out.<name>` is the first repeat.
+Each case file holds `in.<name>` and `out.<name>` for each tensor, in little-endian, with the dtype of the manifest. Output `out.<name>` is the first repeat. A `bfloat16` tensor is stored as its 16-bit patterns, with the safetensors dtype `U16`, and a `values` list in a cases file gives those patterns, not the numbers.
 
 ### Cases file `cumlx.kernel-cases.v1`
 

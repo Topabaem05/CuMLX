@@ -176,8 +176,23 @@ cumlx kernel verify foo.metal kgolden/ -o report/                               
 | 호스트 코드 분리 | `main`, `ATen`, `iostream`과 호스트 함수를 없애고, 장치 코드가 쓰는 선언만 남깁니다 |
 | 템플릿 | 호스트의 `foo<float><<<`나 `--instantiate`에서 구체 타입을 찾아 인스턴스를 만듭니다. 못 찾으면 거부합니다 |
 | PTX 내장 함수 | `direct`(번역기가 처리), `rewrite`(`rsqrtf`, `__clz` 등을 이식 가능한 함수로 교체), `refuse` 세 가지입니다 |
+| bfloat16 | `__nv_bfloat16`과 그 내장 함수를 `cumlx_bf16.h`의 이름으로 바꾸고, 그 헤더를 출력 옆에 씁니다. 아래 **bfloat16**을 보십시오 |
 
-**거부(`E_KERNEL_UNPORTABLE`, exit 4).** 이유를 모두 `errors[].details.refused`에 적습니다. warp 단위 동작(`__match_any_sync`, `__shfl_*`, `__ballot_sync`), 반올림 모드(`__frcp_rz` 등), `double`(`--demote-fp64`로 명시 가능), 텍스처, 전역 `__device__` 변수, 재귀, `printf`, 인라인 PTX, 장치 코드의 커널 실행, 모르는 `__` 이름, 찾을 수 없는 지역 헤더가 대상입니다.
+**거부(`E_KERNEL_UNPORTABLE`, exit 4).** 이유를 모두 `errors[].details.refused`에 적습니다. warp 단위 동작(`__match_any_sync`, `__shfl_*`, `__ballot_sync`), 반올림 모드(`__frcp_rz` 등), `double`(`--demote-fp64`로 명시 가능), 텍스처, 전역 `__device__` 변수, 재귀, `printf`, 인라인 PTX, 장치 코드의 커널 실행, 모르는 `__` 이름, 찾을 수 없는 지역 헤더, bfloat16 나눗셈(`__hdiv`)과 쌍(`__nv_bfloat162`)이 대상입니다.
+
+**bfloat16.** Apple Silicon Mac의 GPU는 모두 MSL `bfloat`를 지원합니다(Apple6 이상, MSL 3.1, macOS 14). 그러나 CUMLX는 그것을 쓰지 않습니다. MSL 명세는 bfloat에 0 방향 반올림과 비정규수 flush를 허용하고, M5 Pro에서 `bfloat(float)`는 비정규수를 0으로 만듭니다. Metal의 float32 덧셈과 곱셈도 safe와 fast 두 수학 모드에서 비정규수 입력과 결과를 0으로 만들므로(2026-11-07 측정), float로 계산하는 에뮬레이션도 CUDA와 다릅니다. 그래서 `cumlx_bf16.h`는 값을 16비트로 저장하고 모든 연산을 32비트 정수 산술로 합니다.
+
+| CUDA | Metal에서 계산하는 것 | 근거 |
+|---|---|---|
+| `__float2bfloat16`(`_rn`), `_rz`, `_rd`, `_ru` | CUDA 12.0 `cuda_bf16.hpp`의 sm70 경로. 비정규수를 지키고, NaN은 0x7FFF | float32 비트 패턴 2^32개 전부에서 비트 일치 |
+| `__hadd`, `__hsub`, `__hmul`, `__hfma`, `+ - *`, `+= -= *=` | sm80 이상의 `fma.rn.bf16`: 정확한 결과를 가장 가까운 짝수로 한 번 반올림, 비정규수 유지 | 덧셈·뺄셈·곱셈은 bf16 쌍 2^32개 전부, fma는 263824개 조합에서 모델과 비트 일치 |
+| `__hneg`, `__habs`, 비교 연산자 | 부호 비트 변경, 정수 순서 비교(NaN은 false) | 위 GPU 시험 |
+| `__bfloat162float`, `__bfloat16_as_ushort`, `__ushort_as_bfloat16` | 비트 이동 | |
+| `/`, `__hdiv`, `__nv_bfloat162` | 거부. `operator/`는 삭제되어 컴파일되지 않습니다 | CUDA의 반올림을 확인하지 않음 |
+
+근거는 [validation/bf16-exhaustive.json](../validation/bf16-exhaustive.json)(`scripts/bf16_exhaustive.py`, M5 Pro, 243초)입니다. 같은 검사에서 MSL `bfloat` 변환은 1671만 개, Metal float 덧셈 후 반올림은 108만 쌍이 달라, 이 검사가 차이를 볼 수 있음을 보였습니다. **비교 대상은 모델이지 CUDA 실행이 아닙니다.** CUDA 12.0은 sm70에 bf16 산술이 없어 V100으로 산술을 확인할 수 없고, sm80 이상의 GPU는 없습니다. 변환은 V100에서 확인할 수 있으며, 그 golden(`validation/kernel-cases-bf16`)은 아직 기록하지 않았습니다.
+
+`kernel verify`는 커널이 `cumlx_bf16`를 쓰면 같은 헤더를 앞에 붙이고 `W_KERNEL_BF16_EMULATED`와 `data.execution.bf16_header_sha256`를 남깁니다. bfloat16 출력은 비트로 비교합니다. golden에서 NaN이 아닌 원소는 16비트가 모두 같아야 하고, NaN은 NaN이기만 하면 됩니다(PTX가 연산의 NaN을 정하지 않으므로, `nan_payload_differs`에 셉니다). bfloat16 버퍼는 `--engine torch`로 돌립니다. `mx.fast.metal_kernel`은 그 버퍼를 `uint16_t`로 선언해 정수가 조용히 float로 바뀌므로, `--engine mlx`는 `bind` 단계의 미완료로 끝납니다. golden과 cases의 `bfloat16`은 비트 패턴(uint16)으로 저장합니다.
 
 `--allow-warp-level`은 warp 단위 내장 함수를 거부하지 않고 번역기로 넘기며 `W_KERNEL_WARP_LEVEL_PASSED`를 표시합니다. Metal은 SIMD 그룹 32도, `threadIdx.x % 32`와 같은 lane도 보장하지 않으므로, 결과는 `cumlx kernel verify`로 그 장치에서만 판단합니다. 기본값은 거부입니다.
 

@@ -32,7 +32,7 @@ from .opgolden import (
 COMPILE_TIMEOUT_SECONDS = 300
 CUDA_TYPES = {'float32': 'float', 'float16': '__half', 'float64': 'double', 'uint8': 'unsigned char', 'int8': 'signed char',
               'uint16': 'unsigned short', 'int16': 'short', 'uint32': 'unsigned int', 'int32': 'int',
-              'uint64': 'unsigned long long', 'int64': 'long long'}
+              'uint64': 'unsigned long long', 'int64': 'long long', 'bfloat16': '__nv_bfloat16'}
 # Bytes that fill the output memory before each repeat. An element that the kernel does not write then differs.
 FILL_BYTES = (0x00, 0xFF)
 
@@ -88,6 +88,8 @@ def generate_harness(case: KernelCase, source: str, header: str) -> str:
              '#include <cuda_runtime.h>']
     if uses_half:
         lines.append('#include <cuda_fp16.h>')
+    if any(t.dtype == 'bfloat16' for t in case.inputs + case.outputs):
+        lines.append('#include <cuda_bf16.h>')
     lines += [header, constants_block(case), kernel, '''
 #define CUMLX_CHECK(call) do { cudaError_t e_ = (call); if (e_ != cudaSuccess) { \\
     fprintf(stderr, "CUDA error %s at %s\\n", cudaGetErrorString(e_), #call); exit(2); } } while (0)

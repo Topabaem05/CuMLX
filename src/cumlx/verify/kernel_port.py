@@ -18,6 +18,7 @@ import re
 from typing import Any, Protocol
 
 from ..errors import CumlxError
+from . import bf16
 from .kernel_capture import wrap_body
 from .kernel_source import (
     FP64_LITERAL,
@@ -169,8 +170,15 @@ def _build_builtins() -> dict[str, BuiltIn]:
         'cooperative_groups': BuiltIn('refuse', reason='CUDA cooperative groups have no Metal equivalent.'),
         'curand_init': BuiltIn('refuse', reason='CURAND has no Metal equivalent. Its sequence could not be reproduced.'),
         'thrust': BuiltIn('refuse', reason='Thrust is a host and device library with no Metal equivalent here.'),
-        '__nv_bfloat16': BuiltIn('refuse', reason='bfloat16 is not available on all Metal GPUs. Convert to float at the kernel boundary.'),
+        '__nv_bfloat162': BuiltIn('refuse', reason='bfloat16 pairs (__nv_bfloat162) are not mapped. Use two __nv_bfloat16 values.'),
+        '__nv_bfloat16_raw': BuiltIn('refuse', reason='__nv_bfloat16_raw is not mapped. Use __bfloat16_as_ushort and __ushort_as_bfloat16.'),
+        '__hdiv': BuiltIn('refuse', reason='bfloat16 division (__hdiv) is not mapped: its rounding on CUDA is not established here. Divide in float and convert.'),
         '__float128': BuiltIn('refuse', reason='Metal has no 128-bit float.'), '__int128': BuiltIn('refuse', reason='Metal has no 128-bit integer.')})
+    # bfloat16: the type and its intrinsics become the names of cumlx_bf16.h, which computes them bit for bit on Metal.
+    for name in ('__nv_bfloat16', 'nv_bfloat16'):
+        table[name] = BuiltIn('rewrite', helper=bf16.TYPE)
+    for name, helper in bf16.INTRINSICS.items():
+        table[name] = BuiltIn('rewrite', helper=helper)
     return table
 
 
@@ -183,7 +191,7 @@ OPERATOR_NAME = re.compile(r'\boperator\s*(?:\(\s*\)|\[\s*\]|[-+*/%^&|~!=<>,]+)(
 STRIPPED_MARKERS = re.compile(r'\b(?:__launch_bounds__|__maxnreg__)\s*\([^()]*\)[ \t]*|\b(?:__noinline__|__grid_constant__)\b[ \t]*')
 _SIMPLE_TYPES = frozenset({'float', 'int', 'unsigned', 'unsigned int', 'char', 'unsigned char', 'short', 'unsigned short', 'long', 'long long',
                            'unsigned long long', 'bool', 'double', 'uint8_t', 'uint16_t', 'uint32_t', 'uint64_t', 'int8_t', 'int16_t', 'int32_t',
-                           'int64_t', 'size_t', '__half'})
+                           'int64_t', 'size_t', '__half', '__nv_bfloat16'})
 
 
 @dataclass
@@ -509,6 +517,8 @@ def _prelude(text: str, includes: Iterable[str]) -> str:
     helpers = sorted(used, key=lambda h: (h in _HELPER_NEEDS, h))  # a helper comes before the helpers that call it
     if '__half' in tokens or {'cumlx_half2float', 'cumlx_float2half'} & tokens:
         lines.append('#include <cuda_fp16.h>\n')  # __half is a class from this header. A translator must know it
+    if bf16.uses_bf16(tokens):
+        lines.append(f'#include "{bf16.HEADER_NAME}"\n')  # `cumlx kernel port` writes it beside the output
     if helpers and '<math.h>' not in includes:
         lines.append('#include <math.h>\n')
     for name, value in HEADER_DEFINES.items():
@@ -576,6 +586,10 @@ def _instantiate(chunk: Chunk, args: list[str], new_name: str) -> str:
     rest = re.sub(r'\b(' + '|'.join(re.escape(k) for k in mapping) + r')\b', lambda m: mapping[m.group(1)], rest) if mapping else rest
     assert chunk.name is not None
     return re.sub(rf'\b{re.escape(chunk.name)}(\s*\()', lambda m: new_name + m.group(1), rest, count=1)
+
+
+# What an entry point may already start with. It is removed, so that the entry point starts with exactly one extern "C".
+_EXTERN_C = re.compile(r'^\s*(?:static\s+)?(?:extern\s*"C"\s*)?')
 
 
 @dataclass
@@ -844,7 +858,7 @@ def preprocess_complete(flat: str, *, name: str, sha: str, record: HeaderRecord,
                 entry_points.append(new_name)
                 entry_map[f"{chunk.name}<{', '.join(args)}>" if args else chunk.name] = new_name
                 function_texts.setdefault(new_name, []).append(text)
-                pieces.append((chunk.start, 'extern "C" ' + re.sub(r'^\s*(?:static\s+)?', '', text.lstrip()) + '\n'))
+                pieces.append((chunk.start, 'extern "C" ' + _EXTERN_C.sub('', text.lstrip()) + '\n'))
                 checked.append((text, line_of(flat, chunk.start)))
             continue
         if chunk.template is not None and chunk.name in template_helpers:
@@ -857,7 +871,7 @@ def preprocess_complete(flat: str, *, name: str, sha: str, record: HeaderRecord,
             function_texts.setdefault(chunk.name, []).append(text)
         if chunk.is_global and chunk.kind == 'function' and chunk.name:
             entry_points.append(chunk.name)
-            text = 'extern "C" ' + re.sub(r'^\s*(?:static\s+)?', '', text.lstrip())
+            text = 'extern "C" ' + _EXTERN_C.sub('', text.lstrip())
         pieces.append((chunk.start, text + '\n'))
         checked.append((text, line_of(flat, chunk.start)))
     cycle = _call_graph_cycle(function_texts)
@@ -982,6 +996,7 @@ def preprocess_file(path: str | Path, *, instantiate: list[str] | None = None, i
         header_text = flatten_includes(header_path.read_text(errors='replace'), header_path.parent, dirs, record, refusals) if header_path.is_file() else ''
         out = _preprocess_body(flat, header_text, name=name, sha=sha, record=record, refusals=refusals, demote_fp64=demote_fp64, wrap=wrap, warnings=warnings, allow_warp_level=allow_warp_level)
     out.record['headers'] = asdict(record)
+    out.record['bf16'] = bf16.uses_bf16(set(IDENT.findall(mask_source(out.source + out.header))))
     if record.unknown_dropped:
         out.warnings.append({'code': 'W_KERNEL_HEADER_DROPPED', 'message': f'These unknown headers were dropped: {record.unknown_dropped}. If a kernel needs one, the translator ends with an error.',
                              'headers': record.unknown_dropped})

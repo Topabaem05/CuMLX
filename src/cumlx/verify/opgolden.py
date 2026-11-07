@@ -25,7 +25,9 @@ MANIFEST = 'manifest.json'
 DTYPES: dict[str, Any] = {
     'float32': np.float32, 'float16': np.float16, 'float64': np.float64, 'uint8': np.uint8, 'int8': np.int8,
     'uint16': np.uint16, 'int16': np.int16, 'uint32': np.uint32, 'int32': np.int32, 'uint64': np.uint64,
-    'int64': np.int64}
+    'int64': np.int64,
+    # bfloat16 is stored as its 16 bits: NumPy has no bfloat16. A value in "values" is the bit pattern, not the number.
+    'bfloat16': np.uint16}
 _NAME = re.compile(r'^[A-Za-z_]\w*$')
 _ENTRY = re.compile(r'^[A-Za-z_]\w*(<[\w\s,.]*>)?$')
 _ID = re.compile(r'^[\w.+-]+$')

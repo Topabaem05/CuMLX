@@ -719,6 +719,20 @@ def run_kernel_port(args) -> Result:
                                       demote_fp64=args.demote_fp64, cases_file=args.cases, case_id=args.case, allow_warp_level=args.allow_warp_level)
     r = Result('kernel port')
     r.warnings.extend(pre.warnings)
+    include_dirs = list(args.include_dir or [])
+    if pre.record.get('bf16'):
+        from ..verify import bf16
+        bf16_out = out.with_name(bf16.HEADER_NAME)
+        if bf16_out.exists() and bf16_out.read_text() != bf16.HEADER and not args.overwrite:
+            raise CumlxError('E_OUTPUT_EXISTS', f'{bf16_out} exists and differs from the header of this version',
+                             hint='pass --overwrite or choose a new folder with -o')
+        bf16_out.parent.mkdir(parents=True, exist_ok=True)
+        bf16_out.write_text(bf16.HEADER)
+        include_dirs.append(str(bf16_out.parent))
+        r.artifact('bf16_header', str(bf16_out))
+        r.warn('W_KERNEL_BF16_EMULATED', f'The kernel uses __nv_bfloat16. {bf16.HEADER_NAME} computes it on Metal in integer arithmetic, '
+               'bit for bit with the CUDA model: conversions as on sm70, arithmetic as on sm80 and later. `cumlx kernel verify` adds it '
+               'when a kernel names cumlx_bf16. Division and bfloat16 pairs are refused.')
     side: dict[str, Any] = {'schema': kernel_port.PORT_SCHEMA, 'source': str(args.source), 'source_sha256': pre.source_sha256,
                             'prepared_sha256': kernel_port.sha256_text(pre.source), 'kernel': pre.name,
                             'form': pre.form, 'entry_points': pre.entry_points, 'preprocess': pre.record}
@@ -733,7 +747,7 @@ def run_kernel_port(args) -> Result:
         r.artifact('port_record', str(sidecar))
         r.warn('W_KERNEL_NOT_TRANSLATED', '--preprocess-only stops before translation. This is not a Metal kernel.')
         return r
-    result = kernel_port.translate(pre, adapter, args.include_dir)
+    result = kernel_port.translate(pre, adapter, include_dirs)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(result.msl)
     if result.header.strip():

@@ -358,8 +358,10 @@ def test_builtin_table_covers_the_walls_of_m0():
     for name, item in PTX_BUILTINS.items():
         assert item.status in ('direct', 'rewrite', 'refuse'), name
         assert item.status != 'refuse' or item.reason, name
-    assert all(item.helper in kernel_port._HELPERS or item.helper.endswith('f')
+    from cumlx.verify import bf16
+    assert all(item.helper in kernel_port._HELPERS or item.helper.endswith('f') or item.helper in bf16.NAMES
                for item in PTX_BUILTINS.values() if item.status == 'rewrite')
+    assert all(f' {name}(' in bf16.METAL_HEADER or f'struct {name}' in bf16.METAL_HEADER for name in bf16.NAMES)
     assert kernel_port.builtin_table()['__frcp_rz']['status'] == 'refuse'
 
 

@@ -1,0 +1,59 @@
+{
+ "schema": "cumlx.kernel-cases.v1",
+ "cases": [
+  {
+   "id": "bf16_convert.65536",
+   "kernel": "bf16_convert",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      65536
+     ],
+     "file": "inputs.safetensors"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "rn",
+     "dtype": "bfloat16",
+     "shape": [
+      65536
+     ]
+    },
+    {
+     "name": "rz",
+     "dtype": "bfloat16",
+     "shape": [
+      65536
+     ]
+    },
+    {
+     "name": "rd",
+     "dtype": "bfloat16",
+     "shape": [
+      65536
+     ]
+    },
+    {
+     "name": "ru",
+     "dtype": "bfloat16",
+     "shape": [
+      65536
+     ]
+    }
+   ],
+   "grid": [
+    65536,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ]
+  }
+ ]
+}

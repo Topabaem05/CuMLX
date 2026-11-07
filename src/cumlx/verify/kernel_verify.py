@@ -18,6 +18,7 @@ from typing import Any, Protocol
 import numpy as np
 
 from ..errors import CumlxError, missing_dependency
+from . import bf16
 from .kernel_capture import PROBE_BODY, PROBE_INPUT, PROBE_OUTPUTS, read_probe
 from .kernel_source import IDENT, is_complete_metal, mask_source
 from .metrics import KERNEL_THRESHOLDS, compare_kernel_output
@@ -26,7 +27,8 @@ from .opgolden import DTYPES, KernelCase, OpGolden, TensorSpec, sha256_text
 REPORT_SCHEMA = 'cumlx.kernel-report.v1'
 HEADER_SUFFIX = '.header.metal'
 METAL_TYPES = {'float32': 'float', 'float16': 'half', 'uint8': 'uint8_t', 'int8': 'int8_t', 'uint16': 'uint16_t',
-               'int16': 'int16_t', 'uint32': 'uint32_t', 'int32': 'int32_t', 'uint64': 'uint64_t', 'int64': 'int64_t'}
+               'int16': 'int16_t', 'uint32': 'uint32_t', 'int32': 'int32_t', 'uint64': 'uint64_t', 'int64': 'int64_t',
+               'bfloat16': bf16.TYPE}
 ATTRIBUTES = {'thread_position_in_grid': 'uint3', 'threadgroup_position_in_grid': 'uint3',
               'thread_position_in_threadgroup': 'uint3', 'threads_per_threadgroup': 'uint3',
               'threadgroups_per_grid': 'uint3', 'threads_per_grid': 'uint3', 'grid_size': 'uint3', 'grid_origin': 'uint3',
@@ -88,6 +90,9 @@ class MLXEngine:
     def run(self, case: KernelCase, source: str, header: str, inputs: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
         if case.initial or case.call is not None:
             raise KernelRunError('bind', f'{case.id} sets call or initial, and mx.fast.metal_kernel takes only inputs and new outputs. Use --engine torch')
+        if any(t.dtype == 'bfloat16' for t in case.inputs + case.outputs):
+            raise KernelRunError('bind', f'{case.id} has bfloat16 buffers. mx.fast.metal_kernel would declare them uint16_t, where an '
+                                 'integer converts to float without a word. Use --engine torch, which declares them cumlx_bf16')
         mx = self.mx
         input_names = [t.name for t in case.inputs]
         output_names = [t.name for t in case.outputs]
@@ -293,7 +298,7 @@ class WoofEngine:
             raise _classify_error(exc) from None
 
 
-def select_engine(name: str, *, needs_complete: bool) -> Engine:
+def select_engine(name: str, *, needs_complete: bool, needs_bf16: bool = False) -> Engine:
     if name == 'woof':
         return WoofEngine()
     if name == 'mlx':
@@ -303,7 +308,7 @@ def select_engine(name: str, *, needs_complete: bool) -> Engine:
         return MLXEngine()
     if name == 'torch':
         return TorchEngine()
-    if needs_complete or importlib.util.find_spec('mlx') is None:
+    if needs_complete or needs_bf16 or importlib.util.find_spec('mlx') is None:
         return TorchEngine()
     return MLXEngine()
 
@@ -401,8 +406,13 @@ def verify_kernels(metal: str | Path, golden_path: str | Path, *, kernel: str | 
     records: list[dict[str, Any]] = []
     translations: dict[str, Any] = {}
     sources: dict[str, tuple[str, str]] = {}
+    bf16_kernels: list[str] = []
     for name, path in targets.items():
-        sources[name] = (path.read_text(), _header_for(path, header))
+        text, head = path.read_text(), _header_for(path, header)
+        text, head, added = bf16.with_metal_header(text, head, set(IDENT.findall(mask_source(text + head))))
+        if added:
+            bf16_kernels.append(name)
+        sources[name] = (text, head)
         sidecar = path.with_name(path.name[:-len('.metal')] + '.port.json')
         if sidecar.is_file():
             try:
@@ -413,7 +423,8 @@ def verify_kernels(metal: str | Path, golden_path: str | Path, *, kernel: str | 
     execution: dict[str, Any] = {}
     measured: dict[str, Any] = {}
     if sources and engine is None:
-        engine = select_engine(engine_name, needs_complete=needs_complete)
+        needs_bf16 = any(t.dtype == 'bfloat16' for c in golden.cases if c.kernel in sources for t in c.inputs + c.outputs)
+        engine = select_engine(engine_name, needs_complete=needs_complete, needs_bf16=needs_bf16)
     if engine is not None and hasattr(engine, 'use_translations'):
         engine.use_translations(translations)
     if engine is not None and sources:
@@ -446,7 +457,8 @@ def verify_kernels(metal: str | Path, golden_path: str | Path, *, kernel: str | 
         port_repeats = port_repeats and identical
         verdict = 'pass'
         for spec in case.outputs:
-            per_run = [compare_kernel_output(run[spec.name], expected[spec.name]) for run in runs]
+            compare = bf16.compare_bits if spec.dtype == 'bfloat16' else compare_kernel_output
+            per_run = [compare(run[spec.name], expected[spec.name]) for run in runs]
             worst = next((m for m in per_run if m['verdict'] == 'fail'), per_run[0])
             record['outputs'][spec.name] = worst
             if worst['verdict'] == 'fail':
@@ -526,6 +538,10 @@ def verify_kernels(metal: str | Path, golden_path: str | Path, *, kernel: str | 
         if ours and golden_sha and golden_sha not in ours:
             warn('W_KERNEL_SOURCE_MISMATCH', f'{name} was translated from a source that differs from the one in the golden.', kernel=name)
 
+    if bf16_kernels:
+        warn('W_KERNEL_BF16_EMULATED', f'{bf16_kernels} name cumlx_bf16, so the integer bfloat16 header of this version was added in front. '
+             'Its arithmetic follows sm80 and later; CUDA 12.0 has none on sm70.', kernels=bf16_kernels)
+        execution['bf16_header_sha256'] = sha256_text(bf16.METAL_HEADER)
     return {'schema': REPORT_SCHEMA, 'verdict': verdict, 'golden': str(golden.path), 'golden_kind': golden.kind,
             'thresholds': dict(KERNEL_THRESHOLDS), 'first_divergence': first_divergence,
             'summary': {'kernels': counts, 'cases': case_counts, 'unmapped': unmapped, 'not_covered': uncovered,

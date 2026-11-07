@@ -1,0 +1,78 @@
+{
+ "schema": "cumlx.bf16_exhaustive.v1",
+ "date": "2026-11-07",
+ "device": "Apple M5 Pro",
+ "machine": "macOS-27.0.1-arm64-arm-64bit-Mach-O",
+ "mlx": "0.32.4",
+ "math_mode": "safe",
+ "header_sha256": "88d0f5d32a613a3f898b97674be0ec079fd5260a398db638fbde4e0a336407cb",
+ "model": "conversions: cuda_bf16.hpp of CUDA 12.0 (sm70 path); add, sub, mul, fma: the exact result rounded once to nearest even with subnormals kept (PTX ISA fma.rn.bf16). Not a CUDA run.",
+ "results": {
+  "float2bfloat16_rn": {
+   "inputs": 4294967296,
+   "bits_differ": 0,
+   "nan_class_differs": 0,
+   "nan_payload_differs": 0
+  },
+  "float2bfloat16_rz": {
+   "inputs": 4294967296,
+   "bits_differ": 0,
+   "nan_class_differs": 0,
+   "nan_payload_differs": 0
+  },
+  "float2bfloat16_rd": {
+   "inputs": 4294967296,
+   "bits_differ": 0,
+   "nan_class_differs": 0,
+   "nan_payload_differs": 0
+  },
+  "float2bfloat16_ru": {
+   "inputs": 4294967296,
+   "bits_differ": 0,
+   "nan_class_differs": 0,
+   "nan_payload_differs": 0
+  },
+  "hadd": {
+   "pairs": 4294967296,
+   "bits_differ": 0,
+   "nan_class_differs": 0,
+   "nan_payload_differs": 0
+  },
+  "hsub": {
+   "pairs": 4294967296,
+   "bits_differ": 0,
+   "nan_class_differs": 0,
+   "nan_payload_differs": 0
+  },
+  "hmul": {
+   "pairs": 4294967296,
+   "bits_differ": 0,
+   "nan_class_differs": 0,
+   "nan_payload_differs": 0
+  },
+  "hfma": {
+   "triples": 263824,
+   "random": 200000,
+   "special_values": 13824,
+   "near_cancellation": 50000,
+   "seed": 20261107,
+   "bits_differ": 0,
+   "nan_class_differs": 0,
+   "nan_payload_differs": 0
+  }
+ },
+ "controls": {
+  "native_bfloat_conversion": {
+   "what": "bfloat(float) of MSL",
+   "inputs": 4294967296,
+   "bits_differ": 16711678
+  },
+  "add_through_metal_float": {
+   "what": "float add on Metal, then round to nearest even",
+   "pairs": 4294967296,
+   "bits_differ": 1084834
+  }
+ },
+ "seconds": 243,
+ "pass": true
+}
