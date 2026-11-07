@@ -190,3 +190,28 @@ def test_mlx_cannot_bind_bf16_buffers_so_the_case_is_incomplete(gpu, capsys, tmp
     body.write_text('uint i = thread_position_in_grid.x; y[i] = x[i];\n')
     code, doc = run(capsys, 'kernel', 'verify', str(body), str(golden), '--engine', 'mlx')
     assert code == 5 and doc['data']['unverified']['items'][0]['stage'] == 'bind', doc['summary']
+
+
+@pytest.mark.gpu
+def test_the_ported_conversions_equal_the_v100_to_the_bit_and_native_bfloat_does_not(gpu, capsys, tmp_path, monkeypatch):
+    """validation/kernel-golden-v100-bf16 is a real V100 run (sm70, nvcc 12.0) of the four conversions on 65536 inputs."""
+    pytest.importorskip('torch')
+    monkeypatch.syspath_prepend(str(ROOT / 'tests'))
+    golden = ROOT / 'validation/kernel-golden-v100-bf16'
+    out = tmp_path / 'right' / 'bf16_convert.metal'
+    code, doc = run(capsys, 'kernel', 'port', str(ROOT / 'validation/kernel-cases-bf16/bf16_convert.cu'), '-o', str(out), '--translator', STUB)
+    assert code == 0, doc
+    code, doc = run(capsys, 'kernel', 'verify', str(out), str(golden), '--max-items', '-1', '-o', str(tmp_path / 'report'))
+    assert code == 0 and doc['data']['kernels']['bf16_convert']['grade'] == 'A', doc['summary']
+    outputs = json.loads((tmp_path / 'report' / 'report.json').read_text())['records'][0]['outputs']
+    assert all(o['basis'] == 'bit_exact' and o['nan_in_golden'] > 0 for o in outputs.values()), outputs
+
+    # MSL's own bfloat conversion, which flushes subnormals on this GPU.
+    wrong = tmp_path / 'wrong' / 'bf16_convert.metal'
+    wrong.parent.mkdir()
+    text = out.read_text().replace('cumlx_float2bfloat16_rn(x[i])', 'cumlx_ushort_as_bfloat16(as_type<ushort>(bfloat(x[i])))')
+    assert text != out.read_text()
+    wrong.write_text(text)
+    code, doc = run(capsys, 'kernel', 'verify', str(wrong), str(golden), '--max-items', '-1')
+    assert code == 1 and doc['data']['first_divergence']['output'] == 'rn', doc['summary']
+    assert doc['data']['first_divergence']['reason'] == 'bits_differ'

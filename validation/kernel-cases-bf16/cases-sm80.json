@@ -1,0 +1,143 @@
+{
+ "schema": "cumlx.kernel-cases.v1",
+ "cases": [
+  {
+   "id": "bf16_convert.65536",
+   "kernel": "bf16_convert",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      65536
+     ],
+     "file": "inputs.safetensors"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "rn",
+     "dtype": "bfloat16",
+     "shape": [
+      65536
+     ]
+    },
+    {
+     "name": "rz",
+     "dtype": "bfloat16",
+     "shape": [
+      65536
+     ]
+    },
+    {
+     "name": "rd",
+     "dtype": "bfloat16",
+     "shape": [
+      65536
+     ]
+    },
+    {
+     "name": "ru",
+     "dtype": "bfloat16",
+     "shape": [
+      65536
+     ]
+    }
+   ],
+   "grid": [
+    65536,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ]
+  },
+  {
+   "id": "bf16_arith.262144",
+   "kernel": "bf16_arith",
+   "inputs": [
+    {
+     "name": "a",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ],
+     "file": "arith-inputs.safetensors"
+    },
+    {
+     "name": "b",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ],
+     "file": "arith-inputs.safetensors"
+    },
+    {
+     "name": "c",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ],
+     "file": "arith-inputs.safetensors"
+    }
+   ],
+   "outputs": [
+    {
+     "name": "add",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ]
+    },
+    {
+     "name": "sub",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ]
+    },
+    {
+     "name": "mul",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ]
+    },
+    {
+     "name": "fma",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ]
+    },
+    {
+     "name": "neg",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ]
+    },
+    {
+     "name": "abs",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ]
+    }
+   ],
+   "grid": [
+    262144,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ]
+  }
+ ]
+}

@@ -184,7 +184,7 @@ cumlx kernel verify foo.metal kgolden/ -o report/                               
 
 | CUDA | Metal에서 계산하는 것 | 근거 |
 |---|---|---|
-| `__float2bfloat16`(`_rn`), `_rz`, `_rd`, `_ru` | CUDA 12.0 `cuda_bf16.hpp`의 sm70 경로. 비정규수를 지키고, NaN은 0x7FFF | float32 비트 패턴 2^32개 전부에서 비트 일치 |
+| `__float2bfloat16`(`_rn`), `_rz`, `_rd`, `_ru` | CUDA 12.0 `cuda_bf16.hpp`의 sm70 경로. 비정규수를 지키고, NaN은 0x7FFF | float32 비트 패턴 2^32개 전부에서 모델과 비트 일치. V100(sm70, nvcc 12.0) golden 65536개와 NaN payload까지 비트 일치, grade A(`validation/kernel-golden-v100-bf16`). MSL `bfloat` 변환은 같은 golden에서 `rn`이 다름 |
 | `__hadd`, `__hsub`, `__hmul`, `__hfma`, `+ - *`, `+= -= *=` | sm80 이상의 `fma.rn.bf16`: 정확한 결과를 가장 가까운 짝수로 한 번 반올림, 비정규수 유지 | 덧셈·뺄셈·곱셈은 bf16 쌍 2^32개 전부, fma는 263824개 조합에서 모델과 비트 일치 |
 | `__hneg`, `__habs`, 비교 연산자 | 부호 비트 변경, 정수 순서 비교(NaN은 false) | 위 GPU 시험 |
 | `__bfloat162float`, `__bfloat16_as_ushort`, `__ushort_as_bfloat16` | 비트 이동 | |

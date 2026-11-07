@@ -1,0 +1,126 @@
+{
+ "schema": "cumlx.opgolden.v1",
+ "cumlx_version": "0.5.0",
+ "created_utc": "2026-11-07T11:04:42Z",
+ "golden": {
+  "kind": "cuda"
+ },
+ "source": {
+  "framework": "cuda",
+  "gpu": "Tesla V100-SXM2-16GB",
+  "driver": "580.178.04",
+  "arch": "7.0",
+  "compiler": {
+   "name": "nvcc",
+   "version": "12.0.140",
+   "flags": [
+    "-arch=native"
+   ]
+  },
+  "cuda_runtime": 12000,
+  "cuda_driver_api": 13000,
+  "host": {
+   "machine": "x86_64",
+   "system": "Linux"
+  },
+  "repeats": 3,
+  "idle_during_capture": true
+ },
+ "floating_point": {
+  "ftz": {
+   "flag": "false (nvcc default)",
+   "load_flushes": false,
+   "input_flushes": false,
+   "output_flushes": false
+  },
+  "fmad": {
+   "flag": "true (nvcc default)",
+   "contracts": true
+  },
+  "fp64": {
+   "available": true
+  },
+  "warp_size": 32,
+  "probe_outputs": [
+   9.99994610111476e-41,
+   9.99994610111476e-41,
+   9.99994610111476e-41,
+   7.346839692639297e-40,
+   5.960464477539063e-08
+  ]
+ },
+ "kernels": {
+  "bf16_convert": {
+   "source_file": "bf16_convert.cu",
+   "source_sha256": "4391398c433b0693c4d378e63387f2124f2a92682905dbf141e84e378c9e5049",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "bf16_convert.65536",
+   "kernel": "bf16_convert",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      65536
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "name": "rn",
+     "dtype": "bfloat16",
+     "shape": [
+      65536
+     ]
+    },
+    {
+     "name": "rz",
+     "dtype": "bfloat16",
+     "shape": [
+      65536
+     ]
+    },
+    {
+     "name": "rd",
+     "dtype": "bfloat16",
+     "shape": [
+      65536
+     ]
+    },
+    {
+     "name": "ru",
+     "dtype": "bfloat16",
+     "shape": [
+      65536
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    65536,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "file": "cases/c0000.safetensors",
+   "sha256": "f8beeb39a3329f63b19c06424aab68f2cb393b4a036882a65d30551ebea08e2f",
+   "repeat_identical": true
+  }
+ ]
+}

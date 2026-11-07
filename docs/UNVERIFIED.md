@@ -24,7 +24,7 @@
 ## bfloat16 커널 (`cumlx_bf16.h`)
 
 - 산술(`__hadd`, `__hsub`, `__hmul`, `__hfma`)은 PTX ISA의 `fma.rn.bf16` 모델과만 비교했습니다. NVIDIA GPU에서 돌린 적이 없습니다. CUDA 12.0은 sm70에 bf16 산술이 없고, sm80 이상의 GPU는 없습니다. CUDA 12.2 이후 sm70의 에뮬레이션은 float를 거쳐 두 번 반올림할 수 있으며, 이 헤더는 그것을 따르지 않습니다.
-- 변환은 `cuda_bf16.hpp`를 옮긴 모델과 2^32개 전부 같지만, V100 golden(`validation/kernel-cases-bf16`)은 GPU가 다른 작업으로 바빠 아직 기록하지 않았습니다.
+- 변환은 `cuda_bf16.hpp`를 옮긴 모델과 2^32개 전부 같고, V100(sm70, nvcc 12.0) golden 입력 65536개와도 비트까지 같습니다(`validation/kernel-golden-v100-bf16`, 2026-11-07). sm80 이상에서 변환은 다른 코드 경로(`cvt.rn.bf16.f32`)를 쓰며, 그 경로는 GPU에서 돌리지 않았습니다.
 - 비교한 장치는 M5 Pro 하나입니다. 정수 산술이라 다른 Apple GPU에서도 같아야 하지만 측정하지 않았습니다. `__hdiv`, `__nv_bfloat162`, 정수에서 bf16으로의 변환(`__int2bfloat16_rn` 등)은 매핑하지 않았습니다. 2^24보다 큰 정수는 float를 거치므로 두 번 반올림됩니다.
 - woof 같은 실제 번역기가 `cumlx_bf16`와 `#include "cumlx_bf16.h"`를 그대로 넘기는지는 시험하지 않았습니다. 시험은 테스트용 stub 번역기로만 했습니다.
 
