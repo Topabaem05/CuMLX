@@ -1,0 +1,173 @@
+{
+ "schema": "cumlx.m6_f1_rerun.v1",
+ "rules": "validation/m6-f1-rerun-limits.json",
+ "prompt": "A bicycle stays upright when it moves because",
+ "commits": {
+  "cuda": "0f7856cfaa4867319105b4105292a272ccac7df6",
+  "mac": "0f7856cfaa4867319105b4105292a272ccac7df6"
+ },
+ "complete": true,
+ "not_complete_because": [],
+ "verdict": "pass",
+ "grade": "A",
+ "parts": {
+  "setup": {
+   "state": "pass",
+   "reasons": [],
+   "reason_count": 0
+  },
+  "program_cuda": {
+   "state": "pass",
+   "reasons": [],
+   "reason_count": 0,
+   "text": " Paris. It is the largest city in Europe and the second largest in the world. It is also",
+   "device": "cuda:0"
+  },
+  "program_mac": {
+   "state": "pass",
+   "reasons": [],
+   "reason_count": 0,
+   "text": " Paris. It is the largest city in Europe and the second largest in the world. It is also",
+   "device": "mps:0"
+  },
+  "first_token": {
+   "state": "pass",
+   "reasons": [],
+   "reason_count": 0,
+   "equal_tokens": 20,
+   "of": 20
+  },
+  "leaves": {
+   "state": "pass",
+   "reasons": [],
+   "reason_count": 0,
+   "worst_rel_l2": 2.977546821659984e-07,
+   "least_equal_fraction": 0.9990234375
+  },
+  "weights": {
+   "state": "pass",
+   "reasons": [],
+   "reason_count": 0,
+   "most_differ_fraction": 0.0
+  },
+  "layers": {
+   "state": "pass",
+   "reasons": [],
+   "reason_count": 0,
+   "worst_rel_l2": 0.007457794546417668
+  },
+  "attention": {
+   "state": "pass",
+   "reasons": [],
+   "reason_count": 0,
+   "worst_mac": 0.002198132219535701,
+   "worst_cuda": 0.0021981329505085458
+  },
+  "controls": {
+   "state": "pass",
+   "reasons": [],
+   "reason_count": 0,
+   "caught": {
+    "no_outlier_split": {
+     "by": "leaves",
+     "caught": true,
+     "reasons": [
+      "model.layers.0.mlp.gate_proj: 0.0219",
+      "model.layers.0.mlp.up_proj: 0.036",
+      "model.layers.1.self_attn.q_proj: 0.00442"
+     ]
+    },
+    "activation_scale_128": {
+     "by": "leaves",
+     "caught": true,
+     "reasons": [
+      "model.layers.0.self_attn.v_proj: 0.0281",
+      "model.layers.0.self_attn.o_proj: 0.0123",
+      "model.layers.0.mlp.gate_proj: 0.0117"
+     ]
+    },
+    "bias_dropped": {
+     "by": "leaves",
+     "caught": true,
+     "reasons": [
+      "model.layers.0.self_attn.q_proj: 1",
+      "model.layers.0.self_attn.k_proj: 1",
+      "model.layers.0.self_attn.v_proj: 0.603"
+     ]
+    },
+    "causal_top_left": {
+     "by": "attention",
+     "caught": true,
+     "reasons": [
+      "attn/24 (decode, layer 0) against_exact: 1.51",
+      "attn/25 (decode, layer 1) against_exact: 0.932",
+      "attn/26 (decode, layer 2) against_exact: 1.84"
+     ]
+    },
+    "no_softmax_scale": {
+     "by": "attention",
+     "caught": true,
+     "reasons": [
+      "attn/0 (prefill, layer 0) against_exact: 0.459",
+      "attn/1 (prefill, layer 1) against_exact: 0.427",
+      "attn/2 (prefill, layer 2) against_exact: 0.6"
+     ]
+    }
+   }
+  }
+ },
+ "reported_not_judged": {
+  "ieee_row_scale": {
+   "worst": "model.layers.14.self_attn.o_proj",
+   "worst_rel_l2": 0.0013335354005750658,
+   "over_limit": 0,
+   "bit_equal": 3,
+   "of": 168,
+   "weights_cb_differ_worst": 0.00027029854910714287,
+   "leaves_state": "pass",
+   "weights_state": "pass"
+  },
+  "ieee_row_scale_exit": 0,
+  "right_adapter": {
+   "worst": "model.layers.5.self_attn.k_proj",
+   "worst_rel_l2": 2.977546821659984e-07,
+   "over_limit": 0,
+   "bit_equal": 162,
+   "of": 168,
+   "weights_cb_differ_worst": 0.0,
+   "leaves_state": "pass",
+   "weights_state": "pass"
+  },
+  "golden_text": " of the force of gravity. The force of gravity is the force that pulls objects towards the center of",
+  "prefill_chain": {
+   "rel_l2": 0.05723370742422827,
+   "max_abs": 1.21875,
+   "equal_fraction": 0.046687421019376577,
+   "finite": true,
+   "top1_equal_positions": 8,
+   "positions": 8
+  },
+  "cuda_text": " Paris. It is the largest city in Europe and the second largest in the world. It is also",
+  "mac_text": " Paris. It is the largest city in Europe and the second largest in the world. It is also",
+  "cuda_bitsandbytes": {
+   "module": "bitsandbytes",
+   "version": "0.50.2"
+  },
+  "cuda_torch": "2.10.0+cu128"
+ },
+ "cuda_versions": {
+  "torch": "2.10.0+cu128",
+  "cuda": "12.8",
+  "transformers": "5.22.1",
+  "accelerate": "1.15.0",
+  "bitsandbytes": "0.50.2",
+  "gpu": "Tesla V100-SXM2-16GB",
+  "capability": [
+   7,
+   0
+  ]
+ },
+ "gpu_at_start": "| NVIDIA-SMI 580.178.04             Driver Version: 580.178.04     CUDA Version: 13.0     |\n|   0  Tesla V100-SXM2-16GB           On  |   00000000:01:00.0 Off |                    0 |",
+ "mac_peak_memory_gb": "31.3",
+ "mac_verdict": "mac_done"
+}

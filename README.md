@@ -27,21 +27,21 @@ diverged: 50 pass, 8 fail, 0 unverified, 6 skipped, 16 chain drift; first diverg
 
 [플랫폼 로드맵](https://github.com/Topabaem05/CuMLX/blob/main/docs/ROADMAP-PLATFORM.md)의 완료 조건 25개 중 24개를 채웠습니다. 남은 것은 M6(통합 릴리스)의 "기함 작업을 새 Mac에서 처음부터 재현"입니다. 프로젝트에 Mac이 한 대(Apple M5 Pro, 48 GB)뿐이라, 같은 Mac의 결과로는 체크하지 않기로 했습니다.
 
-**기함 작업**은 플랫폼이 쓸모 있는지 판단하려고 로드맵에서 정한 다섯 작업이고, 목표 등급도 거기서 정했습니다. 2026-11-06의 첫 완전 실행에서 F2, F3, F4, F5는 목표 등급에 도달했고, **F1은 실패해 아직 등급이 없습니다**([기록](https://github.com/Topabaem05/CuMLX/blob/main/validation/m6-finish-run.json)). 판정 규칙은 실행 전에 커밋했습니다. F1, F2, F3, F5는 이 Mac의 빈 환경(공개 저장소, 빈 홈 폴더)과 Tesla V100의 CUDA를 비교했고, F4는 CUDA 부분이 없어 Mac에서 Genesis와 MuJoCo, MLX와 rsl_rl을 비교했습니다. 첫 완전 실행은 V100과 Mac을 같은 커밋(4bf9b41)으로 돌렸습니다.
+**기함 작업**은 플랫폼이 쓸모 있는지 판단하려고 로드맵에서 정한 다섯 작업이고, 목표 등급도 거기서 정했습니다. 2026-11-06의 첫 완전 실행에서 F2, F3, F4, F5는 목표 등급에 도달했고 F1은 실패했습니다([기록](https://github.com/Topabaem05/CuMLX/blob/main/validation/m6-finish-run.json)). **F1은 2026-11-07에 새 규칙의 첫 완전 실행에서 A를 받았습니다**([기록](https://github.com/Topabaem05/CuMLX/blob/main/validation/m6-f1-rerun.json)). 판정 규칙은 실행 전에 커밋했습니다. F1, F2, F3, F5는 이 Mac의 빈 환경(공개 저장소, 빈 홈 폴더)과 Tesla V100의 CUDA를 비교했고, F4는 CUDA 부분이 없어 Mac에서 Genesis와 MuJoCo, MLX와 rsl_rl을 비교했습니다. 첫 완전 실행은 V100과 Mac을 같은 커밋(4bf9b41)으로 돌렸습니다.
 
 | 작업 | Mac 경로 | 목표 | 결과 | 근거 (rel_l2는 상대 L2 오차) | 범위 |
 |---|---|---|---|---|---|
-| F1 FlashAttention + bitsandbytes로 LLM 추론 | `cumlx run` + 어댑터 2개 | A | **없음** (첫 완전 실행 실패) | 첫 완전 실행에서 int8 층 하나가 rel_l2 2.48e-3(허용 2e-3). 고친 뒤 같은 golden을 Mac에서만 다시 돌린 시도는 최악 1.65e-7로 허용치 안이지만, 규칙상 등급을 주지 않음 | Qwen2.5-0.5B, 판정한 프롬프트 1개 |
+| F1 FlashAttention + bitsandbytes로 LLM 추론 | `cumlx run` + 어댑터 2개 | A | **A** (새 규칙, 2026-11-07) | 새 프롬프트의 V100 golden과 int8 층 168개 최악 rel_l2 3.0e-7(허용 2e-3), int8 가중치 일치, 디코더 층 최악 7.5e-3(허용 1.5e-2), 토큰 20개 모두 같음, 대조군 5개 모두 검출. 2026-11-06의 첫 완전 실행은 int8 층 하나가 2.48e-3이라 실패로 남음 | Qwen2.5-0.5B, 판정한 프롬프트 1개 |
 | F2 3D Gaussian Splatting 학습 | `cumlx run` + gsplat 어댑터 | B | **B** | 실제 gsplat 1.5.3과 렌더 rel_l2 최악 3.6e-7(허용 1e-3), 기울기 2.6e-6(허용 5%), 시드 5개 평균 held-out PSNR Mac 43.15 dB, CUDA 43.50 dB(허용 차이 3.2 dB) | 합성 장면, 밀도 조절과 SH 없음 |
 | F3 커스텀 `.cu` 커널 앱 (SAM2 연결 요소) | `cumlx kernel port` + woof(커널 6개), 호스트 함수는 Python으로 옮긴 드라이버 | A | **A** | 레이블과 개수가 원본 CUDA 확장과 정확히 같음, 드라이버 결함 3개 모두 검출(번역한 커널 안의 결함은 이 시험에 없음) | 합성 마스크 24개 |
 | F4 Isaac Lab 스타일 사족 보행 학습과 추론 | `cumlx.sim` + MLX | 추론 A, 물리 B | **A, B** | MLX 정책이 rsl_rl과 절대 오차 최악 1.7e-6(허용 1e-5), Genesis와 MuJoCo 궤적 오차 중앙값 0.024(허용 0.1) | go2_flat, 학습 시드 1개 |
 | F5 물리 기반 카메라 센서 | `cumlx.render` | B | **B** | RGB는 장치 간 PSNR 최악 45.65 dB(허용 40 dB), 깊이는 정확한 광선 계산 대비 최악 3.4e-5 m(허용 1 mm), 세그멘테이션 불일치 0 | 상자 장면 하나, 시점 6개. CUDA는 Mitsuba 3.8.0, Metal은 3.9.1 |
 
-F1에 아직 등급이 없는 이유는 다음과 같습니다.
+F1의 기록은 다음과 같습니다.
 
-- **첫 완전 실행에서 실패했습니다.** int8 층 하나(`model.layers.14.self_attn.o_proj`)가 2.48e-3(허용 2e-3)이었습니다. 원인은 bitsandbytes가 행 scale `127/absmax`를 CUDA의 근사 나눗셈 `__fdividef`로 구하는데, 어댑터는 장치에서 float32로 나눈 것입니다. 어댑터는 V100에서 잰 `__fdividef` 표를 쓰도록 고쳤습니다.
-- **고친 뒤의 시도는 등급이 되지 않습니다.** 같은 허용치로 Mac만 다시 돌린 3번째 시도(d1717d6)는 모든 부분과 대조 시험을 통과했습니다. 하지만 규칙은 두 장치의 첫 완전 실행에서 통과해야 A라고 정했고, 이 시도는 실패를 보인 같은 golden을 다시 돌린 것이라 독립 시험도 아닙니다. 처음에는 이 시도를 A로 적었고, 2026-11-07의 독립 재검토가 규칙과 맞지 않는다고 찾아 고쳤습니다.
-- **새 시험을 따로 정했습니다.** [새 규칙](https://github.com/Topabaem05/CuMLX/blob/main/validation/m6-f1-rerun-limits.json)은 허용치와 대조 시험을 그대로 두고, 어떤 실행도 쓰지 않은 프롬프트로 두 장치를 다시 돌립니다. 측정 전에 커밋했고, 그 첫 완전 실행이 등급을 정합니다.
+- **2026-11-06의 첫 완전 실행은 실패로 남습니다.** int8 층 하나(`model.layers.14.self_attn.o_proj`)가 2.48e-3(허용 2e-3)이었습니다. 원인은 bitsandbytes가 행 scale `127/absmax`를 CUDA의 근사 나눗셈 `__fdividef`로 구하는데, 어댑터는 장치에서 float32로 나눈 것입니다. 어댑터는 V100에서 잰 `__fdividef` 표를 쓰도록 고쳤습니다. 같은 golden을 Mac에서만 다시 돌린 3번째 시도(d1717d6)는 허용치 안이었지만, 첫 완전 실행이 아니고 독립 시험도 아니라서 등급이 되지 않습니다.
+- **새 시험에서 A를 받았습니다.** [새 규칙](https://github.com/Topabaem05/CuMLX/blob/main/validation/m6-f1-rerun-limits.json)은 허용치와 대조 시험을 그대로 두고, 어떤 실행도 쓰지 않은 프롬프트로 두 장치를 다시 돌립니다. 측정 전에 커밋했습니다. V100과 Mac 모두 그 커밋(0f7856c)으로 돌았고, 첫 완전 실행에서 모든 부분과 대조군 5개가 통과했습니다. 그 전에 Mac 쪽은 디스크가 모자라 시작 전에 한 번 멈췄는데, 규칙상 완전 실행이 아닙니다.
+- **이 golden은 고친 어댑터와 고치기 전 어댑터를 가르지 못합니다.** 고치기 전의 나눗셈(판정하지 않는 재생 결함 `ieee_row_scale`)도 이 golden에서는 int8 층 최악 1.3e-3으로 허용치 안이었습니다. 이 A는 지금 어댑터가 새 입력에서 맞다는 것을 보이고, `__fdividef` 표가 필요하다는 것을 보이지는 않습니다.
 - **FlashAttention-2 바이너리는 어디서도 돌지 않았습니다.** V100(sm70)이 지원하지 않아 CUDA 기준 실행도 어텐션은 CUMLX의 어댑터를 썼습니다. 실제 CUDA 라이브러리와 비교한 것은 bitsandbytes이고, 어텐션의 기준은 float64 정확 계산입니다. F1은 bfloat16 프로그램이므로 목표 A는 bfloat16 반올림 수준의 동등입니다([규칙](https://github.com/Topabaem05/CuMLX/blob/main/validation/m6-f1-limits.json)).
 
 F2는 시드마다 PSNR이 약 2 dB씩 달라 학습 비교 자체는 약하고, 렌더와 기울기 비교가 강한 근거입니다. 등급과 한계는 [결과 보고서](https://github.com/Topabaem05/CuMLX/blob/main/docs/PLATFORM-REPORT.md)에 있습니다.
