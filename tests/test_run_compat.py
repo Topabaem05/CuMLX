@@ -221,6 +221,22 @@ def test_an_explicit_substitute_serves_the_module_and_is_reported(tmp_path, targ
     assert 'W_RUN_SUBSTITUTED' in {w['code'] for w in doc['warnings']}
 
 
+def test_a_dotted_substitute_name_is_a_usage_error(tmp_path, target):
+    doc, _, _ = _run(tmp_path, 'print(1)\n', target, '--substitute', 'flash_attn.bert_padding=stand_in')
+    assert doc['exit_code'] == 2 and doc['errors'][0]['code'] == 'E_USAGE'
+    assert '--substitute flash_attn=MODULE' in doc['errors'][0]['hint']
+
+
+def test_the_report_folder_is_made_before_the_script_runs(tmp_path, target):
+    script = tmp_path / 'script.py'
+    script.write_text('print(1)\n')
+    report = tmp_path / 'golden' / 'seed0.json'
+    argv = [sys.executable, '-m', 'cumlx', 'run', str(script), '--target', target, '--report', str(report), '--format', 'json']
+    done = subprocess.run(argv, capture_output=True, text=True, cwd=tmp_path, env={**os.environ, 'PYTHONPATH': str(ROOT / 'src')}, check=False)
+    assert json.loads(done.stdout)['exit_code'] == 0, done.stderr
+    assert json.loads(report.read_text())['script_exit_code'] == 0
+
+
 def test_a_checkpoint_saved_on_cuda_loads_on_the_target(tmp_path, target):
     doc, report, stderr = _run(tmp_path, """
         import torch

@@ -5,6 +5,9 @@
 REPO=$1 OUT=$2 WORK=$3
 MODEL=Qwen/Qwen2.5-0.5B
 REVISION=060db6499f32faf8b98477b0a26969ef7d8b9987
+# m6_f1rerun.sh sets CUMLX_F1_PROMPT for validation/m6-f1-rerun-limits.json. Without it the golden takes the record's own prompt.
+PROMPT_ARGS=()
+[ -n "${CUMLX_F1_PROMPT:-}" ] && PROMPT_ARGS=(--prompt "$CUMLX_F1_PROMPT")
 mkdir -p "$OUT" "$WORK"
 export PYTHONPATH=$WORK/pkgs:$REPO/src HF_HOME=$WORK/hf PYTHONUNBUFFERED=1
 stage() { echo "[$(date +%H:%M:%S)] f1: $1"; echo "f1: $1" > "$OUT/stage.txt"; }
@@ -22,7 +25,7 @@ echo $? > "$OUT/install.exit"
 cp "$WORK/req.txt" "$OUT/req.txt" 2>/dev/null
 python3 -c 'import torch, transformers, accelerate, bitsandbytes, json; print(json.dumps({"torch": torch.__version__, "cuda": torch.version.cuda, "transformers": transformers.__version__, "accelerate": accelerate.__version__, "bitsandbytes": bitsandbytes.__version__, "gpu": torch.cuda.get_device_name(0), "capability": torch.cuda.get_device_capability(0)}))' > "$OUT/versions.json" 2>> "$OUT/install.txt"
 stage "capture the golden"
-python3 -m cumlx run --target cuda "$REPO/spikes/m6_f1_record.py" --substitute flash_attn=cumlx.compat.flash_attn_sdpa --report "$OUT/capture.run-report.json" --format json -- capture --output "$OUT/golden" > "$OUT/capture.json" 2> "$OUT/capture.txt"
+python3 -m cumlx run --target cuda "$REPO/spikes/m6_f1_record.py" --substitute flash_attn=cumlx.compat.flash_attn_sdpa --report "$OUT/capture.run-report.json" --format json -- capture --output "$OUT/golden" "${PROMPT_ARGS[@]}" > "$OUT/capture.json" 2> "$OUT/capture.txt"
 echo $? > "$OUT/capture.exit"
 stage "the original program"
 python3 -m cumlx run --target cuda "$REPO/spikes/m6_f1_program.py" --substitute flash_attn=cumlx.compat.flash_attn_sdpa --report "$OUT/program.run-report.json" --format json -- --model "$MODEL" --revision "$REVISION" --output "$OUT/program.json" > "$OUT/program.result.json" 2> "$OUT/program.txt"

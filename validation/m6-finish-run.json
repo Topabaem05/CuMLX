@@ -38,8 +38,8 @@
   {
    "attempt": 1,
    "commit": "840c43c",
-   "verdict": "setup errors, nothing measured",
-   "what": "F1 on the V100: uv found a Python 3.11 for --python python3. F2: gsplat 1.5.3 with packed=True rejects [C, 3] backgrounds, and the Mac work made no folder. F3: no ninja on the V100, no cmake on the clean Mac PATH. F5: Mitsuba 3.8 transforms cannot be deep-copied. The launcher held ssh open and fetched nothing. Fixed in 28f2143 and 4bf9b41 with the rules unchanged; a review of five readers and two skeptics per finding found the rest before attempt 2"
+   "verdict": "setup errors, no comparison made",
+   "what": "Some parts ran to their end (the V100 F2 program and its 15 training runs, the Mac base checks), and no part compared the two machines. F1 on the V100: uv found a Python 3.11 for --python python3. F2: gsplat 1.5.3 with packed=True rejects [C, 3] backgrounds, and the Mac work made no folder. F3: no ninja on the V100, no cmake on the clean Mac PATH. F5: Mitsuba 3.8 transforms cannot be deep-copied. The launcher held ssh open and fetched nothing. Fixed in 28f2143 and 4bf9b41 with the rules unchanged; a review of five readers and two skeptics per finding found the rest before attempt 2"
   },
   {
    "attempt": 2,
@@ -62,8 +62,10 @@
    "commit": "d1717d6",
    "parts": "F1 only: a clean Mac run of the F1 part against attempt 2's CUDA golden, which did not change",
    "verdict": "pass",
+   "grade": null,
+   "why_no_grade": "validation/m6-f1-limits.json gives grade A only on the first complete run of both machines. That was attempt 2, and F1 failed in it. This attempt ran on the Mac only, after a fix to the adapter under test, on the golden that showed the fault",
    "mac_commit": "d1717d6abe0d980925adb83731e3e7522efd2f33",
-   "what_changed": "cumlx.compat.bitsandbytes_int8 takes the row scale 127/absmax from a table of CUDA __fdividef values measured on the V100 (validation/bnb-fdividef-sm70.json), where it divided exactly. The limits did not change"
+   "what_changed": "cumlx.compat.bitsandbytes_int8 takes the row scale 127/absmax from a table of CUDA __fdividef values measured on the V100 (validation/bnb-fdividef-sm70.json), where it divided in float32 on the device (on MPS, whose division does not round every quotient correctly). The limits did not change"
   }
  ],
  "f1": {
@@ -126,7 +128,7 @@
   },
   "attempt_3": {
    "verdict": "pass",
-   "grade": "A",
+   "grade": null,
    "parts": {
     "setup": {
      "state": "pass",
@@ -176,7 +178,8 @@
      "state": "pass",
      "reasons": []
     }
-   }
+   },
+   "judge_grade_ignored": "spikes/m6_f1_judge.py writes grade A for any pass and does not know which attempt it judges"
   },
   "cause_of_attempt_2": "bitsandbytes takes 127/absmax with the approximate __fdividef, 1 ulp from the quotient for 29% of fp16 inputs. Of 840 rows of the 168 int8 layers, 835 were equal to CUDA to the bit; in 4 more, 9 activations within 6e-5 of a rounding half went to the other int8 step; 1 element differed in the bfloat16 outlier sum. One such activation at row 2 of model.layers.14.self_attn.o_proj (-63.500004 on the Mac, -63.499996 on CUDA) moved 58% of that row by one bfloat16 step",
   "second_prompt": {
@@ -443,7 +446,7 @@
   }
  },
  "grades": {
-  "f1": "A at attempt 3, after a fix that attempt 2's failure showed; attempt 2 is a fail",
+  "f1": "none: F1 failed on the first complete run (attempt 2). Attempt 3 passed every limit and gives no grade under the rules. validation/m6-f1-rerun-limits.json is a new test",
   "f2": "B",
   "f3": "A",
   "f4": {
@@ -462,6 +465,19 @@
   "Isaac Lab, PhysX or a real robot in F4",
   "An RTX sensor in F5"
  ],
+ "corrected": {
+  "date": "2026-11-07",
+  "what": "Until 2026-11-07 this record gave F1 grade A at attempt 3, and the documents said that all five tasks reached their target grades. An independent recheck of the raw files found that the rules do not allow this, and the grade of F1 is now none. The numbers did not change",
+  "recheck": {
+   "how": "13 readers, two per task and three for the whole run, recomputed the key numbers from the raw files with their own code and tried to refute each verdict",
+   "f1": "The numbers agree: attempt 2 fails (model.layers.14.self_attn.o_proj 2.48e-3) and attempt 3 passes every part and every control. The grade A does not follow from validation/m6-f1-limits.json, which names the first complete run. Also: attempt 3 is not an independent test, and on the second prompt the leaf limit would not separate the fixed adapter from the old one (only the bit-equal rows do, 1,670 against 1,595 of 1,680)",
+   "f2": "Not refuted. The training test can find only gross faults, as its rules say; the renders and gradients (1e-7) and their 8 controls carry the grade. The 1e-7 comparison covers gsplat packed=False only",
+   "f3": "Not refuted. Labels and counts equal on 24 of 24 masks, recomputed with an independent BFS. The three controls are faults of the driver, not of the translated kernels",
+   "f4": "Not refuted. The run repeats the M4 values bit for bit, so it is a deterministic replay on the same Mac. The falls limit does not tell a policy from no policy; the speed limits do",
+   "f5": "Not refuted. The V100 was seen idle at the start of the whole run and at its end, not when F5 began",
+   "whole": "Attempt 2 is the first complete run of both machines at 4bf9b41. The V100 kept its package and model caches from attempt 1; the rules ask for a start from nothing only on the Mac. Peak memory is sampled every 30 s"
+  }
+ },
  "independent_recompute": {
   "what": "spikes/m6_finish_check.py: the key numbers again, from the raw files, with code that imports no judge",
   "result": {

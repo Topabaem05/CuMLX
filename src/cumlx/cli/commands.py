@@ -422,6 +422,10 @@ def run_run(args) -> Result:
         name, sep, module = item.partition('=')
         if not sep or not name or not module:
             raise CumlxError('E_USAGE', f'--substitute needs NAME=MODULE, got {item!r}')
+        if '.' in name:
+            # The import hook matches the first part of an imported name, so a dotted NAME would never match and nothing would change.
+            raise CumlxError('E_USAGE', f'--substitute takes a top-level package name, got {name!r}',
+                             hint=f'--substitute {name.partition(".")[0]}=MODULE serves {name} from MODULE{name[name.index("."):]}')
         substitutes[name] = module
     try:
         import torch
@@ -439,6 +443,8 @@ def run_run(args) -> Result:
 
     # The script's stdout must not enter the one JSON document on stdout.
     stdout = sys.stderr if args.format == 'json' else None
+    # The report is written after the script ends, so its folder is made first: a missing folder must not lose a finished run.
+    report_path.parent.mkdir(parents=True, exist_ok=True)
     rep = runner.run_script(args.script, args.module, list(args.script_args), target=args.target, substitutes=substitutes,
                             allow_cpu_fallback=args.allow_cpu_fallback, timeout=args.timeout, stdout=stdout,
                             trace_losses=args.trace_losses, seed=args.seed, device_name=device_name, torch_version=torch.__version__)

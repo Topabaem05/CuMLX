@@ -10,8 +10,8 @@
 
 - 장비는 Apple M5 Pro 48 GB 한 대와 V100 한 대입니다. 다른 Apple Silicon과 다른 NVIDIA 세대는 측정하지 않았습니다.
 - 대부분의 측정은 다른 작업이 함께 도는 Mac에서 했습니다. 시간과 처리량은 벤치마크가 아닙니다.
-- F1 원본 프로그램은 끝까지 돈 적이 없습니다. mps-bitsandbytes가 그 프로그램에 필요한 API를 제공하지 않고, 어텐션 전에 멈췄으므로 이 실행은 mps-flash-attn에 대해 아무것도 보여 주지 않습니다([기록](../validation/m6-f1-f2-run.json)). F1의 Mac 경로에도 CUDA 비교가 없어 목표 등급 A에 이르지 못합니다.
-- gsplat 어댑터는 실제 gsplat과 비교한 적이 없습니다. 기준은 gsplat의 문서와 소스를 읽고 NumPy로 쓴 손 계산이며, 합성 장면 하나로 학습했습니다. 밀도 조절을 쓰는 실제 gsplat 프로그램은 `gsplat.strategy`가 없어 멈춥니다. F2가 등급 C에 머무는 이유입니다([기록](../validation/m6-f2-adapter-run.json)).
+- F1(2026-11-06): 등급이 없습니다. 원본 프로그램은 CUMLX의 어댑터로 Mac에서 돌지만, V100의 bitsandbytes와 비교한 첫 완전 실행에서 int8 층 하나가 허용치를 넘었습니다. 고친 뒤 같은 golden을 Mac에서만 다시 돌린 3번째 시도는 허용치 안이었지만, 규칙은 첫 완전 실행만 A로 정했고 독립 시험도 아닙니다. 새 시험의 규칙은 `validation/m6-f1-rerun-limits.json`입니다. FlashAttention-2 바이너리는 어디서도 돌지 않았습니다([기록](../validation/m6-finish-run.json)). 그 전(2026-11-05)에는 mps-bitsandbytes가 필요한 API를 주지 않아 원본 프로그램이 어텐션 전에 멈췄습니다([기록](../validation/m6-f1-f2-run.json)).
+- F2(2026-11-06): gsplat 어댑터를 V100의 실제 gsplat 1.5.3과 비교해 B입니다([기록](../validation/m6-finish-run.json)). 합성 장면만 썼고, 밀도 조절을 쓰는 gsplat 프로그램은 `gsplat.strategy`가 없어 여전히 멈춥니다. 시드마다 PSNR이 약 2 dB씩 달라 학습 비교 자체는 약하고, 렌더와 기울기가 강한 근거입니다. 그 전에는 손 계산과만 비교해 등급 C였습니다([기록](../validation/m6-f2-adapter-run.json)).
 - 다른 Mac에서 처음부터 재현한 적이 없습니다. 같은 Mac에서는 빈 환경으로 F3, F4, F5의 규칙 범위가 통과했지만([기록](../validation/m6-same-mac-run.json)), macOS, Metal 드라이버, GPU가 같으므로 다른 칩이나 macOS 버전의 결과가 아닙니다. macOS 27.2 VM에서는 공개 저장소 설치와 GPU 없는 부분만 통과했습니다([기록](../validation/m6-vm-run.json)). VM의 `Apple Paravirtual device`는 `apple5`와 `mac2`까지만 지원해 PyTorch MPS, Genesis Metal, Mitsuba Metal이 거부하므로, F3, F4, F5는 VM에서 검증할 수 없습니다. Tart는 돌리지 않았고, 같은 프레임워크라 같은 제약이 예상될 뿐 측정하지는 않았습니다.
 - `cumlx doctor --stack`은 패키지와 장치가 있는지만 봅니다. nvcc와 NVIDIA 장비는 찾지 않고, Genesis, warp-metal, 번역기는 import하지 않습니다.
 
@@ -89,5 +89,4 @@
 - 기함 작업 5개 전체의 재현. [보고서](PLATFORM-REPORT.md#기함-작업)를 보십시오.
 - 복잡한 USD 자산. cartpole 하나만 시험했습니다.
 - `cumlx.compat.flash_attn_sdpa`와 `cumlx.compat.bitsandbytes_int8`는 Qwen2.5-0.5B 한 모델, 프롬프트 두 개에서만 V100과 비교했습니다. 다른 모델, 4비트, 학습, FlashAttention-2 바이너리 자체는 시험하지 않았습니다. `__fdividef` 표는 V100(sm70)에서만 쟀고, 다른 GPU 세대의 값은 다를 수 있습니다.
-- 기함 작업 다섯 개의 목표 등급 도달은 같은 Mac 한 대의 결과입니다(`validation/m6-finish-run.json`). 다른 Mac이나 다른 Apple GPU 세대는 시험하지 않았습니다.
-- README는 V100 결과가 나온 뒤에 다시 씁니다. 아직 쓰지 않았습니다.
+- 기함 작업 네 개(F2~F5)의 목표 등급 도달은 같은 Mac 한 대의 결과입니다(`validation/m6-finish-run.json`). 다른 Mac이나 다른 Apple GPU 세대는 시험하지 않았습니다.

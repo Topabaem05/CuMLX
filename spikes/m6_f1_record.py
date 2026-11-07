@@ -33,6 +33,8 @@ PROMPT = 'The capital of France is'
 DECODE_STEPS_RECORDED = 3
 NEW_TOKENS = 20
 FAULTS = ('no_outlier_split', 'activation_scale_128', 'bias_dropped', 'causal_top_left', 'no_softmax_scale')
+# Reported and not judged (validation/m6-f1-rerun-limits.json): the adapter's row scale before d1717d6.
+REPORTED_FAULTS = ('ieee_row_scale',)
 
 
 def to_numpy(tensor: Any) -> np.ndarray:
@@ -267,8 +269,10 @@ def apply_fault(name: str) -> None:
     elif name == 'no_softmax_scale':
         real = flash_attn_sdpa._attend
         flash_attn_sdpa._attend = lambda q, k, v, softmax_scale, causal: real(q, k, v, 1.0, causal)
+    elif name == 'ieee_row_scale':
+        functional.cuda_row_scale = lambda absmax: 127.0 / absmax  # float32 division on the tensor's own device
     else:
-        raise SystemExit(f'unknown fault {name!r}: one of {FAULTS}')
+        raise SystemExit(f'unknown fault {name!r}: one of {FAULTS + REPORTED_FAULTS}')
 
 
 def replay(golden: Path, output: Path, fault: str | None) -> int:
@@ -342,7 +346,7 @@ def main() -> int:
     r = sub.add_parser('replay')
     r.add_argument('--golden', required=True, type=Path)
     r.add_argument('--output', required=True, type=Path)
-    r.add_argument('--fault', choices=FAULTS)
+    r.add_argument('--fault', choices=FAULTS + REPORTED_FAULTS)
     args = parser.parse_args()
     return capture(args.output, args.prompt) if args.mode == 'capture' else replay(args.golden, args.output, args.fault)
 

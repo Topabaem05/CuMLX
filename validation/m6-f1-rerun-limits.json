@@ -1,0 +1,18 @@
+{
+ "schema": "cumlx.m6_f1_rerun_limits.v1",
+ "date": "2026-11-07",
+ "committed_before_any_measurement": "This file is in the commit before its golden is recorded and before either machine runs F1 under it. It does not change after a result.",
+ "why": "validation/m6-f1-limits.json gives grade A only when every part passes on the first complete run of both machines. That run was attempt 2 (4bf9b41), and F1 failed in it. Attempt 3 (d1717d6) passed every limit after a fix to cumlx.compat.bitsandbytes_int8, but it replayed attempt 2's golden on the Mac only, so it is not the first complete run and it cannot give grade A under that file. An independent recheck of the raw files on 2026-11-07 found this. Attempt 2 stays a fail. This file is a new test of the adapters as they are now, on an input that no run has seen",
+ "question": "The question of validation/m6-f1-limits.json, for the adapters at the commit that holds this file",
+ "prompt": "A bicycle stays upright when it moves because",
+ "what_is_the_same": "The program (spikes/m6_f1_program.py, not changed, with its own prompt), the model and revision, the machines, the packages, the substitutes, the record, the parts and their limits, and the five controls of validation/m6-f1-limits.json. spikes/m6_f1_judge.py judges the two folders as it is",
+ "what_changes": "Only the prompt of the golden. spikes/m6_f1_record.py capture records it on CUDA with --prompt, and the Mac records its own golden for the reported chain with the same prompt. Neither earlier prompt ('The capital of France is', 'Water boils at a lower temperature on a mountain because') is used for the golden",
+ "how": "The V100 through spikes/m6_cuda_v100.sh start f1rerun (spikes/remote/m6_f1rerun.sh), with the GPU idle at the start. Then the Mac through spikes/m6_same_mac.sh start COMMIT f1, with CUMLX_F1_GOLDEN set to the fetched golden and CUMLX_F1_PROMPT set to the prompt above. Both machines at the commit that holds this file",
+ "complete_run": "A run is complete when both machines give an output for every part and every control. The first complete run under this file gives the grade. A later run does not replace it, and a run that fails stays a fail. A setup error, a stop for memory, disk or time, or a busy GPU at the start is recorded as an attempt that is not complete, and it can be run again",
+ "reported_not_judged": [
+  "the leaves with the row scale divided on the device (127 / absmax, the adapter before d1717d6), as the replay fault ieee_row_scale: this shows whether this golden separates the two adapters, which the limits do not require",
+  "the items that validation/m6-f1-limits.json reports and does not judge"
+ ],
+ "grade": "A when every part and every control of validation/m6-f1-limits.json passes on the first complete run of both machines under this file",
+ "does_not_show": ["Another Mac, another Apple GPU generation or another NVIDIA generation", "FlashAttention-2 itself, which the V100 (sm70) cannot run", "Inputs other than this prompt and the program's own"]
+}

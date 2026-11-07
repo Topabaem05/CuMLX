@@ -2,9 +2,19 @@
 
 ## Unreleased
 
+### Fixed
+
+- `cumlx run` makes the folder of `--report` before the script runs. Before, a missing folder ended a finished run with `E_INTERNAL` and lost its report.
+- `cumlx run --substitute` refuses a dotted `NAME` with `E_USAGE`. The import hook matches only the top-level name, so a dotted one changed nothing and said nothing.
+- `cumlx.compat.bitsandbytes_int8.optim` refuses every optimizer name with NotImplementedError, as the adapter's documentation said. Before, `import bitsandbytes.optim` ended in `E_RUN_MISSING_PACKAGE`. `cumlx.compat.flash_attn_sdpa` refuses `flash_attn_varlen_qkvpacked_func` and `flash_attn_varlen_kvpacked_func` in the same way.
+
 ### Added
 
-- The five flagship tasks reached their target grades on the one Mac, against the V100, under rules committed before the runs: `validation/m6-finish-run.json`. In the first complete run (4bf9b41), F2 (B), F3 (A), F4 (inference A, physics B) and F5 (B) passed and F1 failed, one int8 layer at 2.48e-3 against 2e-3. F1 passed at grade A in a third attempt (d1717d6) with the fix below. M6-1 stays unticked, because its condition names a new Mac.
+- Four of the five flagship tasks reached their target grades on the one Mac, against the V100, under rules committed before the runs: `validation/m6-finish-run.json`. In the first complete run (4bf9b41), F2 (B), F3 (A), F4 (inference A, physics B) and F5 (B) passed and F1 failed, one int8 layer at 2.48e-3 against 2e-3. A third attempt (d1717d6, the Mac only, on the same golden) passed every limit with the fix below, but the rules give grade A only on the first complete run, so F1 has no grade. This entry first said that all five reached their grades; an independent recheck of the raw files on 2026-11-07 found that the rules do not allow it. M6-1 stays unticked, because its condition names a new Mac.
+- `validation/m6-f1-rerun-limits.json`, committed before its run: F1 again on both machines with the limits and controls of `validation/m6-f1-limits.json` and a golden prompt that no run has used. `spikes/remote/m6_f1rerun.sh` runs the V100 side, and `CUMLX_F1_PROMPT` gives the prompt to the Mac side. The replay fault `ieee_row_scale` (reported, not judged) shows whether a golden separates the fixed adapter from the old one.
+- `README.md` is rewritten in Korean after the V100 runs, with the proof grades, the flagship results and their limits. Its links are absolute, for the PyPI page.
+- `.github/workflows/release.yml` builds, checks and publishes `cumlx-lab` to PyPI by trusted publishing when the owner pushes a tag `v<version>` that equals the version in `pyproject.toml`. `docs/RELEASE.md` lists the steps that only the owner can do. Nothing is published yet.
+- `validation/upstream/pr1964_check.py` applies the change of ml-explore/mlx-lm#1964 in its own process and reruns the RoPE reproduction: the base goes from 10000 to 500000.0 and the logits error from 0.1735 to 4.7e-7. The result is in `validation/upstream/README.md`.
 - `spikes/m6_finish_check.py` recomputes the key numbers of those verdicts from the raw files with code that imports no judge, and the record holds its output.
 - A Rust version of the core that needs neither torch nor MLX, in `rust/`: the library crate `cumlx` and the binary `cumlx-rs`. `cumlx-rs tracediff` and `cumlx-rs weights` give the same `cumlx.result.v1` document, exit codes, error codes, verdicts and first failure as the Python commands, with numbers within 1e-12 relative. Every other command ends with exit 3 and the new error code `E_PYTHON_ONLY`, whose hint is the Python command. `cumlx-rs weights` reads an unquantized port from its files and refuses a quantized one. `tests/test_rust_parity.py` runs both command lines on traces and checkpoints that the Python implementation writes, with an injected transpose, scale and sign fault that fails in both. `scripts/rust_vectors.py` writes the metric results that `cargo test` compares. The workflow `Rust` runs `cargo fmt`, `clippy` and `test` on Linux and macOS, with Rust 1.85.1 and 1.99.1, and the parity tests. See `rust/README.md`.
 

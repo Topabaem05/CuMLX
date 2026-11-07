@@ -48,6 +48,18 @@ relative error of the logits: 4.7141412551354733e-07
 
 제안: 이슈를 새로 열기보다 #1964에 직접 쓴 짧은 확인 댓글을 다는 편이 낫습니다. 올리기 전에 PR 브랜치에서 이 재현을 실행하십시오.
 
+### #1964의 변경으로 재현이 고쳐지는지 (2026-11-07 확인)
+
+`pr1964_check.py`는 #1964(head `a3117179`)가 `mlx_lm/models/base.py`에 더한 두 함수를 diff에서 읽어 그대로 옮기고, 설치된 mlx-lm 0.32.2를 이 프로세스 안에서만 바꿔 `rope_parameters_repro.py`와 모델 조사를 다시 돌립니다. PR 브랜치를 설치해 돌린 것은 아닙니다. 2026-11-07, 이 Mac(mlx-lm 0.32.2, transformers 5.22.1, mlx 0.32.4)의 결과는 다음과 같습니다.
+
+| | mlx-lm 0.32.2 그대로 | #1964의 변경 |
+|---|---|---|
+| 재현: MLX 모델의 RoPE base | 10000 | 500000.0 |
+| 재현: logits 상대 오차 | 0.1735 | 4.7e-7 |
+| `rope_theta=12345`인 config의 `ModelArgs.rope_theta`: llama, qwen2, phi3, starcoder2 | 10000, 1000000, 10000, 100000 | 모두 12345.0 |
+
+mistral은 mlx-lm 0.32.2에 모듈이 따로 없어 조사하지 않았습니다. 이 표는 댓글을 쓰는 사람이 확인할 근거이고, 댓글 자체는 mlx-lm 정책에 따라 사람이 직접 써야 합니다. 2026-11-07 기준으로 #1964는 열려 있고 댓글이 없습니다.
+
 ## 별개의 관찰
 
 - `hf-internal-testing/tiny-random-MixtralForCausalLM`과 `tiny-random-Qwen2MoeForCausalLM`은 mlx-lm 0.32.2에서 `Received N parameters not in model`로 로드되지 않습니다(`experts.gate_up_proj` 형식). transformers 5.22.1의 `save_pretrained`는 expert별 이름으로 저장하므로 이 형식은 일부 저장소에만 있습니다. `gpt_oss`에 대한 비슷한 이슈는 #1994입니다.

@@ -150,3 +150,29 @@ def test_the_capture_hooks_save_and_leave_each_output_as_it_is():
 def test_no_forward_hook_in_the_recorder_is_a_lambda():
     source = (REPO / "spikes" / "m6_f1_record.py").read_text()
     assert "register_forward_hook(lambda" not in source
+
+
+def test_the_rerun_rules_name_a_new_prompt_and_the_scripts_pass_it():
+    rerun = json.loads((REPO / "validation" / "m6-f1-rerun-limits.json").read_text())
+    prompt = rerun["prompt"]
+    alternate = (REPO / "spikes" / "remote" / "m6_f1alt.sh").read_text()
+    assert prompt and prompt != record.PROMPT and prompt not in alternate
+    assert "validation/m6-f1-limits.json" in rerun["grade"] and "first complete run" in rerun["grade"]
+    script = (REPO / "spikes" / "remote" / "m6_f1rerun.sh").read_text()
+    assert "validation/m6-f1-rerun-limits.json" in script and "m6_f1.sh" in script and "CUMLX_F1_PROMPT" in script
+    assert 'PROMPT_ARGS=(--prompt "$CUMLX_F1_PROMPT")' in REMOTE and '"${PROMPT_ARGS[@]}"' in REMOTE
+    assert '--prompt "$CUMLX_F1_PROMPT"' in WORK
+    # The reported fault runs on the Mac, and the judge never counts it as a control.
+    assert "--fault ieee_row_scale" in WORK and "ieee_row_scale" in record.REPORTED_FAULTS and "ieee_row_scale" not in j.FAULTS
+
+
+def test_the_reported_fault_divides_the_row_scale_on_the_device():
+    torch = pytest.importorskip("torch")
+    from cumlx.compat.bitsandbytes_int8 import functional
+    real = functional.cuda_row_scale
+    try:
+        record.apply_fault("ieee_row_scale")
+        absmax = torch.tensor([3.0, 0.5, 7.0], dtype=torch.float32)
+        assert torch.equal(functional.cuda_row_scale(absmax), 127.0 / absmax)
+    finally:
+        functional.cuda_row_scale = real

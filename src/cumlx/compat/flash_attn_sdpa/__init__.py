@@ -5,8 +5,8 @@
 FlashAttention-2 computes exact attention, so this computes the same thing without its tiling: QK^T, the softmax and PV in float32 on the
 tensors' own device, and the result in the input's dtype. It is slower and uses O(S^2) memory. It covers flash_attn_func and
 flash_attn_varlen_func with causal or full attention, grouped-query heads and the softmax scale. Dropout, a sliding window, softcap,
-ALiBi, returned probabilities, paged caches and flash_attn_with_kvcache raise NotImplementedError, because a program that lost one
-in silence would get a wrong result.
+ALiBi, returned probabilities, paged caches, flash_attn_with_kvcache and the four packed functions raise NotImplementedError, because a
+program that lost one in silence would get a wrong result.
 
 The causal mask is aligned to the bottom right, as in flash-attn 2.1 and later: query i of Sq attends key j of Sk when j <= i + Sk - Sq.
 A query row that attends no key gives zeros, as flash-attn does.
@@ -112,3 +112,11 @@ def flash_attn_qkvpacked_func(*args: Any, **kwargs: Any) -> torch.Tensor:
 
 def flash_attn_kvpacked_func(*args: Any, **kwargs: Any) -> torch.Tensor:
     raise _refuse('flash_attn_kvpacked_func')
+
+
+def flash_attn_varlen_qkvpacked_func(*args: Any, **kwargs: Any) -> torch.Tensor:
+    raise _refuse('flash_attn_varlen_qkvpacked_func')
+
+
+def flash_attn_varlen_kvpacked_func(*args: Any, **kwargs: Any) -> torch.Tensor:
+    raise _refuse('flash_attn_varlen_kvpacked_func')

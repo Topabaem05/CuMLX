@@ -71,27 +71,38 @@ def main() -> int:
         'machines': {'cuda': 'Tesla V100-SXM2-16GB, driver 580.178.04, nvcc 12.0, sm70, python 3.12 with torch 2.10.0+cu128', 'mac': 'the one Apple M5 Pro, 48 GB, macOS 27, the same Mac as every earlier record'},
         'versions': versions,
         'attempts': [
-            {'attempt': 1, 'commit': '840c43c', 'verdict': 'setup errors, nothing measured', 'what': 'F1 on the V100: uv found a Python 3.11 for --python python3. F2: gsplat 1.5.3 with packed=True rejects [C, 3] backgrounds, and the Mac work made no folder. F3: no ninja on the V100, no cmake on the clean Mac PATH. F5: Mitsuba 3.8 transforms cannot be deep-copied. The launcher held ssh open and fetched nothing. Fixed in 28f2143 and 4bf9b41 with the rules unchanged; a review of five readers and two skeptics per finding found the rest before attempt 2'},
+            {'attempt': 1, 'commit': '840c43c', 'verdict': 'setup errors, no comparison made', 'what': 'Some parts ran to their end (the V100 F2 program and its 15 training runs, the Mac base checks), and no part compared the two machines. F1 on the V100: uv found a Python 3.11 for --python python3. F2: gsplat 1.5.3 with packed=True rejects [C, 3] backgrounds, and the Mac work made no folder. F3: no ninja on the V100, no cmake on the clean Mac PATH. F5: Mitsuba 3.8 transforms cannot be deep-copied. The launcher held ssh open and fetched nothing. Fixed in 28f2143 and 4bf9b41 with the rules unchanged; a review of five readers and two skeptics per finding found the rest before attempt 2'},
             {'attempt': 2, 'commit': '4bf9b41', 'verdict': 'f1 fail, f2 f3 f4 f5 pass', 'the_first_complete_run': True,
              'cuda_commit': text(CUDA / 'cumlx_commit.txt'), 'mac_commit': text(MAC2 / 'cumlx_commit.txt'), 'gpu_busy_at_start': (CUDA / 'busy_at_start.txt').exists(),
              'mac_peak_memory_gb': text(MAC2 / 'peak_used_gb.txt'), 'mac_verdict': text(MAC2 / 'verdict.txt'),
              'base': {name: text(MAC2 / 'base' / f'{name}.exit') for name in ('doctor', 'selftest', 'tests')}},
-            {'attempt': 3, 'commit': 'd1717d6', 'parts': 'F1 only: a clean Mac run of the F1 part against attempt 2\'s CUDA golden, which did not change', 'verdict': v1_3['verdict'], 'mac_commit': text(MAC3 / 'cumlx_commit.txt'),
-             'what_changed': 'cumlx.compat.bitsandbytes_int8 takes the row scale 127/absmax from a table of CUDA __fdividef values measured on the V100 (validation/bnb-fdividef-sm70.json), where it divided exactly. The limits did not change'},
+            {'attempt': 3, 'commit': 'd1717d6', 'parts': 'F1 only: a clean Mac run of the F1 part against attempt 2\'s CUDA golden, which did not change', 'verdict': v1_3['verdict'], 'grade': None,
+             'why_no_grade': 'validation/m6-f1-limits.json gives grade A only on the first complete run of both machines. That was attempt 2, and F1 failed in it. This attempt ran on the Mac only, after a fix to the adapter under test, on the golden that showed the fault', 'mac_commit': text(MAC3 / 'cumlx_commit.txt'),
+             'what_changed': 'cumlx.compat.bitsandbytes_int8 takes the row scale 127/absmax from a table of CUDA __fdividef values measured on the V100 (validation/bnb-fdividef-sm70.json), where it divided in float32 on the device (on MPS, whose division does not round every quotient correctly). The limits did not change'},
         ],
-        'f1': {'target': 'A', 'attempt_2': brief(v1_2), 'attempt_3': brief(v1_3),
+        'f1': {'target': 'A', 'attempt_2': brief(v1_2), 'attempt_3': {**brief(v1_3), 'grade': None, 'judge_grade_ignored': 'spikes/m6_f1_judge.py writes grade A for any pass and does not know which attempt it judges'},
                'cause_of_attempt_2': 'bitsandbytes takes 127/absmax with the approximate __fdividef, 1 ulp from the quotient for 29% of fp16 inputs. Of 840 rows of the 168 int8 layers, 835 were equal to CUDA to the bit; in 4 more, 9 activations within 6e-5 of a rounding half went to the other int8 step; 1 element differed in the bfloat16 outlier sum. One such activation at row 2 of model.layers.14.self_attn.o_proj (-63.500004 on the Mac, -63.499996 on CUDA) moved 58% of that row by one bfloat16 step',
                'second_prompt': {'what': 'A second CUDA golden with the prompt "Water boils at a lower temperature on a mountain because", recorded at d1717d6 after the fix, and its replay in a clean Mac run. The rules name one prompt, so this is reported and not judged. Its judge verdict is not_run only because this golden has no CUDA run of the original program', 'result': brief(v1_alt)}},
         'f2': {'target': 'B', **brief(v2), 'numbers': f2_numbers(v2)},
         'f3': {'target': 'A', **brief(v3)},
         'f4': {'target': 'inference A, physics B', **brief(v4)},
         'f5': {'target': 'B', **brief(v5), 'mitsuba': v5.get('mitsuba')},
-        'grades': {'f1': 'A at attempt 3, after a fix that attempt 2\'s failure showed; attempt 2 is a fail', 'f2': v2.get('grade'), 'f3': v3.get('grade'), 'f4': v4.get('grade'), 'f5': v5.get('grade')},
+        'grades': {'f1': 'none: F1 failed on the first complete run (attempt 2). Attempt 3 passed every limit and gives no grade under the rules. validation/m6-f1-rerun-limits.json is a new test', 'f2': v2.get('grade'), 'f3': v3.get('grade'), 'f4': v4.get('grade'), 'f5': v5.get('grade')},
         'ticks_m6_1': False,
         'why_not_ticked': 'The condition of M6-1 names a new Mac, and every part ran on the one Mac that there is. On 2026-11-06 the owner decided to keep M6-1 unticked on this result',
         'does_not_show': ['Another Mac or another Apple GPU generation', 'FlashAttention-2 itself: it needs compute capability 8.0 and the V100 has 7.0, so F1 judges attention against exact attention in float64',
                           'Other GPU generations for the __fdividef table', 'Real datasets, densification or spherical harmonics in F2', 'Isaac Lab, PhysX or a real robot in F4', 'An RTX sensor in F5'],
     }
+    record['corrected'] = {
+        'date': '2026-11-07',
+        'what': 'Until 2026-11-07 this record gave F1 grade A at attempt 3, and the documents said that all five tasks reached their target grades. An independent recheck of the raw files found that the rules do not allow this, and the grade of F1 is now none. The numbers did not change',
+        'recheck': {'how': '13 readers, two per task and three for the whole run, recomputed the key numbers from the raw files with their own code and tried to refute each verdict',
+                    'f1': 'The numbers agree: attempt 2 fails (model.layers.14.self_attn.o_proj 2.48e-3) and attempt 3 passes every part and every control. The grade A does not follow from validation/m6-f1-limits.json, which names the first complete run. Also: attempt 3 is not an independent test, and on the second prompt the leaf limit would not separate the fixed adapter from the old one (only the bit-equal rows do, 1,670 against 1,595 of 1,680)',
+                    'f2': 'Not refuted. The training test can find only gross faults, as its rules say; the renders and gradients (1e-7) and their 8 controls carry the grade. The 1e-7 comparison covers gsplat packed=False only',
+                    'f3': 'Not refuted. Labels and counts equal on 24 of 24 masks, recomputed with an independent BFS. The three controls are faults of the driver, not of the translated kernels',
+                    'f4': 'Not refuted. The run repeats the M4 values bit for bit, so it is a deterministic replay on the same Mac. The falls limit does not tell a policy from no policy; the speed limits do',
+                    'f5': 'Not refuted. The V100 was seen idle at the start of the whole run and at its end, not when F5 began',
+                    'whole': 'Attempt 2 is the first complete run of both machines at 4bf9b41. The V100 kept its package and model caches from attempt 1; the rules ask for a start from nothing only on the Mac. Peak memory is sampled every 30 s'}}
     check = subprocess.run([sys.executable, str(HERE / 'm6_finish_check.py')], capture_output=True, text=True, check=True)
     record['independent_recompute'] = {'what': 'spikes/m6_finish_check.py: the key numbers again, from the raw files, with code that imports no judge', 'result': json.loads(check.stdout)}
     args.out.write_text(json.dumps(record, indent=1) + '\n')

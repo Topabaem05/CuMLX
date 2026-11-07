@@ -205,6 +205,19 @@ def test_training_and_four_bit_raise():
         bnb.nn.Params4bit.from_prequantized()
 
 
+def test_the_optimizers_and_the_packed_functions_raise():
+    for name in ("Adam8bit", "PagedAdamW8bit", "GlobalOptimManager"):
+        with pytest.raises(NotImplementedError):
+            getattr(bnb.optim, name)
+    with pytest.raises(NotImplementedError):
+        from cumlx.compat.bitsandbytes_int8.optim import AdamW8bit  # noqa: F401
+    assert not hasattr(bnb.optim, "__wrapped__")  # import machinery and hasattr still see an ordinary module
+    q = rand(1, 3, 2, 8)
+    for name in ("flash_attn_qkvpacked_func", "flash_attn_kvpacked_func", "flash_attn_varlen_qkvpacked_func", "flash_attn_varlen_kvpacked_func"):
+        with pytest.raises(NotImplementedError):
+            getattr(fa, name)(q)
+
+
 @pytest.mark.gpu
 def test_the_int8_product_is_exact_on_mps():
     if not torch.backends.mps.is_available():

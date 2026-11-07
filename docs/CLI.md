@@ -52,7 +52,7 @@ cumlx selftest
 | 실행 중 stdout(파이썬·네이티브 출력 포함)을 stderr로 돌림 | 라이브러리 로그가 JSON을 오염시키지 않음 |
 | 결과 envelope 고정 (`cumlx.result.v1`) | 모든 명령을 같은 코드로 처리 |
 | 안정된 exit code, `incomplete`(5)를 pass와 구분 | 분기 처리가 쉽고, 미검증을 성공으로 오인하지 않음 |
-| 오류마다 `code` + `hint`(정확한 해결 명령) | 에이전트가 스스로 복구 |
+| 오류마다 `code`, 대부분에 `hint`(정확한 해결 명령) | 에이전트가 스스로 복구 |
 | `next_steps`에 다음 명령 제안 | 워크플로를 문서 없이 이어감 |
 | `--max-items`로 목록 길이 제한, `truncated` 표시, 전체는 파일 | 컨텍스트 창 절약 |
 | `--dry-run`, `--overwrite` 없이는 덮어쓰지 않음, CUMLX가 만든 디렉터리만 삭제 | 되돌리기 어려운 실수 방지 |
@@ -67,7 +67,7 @@ CUDA를 전제한 PyTorch 스크립트를 수정하지 않고 MPS에서 실행�
 cumlx run train.py --report run-report.json -- --lr 1e-3    # 스크립트 인자는 -- 뒤에
 cumlx run --module my.pkg.train -- --epochs 1
 cumlx run train.py --target cpu                             # MPS가 없는 Linux 등
-cumlx run train.py --substitute flash_attn=mps_flash_attn   # 패키지 대체를 직접 지정
+cumlx run infer.py --substitute flash_attn=cumlx.compat.flash_attn_sdpa --substitute bitsandbytes=cumlx.compat.bitsandbytes_int8   # 아래 어댑터
 cumlx run train.py --substitute gsplat=cumlx.compat.gsplat_metalsplat   # gsplat.rasterization만, 핀홀과 RGB. 나머지 옵션은 오류. metalsplat 설치 필요
 ```
 
@@ -82,6 +82,16 @@ cumlx run train.py --substitute gsplat=cumlx.compat.gsplat_metalsplat   # gsplat
 | `utilization`, `temperature`, `memory_snapshot`, `stream`, `cuda:1` 등 | **오류.** 조용히 넘어가지 않습니다. `E_RUN_UNSUPPORTED` | `refused` |
 
 **오류로 끝나는 경우.** MPS에 없는 연산은 `E_RUN_MPS_OP_MISSING`이고, `--allow-cpu-fallback`을 줄 때만 CPU로 넘어갑니다. 환경에 `PYTORCH_ENABLE_MPS_FALLBACK`이 있어도 이 옵션 없이는 지웁니다. float64는 `E_RUN_MPS_DTYPE`이고, 정밀도를 대신 낮추지 않습니다. 없는 패키지는 `E_RUN_MISSING_PACKAGE`이며 `cumlx recipe`를 안내합니다. 그 밖의 스크립트 실패는 `E_RUN_SCRIPT_FAILED`입니다.
+
+**어댑터.** `--substitute NAME=MODULE`은 스크립트가 `NAME`을 import할 때 `MODULE`을 주고, `NAME.sub`는 `MODULE.sub`로 갑니다. `NAME`은 최상위 패키지 이름이어야 하며, 점이 있는 `NAME`은 `E_USAGE`입니다. CUMLX에 있는 어댑터는 셋입니다.
+
+| 어댑터 | 주는 것 | 거부하는 것 | 근거 |
+|---|---|---|---|
+| `cumlx.compat.flash_attn_sdpa` | `flash_attn_func`, `flash_attn_varlen_func`, `bert_padding`. float32 정확 어텐션, FlashAttention-2의 오른쪽 아래 정렬 causal mask, grouped-query head | dropout, sliding window, softcap, ALiBi, 확률 반환, paged cache, `flash_attn_with_kvcache`, packed 함수 4개 | float64 정확 어텐션 대비 bfloat16 반올림 수준(`validation/m6-finish-run.json`) |
+| `cumlx.compat.bitsandbytes_int8` | `Int8Params`, `Linear8bitLt`, `matmul`과 int8 함수. bitsandbytes 0.50.2의 CUDA 계산을 따르며, 행 scale은 V100에서 잰 `__fdividef(127, abs(h))` 표(`fdividef_127_sm70.bin`, 측정 기록 `validation/bnb-fdividef-sm70.json`)에서 읽습니다. int8 곱은 1024씩 끊어 float32로 정확히 계산합니다 | 4비트, 학습(`has_fp16_weights=True`), 기울기, 이미 양자화된 체크포인트, `bitsandbytes.optim`의 optimizer | 고친 뒤 같은 golden에서 V100의 bitsandbytes와 int8 층 168개 최악 1.65e-7(독립 시험이 아니며 F1 등급은 없음, `validation/m6-finish-run.json`). 남은 차이: outlier 열 합의 순서(cuBLAS), dequant의 FMA |
+| `cumlx.compat.gsplat_metalsplat` | `gsplat.rasterization`, 핀홀과 RGB, classic과 antialiased. metalsplat의 rasterize kernel을 gsplat 1.5.3의 alpha 상한 0.999로 다시 컴파일합니다 | SH, 다른 render mode와 카메라, covars, sparse grad 등 나머지 옵션 전부 | 실제 gsplat 1.5.3과 렌더 최악 3.6e-7, 기울기 2.6e-6 |
+
+`flash_attn_sdpa`와 `bitsandbytes_int8`를 `--substitute`로 주면, `importlib.metadata`가 `flash-attn 2.8.3+cumlx`, `bitsandbytes 0.50.2+cumlx`를 보고합니다. 버전을 확인하는 라이브러리(Transformers 등)가 찾을 수 있게 하는 것이고, `+cumlx`는 원본이 아니라는 표시입니다. 보고할 때마다 `run-report.json`에 `distribution`으로 남습니다. 다른 모듈을 `--substitute`로 줄 때는 이렇게 하지 않습니다.
 
 **출력.** 스크립트의 stdout은 stderr로 보내므로, stdout의 JSON 하나는 깨지지 않습니다. `run-report.json`에는 호출마다 처음 호출한 파일과 줄, 횟수가 있습니다.
 

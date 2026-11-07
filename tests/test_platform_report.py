@@ -73,7 +73,7 @@ def test_no_flagship_task_is_called_reproduced_and_the_failures_stay(texts):
     for row in rows:
         state = row.split('|')[4].strip()
         # A task may reach its target grade on the one Mac, and the state must then say that it was the same Mac. None is reproduced.
-        assert state.startswith(('재현 안 됨', '일부 달성', '목표 등급 도달(같은 Mac')), row
+        assert state.startswith(('재현 안 됨', '일부 달성', '목표 등급 미달', '목표 등급 도달(같은 Mac')), row
         assert '재현됨' not in state and not (state.startswith('재현') and not state.startswith('재현 안 됨')), row
     for failure in ('Go2 시드 1', 'Isaac Lab 처리량', 'MuJoCo Warp 일치, 첫 시험', 'MLX PPO 업데이트, 첫 시험', 'OMNI_KIT_ACCEPT_EULA'):
         assert failure in report

@@ -34,7 +34,12 @@ say "the original program, not changed"
 "$CUMLX" run spikes/m6_f1_program.py $SUBS --report "$OUT/program.run-report.json" --format json -- --model "$MODEL" --revision "$REVISION" --output "$OUT/program.json" >"$OUT/program.result.json" 2>"$OUT/program.txt"
 echo "$?" >"$OUT/program.exit"
 say "the Mac's own golden, for the chain that is reported"
-"$CUMLX" run spikes/m6_f1_record.py $SUBS --report "$OUT/capture.run-report.json" --format json -- capture --output "$OUT/mac-golden" >"$OUT/capture.json" 2>"$OUT/capture.txt"
+# CUMLX_F1_PROMPT is the golden prompt of validation/m6-f1-rerun-limits.json. Without it the record's own prompt is used, as in m6-f1-limits.json.
+if [ -n "${CUMLX_F1_PROMPT:-}" ]; then
+    "$CUMLX" run spikes/m6_f1_record.py $SUBS --report "$OUT/capture.run-report.json" --format json -- capture --output "$OUT/mac-golden" --prompt "$CUMLX_F1_PROMPT" >"$OUT/capture.json" 2>"$OUT/capture.txt"
+else
+    "$CUMLX" run spikes/m6_f1_record.py $SUBS --report "$OUT/capture.run-report.json" --format json -- capture --output "$OUT/mac-golden" >"$OUT/capture.json" 2>"$OUT/capture.txt"
+fi
 echo "$?" >"$OUT/capture.exit"
 GOLDEN=${CUMLX_F1_GOLDEN:-}
 # spikes/m6_finish.sh starts this run before the V100 has finished, so the golden may arrive later. It writes CUMLX_F1_READY when the
@@ -68,6 +73,10 @@ if [ -n "$GOLDEN" ] && [ -f "$GOLDEN/summary.json" ]; then
         "$CUMLX" run spikes/m6_f1_record.py $SUBS --report "$OUT/fault_$fault.run-report.json" --format json -- replay --golden "$GOLDEN" --output "$OUT/fault_$fault.json" --fault "$fault" >"$OUT/fault_$fault.result.json" 2>"$OUT/fault_$fault.txt"
         echo "$?" >"$OUT/fault_$fault.exit"
     done
+    # Reported, not judged: the row scale divided on the device, as before d1717d6, to show whether this golden separates the two.
+    say "reported: ieee_row_scale"
+    "$CUMLX" run spikes/m6_f1_record.py $SUBS --report "$OUT/reported_ieee_row_scale.run-report.json" --format json -- replay --golden "$GOLDEN" --output "$OUT/reported_ieee_row_scale.json" --fault ieee_row_scale >"$OUT/reported_ieee_row_scale.result.json" 2>"$OUT/reported_ieee_row_scale.txt"
+    echo "$?" >"$OUT/reported_ieee_row_scale.exit"
 else
     echo "no CUDA golden: CUMLX_F1_GOLDEN=$GOLDEN" >"$OUT/replay.txt"
 fi
