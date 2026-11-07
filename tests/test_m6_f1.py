@@ -176,3 +176,54 @@ def test_the_reported_fault_divides_the_row_scale_on_the_device():
         assert torch.equal(functional.cuda_row_scale(absmax), 127.0 / absmax)
     finally:
         functional.cuda_row_scale = real
+
+
+@pytest.fixture
+def rerun_sides(sides, tmp_path):
+    """The made-up pair laid out as the rerun's folders: the fetched CUDA folder and the Mac result folder."""
+    import m6_f1_rerun_record as rerun
+    rules = json.loads(rerun.RULES.read_text())
+    cuda_f1, mac_f1 = sides
+    cuda, mac = tmp_path / "fetched", tmp_path / "result"
+    cuda.mkdir()
+    mac.mkdir()
+    cuda_f1.rename(cuda / "f1rerun")
+    mac_f1.rename(mac / "f1")
+    for top in (cuda, mac):
+        (top / "cumlx_commit.txt").write_text("abc123\n")
+    (cuda / "done.txt").write_text("now\n")
+    write(cuda / "f1rerun" / "golden" / "summary.json", {**golden(), "prompt": rules["prompt"]})
+    (mac / "f1" / "mac-golden").mkdir()
+    write(mac / "f1" / "mac-golden" / "summary.json", {"prompt": rules["prompt"]})
+    return rerun, rules, cuda, mac
+
+
+def test_a_rerun_with_every_condition_gets_its_grade(rerun_sides):
+    rerun, rules, cuda, mac = rerun_sides
+    record = rerun.assess(cuda, mac, rules, True)
+    assert record["complete"] and record["verdict"] == "pass" and record["grade"] == "A", record["not_complete_because"]
+
+
+@pytest.mark.parametrize("breaking", ["commit", "rules", "prompt", "mac_prompt", "busy", "unfinished"])
+def test_a_rerun_without_a_condition_is_not_complete_and_gets_no_grade(rerun_sides, breaking):
+    rerun, rules, cuda, mac = rerun_sides
+    in_commit = breaking != "rules"
+    if breaking == "commit":
+        (mac / "cumlx_commit.txt").write_text("def456\n")
+    elif breaking == "prompt":
+        write(cuda / "f1rerun" / "golden" / "summary.json", {**golden(), "prompt": record.PROMPT})
+    elif breaking == "mac_prompt":
+        write(mac / "f1" / "mac-golden" / "summary.json", {"prompt": record.PROMPT})
+    elif breaking == "busy":
+        (cuda / "busy_at_start.txt").write_text("123\n")
+    elif breaking == "unfinished":
+        (cuda / "done.txt").unlink()
+    result = rerun.assess(cuda, mac, rules, in_commit)
+    assert not result["complete"] and result["grade"] is None and result["not_complete_because"]
+
+
+def test_a_complete_rerun_that_fails_stays_a_fail(rerun_sides):
+    rerun, rules, cuda, mac = rerun_sides
+    write(mac / "f1" / "replay.json", replay(leaves={**replay()["leaves"], LEAVES[5]: {**SMALL, "rel_l2": 0.003}}))
+    result = rerun.assess(cuda, mac, rules, True)
+    assert result["complete"] and result["verdict"] == "fail" and result["grade"] is None
