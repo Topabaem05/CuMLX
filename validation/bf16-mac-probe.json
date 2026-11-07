@@ -1,0 +1,181 @@
+{
+ "schema": "cumlx.bf16_mac_probe.v1",
+ "date": "2026-11-07",
+ "macos": "27.0.1",
+ "machine": "arm64",
+ "device": "Apple M5 Pro",
+ "torch": "2.15.0",
+ "mlx": "0.32.4",
+ "reference": "float64 on the CPU, from the same float32 inputs",
+ "ops": {
+  "matmul": {
+   "cpu_bfloat16": {
+    "rel_l2": 0.0028688478322655034,
+    "warnings": []
+   },
+   "mps_bfloat16": {
+    "rel_l2": 0.0028689025489686245,
+    "warnings": []
+   },
+   "mps_float16": {
+    "rel_l2": 0.00035883473913920263,
+    "warnings": []
+   },
+   "mlx_gpu_bfloat16": {
+    "rel_l2": 0.0028689025489686245
+   }
+  },
+  "softmax": {
+   "cpu_bfloat16": {
+    "rel_l2": 0.003845785307397986,
+    "warnings": []
+   },
+   "mps_bfloat16": {
+    "rel_l2": 0.0038457022387864176,
+    "warnings": []
+   },
+   "mps_float16": {
+    "rel_l2": 0.000477263084565731,
+    "warnings": []
+   }
+  },
+  "layer_norm": {
+   "cpu_bfloat16": {
+    "rel_l2": 0.0023427613341246334,
+    "warnings": []
+   },
+   "mps_bfloat16": {
+    "rel_l2": 0.0023427613341246334,
+    "warnings": []
+   },
+   "mps_float16": {
+    "rel_l2": 0.00029344571761074663,
+    "warnings": []
+   }
+  },
+  "rms_norm": {
+   "cpu_bfloat16": {
+    "rel_l2": 0.002338086731355547,
+    "warnings": []
+   },
+   "mps_bfloat16": {
+    "rel_l2": 0.002338086731355547,
+    "warnings": []
+   },
+   "mps_float16": {
+    "rel_l2": 0.00029105574177502636,
+    "warnings": []
+   }
+  },
+  "silu": {
+   "cpu_bfloat16": {
+    "rel_l2": 0.0026625402821836325,
+    "warnings": []
+   },
+   "mps_bfloat16": {
+    "rel_l2": 0.0026625402821836325,
+    "warnings": []
+   },
+   "mps_float16": {
+    "rel_l2": 0.0003238353032716784,
+    "warnings": []
+   }
+  },
+  "sdpa_causal": {
+   "cpu_bfloat16": {
+    "rel_l2": 0.0031482919209994795,
+    "warnings": []
+   },
+   "mps_bfloat16": {
+    "rel_l2": 0.0029643284901305343,
+    "warnings": []
+   },
+   "mps_float16": {
+    "rel_l2": 0.00045094977069992073,
+    "warnings": []
+   },
+   "mlx_gpu_bfloat16": {
+    "rel_l2": 0.002964328490130536
+   }
+  },
+  "cumsum": {
+   "cpu_bfloat16": {
+    "rel_l2": 0.002354743619594946,
+    "warnings": []
+   },
+   "mps_bfloat16": {
+    "rel_l2": 0.002354743619594946,
+    "warnings": []
+   },
+   "mps_float16": {
+    "rel_l2": 0.0002906871517038065,
+    "warnings": []
+   }
+  },
+  "topk": {
+   "cpu_bfloat16": {
+    "rel_l2": 0.001687463891820806,
+    "warnings": []
+   },
+   "mps_bfloat16": {
+    "rel_l2": 0.001687463891820806,
+    "warnings": []
+   },
+   "mps_float16": {
+    "rel_l2": 0.00020918965482248387,
+    "warnings": []
+   }
+  }
+ },
+ "autocast_mps_bfloat16": {
+  "output_dtype": "torch.bfloat16",
+  "warnings": []
+ },
+ "subnormals": {
+  "inputs": [
+   "2^-130",
+   "2^-133",
+   "-2^-128"
+  ],
+  "float32_to_bfloat16_bits": {
+   "cpu": [
+    "0x8",
+    "0x1",
+    "0x8020"
+   ],
+   "mps": [
+    "0x0",
+    "0x0",
+    "0x8000"
+   ],
+   "mlx_gpu": [
+    "0x0",
+    "0x0",
+    "0x8000"
+   ],
+   "mlx_cpu": [
+    "0x8",
+    "0x1",
+    "0x8020"
+   ]
+  },
+  "bfloat16_add_2^-130_twice": {
+   "cpu": 1.4693679385278594e-39,
+   "mps": 0.0
+  },
+  "cuda": "CUDA keeps these values: validation/kernel-golden-v100-bf16 and validation/kernel-golden-a4000-bf16"
+ },
+ "does_not_show": [
+  "a CUDA run of these operations",
+  "other Macs, macOS, torch or MLX versions",
+  "operations other than the ones listed, or a whole model"
+ ],
+ "activations": {
+  "label": "Activations of the F1 rerun's CUDA golden (validation/m6-f1-rerun.json): Qwen2.5-0.5B in bfloat16 with bitsandbytes int8 layers, torch 2.10 on a Tesla V100, prompt 'A bicycle stays upright when it moves because'",
+  "sha256": "9924952705229c40eb223f58ddec2a7974a66e8d2ca2cea9d8e409b2117e65dc",
+  "arrays": 845,
+  "values": 7926976,
+  "subnormal_values": 0,
+  "arrays_with_subnormals": []
+ }
+}

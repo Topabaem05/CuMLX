@@ -111,6 +111,14 @@ cumlx capture <원본> --prompt "Hello" --weights-from-mlx ./my-port-4bit -o gol
 cumlx diff golden-p/ ./my-port-4bit
 ```
 
+### BF16 모델을 Mac에서 돌린다
+
+BF16 모델을 Apple Silicon에서 돌리는 기능은 이미 있습니다. [MLX](https://github.com/ml-explore/mlx/blob/main/mlx/backend/metal/kernels/bf16.h)는 Metal의 `bfloat`를 쓰고, [PyTorch MPS](https://github.com/pytorch/pytorch/pull/119641)는 macOS 14부터 BF16을 지원하며, [llama.cpp](https://github.com/ggml-org/llama.cpp/pull/10218)에는 빌드 옵션으로 켜는 Metal BF16 커널이 있습니다. CUMLX는 이것을 다시 만들지 않습니다. 이 Mac(M5 Pro, macOS 27.0.1, torch 2.15, MLX 0.32.4)에서는 matmul, softmax, layer_norm, rms_norm, silu, causal SDPA, cumsum, topk가 모두 MPS의 BF16으로 돌았습니다. float64 대비 오차(2e-3~4e-3)는 CPU의 BF16과 같았고, `torch.autocast('mps', dtype=torch.bfloat16)`도 경고 없이 돌았습니다([기록](https://github.com/Topabaem05/CuMLX/blob/main/validation/bf16-mac-probe.json), `scripts/bf16_mac_probe.py`).
+
+CUDA와 다른 점은 비정규수(2^-126보다 작은 값)입니다. MPS와 MLX GPU의 변환과 산술은 비정규수를 0으로 만들고, CUDA와 CPU는 지킵니다. 모델에서는 이 차이가 거의 나타나지 않습니다. V100에서 BF16으로 돌린 Qwen2.5-0.5B의 활성화 값 7,926,976개 중 비정규수는 0개였습니다. 모델 출력이 CUDA와 다른 주된 원인은 행렬곱의 누산 순서이고, 그 크기는 `cumlx diff`가 모듈마다 잽니다.
+
+CUMLX가 더하는 것은 CUDA와 같은 BF16 산술입니다. 다른 오픈소스에서는 찾지 못했습니다. [ocannl](https://github.com/lukstafi/ocannl-staging/pull/1460)은 Metal이 비정규수를 어디서 0으로 만드는지 측정했지만, 그것을 지키는 방법은 넣지 않았습니다. `cumlx kernel port`가 쓰는 `cumlx_bf16.h`는 비정규수를 지키고 결과를 한 번만 반올림하며, V100(sm70)과 RTX A4000(sm86)의 실제 CUDA 실행과 비트까지 같았습니다. BF16을 쓰는 CUDA 커널을 직접 옮길 때 씁니다. 아래 "CUDA 커널을 옮긴다"를 보십시오.
+
 ### 생성할 때만 답이 이상하다
 
 capture는 기본으로 KV cache 위의 생성 한 단계도 기록합니다. prefill은 맞는데 캐시 처리(위치 오프셋, mask)만 틀리면 `first_divergence.phase`가 `decode`로 나옵니다.
@@ -217,7 +225,7 @@ torch, MLX 또는 nvcc가 필요한 `capture`, `diff`, `run`, `kernel capture` �
 
 ## 검증 범위
 
-장비는 Apple M5 Pro 한 대(Metal, CPU), Linux MLX CPU(CI, 작은 fixture), Tesla V100 한 대(CUDA)입니다. 기록마다 범위가 다릅니다([검증 보고서](https://github.com/Topabaem05/CuMLX/blob/main/validation/REPORT.md)).
+장비는 Apple M5 Pro 한 대(Metal, CPU), Linux MLX CPU(CI, 작은 fixture), Tesla V100 한 대(CUDA)입니다. BF16 커널 하나는 RTX A4000 한 대(vast.ai에서 빌림)에서도 돌렸습니다. 기록마다 범위가 다릅니다([검증 보고서](https://github.com/Topabaem05/CuMLX/blob/main/validation/REPORT.md)).
 
 - 깨끗한 실제 포팅본 38회(Qwen2.5-0.5B, SmolLM2-135M, 공개된 작은 MoE, 입력 5개): false alarm 0. 2회는 시작하지 못했습니다(CPU의 `gather_mm`).
 - 결함 주입 50회(F1~F11, Qwen2.5-0.5B와 SmolLM2-135M, MoE 결함은 작은 MoE): 놓친 것 0, 3회는 해당 없음(bias가 없는 층).
@@ -225,7 +233,7 @@ torch, MLX 또는 nvcc가 필요한 `capture`, `diff`, `run`, `kernel capture` �
 - 2026-11-02 기준 최근 Hugging Face 모델 12개 중 7개(Gemma4, LFM2, Mixtral MoE, Qwen3, Llama)가 구현과 4비트 변환 모두 ok, 4개는 부분 체크포인트로 거부, 1개는 mlx-lm이 불러오지 못함.
 - 기함 작업은 위 표의 범위에서만 시험했습니다.
 
-**미검증:** 다른 Mac과 다른 Apple GPU 세대, V100 외의 NVIDIA 장비, FlashAttention-2 바이너리, 패딩 입력, 음성·이미지 모델, RTX 센서. 전체 목록은 [미검증 목록](https://github.com/Topabaem05/CuMLX/blob/main/docs/UNVERIFIED.md)에 있습니다. 임계값은 위 범위의 측정값입니다.
+**미검증:** 다른 Mac과 다른 Apple GPU 세대, V100 외의 NVIDIA 장비(BF16 커널을 RTX A4000에서 한 번 돌린 것은 제외), FlashAttention-2 바이너리, 패딩 입력, 음성·이미지 모델, RTX 센서. 전체 목록은 [미검증 목록](https://github.com/Topabaem05/CuMLX/blob/main/docs/UNVERIFIED.md)에 있습니다. 임계값은 위 범위의 측정값입니다.
 
 ## 문서
 
