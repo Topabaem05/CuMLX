@@ -1,0 +1,85 @@
+{
+ "schema": "cumlx.port-rope-check.v1",
+ "date": "2026-11-07",
+ "original": "SonGT1/MiniCPM5-abliterated-2B",
+ "original_revision": "2e20b400c8fe9fb63247fc4a828d9fc8d6b2de6e",
+ "port": "rahulol/Hermit-MiniCPM5-2B-MLX-4bit",
+ "port_revision": "acd49ac4305e20df13b8265c9710d296fab01ed8",
+ "original_transformers_version": "5.21.0",
+ "rope_parameters": {
+  "rope_theta": 5000000,
+  "rope_type": "default"
+ },
+ "top_level_rope_theta": null,
+ "config_differences_original_vs_port": [],
+ "versions": {
+  "mlx": "0.32.4",
+  "mlx-lm": "0.32.2",
+  "torch": "2.15.0",
+  "transformers": "5.22.1"
+ },
+ "rope_base_in_mlx": 10000,
+ "golden": {
+  "architecture": "LlamaForCausalLM",
+  "rope_theta_in_transformers": {
+   "rope_theta": 5000000,
+   "rope_type": "default"
+  },
+  "weights_loaded": 381,
+  "records": 2208
+ },
+ "port_as_published": {
+  "exit_code": 1,
+  "status": "diverged",
+  "summary": "diverged: 1700 pass, 336 fail, 0 unverified, 172 skipped, 1644 chain drift; first divergence at `model.layers.0.self_attn` (isolated, high)",
+  "first_divergence": {
+   "module": "model.layers.0.self_attn",
+   "basis": "isolated",
+   "confidence": "high",
+   "phase": "prefill",
+   "metrics": {
+    "shape": [
+     1,
+     6,
+     2048
+    ],
+    "expected_shape": [
+     1,
+     6,
+     2048
+    ],
+    "rel_l2": 0.06625804621696235,
+    "max_abs": 0.028221811167895794,
+    "cosine": 0.9978714480452222,
+    "scale": 1.007450868517474,
+    "verdict": "fail",
+    "basis": "rel_l2",
+    "reason": "rel_l2_above_threshold"
+   }
+  },
+  "native_output": {
+   "positions": 12,
+   "top1_matches": 9
+  },
+  "worst_isolated_rel_l2": 0.5516132900935707,
+  "warnings": [],
+  "errors": []
+ },
+ "control_top_level_rope_theta": {
+  "added": {
+   "rope_theta": 5000000
+  },
+  "exit_code": 0,
+  "status": "ok",
+  "summary": "ok: 2036 pass, 0 fail, 0 unverified, 172 skipped, 303 chain drift",
+  "first_divergence": null,
+  "native_output": {
+   "positions": 12,
+   "top1_matches": 12
+  },
+  "worst_isolated_rel_l2": 8.034908099602796e-06,
+  "warnings": [],
+  "errors": []
+ },
+ "confirmed": true
+}

@@ -34,11 +34,53 @@ relative error of the logits: 4.7141412551354733e-07
 | stablelm, granite, exaone4 | - | 로드 오류: `rope_theta` 인자 누락 |
 | gemma, gemma2, cohere | - | 로드 오류: `lm_head.weight`. 이 조사의 tied 설정 때문일 수 있으며 RoPE 문제인지 확인하지 않았습니다 |
 
+## 공개된 실제 포팅본에서 확인 (2026-11-07)
+
+위의 조사는 tiny 랜덤 모델이었습니다. 이번에는 Hugging Face에 사람들이 올린 MLX 포팅본을 직접 검사했습니다.
+
+**1단계: config만 읽어 후보 찾기.** `config_scan.py`는 `mlx` 태그가 붙은 최근 저장소의 `config.json`만 내려받습니다. 그리고 mlx-lm의 `ModelArgs.from_dict`로 실제로 쓸 RoPE 설정을 만들어 config와 비교합니다. 가중치는 받지 않고 모델도 실행하지 않습니다. 결과는 `config-scan.json`에 있습니다.
+
+2026-11-07(UTC), mlx-lm 0.32.2(최신 릴리스)로 최근 저장소 6000개를 나열해 config 4864개를 읽었습니다. 그중 587개에 `rope_parameters`가 있었고, 8개(올린 사람 7명)에서 mlx-lm이 transformers와 다른 RoPE base를 씁니다. 기준은 transformers 5.22.1이 같은 config에서 실제로 쓰는 값입니다.
+
+| 포팅본 | 모델 | config의 transformers_version | transformers의 base | mlx-lm의 base | #1964의 변경으로 |
+|---|---|---|---|---|---|
+| rahulol/Hermit-MiniCPM5-2B-MLX-4bit | llama | 5.21.0 | 5000000 | 10000 | 고쳐짐 |
+| dalatexcoder/MiniCPM5-2B-ARA-MLX-4Bit-optiq-mixed | llama | 5.18.0 | 5000000 | 10000 | 고쳐짐 |
+| dalatexcoder/MiniCPM5-2B-Heretic-ARA-MLX-4Bit | llama | 5.18.0 | 5000000 | 10000 | 고쳐짐 |
+| junafinity/Nanbeige-4.3-33B-Heretic-Uncensored-MLX-4bit | llama | 5.20.2 | 120000000 | 10000 | 고쳐짐 |
+| kilianbalaguer9/Voltaire-2.5-MLX-4bit | llama | 5.19.0 | 130000 | 10000 | 고쳐짐 |
+| melmass/Llama-3-8B-LLM2Vec-Kimodo-MLX-4bit | llama | 5.1.0 | 500000 | 10000 | 고쳐짐 |
+| masahiroid/Sentiment-Analysis-7B-4bit-mlx | mistral | 5.2.0 | 1000000 | 10000 | 고쳐짐 |
+| imgovind/wrightproduct-v1 | qwen3_moe | 5.20.2 | 10000000 | 1000000 | **고쳐지지 않음** |
+
+마지막 config는 최상위 `rope_theta`(1000000)와 `rope_parameters.rope_theta`(10000000)를 둘 다 가지며, 두 값이 다릅니다. transformers 5는 `rope_parameters`를 쓰고(원본 Qwen3-30B-A3B-Instruct-2507도 10000000), mlx-lm은 최상위 값을 씁니다. #1964는 `{**flat, **params}` 순서로 합치므로 최상위 값이 이깁니다. 이 포팅본은 78 GB라서 모델을 돌려 확인하지 않았고, config 수준의 결과입니다.
+
+config에 `rope_parameters` 필드를 직접 읽는 모델(gemma4_text, laguna, mellum, ministral3 등)은 판정에서 뺐습니다. `rope_scaling`만 빠진 실제 포팅본은 이번 범위에 없었습니다. 195개는 mlx-lm 0.32.2가 읽지 못했습니다. 대부분 mlx-lm에 없는 모델 종류(k2_horizon 48, lfm3 40, qwen3_5_text 31 등)이고, flint 외에는 2026-11-07의 main에도 없습니다. 다른 도구로 만든 포팅본으로 보이며 이 조사의 대상이 아닙니다.
+
+**2단계: 포팅본 자체로 확인.** `port_rope_check.py`는 원본의 config로 transformers 모델을 만들고, 공개된 포팅본의 가중치를 모두 넣어 golden을 기록합니다(`--weights-from-mlx`와 같은 golden이고, 원본 가중치를 받지 않습니다). 그리고 공개된 포팅본을 `cumlx diff`로 비교합니다. 대조군은 같은 포팅본에서 config에 최상위 `rope_theta` 한 줄만 더한 것입니다.
+
+| 포팅본 (원본) | 원본을 저장한 transformers | MLX의 RoPE base | 공개된 그대로 | 대조군 (최상위 `rope_theta`만 추가) |
+|---|---|---|---|---|
+| [rahulol/Hermit-MiniCPM5-2B-MLX-4bit](https://huggingface.co/rahulol/Hermit-MiniCPM5-2B-MLX-4bit) (SonGT1/MiniCPM5-abliterated-2B) | 5.21.0 | 10000 (원래 5000000) | **diverged**: `model.layers.0.self_attn` (isolated, high), rel_l2 0.066, 336개 실패 | **ok**: 2036 pass, 0 fail, 최악 8.0e-6 |
+| [dalatexcoder/MiniCPM5-2B-ARA-MLX-4Bit-optiq-mixed](https://huggingface.co/dalatexcoder/MiniCPM5-2B-ARA-MLX-4Bit-optiq-mixed) (dalatexcoder/MiniCPM5-2B-heretic-ara) | 5.18.0 | 10000 (원래 5000000) | **diverged**: `model.layers.0.self_attn` (isolated, high), 334개 실패 | **ok**: 2036 pass, 0 fail, 최악 5.1e-6 |
+| [kilianbalaguer9/Voltaire-2.5-MLX-4bit](https://huggingface.co/kilianbalaguer9/Voltaire-2.5-MLX-4bit) (원본 이름 없음) | 5.19.0 | 10000 (원래 130000) | **diverged**: `model.layers.0.self_attn` (isolated, high), 200개 실패 | **ok**: 1172 pass, 0 fail, 최악 4.0e-6 |
+
+앞의 두 포팅본은 원본과 config가 같습니다(양자화 항목 제외). Voltaire는 카드에 원본이 없어서, 포팅본 자신의 config에서 양자화 항목을 뺀 것을 원본 config로 썼습니다. 세 포팅본 모두 대조군이 통과하므로 원인은 RoPE base 하나입니다. 기록은 `ports/`에 있습니다.
+
+**짧은 입력에서는 잘 드러나지 않습니다.** 위 diff의 프롬프트 2개에서 top-1은 첫째 포팅본이 12개 위치 중 9개, 둘째가 12개 중 12개, 셋째가 11개 중 11개 golden과 같았습니다. `long_context_effect.py`로 첫째 포팅본을 이 저장소의 영어 문서(겹치는 문장 없음)에 돌리고, 대조군과 비교했습니다.
+
+| 입력 길이 (token) | 16 | 64 | 256 | 1024 | 2048 |
+|---|---|---|---|---|---|
+| top-1이 다른 위치의 비율 | 31% | 36% | 36% | 39% | 46% |
+| logits 상대 오차 (뒤쪽 절반) | 0.19 | 0.45 | 0.35 | 0.46 | 0.51 |
+
+기준은 golden과 같다고 확인한 대조군입니다. 이 측정은 작업 품질을 잰 것이 아니고, 한 포팅본과 한 텍스트의 결과입니다.
+
 ## 실제 영향과 한계
 
 - 영향을 받는 조건은 **그 모델 구현의 기본값과 다른 `rope_theta`를 쓰는 checkpoint를 transformers 5로 다시 저장한 경우**입니다. Llama 3(500000)의 finetune이 해당할 수 있습니다.
-- transformers 4로 저장한 공개 원본은 최상위 `rope_theta`를 가지므로 영향을 받지 않습니다. 이번 공개 포팅본 캠페인에서는 이 문제가 나타나지 않았습니다.
-- 위 실행은 tiny 랜덤 모델입니다. 실제 finetune checkpoint로는 재현하지 않았습니다.
+- transformers 4로 저장한 공개 원본은 최상위 `rope_theta`를 가지므로 영향을 받지 않습니다. 예를 들어 openbmb/MiniCPM5-2B의 공식 config(transformers 5.6.2)와 공식 MLX 포팅본은 최상위 `rope_theta`가 있어 정상입니다. 영향을 받는 것은 그 원본을 transformers 5의 새 버전으로 다시 저장한 finetune과, 그것을 변환한 포팅본입니다.
+- 2026-11-02의 공개 포팅본 캠페인(`mlx-community` 10개)에서는 이 문제가 나타나지 않았습니다. 2026-11-07에 실제 finetune의 포팅본 3개에서 확인했습니다(위).
 
 ## upstream 상태 (2026-11-02 확인)
 

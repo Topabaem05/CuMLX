@@ -250,7 +250,7 @@ src/cumlx/
 
 **테스팅 마일스톤 T3**
 - [x] 공개 포팅본 3개 이상에 대한 검증 보고서 — 9개 ok, 1개 로드 불가
-- [ ] **upstream에 보고한 실제 불일치 ≥ 1건** (방향이 맞는지 판단하는 핵심 지표) — 불일치는 찾음(`rope_parameters`), 보고는 사용자가 직접 해야 함. 관련 upstream PR #1964가 열려 있음
+- [ ] **upstream에 보고한 실제 불일치 ≥ 1건** (방향이 맞는지 판단하는 핵심 지표) — 불일치는 찾음(`rope_parameters`). 2026-11-07에 사람들이 올린 실제 포팅본 3개에서도 확인함([근거](../validation/upstream/README.md#공개된-실제-포팅본에서-확인-2026-11-07)). 보고는 사용자가 직접 해야 함. 관련 upstream PR #1964가 열려 있음
 - [x] CUDA golden vs CPU golden 차이가 기본 임계값 이내임을 문서화 — V100에서 최대 1.9e-5, Mac CPU와 최대 4.5e-5. [기록](CUDA-GOLDEN.md)
 - [x] 기존 GPU 테스트 35개 Metal 실기에서 skip 0으로 실행, 결과 기록 — M5 Pro, MLX 0.32.2와 0.32.4
 
@@ -284,7 +284,7 @@ cumlx conform --target mlx
 - [x] 위 명령이 Apple Silicon Mac에서 문서대로 동작한다. 새 clone과 새 venv에서 README 순서대로 실행해 확인함 (M5 Pro).
 - [x] 오류 주입 10종 모두 검출, 깨끗한 포팅본 false alarm 0. F1~F11, 실제 모델 50회.
 - [x] 공개 포팅본 검증 보고서 3개 이상. 9개 ok.
-- [ ] upstream 보고 1건 이상. 실제 불일치는 찾았고, 보고는 사용자가 직접 작성해야 함 (mlx-lm 정책).
+- [ ] upstream 보고 1건 이상. 실제 불일치는 찾았고 공개된 실제 포팅본 3개에서도 확인했지만, 보고는 사용자가 직접 작성해야 함 (mlx-lm 정책).
 - [x] 검증하지 않은 영역은 보고서와 문서에 "미검증"으로 표시된다.
 - [ ] PyPI 게시. 계정과 공개 결정이 필요. `pip install 'cumlx-lab[capture,diff]'`는 아직 동작하지 않음.
 

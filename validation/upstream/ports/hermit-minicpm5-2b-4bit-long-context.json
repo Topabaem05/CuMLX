@@ -1,0 +1,52 @@
+{
+ "schema": "cumlx.rope-long-context.v1",
+ "date": "2026-11-07",
+ "port": "rahulol/Hermit-MiniCPM5-2B-MLX-4bit",
+ "port_revision": "acd49ac4305e20df13b8265c9710d296fab01ed8",
+ "rope_parameters": {
+  "rope_theta": 5000000,
+  "rope_type": "default"
+ },
+ "reference": "the same port with a top-level rope_theta (equal to the transformers golden, see port_rope_check.py)",
+ "text": [
+  "AGENTS.md",
+  "validation/REPORT.md"
+ ],
+ "text_commit": "6b5574e9c94669936a889456388917bd8a2537e0",
+ "text_sha256": "516bd4220384f70f70681d5616495791dc8d3b850832aa44c3d9d0290f67f060",
+ "versions": {
+  "mlx": "0.32.4",
+  "mlx-lm": "0.32.2"
+ },
+ "lengths": [
+  {
+   "tokens": 16,
+   "top1_differs": 0.3125,
+   "logits_rel_l2_second_half": 0.1867
+  },
+  {
+   "tokens": 64,
+   "top1_differs": 0.3594,
+   "logits_rel_l2_second_half": 0.4508
+  },
+  {
+   "tokens": 256,
+   "top1_differs": 0.3555,
+   "logits_rel_l2_second_half": 0.3456
+  },
+  {
+   "tokens": 1024,
+   "top1_differs": 0.3896,
+   "logits_rel_l2_second_half": 0.4612
+  },
+  {
+   "tokens": 2048,
+   "top1_differs": 0.458,
+   "logits_rel_l2_second_half": 0.5089
+  }
+ ],
+ "does_not_show": [
+  "task quality on real data",
+  "other ports or prompts"
+ ]
+}

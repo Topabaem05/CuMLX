@@ -1,0 +1,4443 @@
+{
+ "schema": "cumlx.config-scan.v1",
+ "date": "2026-11-07",
+ "mlx_lm": "0.32.2",
+ "repos_listed": 6000,
+ "configs_read": 4864,
+ "configs_with_rope_parameters": 587,
+ "flagged": [
+  {
+   "repo": "rahulol/Hermit-MiniCPM5-2B-MLX-4bit",
+   "model_type": "llama",
+   "transformers_version": "5.21.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 5000000,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 5000000,
+    "rope_type": "default"
+   },
+   "findings": [
+    "rope_base"
+   ],
+   "mlx_rope_theta": 10000,
+   "mlx_rope_scaling": null,
+   "with_pr1964": {
+    "rope_theta": 5000000,
+    "rope_scaling": null,
+    "base_fixed": true
+   }
+  },
+  {
+   "repo": "junafinity/Nanbeige-4.3-33B-Heretic-Uncensored-MLX-4bit",
+   "model_type": "llama",
+   "transformers_version": "5.20.2",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 120000000,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 120000000,
+    "rope_type": "default"
+   },
+   "findings": [
+    "rope_base"
+   ],
+   "mlx_rope_theta": 10000,
+   "mlx_rope_scaling": null,
+   "with_pr1964": {
+    "rope_theta": 120000000,
+    "rope_scaling": null,
+    "base_fixed": true
+   }
+  },
+  {
+   "repo": "imgovind/wrightproduct-v1",
+   "model_type": "qwen3_moe",
+   "transformers_version": "5.20.2",
+   "top_level_rope_theta": 1000000.0,
+   "rope_parameters": {
+    "rope_theta": 10000000,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 10000000,
+    "rope_type": "default"
+   },
+   "findings": [
+    "rope_base"
+   ],
+   "mlx_rope_theta": 1000000.0,
+   "mlx_rope_scaling": null,
+   "with_pr1964": {
+    "rope_theta": 1000000.0,
+    "rope_scaling": null,
+    "base_fixed": false
+   }
+  },
+  {
+   "repo": "masahiroid/Sentiment-Analysis-7B-4bit-mlx",
+   "model_type": "mistral",
+   "transformers_version": "5.2.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 1000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 1000000.0,
+    "rope_type": "default"
+   },
+   "findings": [
+    "rope_base"
+   ],
+   "mlx_rope_theta": 10000,
+   "mlx_rope_scaling": null,
+   "with_pr1964": {
+    "rope_theta": 1000000.0,
+    "rope_scaling": null,
+    "base_fixed": true
+   }
+  },
+  {
+   "repo": "dalatexcoder/MiniCPM5-2B-ARA-MLX-4Bit-optiq-mixed",
+   "model_type": "llama",
+   "transformers_version": "5.18.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 5000000,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 5000000,
+    "rope_type": "default"
+   },
+   "findings": [
+    "rope_base"
+   ],
+   "mlx_rope_theta": 10000,
+   "mlx_rope_scaling": null,
+   "with_pr1964": {
+    "rope_theta": 5000000,
+    "rope_scaling": null,
+    "base_fixed": true
+   }
+  },
+  {
+   "repo": "dalatexcoder/MiniCPM5-2B-Heretic-ARA-MLX-4Bit",
+   "model_type": "llama",
+   "transformers_version": "5.18.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 5000000,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 5000000,
+    "rope_type": "default"
+   },
+   "findings": [
+    "rope_base"
+   ],
+   "mlx_rope_theta": 10000,
+   "mlx_rope_scaling": null,
+   "with_pr1964": {
+    "rope_theta": 5000000,
+    "rope_scaling": null,
+    "base_fixed": true
+   }
+  },
+  {
+   "repo": "kilianbalaguer9/Voltaire-2.5-MLX-4bit",
+   "model_type": "llama",
+   "transformers_version": "5.19.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 130000,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 130000,
+    "rope_type": "default"
+   },
+   "findings": [
+    "rope_base"
+   ],
+   "mlx_rope_theta": 10000,
+   "mlx_rope_scaling": null,
+   "with_pr1964": {
+    "rope_theta": 130000,
+    "rope_scaling": null,
+    "base_fixed": true
+   }
+  },
+  {
+   "repo": "melmass/Llama-3-8B-LLM2Vec-Kimodo-MLX-4bit",
+   "model_type": "llama",
+   "transformers_version": "5.1.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 500000.0,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 500000.0,
+    "rope_type": "default"
+   },
+   "findings": [
+    "rope_base"
+   ],
+   "mlx_rope_theta": 10000,
+   "mlx_rope_scaling": null,
+   "with_pr1964": {
+    "rope_theta": 500000.0,
+    "rope_scaling": null,
+    "base_fixed": true
+   }
+  }
+ ],
+ "not_loadable": [
+  {
+   "repo": "AJ-Gonzalez/coder-lfm3-1.7b",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "netprojects/nemotron-dory1.0-4b-mlx-bf16",
+   "model_type": "dory",
+   "transformers_version": null,
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "sliding_attention": {
+     "rope_type": "default",
+     "rope_theta": 10000,
+     "partial_rotary_factor": 1.0
+    },
+    "full_attention": {
+     "rope_type": "default",
+     "rope_theta": 10000000,
+     "partial_rotary_factor": 1.0
+    }
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type dory not supported."
+  },
+  {
+   "repo": "netprojects/nemotron-dory1.0-4b-mlx-8bit",
+   "model_type": "dory",
+   "transformers_version": null,
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "sliding_attention": {
+     "rope_type": "default",
+     "rope_theta": 10000,
+     "partial_rotary_factor": 1.0
+    },
+    "full_attention": {
+     "rope_type": "default",
+     "rope_theta": 10000000,
+     "partial_rotary_factor": 1.0
+    }
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type dory not supported."
+  },
+  {
+   "repo": "netprojects/nemotron-dory1.0-4b-mlx-nvfp4",
+   "model_type": "dory",
+   "transformers_version": null,
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "sliding_attention": {
+     "rope_type": "default",
+     "rope_theta": 10000,
+     "partial_rotary_factor": 1.0
+    },
+    "full_attention": {
+     "rope_type": "default",
+     "rope_theta": 10000000,
+     "partial_rotary_factor": 1.0
+    }
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type dory not supported."
+  },
+  {
+   "repo": "anerjy/Attache-Router-0.8B-4bit-mlx",
+   "model_type": "qwen3_5_text",
+   "transformers_version": null,
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "rope_theta": 10000000,
+    "partial_rotary_factor": 0.25,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "rope_theta": 10000000,
+    "partial_rotary_factor": 0.25,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "Muesli-HQ/lfm3-1.7b-muesli-cleanup-v14-mlx-8bit",
+   "model_type": "lfm3",
+   "transformers_version": "5.20.2",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "hermitdave/LFM3-1.7B-MLX-DWQ-4bit",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "LiquidAI/LFM3-1.7B-MLX-bf16",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "LiquidAI/LFM3-1.7B-MLX-6bit",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 6,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "LiquidAI/LFM3-1.7B-MLX-5bit",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 5,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "LiquidAI/LFM3-1.7B-MLX-4bit",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "LiquidAI/LFM3-1.7B-MLX-8bit",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "TechnoBaptist/phonon-refiner-1.7b",
+   "model_type": "lfm3",
+   "transformers_version": "5.19.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "jk797/LFM3-1.7B-MLX-oQ4e",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "jk797/LFM3-1.7B-MLX-oQ6e",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 6,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "jk797/LFM3-1.7B-MLX-oQ8e",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "jk797/LFM3-1.7B-MLX-oQ5e",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 5,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "Infatoshi/phonon-refiner-1.7b",
+   "model_type": "lfm3",
+   "transformers_version": "5.19.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "cyanaut/LFM3-1.7B-oQ4e-fp16",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "cyanaut/LFM3-1.7B-oQ6e-fp16",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 6,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "cyanaut/LFM3-1.7B-oQ8e-fp16",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "alvarolizama/LFM3-1.7B-MLX-oQ4-fp16",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "mchen04/LFM3-1.7B-Uncensored-MLX",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "Lykegenes/LFM3-1.7B-MLX-oQ8e-fp16",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "mchen04/LFM3-1.7B-Heretic-Abliterated-MLX-bf16",
+   "model_type": "lfm3",
+   "transformers_version": "5.20.2",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "dima6312/Flint-40B-A2.5B-abliterated-Rec-4bit",
+   "model_type": "flint",
+   "transformers_version": null,
+   "top_level_rope_theta": 10000.0,
+   "rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type flint not supported."
+  },
+  {
+   "repo": "dima6312/Flint-40B-A2.5B-abliterated-MLX-4bit",
+   "model_type": "flint",
+   "transformers_version": null,
+   "top_level_rope_theta": 10000.0,
+   "rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type flint not supported."
+  },
+  {
+   "repo": "kszlachcikowski/MiMo-V2.6-Flash-RL-oQ8e-mtp-text",
+   "model_type": "mimo_v2",
+   "transformers_version": "5.3.0",
+   "top_level_rope_theta": 10000000.0,
+   "rope_parameters": {
+    "partial_rotary_factor": 0.334,
+    "rope_theta": 10000000.0,
+    "rope_type": "default",
+    "type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type mimo_v2 not supported."
+  },
+  {
+   "repo": "kszlachcikowski/MiMo-V2.6-Flash-RL-oQ8e-mtp",
+   "model_type": "mimo_v2",
+   "transformers_version": "5.3.0",
+   "top_level_rope_theta": 10000000.0,
+   "rope_parameters": {
+    "partial_rotary_factor": 0.334,
+    "rope_theta": 10000000.0,
+    "rope_type": "default",
+    "type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type mimo_v2 not supported."
+  },
+  {
+   "repo": "UraionLabs/LFM3-1.7B-MLX-oQ8e",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "UraionLabs/LFM3-1.7B-MLX-oQ6e",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 6,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "UraionLabs/LFM3-1.7B-MLX-oQ5e",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 5,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "UraionLabs/LFM3-1.7B-MLX-oQ4e",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "hermitdave/K2-Horizon-7B-Uno-MLX-slq-4.5bpw",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "skryptersi/LFM3-1.7B-oQ4e",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "brainworkup/LFM3-1.7B-MLX-oQ8e",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "Studio-Research-M1/Flint-40B-A2.5B-abliterated-oQ4e-BF16-MLX",
+   "model_type": "flint",
+   "transformers_version": "5.20.2",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type flint not supported."
+  },
+  {
+   "repo": "Studio-Research-M1/Flint-40B-A2.5B-abliterated-oQ8e-BF16-MLX",
+   "model_type": "flint",
+   "transformers_version": "5.20.2",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type flint not supported."
+  },
+  {
+   "repo": "alan13367/LFM3-1.7B-oQ8e",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "scombat/s1d1-router-6src-tiny-mlx-8bit",
+   "model_type": "modernbert",
+   "transformers_version": "5.19.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    }
+   },
+   "findings": [],
+   "load": "ValueError: Model type modernbert not supported."
+  },
+  {
+   "repo": "scombat/s1d1-router-6src-small-mlx-8bit",
+   "model_type": "modernbert",
+   "transformers_version": "5.19.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    }
+   },
+   "findings": [],
+   "load": "ValueError: Model type modernbert not supported."
+  },
+  {
+   "repo": "scombat/s1d1-router-6src-compact-mlx-8bit",
+   "model_type": "modernbert",
+   "transformers_version": "5.19.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    }
+   },
+   "findings": [],
+   "load": "ValueError: Model type modernbert not supported."
+  },
+  {
+   "repo": "scombat/s1d1-router-6src-full-mlx-8bit",
+   "model_type": "modernbert",
+   "transformers_version": "5.19.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    }
+   },
+   "findings": [],
+   "load": "ValueError: Model type modernbert not supported."
+  },
+  {
+   "repo": "mlx-community/Hemmingway-1-OptiQ-4bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "netprojects/granite-switch-4.1-30b-mlx-4bit",
+   "model_type": "granite_switch",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 50000000,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type granite_switch not supported."
+  },
+  {
+   "repo": "netprojects/granite-switch-4.1-30b-mlx-8bit",
+   "model_type": "granite_switch",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 50000000,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type granite_switch not supported."
+  },
+  {
+   "repo": "netprojects/granite-switch-4.1-8b-mlx-4bit",
+   "model_type": "granite_switch",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type granite_switch not supported."
+  },
+  {
+   "repo": "netprojects/granite-switch-4.1-8b-mlx-8bit",
+   "model_type": "granite_switch",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type granite_switch not supported."
+  },
+  {
+   "repo": "mlx-community/LFM3-1.7B-OptiQ-4bit",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "alexwengg/LFM3-1.7B-Base-MLX-mixed-5-6-8",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 5,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "alexwengg/LFM3-1.7B-Base-MLX-5bit",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 5,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "hakunokina/MiMo-V2.6-Flash-RL-UNCENSORED-oQ4e-mtp",
+   "model_type": "mimo_v2",
+   "transformers_version": "5.3.0",
+   "top_level_rope_theta": 10000000.0,
+   "rope_parameters": {
+    "partial_rotary_factor": 0.334,
+    "rope_theta": 10000000.0,
+    "rope_type": "default",
+    "type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type mimo_v2 not supported."
+  },
+  {
+   "repo": "OsaurusAI/LFM3-1.7B-JANG_6M",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 6,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "sergolsub/mlx-drex-v1.5-9B",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "nativ-community/LFM3-1.7B-mxfp8",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "nativ-community/LFM3-1.7B-mxfp4",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "nativ-community/LFM3-1.7B-nvfp4",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "nativ-community/LFM3-1.7B-8bit",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "nativ-community/LFM3-1.7B-6bit",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 6,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "nativ-community/LFM3-1.7B-5bit",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 5,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "nativ-community/LFM3-1.7B-4bit",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "nativ-community/LFM3-1.7B-bf16",
+   "model_type": "lfm3",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.5,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type lfm3 not supported."
+  },
+  {
+   "repo": "IFM/Jais-3-MoVA-36B-A4B-MLX-bf16",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "IFM/Jais-3-MoVA-36B-A4B-MLX-8bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "IFM/Jais-3-MoVA-36B-A4B-MLX-4bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "IFM/Jais-3-32B-MLX-bf16",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "IFM/Jais-3-32B-MLX-8bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "IFM/Jais-3-32B-MLX-4bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "IFM/Jais-3-7B-MLX-bf16",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "IFM/Jais-3-7B-MLX-8bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "IFM/Jais-3-7B-MLX-4bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "IFM/Jais-3-3.7B-MLX-bf16",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "IFM/Jais-3-3.7B-MLX-8bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "IFM/Jais-3-3.7B-MLX-4bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "IFM/Jais-3-0.9B-MLX-bf16",
+   "model_type": "k2_horizon",
+   "transformers_version": "4.57.1",
+   "top_level_rope_theta": 1000000.0,
+   "rope_parameters": {
+    "attention_factor": 1.2772588722239782,
+    "beta_fast": 128.0,
+    "beta_slow": 4.0,
+    "factor": 16.0,
+    "original_max_position_embeddings": 8192,
+    "rope_type": "yarn",
+    "truncate": true
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "IFM/Jais-3-0.9B-MLX-8bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "4.57.1",
+   "top_level_rope_theta": 1000000.0,
+   "rope_parameters": {
+    "attention_factor": 1.2772588722239782,
+    "beta_fast": 128.0,
+    "beta_slow": 4.0,
+    "factor": 16.0,
+    "original_max_position_embeddings": 8192,
+    "rope_type": "yarn",
+    "truncate": true
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "IFM/Jais-3-0.9B-MLX-4bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "4.57.1",
+   "top_level_rope_theta": 1000000.0,
+   "rope_parameters": {
+    "attention_factor": 1.2772588722239782,
+    "beta_fast": 128.0,
+    "beta_slow": 4.0,
+    "factor": 16.0,
+    "original_max_position_embeddings": 8192,
+    "rope_type": "yarn",
+    "truncate": true
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "Popbones/LiveMem-RL-mlx-q4-backbone",
+   "model_type": "livemem",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 5000000,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type livemem not supported."
+  },
+  {
+   "repo": "Popbones/LiveMem-RL-mlx-q8-backbone",
+   "model_type": "livemem",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 5000000,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type livemem not supported."
+  },
+  {
+   "repo": "Popbones/LiveMem-RL-mlx-bf16",
+   "model_type": "livemem",
+   "transformers_version": "5.12.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 5000000,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type livemem not supported."
+  },
+  {
+   "repo": "balllvin/flint-heretic-mlx-4bit",
+   "model_type": "flint",
+   "transformers_version": null,
+   "top_level_rope_theta": 10000.0,
+   "rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type flint not supported."
+  },
+  {
+   "repo": "xquantize/nemotron-labs-dory1.0-4b-mlx-6bit",
+   "model_type": "dory",
+   "transformers_version": null,
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "sliding_attention": {
+     "rope_type": "default",
+     "rope_theta": 10000,
+     "partial_rotary_factor": 1.0
+    },
+    "full_attention": {
+     "rope_type": "default",
+     "rope_theta": 10000000,
+     "partial_rotary_factor": 1.0
+    }
+   },
+   "quantization": 6,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type dory not supported."
+  },
+  {
+   "repo": "webbrain-one/qwen3.5-9b-tr-hukuk-v2.1-MLX-5bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.20.2",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": 5,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "webbrain-one/qwen3.5-9b-tr-hukuk-v2.1-MLX-4bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.20.2",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "sbintuitions/hikari-medium",
+   "model_type": "hikari",
+   "transformers_version": "5.8.0.dev0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type hikari not supported."
+  },
+  {
+   "repo": "imgovind/wrightproduct-v0",
+   "model_type": "qwen3_moe",
+   "transformers_version": "5.20.2",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 10000000,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "TypeError: ModelArgs.__init__() missing 2 required positional arguments: 'num_experts' and 'rope_theta'"
+  },
+  {
+   "repo": "hkust-aaron/EdgeRock-4B-MLX-4bit-mixed",
+   "model_type": "edgerock",
+   "transformers_version": "5.7.0.dev0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type edgerock not supported."
+  },
+  {
+   "repo": "hkust-aaron/EdgeRock-4B-MLX-6bit-g64",
+   "model_type": "edgerock",
+   "transformers_version": "5.7.0.dev0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default"
+   },
+   "quantization": 6,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type edgerock not supported."
+  },
+  {
+   "repo": "hkust-aaron/EdgeRock-4B-MLX-4bit-g32",
+   "model_type": "edgerock",
+   "transformers_version": "5.7.0.dev0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type edgerock not supported."
+  },
+  {
+   "repo": "hkust-aaron/EdgeRock-4B-MLX-8bit",
+   "model_type": "edgerock",
+   "transformers_version": "5.7.0.dev0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type edgerock not supported."
+  },
+  {
+   "repo": "Nav8ha/flint-mixed-3-4bit",
+   "model_type": "flint",
+   "transformers_version": null,
+   "top_level_rope_theta": 10000.0,
+   "rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type flint not supported."
+  },
+  {
+   "repo": "mlx-community/flint-mixed-3-4bit",
+   "model_type": "flint",
+   "transformers_version": null,
+   "top_level_rope_theta": 10000.0,
+   "rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type flint not supported."
+  },
+  {
+   "repo": "EigenLabs/flint-int4",
+   "model_type": "flint",
+   "transformers_version": null,
+   "top_level_rope_theta": 10000.0,
+   "rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type flint not supported."
+  },
+  {
+   "repo": "RecursiveSI/flint-int4",
+   "model_type": "flint",
+   "transformers_version": null,
+   "top_level_rope_theta": 10000.0,
+   "rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 10000.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type flint not supported."
+  },
+  {
+   "repo": "mlx-community/Hy-Memory-30B-A3B-8bit",
+   "model_type": "hy_v3",
+   "transformers_version": "5.6.0.dev0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type hy_v3 not supported."
+  },
+  {
+   "repo": "mlx-community/Hy-Memory-30B-A3B-4bit",
+   "model_type": "hy_v3",
+   "transformers_version": "5.6.0.dev0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type hy_v3 not supported."
+  },
+  {
+   "repo": "webbrain-one/qwen3.5-9b-tr-hukuk-MLX-4bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.20.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "OpensourceWTF/Beam-1.0-501B-A23B-NVFP4-q8-mlx-stream",
+   "model_type": "beam",
+   "transformers_version": "5.16.0.dev0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "sliding_attention": {
+     "rope_type": "default",
+     "rope_theta": 10000.0
+    },
+    "full_attention": null
+   },
+   "quantization": null,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "sliding_attention": {
+     "rope_type": "default",
+     "rope_theta": 10000.0
+    },
+    "full_attention": null
+   },
+   "findings": [],
+   "load": "ValueError: Model type beam not supported."
+  },
+  {
+   "repo": "snsnc/NVIDIA-Nemotron-Labs-Dory1.0-4B-mlx-4bit",
+   "model_type": "dory",
+   "transformers_version": null,
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "sliding_attention": {
+     "rope_type": "default",
+     "rope_theta": 10000,
+     "partial_rotary_factor": 1.0
+    },
+    "full_attention": {
+     "rope_type": "default",
+     "rope_theta": 10000000,
+     "partial_rotary_factor": 1.0
+    }
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type dory not supported."
+  },
+  {
+   "repo": "smdesai/NVIDIA-Nemotron-Labs-Dory1.0-4B-MLX-NVFP4",
+   "model_type": "dory",
+   "transformers_version": null,
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "sliding_attention": {
+     "rope_type": "default",
+     "rope_theta": 10000,
+     "partial_rotary_factor": 1.0
+    },
+    "full_attention": {
+     "rope_type": "default",
+     "rope_theta": 10000000,
+     "partial_rotary_factor": 1.0
+    }
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type dory not supported."
+  },
+  {
+   "repo": "North-ML1/Qwen3.8-Smol-uo",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.15.0.dev0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "lapislabsai/lapis-sal-150M-MLX",
+   "model_type": null,
+   "transformers_version": null,
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 160000.0,
+     "rope_type": "default"
+    }
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "KeyError: 'model_type'"
+  },
+  {
+   "repo": "Duckets/Hy-Memory-30B-A3B-MLX-4bit",
+   "model_type": "hy_v3",
+   "transformers_version": "5.6.0.dev0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type hy_v3 not supported."
+  },
+  {
+   "repo": "hermitdave/Hy-Memory-30B-A3B-MLX-8bit",
+   "model_type": "hy_v3",
+   "transformers_version": "5.6.0.dev0",
+   "top_level_rope_theta": 11158840.0,
+   "rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type hy_v3 not supported."
+  },
+  {
+   "repo": "hermitdave/Hy-Memory-30B-A3B-MLX-Mixed4-6",
+   "model_type": "hy_v3",
+   "transformers_version": "5.6.0.dev0",
+   "top_level_rope_theta": 11158840.0,
+   "rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type hy_v3 not supported."
+  },
+  {
+   "repo": "hermitdave/Hy-Memory-30B-A3B-MLX-8bit-omlx",
+   "model_type": "hy_v3",
+   "transformers_version": "5.6.0.dev0",
+   "top_level_rope_theta": 11158840.0,
+   "rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type hy_v3 not supported."
+  },
+  {
+   "repo": "hermitdave/Hy-Memory-30B-A3B-MLX-Mixed4-6-omlx",
+   "model_type": "hy_v3",
+   "transformers_version": "5.6.0.dev0",
+   "top_level_rope_theta": 11158840.0,
+   "rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type hy_v3 not supported."
+  },
+  {
+   "repo": "leonsarmiento/Hy-Memory-30B-A3B-8bit-mlx",
+   "model_type": "hy_v3",
+   "transformers_version": "5.6.0.dev0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type hy_v3 not supported."
+  },
+  {
+   "repo": "JANGQ-AI/MiMo-V2.6-Flash-MOPD-JANGHT2.5",
+   "model_type": "mimo_v2",
+   "transformers_version": "5.3.0",
+   "top_level_rope_theta": 10000000.0,
+   "rope_parameters": {
+    "partial_rotary_factor": 0.334,
+    "rope_theta": 10000000.0,
+    "rope_type": "default",
+    "type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type mimo_v2 not supported."
+  },
+  {
+   "repo": "OsaurusAI/Diplodocus-preview-JANG_6M",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.4.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "mlx-community/K2-Horizon-7B-chat-mlx-16bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "mlx-community/K2-Horizon-0.9B-chat-mlx-16bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "4.57.1",
+   "top_level_rope_theta": 1000000.0,
+   "rope_parameters": {
+    "attention_factor": 1.2772588722239782,
+    "beta_fast": 128.0,
+    "beta_slow": 4.0,
+    "factor": 16.0,
+    "original_max_position_embeddings": 8192,
+    "rope_type": "yarn",
+    "truncate": true
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "mlx-community/JevK5-chat-mlx-8bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "mlx-community/JevK5-chat-mlx-4bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "mlx-community/JevK5-chat-mlx-16bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "mlx-community/Jev-Style-0.8B-Decision-v3-mlx-8bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "mlx-community/Jev-Style-0.8B-Decision-v3-mlx-16bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "topoloop/finch-0.1-0.8B",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "AlphaOxO/Param2-17B-A2.4B-Thinking-4bits-mlx",
+   "model_type": "param2moe",
+   "transformers_version": "5.3.0",
+   "top_level_rope_theta": 500000,
+   "rope_parameters": {
+    "partial_rotary_factor": 1.0,
+    "rope_theta": 500000,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type param2moe not supported."
+  },
+  {
+   "repo": "SirSahOl/Jev-Style-0.8B-Decision-v3-mlx-8bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "SirSahOl/Jev-Style-0.8B-Decision-v3-mlx-16bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "txgsync/K2-Horizon-MoVA-36B-A4B-MLA-NanoSeedLM-P3",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "txgsync/K2-Horizon-MoVA-36B-A4B-MLA-NanoSeedLM-P4",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "txgsync/K2-Horizon-MoVA-36B-A4B-MLA-oQ4e",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "txgsync/K2-Horizon-MoVA-36B-A4B-MLA-oQ6e",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 6,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "txgsync/K2-Horizon-MoVA-36B-A4B-MLA-oQ8e",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "txgsync/K2-Horizon-MoVA-36B-A4B-MLA",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "abenzerps/K2-Horizon-MoVA-36B-A4B-MLX-4bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "inferencerlabs/MiMo-V2.6-Flash-RL-MLX-Q9",
+   "model_type": "mimo_v2",
+   "transformers_version": "5.3.0",
+   "top_level_rope_theta": 10000000.0,
+   "rope_parameters": {
+    "partial_rotary_factor": 0.334,
+    "rope_theta": 10000000.0,
+    "rope_type": "default",
+    "type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type mimo_v2 not supported."
+  },
+  {
+   "repo": "txgsync/K2-Horizon-0.9B-NSLM-seeds-4bpw",
+   "model_type": "k2_horizon",
+   "transformers_version": "4.57.1",
+   "top_level_rope_theta": 1000000.0,
+   "rope_parameters": {
+    "attention_factor": 1.2772588722239782,
+    "beta_fast": 128.0,
+    "beta_slow": 4.0,
+    "factor": 16.0,
+    "original_max_position_embeddings": 8192,
+    "rope_type": "yarn",
+    "truncate": true
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "txgsync/K2-Horizon-MoVA-36B-A4B-NSLM-p4mx-q4v",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "Nurymanau/NeoMME-260M-Retriever-MLX",
+   "model_type": "neomme",
+   "transformers_version": "5.16.0.dev0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.25,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "partial_rotary_factor": 1.0,
+     "rope_theta": 10000.0,
+     "rope_type": "default"
+    }
+   },
+   "quantization": null,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "full_attention": {
+     "partial_rotary_factor": 0.25,
+     "rope_theta": 1000000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "partial_rotary_factor": 1.0,
+     "rope_theta": 10000.0,
+     "rope_type": "default"
+    }
+   },
+   "findings": [],
+   "load": "ValueError: Model type neomme not supported."
+  },
+  {
+   "repo": "interimlabs/InterimLabs-Huihui-Qwen3.5-9B-abliterated-MLX-4bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": null,
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "rope_type": "default",
+    "rope_theta": 10000000,
+    "partial_rotary_factor": 0.25
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "rope_type": "default",
+    "rope_theta": 10000000,
+    "partial_rotary_factor": 0.25
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "interimlabs/InterimLabs-Qwen3.5-9B-MLX-4bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": null,
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "rope_type": "default",
+    "rope_theta": 10000000,
+    "partial_rotary_factor": 0.25
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "rope_type": "default",
+    "rope_theta": 10000000,
+    "partial_rotary_factor": 0.25
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "interimlabs/InterimLabs-Huihui-Qwen3.5-4B-abliterated-MLX-4bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": null,
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "interimlabs/InterimLabs-Qwen3.5-4B-MLX-4bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": null,
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "rope_type": "default",
+    "rope_theta": 10000000,
+    "partial_rotary_factor": 0.25
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "rope_type": "default",
+    "rope_theta": 10000000,
+    "partial_rotary_factor": 0.25
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "interimlabs/InterimLabs-Huihui-Qwen3.5-2B-abliterated-MLX-4bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": null,
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "rope_type": "default",
+    "rope_theta": 10000000,
+    "partial_rotary_factor": 0.25
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "rope_type": "default",
+    "rope_theta": 10000000,
+    "partial_rotary_factor": 0.25
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "interimlabs/InterimLabs-Qwen3.5-2B-MLX-4bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": null,
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "rope_type": "default",
+    "rope_theta": 10000000,
+    "partial_rotary_factor": 0.25
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "rope_type": "default",
+    "rope_theta": 10000000,
+    "partial_rotary_factor": 0.25
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "nativ-community/JEV-9B-MLX-8bit",
+   "model_type": "jev_text",
+   "transformers_version": "5.16.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "rope_type": "default",
+    "rope_theta": 10000000,
+    "partial_rotary_factor": 0.25
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type jev_text not supported."
+  },
+  {
+   "repo": "nativ-community/JEV-9B-MLX-NVFP4",
+   "model_type": "jev_text",
+   "transformers_version": "5.16.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "rope_type": "default",
+    "rope_theta": 10000000,
+    "partial_rotary_factor": 0.25
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type jev_text not supported."
+  },
+  {
+   "repo": "dotyerts/MiMo-V2.6-Flash-RL-UNCENSORED-oQ8e-mtp",
+   "model_type": "mimo_v2",
+   "transformers_version": "5.3.0",
+   "top_level_rope_theta": 10000000.0,
+   "rope_parameters": {
+    "partial_rotary_factor": 0.334,
+    "rope_theta": 10000000.0,
+    "rope_type": "default",
+    "type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type mimo_v2 not supported."
+  },
+  {
+   "repo": "ox-ox/Hy3-295B-Instruct-w2q3exp-AProjQ8-SExpQ8-OutQ8-MTP-mlx",
+   "model_type": "hy_v3",
+   "transformers_version": null,
+   "top_level_rope_theta": 11158840.0,
+   "rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "quantization": 2,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type hy_v3 not supported."
+  },
+  {
+   "repo": "vanch007/Hy-MT2-30B-A3B-oQ6e-fp16",
+   "model_type": "hy_v3",
+   "transformers_version": "4.57.1",
+   "top_level_rope_theta": 11158840.0,
+   "rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "quantization": 6,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type hy_v3 not supported."
+  },
+  {
+   "repo": "Algorythm-Canada/jevk5-0.2-mlx-4bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "Algorythm-Canada/jevk5-0.2-mlx-8bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "stefanschmidt/jina-ocr-v1-8bit",
+   "model_type": "deepseekocr",
+   "transformers_version": "4.57.3",
+   "top_level_rope_theta": 1000000,
+   "rope_parameters": {
+    "rope_theta": 1000000,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type deepseekocr not supported."
+  },
+  {
+   "repo": "Avicennasis/K2-Horizon-7B-heretic-mlx-8bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.18.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "Avicennasis/K2-Horizon-3.7B-heretic-mlx-8bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "Avicennasis/K2-Horizon-0.9B-heretic-mlx-8bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "attention_factor": 1.2772588722239782,
+    "beta_fast": 128.0,
+    "beta_slow": 4.0,
+    "factor": 16.0,
+    "original_max_position_embeddings": 8192,
+    "rope_theta": 1000000.0,
+    "rope_type": "yarn",
+    "truncate": true
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "Edge0/Edge0-8B-A1B-preview",
+   "model_type": null,
+   "transformers_version": "5.8.1",
+   "top_level_rope_theta": 6000000,
+   "rope_parameters": {
+    "partial_rotary_factor": 0.5,
+    "rope_theta": 6000000,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "KeyError: 'model_type'"
+  },
+  {
+   "repo": "SirSahOl/JevK5-chat-mlx-16bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "SirSahOl/JevK5-chat-mlx-8bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "mlx-works/K2-Horizon-7B-oQ4e",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "mlx-works/K2-Horizon-7B-oQ3e",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 3,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "SirSahOl/JevK5-chat-mlx-4bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "nativ-community/decider-2b",
+   "model_type": "decider2",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type decider2 not supported."
+  },
+  {
+   "repo": "ameerhmz5/laya-modernbert-decision-90pct",
+   "model_type": "modernbert",
+   "transformers_version": "5.14.1",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000.0,
+     "rope_type": "default"
+    }
+   },
+   "quantization": null,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000.0,
+     "rope_type": "default"
+    }
+   },
+   "findings": [],
+   "load": "ValueError: Model type modernbert not supported."
+  },
+  {
+   "repo": "mlx-community/K2-Horizon-0.9B-4bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "4.57.1",
+   "top_level_rope_theta": 1000000.0,
+   "rope_parameters": {
+    "attention_factor": 1.2772588722239782,
+    "beta_fast": 128.0,
+    "beta_slow": 4.0,
+    "factor": 16.0,
+    "original_max_position_embeddings": 8192,
+    "rope_type": "yarn",
+    "truncate": true
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "mlx-community/K2-Horizon-0.9B-8bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "4.57.1",
+   "top_level_rope_theta": 1000000.0,
+   "rope_parameters": {
+    "attention_factor": 1.2772588722239782,
+    "beta_fast": 128.0,
+    "beta_slow": 4.0,
+    "factor": 16.0,
+    "original_max_position_embeddings": 8192,
+    "rope_type": "yarn",
+    "truncate": true
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "mlx-community/K2-Horizon-0.9B-bf16",
+   "model_type": "k2_horizon",
+   "transformers_version": "4.57.1",
+   "top_level_rope_theta": 1000000.0,
+   "rope_parameters": {
+    "attention_factor": 1.2772588722239782,
+    "beta_fast": 128.0,
+    "beta_slow": 4.0,
+    "factor": 16.0,
+    "original_max_position_embeddings": 8192,
+    "rope_type": "yarn",
+    "truncate": true
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "mlx-community/K2-Horizon-3.7B-4bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "mlx-community/K2-Horizon-3.7B-8bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "mlx-community/K2-Horizon-3.7B-bf16",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "mlx-community/K2-Horizon-7B-4bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "mlx-community/K2-Horizon-7B-8bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "mlx-community/K2-Horizon-7B-bf16",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "vogel61/MiMo-V2.6-Flash-MOPD-oQ4e-mtp",
+   "model_type": "mimo_v2",
+   "transformers_version": "5.3.0",
+   "top_level_rope_theta": 10000000.0,
+   "rope_parameters": {
+    "partial_rotary_factor": 0.334,
+    "rope_theta": 10000000.0,
+    "rope_type": "default",
+    "type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type mimo_v2 not supported."
+  },
+  {
+   "repo": "Gladstone025HF/K2-Horizon-MoVA-36B-A4B-oQ8e",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "mlx-community/K2-Horizon-MoVA-36B-A4B-4bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "mlx-community/K2-Horizon-MoVA-36B-A4B-8bit",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "mlx-community/K2-Horizon-MoVA-36B-A4B-bf16",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "inferencerlabs/MiMo-V2.6-Pro-RL-MLX-Q9",
+   "model_type": "mimo_v2",
+   "transformers_version": "5.3.0",
+   "top_level_rope_theta": 10000000,
+   "rope_parameters": {
+    "partial_rotary_factor": 0.334,
+    "rope_theta": 10000000,
+    "rope_type": "default",
+    "type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type mimo_v2 not supported."
+  },
+  {
+   "repo": "EigenLabs/MiMo-V2.6-Flash-MOPD-MLX-4bit-mtp",
+   "model_type": "mimo_v2",
+   "transformers_version": "5.3.0",
+   "top_level_rope_theta": 10000000.0,
+   "rope_parameters": {
+    "partial_rotary_factor": 0.334,
+    "rope_theta": 10000000.0,
+    "rope_type": "default",
+    "type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type mimo_v2 not supported."
+  },
+  {
+   "repo": "OsaurusAI/MiMo-V2.6-Flash-RL-JANG_2L",
+   "model_type": "mimo_v2",
+   "transformers_version": "5.3.0",
+   "top_level_rope_theta": 10000000.0,
+   "rope_parameters": {
+    "partial_rotary_factor": 0.334,
+    "rope_theta": 10000000.0,
+    "rope_type": "default",
+    "type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type mimo_v2 not supported."
+  },
+  {
+   "repo": "nativ-community/MiMo-V2.6-Flash-RL-MLX-8bit",
+   "model_type": "mimo_v2",
+   "transformers_version": "5.3.0",
+   "top_level_rope_theta": 10000000.0,
+   "rope_parameters": {
+    "partial_rotary_factor": 0.334,
+    "rope_theta": 10000000.0,
+    "rope_type": "default",
+    "type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type mimo_v2 not supported."
+  },
+  {
+   "repo": "sahilchachra/Laya-TypedDecisions-MXFP8",
+   "model_type": "modernbert",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000.0,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000.0,
+     "rope_type": "default"
+    }
+   },
+   "findings": [],
+   "load": "ValueError: Model type modernbert not supported."
+  },
+  {
+   "repo": "sahilchachra/Laya-TypedDecisions-MXFP4",
+   "model_type": "modernbert",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000.0,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000.0,
+     "rope_type": "default"
+    }
+   },
+   "findings": [],
+   "load": "ValueError: Model type modernbert not supported."
+  },
+  {
+   "repo": "sahilchachra/Laya-Multilingual-MXFP8",
+   "model_type": "modernbert",
+   "transformers_version": "5.0.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    }
+   },
+   "findings": [],
+   "load": "ValueError: Model type modernbert not supported."
+  },
+  {
+   "repo": "sahilchachra/Laya-Multilingual-MXFP4",
+   "model_type": "modernbert",
+   "transformers_version": "5.0.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    }
+   },
+   "findings": [],
+   "load": "ValueError: Model type modernbert not supported."
+  },
+  {
+   "repo": "sahilchachra/Laya-English-MXFP8",
+   "model_type": "modernbert",
+   "transformers_version": "5.0.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000.0,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000.0,
+     "rope_type": "default"
+    }
+   },
+   "findings": [],
+   "load": "ValueError: Model type modernbert not supported."
+  },
+  {
+   "repo": "sahilchachra/Laya-English-MXFP4",
+   "model_type": "modernbert",
+   "transformers_version": "5.0.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000.0,
+     "rope_type": "default"
+    }
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000.0,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 10000.0,
+     "rope_type": "default"
+    }
+   },
+   "findings": [],
+   "load": "ValueError: Model type modernbert not supported."
+  },
+  {
+   "repo": "nativ-community/MiMo-V2.6-Flash-RL-MLX-4bit",
+   "model_type": "mimo_v2",
+   "transformers_version": "5.3.0",
+   "top_level_rope_theta": 10000000.0,
+   "rope_parameters": {
+    "partial_rotary_factor": 0.334,
+    "rope_theta": 10000000.0,
+    "rope_type": "default",
+    "type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type mimo_v2 not supported."
+  },
+  {
+   "repo": "nativ-community/Hemmingway-1-MLX-8bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "nativ-community/Hemmingway-1-MLX-4bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "mlx-community/MiMo-V2.6-Pro-RL-mxfp4-q8",
+   "model_type": "mimo_v2",
+   "transformers_version": "5.3.0",
+   "top_level_rope_theta": 10000000,
+   "rope_parameters": {
+    "partial_rotary_factor": 0.334,
+    "rope_theta": 10000000,
+    "rope_type": "default",
+    "type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type mimo_v2 not supported."
+  },
+  {
+   "repo": "Yanun/MiMo-V2.6-Flash-RL-MXFP4",
+   "model_type": "mimo_v2",
+   "transformers_version": "5.3.0",
+   "top_level_rope_theta": 10000000.0,
+   "rope_parameters": {
+    "partial_rotary_factor": 0.334,
+    "rope_theta": 10000000.0,
+    "rope_type": "default",
+    "type": "default"
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type mimo_v2 not supported."
+  },
+  {
+   "repo": "SirSahOl/decider-2b-chat-mlx-16bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": null,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "SirSahOl/decider-2b-chat-mlx-8bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "SirSahOl/decider-2b-chat-mlx-4bit",
+   "model_type": "qwen3_5_text",
+   "transformers_version": "5.17.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "mrope_interleaved": true,
+    "mrope_section": [
+     11,
+     11,
+     10
+    ],
+    "partial_rotary_factor": 0.25,
+    "rope_theta": 10000000,
+    "type": "default",
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type qwen3_5_text not supported."
+  },
+  {
+   "repo": "AlazarM/MiMo-V2.6-Flash-RL-MLX-4bit",
+   "model_type": "mimo_v2",
+   "transformers_version": "5.3.0",
+   "top_level_rope_theta": 10000000.0,
+   "rope_parameters": {
+    "partial_rotary_factor": 0.334,
+    "rope_theta": 10000000.0,
+    "rope_type": "default",
+    "type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type mimo_v2 not supported."
+  },
+  {
+   "repo": "mlx-community/MiMo-V2.6-Flash-RL-mxfp4-q8",
+   "model_type": "mimo_v2",
+   "transformers_version": "5.3.0",
+   "top_level_rope_theta": 10000000.0,
+   "rope_parameters": {
+    "partial_rotary_factor": 0.334,
+    "rope_theta": 10000000.0,
+    "rope_type": "default",
+    "type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type mimo_v2 not supported."
+  },
+  {
+   "repo": "UraionLabs/K2-Horizon-7B-oQ4e",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "UraionLabs/K2-Horizon-7B-oQ8e",
+   "model_type": "k2_horizon",
+   "transformers_version": "5.13.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 10000000.0,
+    "rope_type": "default"
+   },
+   "quantization": 8,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "ValueError: Model type k2_horizon not supported."
+  },
+  {
+   "repo": "mlx-community/Hy3-OptiQ-2bit",
+   "model_type": "hy_v3",
+   "transformers_version": "5.6.0",
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "quantization": 4,
+   "reference": "transformers",
+   "transformers_rope_parameters": {
+    "rope_theta": 11158840.0,
+    "rope_type": "default"
+   },
+   "findings": [],
+   "load": "ValueError: Model type hy_v3 not supported."
+  },
+  {
+   "repo": "litillabs/litil-colbert-300m-v1-mlx",
+   "model_type": null,
+   "transformers_version": null,
+   "top_level_rope_theta": null,
+   "rope_parameters": {
+    "full_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    },
+    "sliding_attention": {
+     "rope_theta": 160000,
+     "rope_type": "default"
+    }
+   },
+   "quantization": null,
+   "reference": "config",
+   "transformers_rope_parameters": null,
+   "findings": [],
+   "load": "KeyError: 'model_type'"
+  }
+ ],
+ "does_not_show": [
+  "that a flagged port gives wrong outputs: confirm each with cumlx diff",
+  "ports without the mlx tag, or older than the listed window"
+ ]
+}

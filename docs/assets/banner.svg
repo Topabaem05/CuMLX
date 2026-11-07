@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-labelledby="title desc">
+  <title id="title">CuMLX</title>
+  <desc id="desc">CuMLX compares an MLX port with its CUDA/PyTorch original module by module and points to the first module that diverges.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#161f35"/>
+    </linearGradient>
+    <linearGradient id="cuda" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#76b900"/>
+      <stop offset="1" stop-color="#4f8a00"/>
+    </linearGradient>
+    <linearGradient id="mlx" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#7aa2ff"/>
+      <stop offset="1" stop-color="#4c6fe0"/>
+    </linearGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#ffffff" stroke-opacity="0.04" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1280" height="360" fill="url(#bg)"/>
+  <rect width="1280" height="360" fill="url(#grid)"/>
+
+  <g font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <text x="80" y="150" font-size="88" font-weight="700" fill="#f5f7fb" letter-spacing="-2">Cu<tspan fill="#9fb7ff">MLX</tspan></text>
+    <text x="84" y="200" font-size="26" fill="#c9d2e3">Prove that your MLX port computes</text>
+    <text x="84" y="234" font-size="26" fill="#c9d2e3">what the CUDA original computes.</text>
+    <text x="84" y="292" font-size="18" fill="#7f8aa3" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace">cumlx capture → cumlx diff → first divergence</text>
+  </g>
+
+  <!-- Two traces, compared module by module -->
+  <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15">
+    <rect x="690" y="86" width="96" height="34" rx="8" fill="url(#cuda)"/>
+    <text x="738" y="108" text-anchor="middle" fill="#0b1220" font-weight="700">CUDA</text>
+    <rect x="690" y="226" width="96" height="34" rx="8" fill="url(#mlx)"/>
+    <text x="738" y="248" text-anchor="middle" fill="#0b1220" font-weight="700">MLX</text>
+
+    <!-- golden row -->
+    <g fill="#76b900" fill-opacity="0.85">
+      <rect x="806" y="90" width="44" height="26" rx="5"/>
+      <rect x="860" y="90" width="44" height="26" rx="5"/>
+      <rect x="914" y="90" width="44" height="26" rx="5"/>
+      <rect x="968" y="90" width="44" height="26" rx="5"/>
+      <rect x="1022" y="90" width="44" height="26" rx="5"/>
+      <rect x="1076" y="90" width="44" height="26" rx="5"/>
+      <rect x="1130" y="90" width="44" height="26" rx="5"/>
+    </g>
+    <!-- port row: equal, equal, equal, first divergence, then not judged -->
+    <g>
+      <rect x="806" y="230" width="44" height="26" rx="5" fill="#7aa2ff" fill-opacity="0.85"/>
+      <rect x="860" y="230" width="44" height="26" rx="5" fill="#7aa2ff" fill-opacity="0.85"/>
+      <rect x="914" y="230" width="44" height="26" rx="5" fill="#7aa2ff" fill-opacity="0.85"/>
+      <rect x="968" y="230" width="44" height="26" rx="5" fill="#ff5d6c"/>
+      <rect x="1022" y="230" width="44" height="26" rx="5" fill="#7aa2ff" fill-opacity="0.85"/>
+      <rect x="1076" y="230" width="44" height="26" rx="5" fill="#7aa2ff" fill-opacity="0.85"/>
+      <rect x="1130" y="230" width="44" height="26" rx="5" fill="#7aa2ff" fill-opacity="0.85"/>
+    </g>
+    <!-- comparison ticks -->
+    <g stroke-width="2" stroke-linecap="round">
+      <line x1="828" y1="124" x2="828" y2="222" stroke="#3a4766"/>
+      <line x1="882" y1="124" x2="882" y2="222" stroke="#3a4766"/>
+      <line x1="936" y1="124" x2="936" y2="222" stroke="#3a4766"/>
+      <line x1="990" y1="124" x2="990" y2="222" stroke="#ff5d6c" stroke-dasharray="6 6"/>
+      <line x1="1044" y1="124" x2="1044" y2="222" stroke="#3a4766"/>
+      <line x1="1098" y1="124" x2="1098" y2="222" stroke="#3a4766"/>
+      <line x1="1152" y1="124" x2="1152" y2="222" stroke="#3a4766"/>
+    </g>
+    <g fill="#5fd38d" font-size="18" text-anchor="middle" font-weight="700">
+      <text x="828" y="179">=</text><text x="882" y="179">=</text><text x="936" y="179">=</text>
+      <text x="1044" y="179">=</text><text x="1098" y="179">=</text><text x="1152" y="179">=</text>
+    </g>
+    <rect x="938" y="157" width="104" height="30" rx="15" fill="#0b1220" stroke="#ff5d6c" stroke-width="2"/>
+    <text x="990" y="177" text-anchor="middle" fill="#ff8a95" font-size="14">self_attn</text>
+    <text x="990" y="292" text-anchor="middle" fill="#ff8a95" font-size="14">first divergence</text>
+  </g>
+</svg>

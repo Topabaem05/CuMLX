@@ -86,14 +86,23 @@ def verify(original: str, port: str, quantized: bool, prompts: Path, work: Path)
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('-o', '--output', required=True)
+    ap.add_argument('--port', action='append', metavar='ORIGINAL=PORT[:q]',
+                    help='check this pair instead of the built-in list; ":q" makes the golden use the port weights')
     args = ap.parse_args()
+    ports = PORTS
+    if args.port:
+        ports = []
+        for item in args.port:
+            original, _, port = item.partition('=')
+            quantized = port.endswith(':q')
+            ports.append((original, port.removesuffix(':q'), quantized))
     rows = []
     with TemporaryDirectory(prefix='cumlx-campaign-') as tmp:
         work = Path(tmp)
         prompts = work / 'prompts.txt'
         prompts.write_text('\n'.join(PROMPTS) + '\n', encoding='utf-8')
         current = None
-        for original, port, quantized in PORTS:
+        for original, port, quantized in ports:
             print(f'verifying {port}', file=sys.stderr, flush=True)
             if original != current:  # each original gets a new download cache, to keep disk use low
                 shutil.rmtree(work / 'hf', ignore_errors=True)
