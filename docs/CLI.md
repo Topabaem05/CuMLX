@@ -185,12 +185,12 @@ cumlx kernel verify foo.metal kgolden/ -o report/                               
 | CUDA | Metal에서 계산하는 것 | 근거 |
 |---|---|---|
 | `__float2bfloat16`(`_rn`), `_rz`, `_rd`, `_ru` | CUDA 12.0 `cuda_bf16.hpp`의 sm70 경로. 비정규수를 지키고, NaN은 0x7FFF | float32 비트 패턴 2^32개 전부에서 모델과 비트 일치. V100(sm70, nvcc 12.0) golden 65536개와 NaN payload까지 비트 일치, grade A(`validation/kernel-golden-v100-bf16`). MSL `bfloat` 변환은 같은 golden에서 `rn`이 다름 |
-| `__hadd`, `__hsub`, `__hmul`, `__hfma`, `+ - *`, `+= -= *=` | sm80 이상의 `fma.rn.bf16`: 정확한 결과를 가장 가까운 짝수로 한 번 반올림, 비정규수 유지 | 덧셈·뺄셈·곱셈은 bf16 쌍 2^32개 전부, fma는 263824개 조합에서 모델과 비트 일치 |
-| `__hneg`, `__habs`, 비교 연산자 | 부호 비트 변경, 정수 순서 비교(NaN은 false) | 위 GPU 시험 |
+| `__hadd`, `__hsub`, `__hmul`, `__hfma`, `+ - *`, `+= -= *=` | sm80 이상의 `fma.rn.bf16`: 정확한 결과를 가장 가까운 짝수로 한 번 반올림, 비정규수 유지 | 덧셈·뺄셈·곱셈은 bf16 쌍 2^32개 전부, fma는 263824개 조합에서 모델과 비트 일치. RTX A4000(sm86, nvcc 12.4) golden 262144개와 NaN payload까지 비트 일치, grade A(`validation/kernel-golden-a4000-bf16`) |
+| `__hneg`, `__habs`, 비교 연산자 | 부호 비트 변경, 정수 순서 비교(NaN은 false) | sm86 golden과 NaN이 아닌 값은 비트 일치. NaN 입력에 CUDA는 0x7FFF를 내고 헤더는 payload를 지킵니다(PTX가 정하지 않음, NaN 종류로 비교) |
 | `__bfloat162float`, `__bfloat16_as_ushort`, `__ushort_as_bfloat16` | 비트 이동 | |
 | `/`, `__hdiv`, `__nv_bfloat162` | 거부. `operator/`는 삭제되어 컴파일되지 않습니다 | CUDA의 반올림을 확인하지 않음 |
 
-근거는 [validation/bf16-exhaustive.json](../validation/bf16-exhaustive.json)(`scripts/bf16_exhaustive.py`, M5 Pro, 243초)입니다. 같은 검사에서 MSL `bfloat` 변환은 1671만 개, Metal float 덧셈 후 반올림은 108만 쌍이 달라, 이 검사가 차이를 볼 수 있음을 보였습니다. **비교 대상은 모델이지 CUDA 실행이 아닙니다.** CUDA 12.0은 sm70에 bf16 산술이 없어 V100으로 산술을 확인할 수 없고, sm80 이상의 GPU는 없습니다. 변환은 V100에서 확인할 수 있으며, 그 golden(`validation/kernel-cases-bf16`)은 아직 기록하지 않았습니다.
+근거는 [validation/bf16-exhaustive.json](../validation/bf16-exhaustive.json)(`scripts/bf16_exhaustive.py`, M5 Pro, 243초)입니다. 같은 검사에서 MSL `bfloat` 변환은 1671만 개, Metal float 덧셈 후 반올림은 108만 쌍이 달라, 이 검사가 차이를 볼 수 있음을 보였습니다. 이 전수 검사의 비교 대상은 모델입니다. 실제 CUDA 실행과는 두 번 비교했습니다. 변환은 V100(sm70, nvcc 12.0) golden(`validation/kernel-golden-v100-bf16`), 변환과 산술은 RTX A4000(sm86, nvcc 12.4) golden(`validation/kernel-golden-a4000-bf16`, 입력은 `validation/kernel-cases-bf16/cases-sm80.json`)이며, 둘 다 grade A입니다. CUDA 12.0은 sm70에 bf16 산술이 없어 V100으로는 산술을 확인할 수 없습니다.
 
 `kernel verify`는 커널이 `cumlx_bf16`를 쓰면 같은 헤더를 앞에 붙이고 `W_KERNEL_BF16_EMULATED`와 `data.execution.bf16_header_sha256`를 남깁니다. bfloat16 출력은 비트로 비교합니다. golden에서 NaN이 아닌 원소는 16비트가 모두 같아야 하고, NaN은 NaN이기만 하면 됩니다(PTX가 연산의 NaN을 정하지 않으므로, `nan_payload_differs`에 셉니다). bfloat16 버퍼는 `--engine torch`로 돌립니다. `mx.fast.metal_kernel`은 그 버퍼를 `uint16_t`로 선언해 정수가 조용히 float로 바뀌므로, `--engine mlx`는 `bind` 단계의 미완료로 끝납니다. golden과 cases의 `bfloat16`은 비트 패턴(uint16)으로 저장합니다.
 

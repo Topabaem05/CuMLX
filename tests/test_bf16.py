@@ -215,3 +215,36 @@ def test_the_ported_conversions_equal_the_v100_to_the_bit_and_native_bfloat_does
     code, doc = run(capsys, 'kernel', 'verify', str(wrong), str(golden), '--max-items', '-1')
     assert code == 1 and doc['data']['first_divergence']['output'] == 'rn', doc['summary']
     assert doc['data']['first_divergence']['reason'] == 'bits_differ'
+
+
+@pytest.mark.gpu
+def test_the_ported_arithmetic_equals_an_sm86_run_to_the_bit_and_metal_float_does_not(gpu, capsys, tmp_path, monkeypatch):
+    """validation/kernel-golden-a4000-bf16 is a real RTX A4000 run (sm86, nvcc 12.4) of cases-sm80.json."""
+    pytest.importorskip('torch')
+    monkeypatch.syspath_prepend(str(ROOT / 'tests'))
+    golden = ROOT / 'validation/kernel-golden-a4000-bf16'
+    ported = tmp_path / 'right'
+    for name in ('bf16_convert', 'bf16_arith'):
+        code, doc = run(capsys, 'kernel', 'port', str(ROOT / f'validation/kernel-cases-bf16/{name}.cu'), '-o', str(ported / f'{name}.metal'),
+                        '--translator', STUB, '--overwrite')
+        assert code == 0, doc
+    code, doc = run(capsys, 'kernel', 'verify', str(ported), str(golden), '--max-items', '-1', '-o', str(tmp_path / 'report'))
+    assert code == 0 and {k: v['grade'] for k, v in doc['data']['kernels'].items()} == {'bf16_convert': 'A', 'bf16_arith': 'A'}, doc['summary']
+    records = {r['case']: r['outputs'] for r in json.loads((tmp_path / 'report' / 'report.json').read_text())['records']}
+    arith = records['bf16_arith.262144']
+    assert all(o['basis'] == 'bit_exact' for o in arith.values()), arith
+    assert arith['add']['nan_payload_differs'] == arith['fma']['nan_payload_differs'] == 0
+    # CUDA gives 0x7FFF for the negation and absolute value of a NaN; the header keeps the payload, which PTX leaves unspecified.
+    assert arith['neg']['nan_payload_differs'] > 0
+
+    # The fused multiply-add in Metal float arithmetic, which flushes subnormals and rounds twice.
+    wrong = tmp_path / 'wrong' / 'bf16_arith.metal'
+    wrong.parent.mkdir()
+    text = (ported / 'bf16_arith.metal').read_text()
+    changed = text.replace('cumlx_hfma(a[i], b[i], c[i])', 'cumlx_bf16(float(a[i]) * float(b[i]) + float(c[i]))')
+    assert changed != text
+    wrong.write_text(changed)
+    code, doc = run(capsys, 'kernel', 'verify', str(wrong), str(golden), '--max-items', '-1')
+    assert code == 1 and doc['data']['first_divergence']['output'] == 'fma', doc['summary']
+    # float32 a*b can overflow to inf where the exact fma stays finite, so a NaN class can differ before any bits do.
+    assert doc['data']['first_divergence']['reason'] in ('bits_differ', 'nan_mismatch')

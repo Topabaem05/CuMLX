@@ -1,0 +1,83 @@
+{
+  "schema": "cumlx.result.v1",
+  "command": "kernel capture",
+  "ok": true,
+  "status": "ok",
+  "exit_code": 0,
+  "summary": "recorded 2 of 2 case(s), 2 kernel(s), on NVIDIA RTX A4000 (driver 580.126.09, nvcc 12.4.131)",
+  "data": {
+    "kernels_recorded": [
+      "bf16_arith",
+      "bf16_convert"
+    ],
+    "cases_recorded": 2,
+    "cases_total": 2,
+    "source": {
+      "framework": "cuda",
+      "gpu": "NVIDIA RTX A4000",
+      "driver": "580.126.09",
+      "arch": "8.6",
+      "compiler": {
+        "name": "nvcc",
+        "version": "12.4.131",
+        "flags": [
+          "-arch=native"
+        ]
+      },
+      "cuda_runtime": 12040,
+      "cuda_driver_api": 13000,
+      "host": {
+        "machine": "x86_64",
+        "system": "Linux"
+      },
+      "repeats": 3,
+      "idle_during_capture": true
+    },
+    "floating_point": {
+      "ftz": {
+        "flag": "false (nvcc default)",
+        "load_flushes": false,
+        "input_flushes": false,
+        "output_flushes": false
+      },
+      "fmad": {
+        "flag": "true (nvcc default)",
+        "contracts": true
+      },
+      "fp64": {
+        "available": true
+      },
+      "warp_size": 32,
+      "probe_outputs": [
+        9.99994610111476e-41,
+        9.99994610111476e-41,
+        9.99994610111476e-41,
+        7.346839692639297e-40,
+        5.960464477539063e-08
+      ]
+    },
+    "failed": {
+      "items": [],
+      "total": 0,
+      "omitted": 0
+    },
+    "not_repeating": []
+  },
+  "artifacts": [
+    {
+      "kind": "golden",
+      "path": "golden"
+    }
+  ],
+  "warnings": [],
+  "errors": [],
+  "next_steps": [
+    {
+      "command": "cumlx kernel verify foo.metal golden",
+      "why": "on a Mac: compare a Metal kernel with this golden"
+    }
+  ],
+  "truncated": false,
+  "cumlx_version": "0.5.0",
+  "elapsed_ms": 3725
+}

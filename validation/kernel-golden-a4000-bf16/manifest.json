@@ -1,0 +1,224 @@
+{
+ "schema": "cumlx.opgolden.v1",
+ "cumlx_version": "0.5.0",
+ "created_utc": "2026-11-07T11:21:36Z",
+ "golden": {
+  "kind": "cuda"
+ },
+ "source": {
+  "framework": "cuda",
+  "gpu": "NVIDIA RTX A4000",
+  "driver": "580.126.09",
+  "arch": "8.6",
+  "compiler": {
+   "name": "nvcc",
+   "version": "12.4.131",
+   "flags": [
+    "-arch=native"
+   ]
+  },
+  "cuda_runtime": 12040,
+  "cuda_driver_api": 13000,
+  "host": {
+   "machine": "x86_64",
+   "system": "Linux"
+  },
+  "repeats": 3,
+  "idle_during_capture": true
+ },
+ "floating_point": {
+  "ftz": {
+   "flag": "false (nvcc default)",
+   "load_flushes": false,
+   "input_flushes": false,
+   "output_flushes": false
+  },
+  "fmad": {
+   "flag": "true (nvcc default)",
+   "contracts": true
+  },
+  "fp64": {
+   "available": true
+  },
+  "warp_size": 32,
+  "probe_outputs": [
+   9.99994610111476e-41,
+   9.99994610111476e-41,
+   9.99994610111476e-41,
+   7.346839692639297e-40,
+   5.960464477539063e-08
+  ]
+ },
+ "kernels": {
+  "bf16_arith": {
+   "source_file": "bf16_arith.cu",
+   "source_sha256": "dcc377b8de819959e3d42ead918b8fafffa7cd1af2cd9992f9f7e9ab542cadef",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  },
+  "bf16_convert": {
+   "source_file": "bf16_convert.cu",
+   "source_sha256": "4391398c433b0693c4d378e63387f2124f2a92682905dbf141e84e378c9e5049",
+   "header_file": null,
+   "header_sha256": null,
+   "form": "complete",
+   "features": {
+    "fp64": false,
+    "fp64_literals": 0,
+    "atomics": false,
+    "warp_level": []
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "bf16_convert.65536",
+   "kernel": "bf16_convert",
+   "inputs": [
+    {
+     "name": "x",
+     "dtype": "float32",
+     "shape": [
+      65536
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "name": "rn",
+     "dtype": "bfloat16",
+     "shape": [
+      65536
+     ]
+    },
+    {
+     "name": "rz",
+     "dtype": "bfloat16",
+     "shape": [
+      65536
+     ]
+    },
+    {
+     "name": "rd",
+     "dtype": "bfloat16",
+     "shape": [
+      65536
+     ]
+    },
+    {
+     "name": "ru",
+     "dtype": "bfloat16",
+     "shape": [
+      65536
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    65536,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "file": "cases/c0000.safetensors",
+   "sha256": "f8beeb39a3329f63b19c06424aab68f2cb393b4a036882a65d30551ebea08e2f",
+   "repeat_identical": true
+  },
+  {
+   "id": "bf16_arith.262144",
+   "kernel": "bf16_arith",
+   "inputs": [
+    {
+     "name": "a",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ]
+    },
+    {
+     "name": "b",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ]
+    },
+    {
+     "name": "c",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "name": "add",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ]
+    },
+    {
+     "name": "sub",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ]
+    },
+    {
+     "name": "mul",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ]
+    },
+    {
+     "name": "fma",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ]
+    },
+    {
+     "name": "neg",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ]
+    },
+    {
+     "name": "abs",
+     "dtype": "bfloat16",
+     "shape": [
+      262144
+     ]
+    }
+   ],
+   "constants": {},
+   "grid": [
+    262144,
+    1,
+    1
+   ],
+   "threadgroup": [
+    256,
+    1,
+    1
+   ],
+   "file": "cases/c0001.safetensors",
+   "sha256": "cbb80c9068efbfbbf860f604ffd605d9758f342fad92fac7b5e6f3aa4ae63e95",
+   "repeat_identical": true
+  }
+ ]
+}

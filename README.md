@@ -174,7 +174,7 @@ cumlx kernel verify foo.metal kgolden/                                          
 
 CUMLX는 번역기를 설치하지 않습니다. woof(`metal-woof`)는 조건을 받아들이는 사람이 직접 설치합니다. 번역기가 없으면 `E_KERNEL_TRANSLATOR_MISSING`(exit 3)이고, Metal에 없는 기능은 `E_KERNEL_UNPORTABLE`로 이유와 함께 거부합니다. 호스트 코드(`main`, ATen)는 번역하지 않고 떼어 내므로, F3처럼 앱을 돌리려면 호스트 함수는 사람이 옮깁니다. 입력이 닿지 않은 경로의 결함은 잡을 수 없으므로, 통과는 case가 실행한 범위만 보장합니다. 직접 쓴 Metal 연산은 `cumlx.check_op(torch_fn, mlx_fn, inputs)`로 비교합니다.
 
-`__nv_bfloat16` 커널은 출력 옆에 쓰는 `cumlx_bf16.h`로 옮깁니다. MSL `bfloat`와 Metal float 산술은 비정규수를 0으로 만들어 CUDA와 다르므로, 이 헤더는 값을 16비트로 저장하고 정수 산술로 계산합니다. M5 Pro에서 CUDA 모델과 변환은 2^32개 전부, 덧셈·뺄셈·곱셈은 bf16 쌍 2^32개 전부 비트까지 같았습니다. 변환은 V100의 실제 CUDA 실행(입력 65536개)과도 비트까지 같습니다. 산술의 비교 대상은 모델이며 CUDA 실행이 아닙니다. 나눗셈과 `__nv_bfloat162`는 거부합니다. [CLI 문서](https://github.com/Topabaem05/CuMLX/blob/main/docs/CLI.md)를 보십시오.
+`__nv_bfloat16` 커널은 출력 옆에 쓰는 `cumlx_bf16.h`로 옮깁니다. MSL `bfloat`와 Metal float 산술은 비정규수를 0으로 만들어 CUDA와 다르므로, 이 헤더는 값을 16비트로 저장하고 정수 산술로 계산합니다. M5 Pro에서 CUDA 모델과 변환은 2^32개 전부, 덧셈·뺄셈·곱셈은 bf16 쌍 2^32개 전부 비트까지 같았습니다. 실제 CUDA 실행과도 같습니다. 변환은 V100(sm70) 입력 65536개, 변환과 산술은 RTX A4000(sm86) 입력 262144개에서 비트까지 같았습니다. 나눗셈과 `__nv_bfloat162`는 거부합니다. [CLI 문서](https://github.com/Topabaem05/CuMLX/blob/main/docs/CLI.md)를 보십시오.
 
 ### 로봇 정책을 학습하고 돌린다
 
