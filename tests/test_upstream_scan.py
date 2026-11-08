@@ -65,3 +65,32 @@ def test_a_top_level_rope_theta_that_disagrees_with_rope_parameters_is_flagged()
     assert row['transformers_rope_parameters']['rope_theta'] == 10000000
     assert row['findings'] == ['rope_base'] and row['mlx_rope_theta'] == 1000000.0
     assert row['with_pr1964']['base_fixed'] is False
+
+
+def port_check():
+    path = SCAN.with_name('port_rope_check.py')
+    spec = importlib.util.spec_from_file_location('port_rope_check', path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_cut_keeps_the_first_layers_and_their_per_layer_lists():
+    module = port_check()
+    config = {**LLAMA, 'num_hidden_layers': 4, 'layer_types': ['a', 'b', 'c', 'd'], 'eos_token_id': [1, 2]}
+    out = module.cut(config, 2)
+    assert out['num_hidden_layers'] == 2 and out['layer_types'] == ['a', 'b']
+    assert out['eos_token_id'] == [1, 2]  # not a per-layer list
+    with pytest.raises(SystemExit):
+        module.cut(config, 4)
+    with pytest.raises(SystemExit):
+        module.cut(config, 0)
+
+
+def test_layer_pattern_matches_decoder_layers_with_and_without_the_model_prefix():
+    layer = port_check().LAYER
+    assert int(layer.search('model.layers.12.self_attn.q_proj.weight').group(1)) == 12
+    assert int(layer.search('layers.3.mlp.down_proj.scales').group(1)) == 3
+    assert layer.search('model.embed_tokens.weight') is None
+    assert layer.search('lm_head.weight') is None
+    assert layer.search('model.norm.weight') is None

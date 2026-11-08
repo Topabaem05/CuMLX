@@ -1,0 +1,93 @@
+{
+ "schema": "cumlx.port-rope-check.v1",
+ "date": "2026-11-08",
+ "original": "kilianbalaguer9/Voltaire-2.5-MLX-4bit",
+ "original_revision": "273a4e4fe5c41027f6d9af5d3904dda9dc7c99b3",
+ "port": "kilianbalaguer9/Voltaire-2.5-MLX-4bit",
+ "port_revision": "273a4e4fe5c41027f6d9af5d3904dda9dc7c99b3",
+ "original_transformers_version": "5.19.0",
+ "rope_parameters": {
+  "rope_theta": 130000,
+  "rope_type": "default"
+ },
+ "top_level_rope_theta": null,
+ "config_differences_original_vs_port": [],
+ "versions": {
+  "mlx": "0.32.4",
+  "mlx-lm": "0.32.2",
+  "torch": "2.15.0",
+  "transformers": "5.22.1"
+ },
+ "layers": {
+  "checked": 2,
+  "published": 24,
+  "does_not_show": [
+   "layers after the first K",
+   "the output of the whole port"
+  ]
+ },
+ "rope_base_in_mlx": 10000,
+ "golden": {
+  "architecture": "LlamaForCausalLM",
+  "rope_theta_in_transformers": {
+   "rope_theta": 130000,
+   "rope_type": "default"
+  },
+  "weights_loaded": 20,
+  "records": 128
+ },
+ "port_as_published": {
+  "exit_code": 1,
+  "status": "diverged",
+  "summary": "diverged: 92 pass, 24 fail, 0 unverified, 12 skipped, 63 chain drift; first divergence at `model.layers.0.self_attn` (isolated, high)",
+  "first_divergence": {
+   "module": "model.layers.0.self_attn",
+   "basis": "isolated",
+   "confidence": "high",
+   "phase": "prefill",
+   "metrics": {
+    "shape": [
+     1,
+     5,
+     2048
+    ],
+    "expected_shape": [
+     1,
+     5,
+     2048
+    ],
+    "rel_l2": 0.038986802532664726,
+    "max_abs": 0.09592533111572266,
+    "cosine": 0.9992727204818828,
+    "scale": 1.0066604502439198,
+    "verdict": "fail",
+    "basis": "rel_l2",
+    "reason": "rel_l2_above_threshold"
+   }
+  },
+  "native_output": {
+   "positions": 11,
+   "top1_matches": 10
+  },
+  "worst_isolated_rel_l2": 0.11046718759310871,
+  "warnings": [],
+  "errors": []
+ },
+ "control_top_level_rope_theta": {
+  "added": {
+   "rope_theta": 130000
+  },
+  "exit_code": 0,
+  "status": "ok",
+  "summary": "ok: 116 pass, 0 fail, 0 unverified, 12 skipped",
+  "first_divergence": null,
+  "native_output": {
+   "positions": 11,
+   "top1_matches": 11
+  },
+  "worst_isolated_rel_l2": 2.9401283654058896e-06,
+  "warnings": [],
+  "errors": []
+ },
+ "confirmed": true
+}

@@ -1,0 +1,70 @@
+{
+ "schema": "cumlx.port-rope-check.v1",
+ "date": "2026-11-08",
+ "original": "Qwen/Qwen2.5-0.5B-Instruct",
+ "original_revision": "7ae557604adf67be50417f59c2c2f167def9a775",
+ "port": "mlx-community/Qwen2.5-0.5B-Instruct-4bit",
+ "port_revision": "a5339a4131f135d0fdc6a5c8b5bbed2753bbe0f3",
+ "original_transformers_version": "4.43.1",
+ "rope_parameters": null,
+ "top_level_rope_theta": 1000000.0,
+ "config_differences_original_vs_port": [],
+ "versions": {
+  "mlx": "0.32.4",
+  "mlx-lm": "0.32.2",
+  "torch": "2.15.0",
+  "transformers": "5.22.1"
+ },
+ "layers": {
+  "checked": 2,
+  "published": 24,
+  "does_not_show": [
+   "layers after the first K",
+   "the output of the whole port"
+  ]
+ },
+ "vocabulary": {
+  "kept_token_ids": [
+   315,
+   374,
+   750,
+   785,
+   1445,
+   1648,
+   6722,
+   9625,
+   75698
+  ],
+  "published": 151936,
+  "does_not_show": [
+   "logits of the tokens that were not kept"
+  ]
+ },
+ "rope_base_in_mlx": 1000000.0,
+ "golden": {
+  "architecture": "Qwen2ForCausalLM",
+  "rope_theta_in_transformers": {
+   "rope_theta": 1000000.0,
+   "rope_type": "default"
+  },
+  "weights_loaded": 26,
+  "records": 128
+ },
+ "port_as_published": {
+  "exit_code": 0,
+  "status": "ok",
+  "summary": "ok: 116 pass, 0 fail, 0 unverified, 12 skipped",
+  "first_divergence": null,
+  "native_output": {
+   "positions": 9,
+   "top1_matches": 9
+  },
+  "worst_isolated_rel_l2": 9.615727498635447e-06,
+  "warnings": [],
+  "errors": []
+ },
+ "control_top_level_rope_theta": {
+  "skipped": "the config has no rope_parameters"
+ },
+ "confirmed": false
+}

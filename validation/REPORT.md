@@ -2,7 +2,7 @@
 
 This file separates what ran from what did not. The newest evidence is first.
 
-## Published MLX ports with a silent RoPE mismatch (2026-11-07, local)
+## Published MLX ports with a silent RoPE mismatch (2026-11-07 and 2026-11-08, local)
 
 Environment: Apple M5 Pro, mlx 0.32.4, mlx-lm 0.32.2 (the latest release), torch 2.15.0, transformers 5.22.1.
 
@@ -11,6 +11,7 @@ Environment: Apple M5 Pro, mlx 0.32.4, mlx-lm 0.32.2 (the latest release), torch
 | Config scan (`upstream/config_scan.py`, `upstream/config-scan.json`) | 6000 recent `mlx`-tagged repositories listed, 4864 configs read, 587 with `rope_parameters`. In 8 ports from 7 uploaders, mlx-lm's `ModelArgs` takes a different RoPE base from the one transformers resolves from the same config (llama 6, mistral 1, qwen3_moe 1) | Config only; no model was run in this step. 195 configs name a model type that mlx-lm 0.32.2 does not implement |
 | The change of ml-explore/mlx-lm#1964 on the same configs | Fixes 7 of the 8. It does not fix a config whose top-level `rope_theta` (1e6) disagrees with `rope_parameters` (1e7): transformers takes `rope_parameters`, and #1964 keeps the top-level value | Logic restated from the pull request's diff (`upstream/pr1964_logic.py`), not its branch |
 | Published ports run against a golden (`upstream/port_rope_check.py`, `upstream/ports/`) | 3 finetune ports (two MiniCPM5-2B, one Voltaire-2.5) diverged at `model.layers.0.self_attn` (isolated, high). The same ports with only a top-level `rope_theta` added to config.json passed (0 fail, worst 8.0e-6, 5.1e-6, 4.0e-6) | The golden runs the original architecture from its config with the port's weights; 2 prompts. Voltaire names no original, so its own config stood for it |
+| Larger published ports, first 2 decoder layers (`port_rope_check.py --layers 2`, 2026-11-08) | MiniCPM5-2B-Heretic-ARA, Sentiment-Analysis-7B and Nanbeige-4.3-33B (also `--vocab-from-prompts`, 11 of 166,912 tokens) diverged at `model.layers.0.self_attn` (isolated, high); controls passed (worst 4.6e-6, 2.6e-6, 2.9e-6). On Voltaire, the full check and both cuts gave the same rel_l2 (0.038986802532664726), and a port without the defect (Qwen2.5-0.5B-Instruct-4bit) passed both. The 7B published port, run whole in MLX, differs from its control in top-1 at 19% to 24% of positions (16 to 2048 tokens) | Verdicts cover the first 2 layers. The 8B LLM2Vec repo is not an mlx-lm port (`LlamaBiModel`, no `lm_head`, quantization outside config.json), so it is excluded; the 78 GB qwen3_moe port is config level only |
 | Effect on longer input (`upstream/long_context_effect.py`) | On non-repeating text, the published port's top-1 differs from the control at 31% of positions at 16 tokens and 46% at 2048 | One port, one text; not task quality |
 | Reported upstream | **No.** mlx-lm's contribution policy requires a person to write the report | |
 

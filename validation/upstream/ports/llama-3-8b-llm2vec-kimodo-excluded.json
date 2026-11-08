@@ -1,0 +1,29 @@
+{
+ "schema": "cumlx.port-excluded.v1",
+ "date": "2026-11-08",
+ "port": "melmass/Llama-3-8B-LLM2Vec-Kimodo-MLX-4bit",
+ "port_revision": "b13dac6b8772e31e63bcd92a74d975b126c5e7a7",
+ "flagged_by": "config_scan.py (rope_base: rope_theta only in rope_parameters)",
+ "evidence": {
+  "architectures": [
+   "LlamaBiModel"
+  ],
+  "quantization_in_config_json": false,
+  "quantization_in_kimodo_mlx_json": {
+   "bits": 4,
+   "group_size": 32
+  },
+  "tensors": 740,
+  "tensor_names_with_model_prefix": 0,
+  "lm_head_tensors": [],
+  "example_tensor": {
+   "name": "layers.0.self_attn.q_proj.weight",
+   "dtype": "U32"
+  }
+ },
+ "method": "config.json, kimodo_mlx.json and the safetensors header, read remotely; the weights were not downloaded",
+ "conclusion": "not an mlx-lm port: a bidirectional encoder (LlamaBiModel) with no lm_head, whose quantization is outside config.json; its own loader reads it, so the scan flag does not show an mlx-lm defect",
+ "does_not_show": [
+  "whether the Kimodo loader reads rope_parameters"
+ ]
+}

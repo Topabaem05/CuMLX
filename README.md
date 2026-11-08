@@ -380,7 +380,7 @@ carry the fix, and the next commands are suggested. `cumlx describe --format jso
 ## Ports checked in the wild
 
 CuMLX is meant to find defects that nobody notices. So it was pointed at MLX ports that people published on Hugging
-Face. The checks below ran on 2026-11-07 with mlx-lm 0.32.2, the latest release.
+Face. The checks below ran on 2026-11-07 and 2026-11-08 with mlx-lm 0.32.2, the latest release.
 
 ### A silent RoPE mismatch in real finetunes
 
@@ -413,9 +413,23 @@ control: the same port with one top-level `rope_theta` line added to its config.
 | rahulol/Hermit-MiniCPM5-2B-MLX-4bit | **diverged** at `model.layers.0.self_attn` (isolated, high), rel_l2 0.066, 336 modules fail | **ok**, 2036 pass, worst 8.0e-6 |
 | dalatexcoder/MiniCPM5-2B-ARA-MLX-4Bit-optiq-mixed | **diverged** at `model.layers.0.self_attn` (isolated, high), rel_l2 0.068, 334 fail | **ok**, 2036 pass, worst 5.1e-6 |
 | kilianbalaguer9/Voltaire-2.5-MLX-4bit | **diverged** at `model.layers.0.self_attn` (isolated, high), rel_l2 0.039, 200 fail | **ok**, 1172 pass, worst 4.0e-6 |
+| dalatexcoder/MiniCPM5-2B-Heretic-ARA-MLX-4Bit, first 2 of 42 layers | **diverged** at `model.layers.0.self_attn` (isolated, high), rel_l2 0.068, 24 fail | **ok**, 116 pass, worst 4.6e-6 |
+| masahiroid/Sentiment-Analysis-7B-4bit-mlx, first 2 of 32 layers | **diverged** at `model.layers.0.self_attn` (isolated, high), rel_l2 0.136, 24 fail | **ok**, 116 pass, worst 2.6e-6 |
+| junafinity/Nanbeige-4.3-33B-Heretic-Uncensored-MLX-4bit, first 2 of 52 layers, 11 tokens | **diverged** at `model.layers.0.self_attn` (isolated, high), rel_l2 0.109, 24 fail | **ok**, 116 pass, worst 2.9e-6 |
 
 Records: [validation/upstream/ports/](https://github.com/Topabaem05/CuMLX/blob/main/validation/upstream/ports/). Voltaire's card names no original, so its own config
 (without the quantization entries) stands for the original's.
+
+A float32 golden of a 7B model needs about 28 GB, more than this Mac had free. For the last three rows, `--layers 2`
+keeps the first 2 decoder layers, the embedding, the final norm and the head, and downloads only the shards that hold
+them. A RoPE base defect shows in layer 0. For the 33B, `--vocab-from-prompts` also keeps only the embedding and head
+rows of the prompt tokens. A 4-bit row is quantized on its own, so every activation is unchanged. On Voltaire, a full
+check and both cuts gave the same first divergence (rel_l2 0.038986802532664726), and a port without the defect passed
+both cuts. These verdicts cover the first 2 layers only.
+
+Of the 8 flagged ports, 6 are now confirmed on the port itself. melmass/Llama-3-8B-LLM2Vec-Kimodo-MLX-4bit is not an
+mlx-lm port: it is a bidirectional encoder (`LlamaBiModel`) with no `lm_head`, and its quantization is stored outside
+config.json, so its own loader reads it. The qwen3_moe port (78 GB) is checked at config level only.
 
 The control passing proves that the RoPE base is the whole defect.
 
@@ -425,7 +439,8 @@ the published port chose a different next token from the control at this share o
 
 | Input length (tokens) | 16 | 64 | 256 | 1,024 | 2,048 |
 |---|---|---|---|---|---|
-| Top-1 differs | 31% | 36% | 36% | 39% | 46% |
+| Top-1 differs, Hermit-MiniCPM5-2B | 31% | 36% | 36% | 39% | 46% |
+| Top-1 differs, Sentiment-Analysis-7B (whole port in MLX) | 19% | 22% | 18% | 22% | 24% |
 
 **Upstream.** The open pull request [ml-explore/mlx-lm#1964](https://github.com/ml-explore/mlx-lm/pull/1964) fixes 7 of
 the 8 configs. It does not fix the qwen3_moe config, whose top-level `rope_theta` disagrees with `rope_parameters`:
@@ -476,8 +491,9 @@ also ran on one RTX A4000 rented on vast.ai. Each record has its own scope ([val
 - 38 runs of clean real ports (Qwen2.5-0.5B, SmolLM2-135M, small public MoE, 5 inputs): 0 false alarms.
 - 50 fault-injection runs (F1 to F11): 0 missed, 3 not applicable.
 - Published `mlx-community` ports: 9 of 10 ok, 1 could not load.
-- Ports that people published (2026-11-07): 4,864 configs scanned, 8 with a silent RoPE mismatch, 3 confirmed by
-  `cumlx diff` with a control that passes.
+- Ports that people published (2026-11-07 and 2026-11-08): 4,864 configs scanned, 8 flagged for a silent RoPE
+  mismatch, 6 confirmed by `cumlx diff` with a control that passes (3 of them, up to 33B, on the first 2 layers), 1 not
+  an mlx-lm port.
 - 12 recent Hugging Face models (2026-11-02): 7 ok on both the implementation and a 4-bit conversion.
 - The flagship tasks, only in the scope of the table above.
 

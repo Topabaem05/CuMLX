@@ -331,7 +331,7 @@ Dory1.0-4B NVFP4의 MLX repack(`smdesai/...`)은 ModelOpt 원본과 비교했습
 
 ### 실제 불일치
 
-mlx-lm 0.32.2는 transformers 5가 쓴 config의 `rope_parameters`를 많은 모델에서 읽지 않아, 조용히 기본 RoPE base를 씁니다. 2026-11-07에는 사람들이 Hugging Face에 올린 finetune의 MLX 포팅본 3개(MiniCPM5-2B 2개, Voltaire-2.5)에서 `model.layers.0.self_attn`이 틀린 것을 확인했고, config에 최상위 `rope_theta`만 더하면 통과했습니다. 근거와 재현은 [validation/upstream](../validation/upstream/README.md)에 있습니다. mlx-lm 정책상 AI가 upstream 게시물을 작성할 수 없어 아직 보고하지 않았습니다.
+mlx-lm 0.32.2는 transformers 5가 쓴 config의 `rope_parameters`를 많은 모델에서 읽지 않아, 조용히 기본 RoPE base를 씁니다. 2026-11-07~08에는 사람들이 Hugging Face에 올린 finetune의 MLX 포팅본 6개(MiniCPM5-2B 3개, Voltaire-2.5, 7B 1개, 33B 1개)에서 `model.layers.0.self_attn`이 틀린 것을 확인했고, config에 최상위 `rope_theta`만 더하면 통과했습니다. 7B와 33B, 그리고 2B 하나는 `port_rope_check.py --layers 2`로 앞쪽 2개 layer만 확인했습니다. 근거와 재현은 [validation/upstream](../validation/upstream/README.md)에 있습니다. mlx-lm 정책상 AI가 upstream 게시물을 작성할 수 없어 아직 보고하지 않았습니다.
 
 ### 장치 간 golden 차이
 

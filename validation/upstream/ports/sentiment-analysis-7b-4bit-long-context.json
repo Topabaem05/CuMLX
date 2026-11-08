@@ -1,0 +1,52 @@
+{
+ "schema": "cumlx.rope-long-context.v1",
+ "date": "2026-11-08",
+ "port": "masahiroid/Sentiment-Analysis-7B-4bit-mlx",
+ "port_revision": "04a30920e88b07a6a53dd9382a122cd388afa8f3",
+ "rope_parameters": {
+  "rope_theta": 1000000.0,
+  "rope_type": "default"
+ },
+ "reference": "the same port with a top-level rope_theta (equal to the transformers golden, see port_rope_check.py)",
+ "text": [
+  "AGENTS.md",
+  "validation/REPORT.md"
+ ],
+ "text_commit": "a768cc9a20cd862ca1bfc25a5b0f5378c53829cc",
+ "text_sha256": "ccaac3736747b37f0b749f6b6461f5629d7b975370b4b69f5c3348a17c92a8f2",
+ "versions": {
+  "mlx": "0.32.4",
+  "mlx-lm": "0.32.2"
+ },
+ "lengths": [
+  {
+   "tokens": 16,
+   "top1_differs": 0.1875,
+   "logits_rel_l2_second_half": 0.1321
+  },
+  {
+   "tokens": 64,
+   "top1_differs": 0.2188,
+   "logits_rel_l2_second_half": 0.156
+  },
+  {
+   "tokens": 256,
+   "top1_differs": 0.1797,
+   "logits_rel_l2_second_half": 0.1843
+  },
+  {
+   "tokens": 1024,
+   "top1_differs": 0.2158,
+   "logits_rel_l2_second_half": 0.1809
+  },
+  {
+   "tokens": 2048,
+   "top1_differs": 0.2388,
+   "logits_rel_l2_second_half": 0.1812
+  }
+ ],
+ "does_not_show": [
+  "task quality on real data",
+  "other ports or prompts"
+ ]
+}
